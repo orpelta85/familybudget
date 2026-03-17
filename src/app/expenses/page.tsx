@@ -45,12 +45,12 @@ export default function ExpensesPage() {
   const router = useRouter()
   const { data: periods } = usePeriods()
   const currentPeriod = useCurrentPeriod()
-  const [selectedPeriodId, setSelectedPeriodId] = useState<number | undefined>()
+  const { selectedPeriodId, setSelectedPeriodId } = useSharedPeriod()
   const fileRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
     if (currentPeriod && !selectedPeriodId) setSelectedPeriodId(currentPeriod.id)
-  }, [currentPeriod, selectedPeriodId])
+  }, [currentPeriod, selectedPeriodId, setSelectedPeriodId])
   useEffect(() => {
     if (!loading && !user) router.push('/login')
   }, [user, loading, router])

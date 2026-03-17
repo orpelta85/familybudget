@@ -22,11 +22,11 @@ export default function ApartmentPage() {
   const { data: deposits } = useApartmentDeposits()
   const upsert = useUpsertApartmentDeposit()
   const [amount, setAmount] = useState(MONTHLY_TARGET.toString())
-  const [selectedPeriodId, setSelectedPeriodId] = useState<number | undefined>()
+  const { selectedPeriodId, setSelectedPeriodId } = useSharedPeriod()
 
   useEffect(() => {
     if (currentPeriod && !selectedPeriodId) setSelectedPeriodId(currentPeriod.id)
-  }, [currentPeriod, selectedPeriodId])
+  }, [currentPeriod, selectedPeriodId, setSelectedPeriodId])
 
   useEffect(() => {
     if (!loading && !user) router.push('/login')

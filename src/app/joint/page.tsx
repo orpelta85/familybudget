@@ -25,11 +25,11 @@ export default function JointPage() {
   const router = useRouter()
   const { data: periods } = usePeriods()
   const currentPeriod = useCurrentPeriod()
-  const [selectedPeriodId, setSelectedPeriodId] = useState<number | undefined>()
+  const { selectedPeriodId, setSelectedPeriodId } = useSharedPeriod()
 
   useEffect(() => {
     if (currentPeriod && !selectedPeriodId) setSelectedPeriodId(currentPeriod.id)
-  }, [currentPeriod, selectedPeriodId])
+  }, [currentPeriod, selectedPeriodId, setSelectedPeriodId])
 
   useEffect(() => {
     if (!loading && !user) router.push('/login')

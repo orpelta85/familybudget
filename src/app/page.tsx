@@ -40,11 +40,11 @@ export default function Dashboard() {
   const { data: hasSetup, isLoading: setupLoading } = useHasSetup(user?.id)
   const { data: periods } = usePeriods()
   const currentPeriod = useCurrentPeriod()
-  const [selectedPeriodId, setSelectedPeriodId] = useState<number | undefined>()
+  const { selectedPeriodId, setSelectedPeriodId } = useSharedPeriod()
 
   useEffect(() => {
     if (currentPeriod && !selectedPeriodId) setSelectedPeriodId(currentPeriod.id)
-  }, [currentPeriod, selectedPeriodId])
+  }, [currentPeriod, selectedPeriodId, setSelectedPeriodId])
 
   useEffect(() => {
     if (!userLoading && !user) router.push('/login')
