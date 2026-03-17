@@ -1,5 +1,48 @@
 import * as XLSX from 'xlsx'
 
+// ── Shared expenses Excel ─────────────────────────────────────────────────────
+
+export interface RawSharedRow {
+  label: string
+  total_amount: number
+}
+
+export function createSharedTemplate(categoryLabels: string[]): Blob {
+  const wb = XLSX.utils.book_new()
+  const headers = ['קטגוריה', 'סכום כולל (₪)', 'הערות']
+  const rows = categoryLabels.map(label => [label, '', ''])
+  const ws = XLSX.utils.aoa_to_sheet([headers, ...rows])
+  ws['!cols'] = [{ wch: 22 }, { wch: 16 }, { wch: 25 }]
+  XLSX.utils.book_append_sheet(wb, ws, 'הוצאות משותפות')
+  const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' })
+  return new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+}
+
+export function parseSharedExcel(file: File): Promise<RawSharedRow[]> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      try {
+        const data = new Uint8Array(e.target?.result as ArrayBuffer)
+        const wb = XLSX.read(data, { type: 'array' })
+        const sheet = wb.Sheets[wb.SheetNames[0]]
+        const rows: Record<string, unknown>[] = XLSX.utils.sheet_to_json(sheet, { defval: '' })
+        const keys = rows[0] ? Object.keys(rows[0]) : []
+        const labelKey = keys.find(k => /קטגוריה|שם|category/i.test(k)) ?? keys[0]
+        const amountKey = keys.find(k => /סכום|amount|כולל/i.test(k)) ?? keys[1]
+        const parsed: RawSharedRow[] = rows
+          .map(r => ({
+            label: String(r[labelKey] ?? '').trim(),
+            total_amount: Math.abs(parseFloat(String(r[amountKey] ?? '0').replace(/[^\d.]/g, '')) || 0),
+          }))
+          .filter(r => r.label && r.total_amount > 0)
+        resolve(parsed)
+      } catch (err) { reject(err) }
+    }
+    reader.readAsArrayBuffer(file)
+  })
+}
+
 export interface RawExpenseRow {
   date: string
   description: string

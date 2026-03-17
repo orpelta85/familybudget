@@ -2,14 +2,15 @@
 
 import { useUser } from '@/lib/queries/useUser'
 import { usePeriods, useCurrentPeriod } from '@/lib/queries/usePeriods'
-import { usePersonalExpenses, useBudgetCategories, useAddExpense, useDeleteExpense } from '@/lib/queries/useExpenses'
+import { usePersonalExpenses, useBudgetCategories, useAddExpense, useDeleteExpense, useDeleteAllPeriodExpenses } from '@/lib/queries/useExpenses'
 import { formatCurrency } from '@/lib/utils'
 import { parseExpenseExcel, createExpenseTemplate } from '@/lib/excel-import'
+import { useRecurringPersonal, personalItemId } from '@/lib/hooks/useRecurring'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useRef } from 'react'
 import { PeriodSelector } from '@/components/layout/PeriodSelector'
 import { toast } from 'sonner'
-import { Receipt, Upload, Download, Plus, X, FileSpreadsheet } from 'lucide-react'
+import { Receipt, Upload, Download, Plus, X, FileSpreadsheet, Lock, Unlock, RotateCcw } from 'lucide-react'
 import type { RawExpenseRow } from '@/lib/excel-import'
 import type { BudgetCategory } from '@/lib/types'
 
@@ -33,6 +34,8 @@ export default function ExpensesPage() {
   const { data: categories } = useBudgetCategories(user?.id)
   const addExpense = useAddExpense()
   const deleteExpense = useDeleteExpense()
+  const deleteAll = useDeleteAllPeriodExpenses()
+  const recurring = useRecurringPersonal(user?.id)
 
   // Quick add form
   const [categoryId, setCategoryId] = useState('')
@@ -42,6 +45,28 @@ export default function ExpensesPage() {
   // Excel import state
   const [importRows, setImportRows] = useState<(RawExpenseRow & { categoryId: string })[]>([])
   const [showImport, setShowImport] = useState(false)
+
+  // Auto-insert locked templates when period is empty
+  useEffect(() => {
+    if (!expenses || !user || !selectedPeriodId) return
+    if (expenses.length > 0) return
+    if (recurring.items.length === 0) return
+    // Auto-insert locked items into empty period
+    Promise.all(recurring.items.map(item =>
+      addExpense.mutateAsync({
+        period_id: selectedPeriodId,
+        user_id: user.id,
+        category_id: item.category_id,
+        amount: item.amount,
+        description: item.description,
+        expense_date: new Date().toISOString().split('T')[0],
+      })
+    )).then(() => {
+      toast.success(`${recurring.items.length} פריטים קבועים נוספו אוטומטית`)
+    }).catch(() => {})
+  // Run only when period changes (not on every expense update)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPeriodId, user?.id])
 
   if (loading || !user) return null
 
@@ -70,6 +95,48 @@ export default function ExpensesPage() {
     if (!user || !selectedPeriodId) return
     await deleteExpense.mutateAsync({ id, period_id: selectedPeriodId, user_id: user.id })
     toast.success('נמחק')
+  }
+
+  // Reset: delete all non-locked, keep/re-insert locked templates
+  async function handleReset() {
+    if (!user || !selectedPeriodId) return
+    if (!confirm('לאפס את החודש? רק הפריטים הנעולים ישמרו.')) return
+    try {
+      // Delete expenses that are NOT locked
+      const locked = recurring.items
+      const toDelete = (expenses ?? []).filter(e => {
+        const id = personalItemId(e.category_id, e.description ?? '')
+        return !locked.some(l => l.id === id)
+      })
+      await Promise.all(toDelete.map(e =>
+        deleteExpense.mutateAsync({ id: e.id, period_id: selectedPeriodId, user_id: user.id })
+      ))
+
+      // Insert locked templates that aren't already present
+      const existingKeys = new Set(
+        (expenses ?? []).map(e => personalItemId(e.category_id, e.description ?? ''))
+      )
+      const toInsert = locked.filter(l => !existingKeys.has(l.id))
+      await Promise.all(toInsert.map(item =>
+        addExpense.mutateAsync({
+          period_id: selectedPeriodId,
+          user_id: user.id,
+          category_id: item.category_id,
+          amount: item.amount,
+          description: item.description,
+          expense_date: new Date().toISOString().split('T')[0],
+        })
+      ))
+      toast.success(`אופס — ${locked.length} פריטים קבועים שמורים`)
+    } catch { toast.error('שגיאה באיפוס') }
+  }
+
+  function toggleLock(expense: { category_id: number; amount: number; description: string | null | undefined }) {
+    const catName = (categories ?? []).find(c => c.id === expense.category_id)?.name ?? ''
+    const desc = expense.description ?? ''
+    const id = personalItemId(expense.category_id, desc)
+    recurring.toggle({ id, category_id: expense.category_id, category_name: catName, amount: expense.amount, description: desc })
+    toast.success(recurring.isLocked(id) ? `בוטל נעילה: ${catName}` : `${catName} נועל לחודשים הבאים`)
   }
 
   async function handleExcelUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -114,7 +181,8 @@ export default function ExpensesPage() {
     } catch { toast.error('שגיאה בייבוא') }
   }
 
-  const card = { background: 'oklch(0.16 0.01 250)', border: '1px solid oklch(0.25 0.01 250)', borderRadius: 12, padding: 20 }
+  const card: React.CSSProperties = { background: 'oklch(0.16 0.01 250)', border: '1px solid oklch(0.25 0.01 250)', borderRadius: 12, padding: 20 }
+  const lockedCount = recurring.items.length
 
   return (
     <div>
@@ -125,9 +193,15 @@ export default function ExpensesPage() {
             <Receipt size={18} style={{ color: 'oklch(0.72 0.18 55)' }} />
             <h1 style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em' }}>הוצאות אישיות</h1>
           </div>
-          <p style={{ color: 'oklch(0.55 0.01 250)', fontSize: 13 }}>{selectedPeriod?.label ?? '...'}</p>
+          <p style={{ color: 'oklch(0.55 0.01 250)', fontSize: 13 }}>
+            {selectedPeriod?.label ?? '...'}
+            {lockedCount > 0 && <span style={{ marginRight: 8, color: 'oklch(0.70 0.15 185)' }}>· {lockedCount} פריטים נעולים</span>}
+          </p>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          <button onClick={handleReset} title="אפס חודש (שמור רק נעולים)" style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'oklch(0.22 0.01 250)', border: '1px solid oklch(0.28 0.01 250)', borderRadius: 8, padding: '8px 12px', color: 'oklch(0.75 0.01 250)', fontSize: 13, cursor: 'pointer' }}>
+            <RotateCcw size={14} /> אתחול
+          </button>
           <button onClick={downloadTemplate} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'oklch(0.22 0.01 250)', border: '1px solid oklch(0.28 0.01 250)', borderRadius: 8, padding: '8px 12px', color: 'oklch(0.75 0.01 250)', fontSize: 13, cursor: 'pointer' }}>
             <Download size={14} /> תבנית Excel
           </button>
@@ -191,19 +265,18 @@ export default function ExpensesPage() {
           </div>
           <form onSubmit={handleAdd} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <Field label="קטגוריה">
-              <select value={categoryId} onChange={e => setCategoryId(e.target.value)} required
-                style={inputStyle}>
+              <select value={categoryId} onChange={e => setCategoryId(e.target.value)} required style={inputStyleForm}>
                 <option value="">בחר...</option>
                 {categories?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </Field>
             <Field label="סכום (₪)">
               <input type="number" value={amount} onChange={e => setAmount(e.target.value)}
-                placeholder="0" required min="0" style={{ ...inputStyle, direction: 'ltr', textAlign: 'right' }} />
+                placeholder="0" required min="0" style={{ ...inputStyleForm, direction: 'ltr', textAlign: 'right' }} />
             </Field>
             <Field label="תיאור">
               <input type="text" value={description} onChange={e => setDescription(e.target.value)}
-                placeholder="אופציונלי..." style={inputStyle} />
+                placeholder="אופציונלי..." style={inputStyleForm} />
             </Field>
             <button type="submit" disabled={addExpense.isPending} style={primaryBtn}>
               {addExpense.isPending ? '...' : '+ הוסף הוצאה'}
@@ -219,20 +292,32 @@ export default function ExpensesPage() {
           </div>
           {!expenses?.length
             ? <Empty text="אין הוצאות — הוסף ידנית או ייבא מאקסל" />
-            : expenses.map(e => (
-              <div key={e.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid oklch(0.20 0.01 250)' }}>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: 500 }}>{(e.budget_categories as BudgetCategory)?.name ?? 'כללי'}</div>
-                  {e.description && <div style={{ fontSize: 12, color: 'oklch(0.55 0.01 250)', marginTop: 1 }}>{e.description}</div>}
+            : expenses.map(e => {
+              const itemId = personalItemId(e.category_id, e.description ?? '')
+              const locked = recurring.isLocked(itemId)
+              return (
+                <div key={e.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid oklch(0.20 0.01 250)' }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 14, fontWeight: 500 }}>{(e.budget_categories as BudgetCategory)?.name ?? 'כללי'}</div>
+                    {e.description && <div style={{ fontSize: 12, color: 'oklch(0.55 0.01 250)', marginTop: 1 }}>{e.description}</div>}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{ fontSize: 14, fontWeight: 600, direction: 'ltr' }}>{formatCurrency(e.amount)}</span>
+                    {/* Lock toggle */}
+                    <button
+                      onClick={() => toggleLock({ category_id: e.category_id, amount: e.amount, description: e.description ?? null })}
+                      title={locked ? 'בטל נעילה' : 'נעל — יתווסף אוטומטית חודש הבא'}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: locked ? 'oklch(0.70 0.15 185)' : 'oklch(0.35 0.01 250)', display: 'flex', alignItems: 'center', padding: 2 }}
+                    >
+                      {locked ? <Lock size={13} /> : <Unlock size={13} />}
+                    </button>
+                    <button onClick={() => handleDelete(e.id)} style={{ background: 'none', border: 'none', color: 'oklch(0.45 0.01 250)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                      <X size={15} />
+                    </button>
+                  </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  <span style={{ fontSize: 14, fontWeight: 600, direction: 'ltr' }}>{formatCurrency(e.amount)}</span>
-                  <button onClick={() => handleDelete(e.id)} style={{ background: 'none', border: 'none', color: 'oklch(0.45 0.01 250)', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
-                    <X size={15} />
-                  </button>
-                </div>
-              </div>
-            ))
+              )
+            })
           }
         </div>
       </div>
@@ -253,7 +338,7 @@ function Empty({ text }: { text: string }) {
   return <div style={{ color: 'oklch(0.50 0.01 250)', fontSize: 13, textAlign: 'center', padding: '32px 0' }}>{text}</div>
 }
 
-const inputStyle: React.CSSProperties = {
+const inputStyleForm: React.CSSProperties = {
   width: '100%',
   background: 'oklch(0.22 0.01 250)',
   border: '1px solid oklch(0.28 0.01 250)',

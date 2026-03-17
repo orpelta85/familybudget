@@ -86,6 +86,21 @@ export function useAddExpense() {
   })
 }
 
+export function useDeleteAllPeriodExpenses() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ period_id, user_id }: { period_id: number; user_id: string }) => {
+      const sb = createClient()
+      const { error } = await sb.from('personal_expenses').delete().eq('period_id', period_id).eq('user_id', user_id)
+      if (error) throw error
+      return { period_id, user_id }
+    },
+    onSuccess: ({ period_id, user_id }) => {
+      qc.invalidateQueries({ queryKey: ['personal_expenses', period_id, user_id] })
+    },
+  })
+}
+
 export function useDeleteExpense() {
   const qc = useQueryClient()
   return useMutation({

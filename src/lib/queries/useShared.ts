@@ -2,6 +2,32 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import type { SharedExpense } from '@/lib/types'
 
+export function useDeleteSharedExpense() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, period_id }: { id: number; period_id: number }) => {
+      const sb = createClient()
+      const { error } = await sb.from('shared_expenses').delete().eq('id', id)
+      if (error) throw error
+      return period_id
+    },
+    onSuccess: (period_id) => qc.invalidateQueries({ queryKey: ['shared_expenses', period_id] }),
+  })
+}
+
+export function useDeleteAllPeriodSharedExpenses() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (period_id: number) => {
+      const sb = createClient()
+      const { error } = await sb.from('shared_expenses').delete().eq('period_id', period_id)
+      if (error) throw error
+      return period_id
+    },
+    onSuccess: (period_id) => qc.invalidateQueries({ queryKey: ['shared_expenses', period_id] }),
+  })
+}
+
 export function useSharedExpenses(periodId: number | undefined) {
   return useQuery<SharedExpense[]>({
     queryKey: ['shared_expenses', periodId],

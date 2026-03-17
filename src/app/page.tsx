@@ -117,7 +117,9 @@ export default function Dashboard() {
   const variableTargets = variableCats.reduce((s, c) => s + c.monthly_target, 0)
   const variableSpent = variableCats.reduce((s, c) => s + (spendByCat[c.id] ?? 0), 0)
   const variableRemaining = variableTargets - variableSpent
-  const safeToSpend = totalIncome - fixedTargets - totalShared - variableSpent
+  const sinkingTargets = (categories ?? []).filter(c => c.type === 'sinking').reduce((s, c) => s + c.monthly_target, 0)
+  const savingsTargets = (categories ?? []).filter(c => c.type === 'savings').reduce((s, c) => s + c.monthly_target, 0)
+  const safeToSpend = totalIncome - fixedTargets - sinkingTargets - savingsTargets - totalShared - variableSpent
 
   // ── Year-over-year ────────────────────────────────────────────────────────
   const yearAgoIncome = allIncome?.find(i => i.period_id === yearAgoPeriodId)
@@ -236,6 +238,8 @@ export default function Dashboard() {
                   { label: 'הוצאות קבועות (יעד)', value: -fixedTargets, color: 'oklch(0.55 0.01 250)', sign: '-' },
                   { label: 'משותפות (שהוזן)', value: -totalShared, color: 'oklch(0.55 0.01 250)', sign: '-' },
                   { label: 'משתנות - הוצאתי', value: -variableSpent, color: 'oklch(0.72 0.18 55)', sign: '-' },
+                  ...(sinkingTargets > 0 ? [{ label: 'קרנות צבירה (יעד חודשי)', value: -sinkingTargets, color: 'oklch(0.70 0.15 185)', sign: '-' }] : []),
+                  ...(savingsTargets > 0 ? [{ label: 'חיסכון (יעד חודשי)', value: -savingsTargets, color: 'oklch(0.70 0.18 145)', sign: '-' }] : []),
                 ].map(row => (
                   <div key={row.label} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px solid oklch(0.20 0.01 250)' }}>
                     <span style={{ color: 'oklch(0.70 0.01 250)' }}>{row.label}</span>
