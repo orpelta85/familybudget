@@ -55,6 +55,18 @@ export function useAllPersonalExpenses(userId: string | undefined) {
   })
 }
 
+export function useUpdateCategoryTarget() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, monthly_target, user_id }: { id: number; monthly_target: number; user_id: string }) => {
+      const sb = createClient()
+      const { error } = await sb.from('budget_categories').update({ monthly_target }).eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: ['budget_categories', vars.user_id] }),
+  })
+}
+
 export function useAddExpense() {
   const qc = useQueryClient()
   return useMutation({

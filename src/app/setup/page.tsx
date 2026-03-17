@@ -28,7 +28,7 @@ export default function SetupPage() {
     try {
       await runSetup.mutateAsync(user.id)
       toast.success('הגדרות אתחול הושלמו!')
-      router.push('/')
+      window.location.href = '/'
     } catch (e) {
       toast.error('שגיאה בהגדרה — נסה שוב')
       console.error(e)

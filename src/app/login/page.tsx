@@ -10,7 +10,21 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [isSignup, setIsSignup] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [resetSent, setResetSent] = useState(false)
   const router = useRouter()
+
+  async function handleReset() {
+    if (!email) { toast.error('הזן אימייל קודם'); return }
+    setLoading(true)
+    const sb = createClient()
+    const { error } = await sb.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth/callback?next=/reset-password`
+    })
+    setLoading(false)
+    if (error) { toast.error(error.message); return }
+    setResetSent(true)
+    toast.success('נשלח מייל לאיפוס סיסמה — בדוק את תיבת הדואר')
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -79,6 +93,16 @@ export default function LoginPage() {
         >
           {isSignup ? 'יש לי כבר חשבון — התחברות' : 'אין לי חשבון — הרשמה'}
         </button>
+
+        {!isSignup && (
+          <button
+            onClick={handleReset}
+            disabled={loading || resetSent}
+            style={{ marginTop: 10, width: '100%', background: 'none', border: 'none', color: 'oklch(0.55 0.01 250)', cursor: resetSent ? 'default' : 'pointer', fontSize: 12 }}
+          >
+            {resetSent ? '✓ מייל נשלח' : 'שכחתי סיסמה'}
+          </button>
+        )}
       </div>
     </div>
   )

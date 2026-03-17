@@ -1,8 +1,7 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { createClient } from '@/lib/supabase/client'
+import { NextRequest, NextResponse } from 'next/server'
+import { createServiceClient } from '@/lib/supabase/server'
 
 const STARTER_CATEGORIES = [
-  // Fixed (shared expenses reflected here as my share)
   { name: 'שכירות (חלקי)', type: 'fixed', monthly_target: 2500, sort_order: 1 },
   { name: 'ארנונה (חלקי)', type: 'fixed', monthly_target: 150, sort_order: 2 },
   { name: 'חשמל (חלקי)', type: 'fixed', monthly_target: 100, sort_order: 3 },
@@ -12,7 +11,6 @@ const STARTER_CATEGORIES = [
   { name: 'ביטוח דירה (חלקי)', type: 'fixed', monthly_target: 60, sort_order: 7 },
   { name: 'נטפליקס (חלקי)', type: 'fixed', monthly_target: 30, sort_order: 8 },
   { name: 'ספוטיפיי (חלקי)', type: 'fixed', monthly_target: 25, sort_order: 9 },
-  // Variable
   { name: 'מכולת (חלקי)', type: 'variable', monthly_target: 600, sort_order: 10 },
   { name: 'הוצאות אישיות', type: 'variable', monthly_target: 1500, sort_order: 11 },
   { name: 'בגדים', type: 'variable', monthly_target: 300, sort_order: 12 },
@@ -20,14 +18,12 @@ const STARTER_CATEGORIES = [
   { name: 'תחבורה', type: 'variable', monthly_target: 400, sort_order: 14 },
   { name: 'ספורט', type: 'variable', monthly_target: 200, sort_order: 15 },
   { name: 'שונות', type: 'variable', monthly_target: 200, sort_order: 16 },
-  // Sinking
   { name: 'קרן חירום', type: 'sinking', monthly_target: 500, sort_order: 17 },
   { name: 'חופשה', type: 'sinking', monthly_target: 400, sort_order: 18 },
   { name: 'רכב', type: 'sinking', monthly_target: 300, sort_order: 19 },
-  // Savings
   { name: 'דירה', type: 'savings', monthly_target: 3500, sort_order: 20 },
   { name: 'השקעות', type: 'savings', monthly_target: 500, sort_order: 21 },
-] as const
+]
 
 const STARTER_FUNDS = [
   { name: 'קרן חירום', monthly_allocation: 500 },
@@ -37,36 +33,30 @@ const STARTER_FUNDS = [
   { name: 'מתנות', monthly_allocation: 100 },
 ]
 
-export function useHasSetup(userId: string | undefined) {
-  return useQuery<boolean>({
-    queryKey: ['has_setup', userId],
-    enabled: !!userId,
-    queryFn: async () => {
-      const res = await fetch(`/api/has-setup?userId=${userId}`)
-      const { hasSetup } = await res.json()
-      return hasSetup as boolean
-    },
-  })
-}
+export async function POST(req: NextRequest) {
+  const { userId } = await req.json()
+  if (!userId) return NextResponse.json({ error: 'missing userId' }, { status: 400 })
 
-export function useRunSetup() {
-  const qc = useQueryClient()
-  return useMutation({
-    mutationFn: async (userId: string) => {
-      const res = await fetch('/api/setup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId }),
-      })
-      if (!res.ok) {
-        const { error } = await res.json()
-        throw new Error(error ?? 'setup failed')
-      }
-    },
-    onSuccess: (_, userId) => {
-      qc.invalidateQueries({ queryKey: ['has_setup', userId] })
-      qc.invalidateQueries({ queryKey: ['budget_categories', userId] })
-      qc.invalidateQueries({ queryKey: ['sinking_funds', userId] })
-    },
-  })
+  const sb = createServiceClient()
+
+  // Upsert profile
+  await sb.from('profiles').upsert({ id: userId, name: 'אורי' }, { onConflict: 'id' })
+
+  // Insert categories (skip if already exist)
+  const { error: catError } = await sb
+    .from('budget_categories')
+    .insert(STARTER_CATEGORIES.map(c => ({ ...c, user_id: userId, year: 1 })))
+  if (catError && !catError.message.includes('duplicate')) {
+    return NextResponse.json({ error: catError.message }, { status: 500 })
+  }
+
+  // Insert sinking funds (skip if already exist)
+  const { error: fundError } = await sb
+    .from('sinking_funds')
+    .insert(STARTER_FUNDS.map(f => ({ ...f, user_id: userId })))
+  if (fundError && !fundError.message.includes('duplicate')) {
+    return NextResponse.json({ error: fundError.message }, { status: 500 })
+  }
+
+  return NextResponse.json({ ok: true })
 }

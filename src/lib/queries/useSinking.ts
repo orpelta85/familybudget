@@ -44,6 +44,18 @@ export function useAllSinkingTransactions(userId: string | undefined) {
   })
 }
 
+export function useUpdateSinkingFund() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, monthly_allocation, name }: { id: number; monthly_allocation: number; name: string }) => {
+      const sb = createClient()
+      const { error } = await sb.from('sinking_funds').update({ monthly_allocation, name }).eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['sinking_funds'] }),
+  })
+}
+
 export function useAddSinkingTransaction() {
   const qc = useQueryClient()
   return useMutation({
