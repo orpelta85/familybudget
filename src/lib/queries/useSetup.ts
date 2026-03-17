@@ -42,9 +42,13 @@ export function useHasSetup(userId: string | undefined) {
     queryKey: ['has_setup', userId],
     enabled: !!userId,
     queryFn: async () => {
-      const res = await fetch(`/api/has-setup?userId=${userId}`)
-      const { hasSetup } = await res.json()
-      return hasSetup as boolean
+      const sb = createClient()
+      const { data } = await sb
+        .from('budget_categories')
+        .select('id')
+        .eq('user_id', userId!)
+        .limit(1)
+      return (data?.length ?? 0) > 0
     },
   })
 }
