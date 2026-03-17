@@ -56,6 +56,22 @@ export function useUpdateSinkingFund() {
   })
 }
 
+export function useAddSinkingFund() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ name, monthly_allocation, user_id }: { name: string; monthly_allocation: number; user_id: string }) => {
+      const sb = createClient()
+      const { data, error } = await sb
+        .from('sinking_funds')
+        .insert({ name, monthly_allocation, user_id, is_active: true })
+        .select().single()
+      if (error) throw error
+      return data
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['sinking_funds'] }),
+  })
+}
+
 export function useAddSinkingTransaction() {
   const qc = useQueryClient()
   return useMutation({

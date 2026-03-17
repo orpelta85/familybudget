@@ -2,7 +2,7 @@
 
 import { useUser } from '@/lib/queries/useUser'
 import { usePeriods } from '@/lib/queries/usePeriods'
-import { useSinkingFunds, useAllSinkingTransactions, useAddSinkingTransaction, useUpdateSinkingFund } from '@/lib/queries/useSinking'
+import { useSinkingFunds, useAllSinkingTransactions, useAddSinkingTransaction, useUpdateSinkingFund, useAddSinkingFund } from '@/lib/queries/useSinking'
 import { formatCurrency } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -18,6 +18,8 @@ export default function SinkingPage() {
   const addTxn = useAddSinkingTransaction()
 
   const updateFund = useUpdateSinkingFund()
+  const addFund = useAddSinkingFund()
+  const [newFund, setNewFund] = useState<{ name: string; annual: string } | null>(null)
   const [modal, setModal] = useState<{ fundId: number; type: 'add' | 'use' | 'personal' | 'shared' } | null>(null)
   const [txAmount, setTxAmount] = useState('')
   const [txDesc, setTxDesc] = useState('')
@@ -62,6 +64,17 @@ export default function SinkingPage() {
     } catch { toast.error('שגיאה') }
   }
 
+  async function handleAddFund() {
+    if (!newFund || !user) return
+    const annual = Number(newFund.annual)
+    if (!newFund.name.trim() || !annual || annual <= 0) return
+    try {
+      await addFund.mutateAsync({ name: newFund.name.trim(), monthly_allocation: Math.round(annual / 12), user_id: user.id })
+      toast.success('קרן נוספה!')
+      setNewFund(null)
+    } catch { toast.error('שגיאה בהוספה') }
+  }
+
   async function handleEditFund() {
     if (!editFund) return
     const annual = Number(editFund.annual)
@@ -76,9 +89,17 @@ export default function SinkingPage() {
 
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-        <Target size={18} style={{ color: 'oklch(0.70 0.15 185)' }} />
-        <h1 style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em' }}>קרנות צבירה</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Target size={18} style={{ color: 'oklch(0.70 0.15 185)' }} />
+          <h1 style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em' }}>קרנות צבירה</h1>
+        </div>
+        <button
+          onClick={() => setNewFund({ name: '', annual: '' })}
+          style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'oklch(0.20 0.04 185)', border: '1px solid oklch(0.32 0.08 185)', borderRadius: 8, padding: '7px 14px', color: 'oklch(0.70 0.15 185)', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}
+        >
+          <Plus size={13} /> קרן חדשה
+        </button>
       </div>
       <p style={{ color: 'oklch(0.55 0.01 250)', fontSize: 13, marginBottom: 20 }}>
         יתרה כוללת: <span style={{ direction: 'ltr', display: 'inline-block', fontWeight: 600, color: 'oklch(0.70 0.15 185)' }}>{formatCurrency(totalBalance)}</span>
@@ -250,6 +271,52 @@ export default function SinkingPage() {
               <button onClick={handleTxn} disabled={addTxn.isPending}
                 style={{ background: modal.type === 'add' ? 'oklch(0.70 0.15 185)' : modal.type === 'shared' ? 'oklch(0.72 0.18 320)' : 'oklch(0.72 0.18 55)', border: 'none', borderRadius: 8, padding: '11px 0', fontWeight: 600, fontSize: 14, color: 'oklch(0.10 0.01 250)', cursor: 'pointer' }}>
                 {addTxn.isPending ? '...' : modal.type === 'add' ? 'רשום הפקדה' : 'רשום הוצאה'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Add new fund modal ── */}
+      {newFund && (
+        <div style={{ position: 'fixed', inset: 0, background: 'oklch(0 0 0 / 0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
+          <div style={{ background: 'oklch(0.18 0.01 250)', border: '1px solid oklch(0.28 0.01 250)', borderRadius: 14, padding: 28, width: 340 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <span style={{ fontWeight: 600, fontSize: 15 }}>קרן חדשה</span>
+              <button onClick={() => setNewFund(null)} style={{ background: 'none', border: 'none', color: 'oklch(0.55 0.01 250)', cursor: 'pointer' }}><X size={18} /></button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div>
+                <label style={{ fontSize: 12, color: 'oklch(0.60 0.01 250)', display: 'block', marginBottom: 5 }}>שם הקרן</label>
+                <input
+                  type="text" autoFocus
+                  value={newFund.name}
+                  onChange={e => setNewFund(f => f && ({ ...f, name: e.target.value }))}
+                  placeholder="למשל: טיולים, חתונה, מחשב..."
+                  style={{ width: '100%', background: 'oklch(0.22 0.01 250)', border: '1px solid oklch(0.28 0.01 250)', borderRadius: 8, padding: '9px 12px', color: 'inherit', fontSize: 14 }}
+                />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, color: 'oklch(0.60 0.01 250)', display: 'block', marginBottom: 5 }}>יעד שנתי (₪) — כמה תוציא בשנה?</label>
+                <input
+                  type="number"
+                  value={newFund.annual}
+                  onChange={e => setNewFund(f => f && ({ ...f, annual: e.target.value }))}
+                  placeholder="0" min="0"
+                  style={{ width: '100%', background: 'oklch(0.22 0.01 250)', border: '1px solid oklch(0.28 0.01 250)', borderRadius: 8, padding: '9px 12px', color: 'inherit', fontSize: 15, direction: 'ltr', textAlign: 'right' }}
+                />
+              </div>
+              {newFund.annual && Number(newFund.annual) > 0 && (
+                <div style={{ background: 'oklch(0.20 0.02 185)', borderRadius: 8, padding: '10px 14px', fontSize: 13, color: 'oklch(0.70 0.15 185)', direction: 'ltr', textAlign: 'left' }}>
+                  ≈ {formatCurrency(Math.round(Number(newFund.annual) / 12))} / חודש להפקיד
+                </div>
+              )}
+              <button
+                onClick={handleAddFund}
+                disabled={addFund.isPending || !newFund.name.trim() || !Number(newFund.annual)}
+                style={{ background: 'oklch(0.70 0.15 185)', border: 'none', borderRadius: 8, padding: '11px 0', fontWeight: 600, fontSize: 14, color: 'oklch(0.10 0.01 250)', cursor: 'pointer', opacity: (addFund.isPending || !newFund.name.trim() || !Number(newFund.annual)) ? 0.5 : 1 }}
+              >
+                {addFund.isPending ? '...' : 'הוסף קרן'}
               </button>
             </div>
           </div>
