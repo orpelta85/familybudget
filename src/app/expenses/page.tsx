@@ -6,6 +6,7 @@ import { usePersonalExpenses, useBudgetCategories, useAddExpense, useDeleteExpen
 import { useSharedExpenses, useUpsertSharedExpense, useDeleteSharedExpense } from '@/lib/queries/useShared'
 import { useSinkingFunds } from '@/lib/queries/useSinking'
 import { formatCurrency } from '@/lib/utils'
+import { useSharedPeriod } from '@/lib/context/PeriodContext'
 import { parseExpenseExcel, createExpenseTemplate } from '@/lib/excel-import'
 import { useRecurringPersonal, useRecurringShared, personalItemId } from '@/lib/hooks/useRecurring'
 import { useRouter } from 'next/navigation'
