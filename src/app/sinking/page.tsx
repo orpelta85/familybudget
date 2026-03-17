@@ -94,29 +94,60 @@ export default function SinkingPage() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 16 }}>
             {funds.map(fund => {
               const balance = getFundBalance(fund.id, fund.monthly_allocation)
+              const annualTarget = fund.monthly_allocation * 12
+              const pct = annualTarget > 0 ? Math.min((balance / annualTarget) * 100, 100) : 0
+              const remaining = annualTarget - balance
+              const funded = balance >= annualTarget
               const txns = allTxns?.filter(t => t.fund_id === fund.id) ?? []
               const lastTxn = txns[0]
 
               return (
                 <div key={fund.id} style={card}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 14 }}>
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600, fontSize: 14, marginBottom: 3 }}>
-                        {fund.name}
-                        <button onClick={() => setEditFund({ id: fund.id, name: fund.name, annual: String(fund.monthly_allocation * 12) })}
-                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'oklch(0.50 0.01 250)', padding: 0, display: 'flex' }}>
-                          <Pencil size={11} />
-                        </button>
-                      </div>
-                      <div style={{ fontSize: 12, color: 'oklch(0.55 0.01 250)' }}>
-                        {formatCurrency(fund.monthly_allocation * 12)} / שנה
-                        <span style={{ margin: '0 6px', opacity: 0.4 }}>·</span>
-                        {formatCurrency(fund.monthly_allocation)} / חודש
-                      </div>
+                  {/* Header */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600, fontSize: 14 }}>
+                      {fund.name}
+                      <button onClick={() => setEditFund({ id: fund.id, name: fund.name, annual: String(annualTarget) })}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'oklch(0.50 0.01 250)', padding: 0, display: 'flex' }}>
+                        <Pencil size={11} />
+                      </button>
                     </div>
-                    <div style={{ fontSize: 22, fontWeight: 700, direction: 'ltr', color: balance >= 0 ? 'oklch(0.70 0.15 185)' : 'oklch(0.62 0.22 27)' }}>
-                      {formatCurrency(balance)}
+                    <div style={{ fontSize: 11, color: 'oklch(0.55 0.01 250)', textAlign: 'left', direction: 'ltr' }}>
+                      יעד שנתי: {formatCurrency(annualTarget)}
                     </div>
+                  </div>
+
+                  {/* Balance row */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 10 }}>
+                    <span style={{ fontSize: 11, color: 'oklch(0.55 0.01 250)' }}>צבור</span>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, direction: 'ltr' }}>
+                      <span style={{ fontSize: 22, fontWeight: 700, color: funded ? 'oklch(0.70 0.18 145)' : balance > 0 ? 'oklch(0.70 0.15 185)' : 'oklch(0.62 0.22 27)' }}>
+                        {formatCurrency(balance)}
+                      </span>
+                      <span style={{ fontSize: 12, color: 'oklch(0.50 0.01 250)' }}>/ {formatCurrency(annualTarget)}</span>
+                    </div>
+                  </div>
+
+                  {/* Progress bar */}
+                  <div style={{ marginBottom: 8 }}>
+                    <div style={{ height: 6, borderRadius: 3, background: 'oklch(0.22 0.01 250)', overflow: 'hidden' }}>
+                      <div style={{
+                        height: '100%', borderRadius: 3,
+                        width: `${Math.max(0, pct)}%`,
+                        background: funded ? 'oklch(0.70 0.18 145)' : pct >= 70 ? 'oklch(0.70 0.15 185)' : 'oklch(0.55 0.10 185)',
+                        transition: 'width 0.4s ease',
+                      }} />
+                    </div>
+                  </div>
+
+                  {/* Status */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: lastTxn ? 10 : 14 }}>
+                    <span style={{ color: funded ? 'oklch(0.70 0.18 145)' : 'oklch(0.55 0.01 250)' }}>
+                      {funded ? '✓ ממומן מלא' : `נותר ${formatCurrency(Math.max(0, remaining))}`}
+                    </span>
+                    <span style={{ color: 'oklch(0.60 0.01 250)', direction: 'ltr' }}>
+                      {pct.toFixed(0)}%
+                    </span>
                   </div>
 
                   {lastTxn && (
@@ -161,13 +192,15 @@ export default function SinkingPage() {
                   style={{ width: '100%', background: 'oklch(0.22 0.01 250)', border: '1px solid oklch(0.28 0.01 250)', borderRadius: 8, padding: '9px 12px', color: 'inherit', fontSize: 14 }} />
               </div>
               <div>
-                <label style={{ fontSize: 12, color: 'oklch(0.60 0.01 250)', display: 'block', marginBottom: 5 }}>יעד שנתי (₪)</label>
+                <label style={{ fontSize: 12, color: 'oklch(0.60 0.01 250)', display: 'block', marginBottom: 5 }}>
+                  יעד שנתי (₪) — כמה תוציא על זה בשנה?
+                </label>
                 <input type="number" value={editFund.annual} onChange={e => setEditFund(f => f && ({ ...f, annual: e.target.value }))} placeholder="0" min="0"
                   style={{ width: '100%', background: 'oklch(0.22 0.01 250)', border: '1px solid oklch(0.28 0.01 250)', borderRadius: 8, padding: '9px 12px', color: 'inherit', fontSize: 15, direction: 'ltr', textAlign: 'right' }} />
               </div>
               {editFund.annual && Number(editFund.annual) > 0 && (
-                <div style={{ background: 'oklch(0.20 0.02 185)', borderRadius: 8, padding: '10px 14px', fontSize: 13, color: 'oklch(0.70 0.15 185)' }}>
-                  = {formatCurrency(Math.round(Number(editFund.annual) / 12))} לחודש
+                <div style={{ background: 'oklch(0.20 0.02 185)', borderRadius: 8, padding: '10px 14px', fontSize: 13, color: 'oklch(0.70 0.15 185)', direction: 'ltr', textAlign: 'left' }}>
+                  ≈ {formatCurrency(Math.round(Number(editFund.annual) / 12))} / חודש להפקיד
                 </div>
               )}
               <button onClick={handleEditFund} disabled={updateFund.isPending}
