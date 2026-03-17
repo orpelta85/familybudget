@@ -72,6 +72,22 @@ export function useAddSinkingFund() {
   })
 }
 
+export function useDeleteSinkingFund() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const sb = createClient()
+      // soft delete — mark inactive so transactions history is preserved
+      const { error } = await sb.from('sinking_funds').update({ is_active: false }).eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['sinking_funds'] })
+      qc.invalidateQueries({ queryKey: ['all_sinking_transactions'] })
+    },
+  })
+}
+
 export function useAddSinkingTransaction() {
   const qc = useQueryClient()
   return useMutation({

@@ -2,12 +2,12 @@
 
 import { useUser } from '@/lib/queries/useUser'
 import { usePeriods } from '@/lib/queries/usePeriods'
-import { useSinkingFunds, useAllSinkingTransactions, useAddSinkingTransaction, useUpdateSinkingFund, useAddSinkingFund } from '@/lib/queries/useSinking'
+import { useSinkingFunds, useAllSinkingTransactions, useAddSinkingTransaction, useUpdateSinkingFund, useAddSinkingFund, useDeleteSinkingFund } from '@/lib/queries/useSinking'
 import { formatCurrency } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { Target, Plus, X, Pencil, Users, User } from 'lucide-react'
+import { Target, Plus, X, Pencil, Users, User, Trash2 } from 'lucide-react'
 
 // ── Fund type (personal / shared) stored in localStorage ─────────────────────
 function getFundMeta(userId: string): Record<string, boolean> {
@@ -47,6 +47,7 @@ export default function SinkingPage() {
   const addTxn = useAddSinkingTransaction()
   const updateFund = useUpdateSinkingFund()
   const addFund = useAddSinkingFund()
+  const deleteFund = useDeleteSinkingFund()
 
   // Fund create / edit
   const [newFund, setNewFund] = useState<FundForm | null>(null)
@@ -82,10 +83,18 @@ export default function SinkingPage() {
     return deposits - withdrawals
   }
 
+  async function handleDeleteFund(id: number, name: string) {
+    if (!confirm(`למחוק את קרן "${name}"? הפעולה לא תמחק את היסטוריית העסקאות.`)) return
+    try {
+      await deleteFund.mutateAsync(id)
+      toast.success('קרן נמחקה')
+    } catch { toast.error('שגיאה במחיקה') }
+  }
+
   async function handleAddFund() {
     if (!newFund || !user) return
     const total = Number(newFund.totalAnnual)
-    if (!newFund.name.trim() || !total || total <= 0) return
+    if (!newFund.name.trim() || total < 0) return
     const monthly = newFund.isShared ? Math.round(total / 12 / 2) : Math.round(total / 12)
     try {
       const created = await addFund.mutateAsync({ name: newFund.name.trim(), monthly_allocation: monthly, user_id: user.id })
@@ -101,7 +110,7 @@ export default function SinkingPage() {
   async function handleEditFund() {
     if (!editFund || !user) return
     const total = Number(editFund.totalAnnual)
-    if (!total || total <= 0) return
+    if (total < 0) return
     const monthly = editFund.isShared ? Math.round(total / 12 / 2) : Math.round(total / 12)
     await updateFund.mutateAsync({ id: editFund.id, name: editFund.name, monthly_allocation: monthly })
     setFundShared(user.id, editFund.id, editFund.isShared)
@@ -219,6 +228,12 @@ export default function SinkingPage() {
                       >
                         <Pencil size={12} />
                       </button>
+                      <button
+                        onClick={() => handleDeleteFund(fund.id, fund.name)}
+                        style={{ display: 'flex', alignItems: 'center', background: 'oklch(0.18 0.03 15)', border: '1px solid oklch(0.28 0.06 15)', borderRadius: 7, padding: '6px 10px', color: 'oklch(0.60 0.18 15)', fontSize: 12, cursor: 'pointer' }}
+                      >
+                        <Trash2 size={12} />
+                      </button>
                     </div>
                   </div>
 
@@ -244,8 +259,8 @@ export default function SinkingPage() {
             <FundFormFields form={newFund} onChange={setNewFund} />
             <button
               onClick={handleAddFund}
-              disabled={addFund.isPending || !newFund.name.trim() || !Number(newFund.totalAnnual)}
-              style={primaryBtn(addFund.isPending || !newFund.name.trim() || !Number(newFund.totalAnnual))}
+              disabled={addFund.isPending || !newFund.name.trim() || Number(newFund.totalAnnual) < 0}
+              style={primaryBtn(addFund.isPending || !newFund.name.trim() || Number(newFund.totalAnnual) < 0)}
             >
               {addFund.isPending ? '...' : 'הוסף קרן'}
             </button>
@@ -261,8 +276,8 @@ export default function SinkingPage() {
             <FundFormFields form={editFund} onChange={f => setEditFund(prev => prev && { ...prev, ...f })} />
             <button
               onClick={handleEditFund}
-              disabled={updateFund.isPending || !editFund.name.trim() || !Number(editFund.totalAnnual)}
-              style={primaryBtn(updateFund.isPending || !editFund.name.trim() || !Number(editFund.totalAnnual))}
+              disabled={updateFund.isPending || !editFund.name.trim() || Number(editFund.totalAnnual) < 0}
+              style={primaryBtn(updateFund.isPending || !editFund.name.trim() || Number(editFund.totalAnnual) < 0)}
             >
               {updateFund.isPending ? '...' : 'שמור'}
             </button>
@@ -347,9 +362,9 @@ function FundFormFields({ form, onChange }: { form: FundForm; onChange: (f: Fund
       </div>
       <div>
         <label style={labelStyle}>יעד שנתי כולל (₪) — כמה תוציאו על זה בשנה?</label>
-        <input type="number" value={form.totalAnnual}
-          onChange={e => onChange({ ...form, totalAnnual: e.target.value })}
-          placeholder="0" min="0"
+        <input type="text" inputMode="numeric" value={form.totalAnnual}
+          onChange={e => onChange({ ...form, totalAnnual: e.target.value.replace(/[^\d]/g, '') })}
+          placeholder="0"
           style={{ ...inputBase, direction: 'ltr', textAlign: 'right', fontSize: 16 }} />
       </div>
       {/* Personal / Shared toggle */}
