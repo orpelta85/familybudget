@@ -1,0 +1,90 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { createClient } from '@/lib/supabase/client'
+import type { PersonalExpense, BudgetCategory } from '@/lib/types'
+
+export function usePersonalExpenses(periodId: number | undefined, userId: string | undefined) {
+  return useQuery<PersonalExpense[]>({
+    queryKey: ['personal_expenses', periodId, userId],
+    enabled: !!periodId && !!userId,
+    queryFn: async () => {
+      const sb = createClient()
+      const { data, error } = await sb
+        .from('personal_expenses')
+        .select('*, budget_categories(*)')
+        .eq('period_id', periodId!)
+        .eq('user_id', userId!)
+        .order('created_at', { ascending: false })
+      if (error) throw error
+      return data
+    },
+  })
+}
+
+export function useBudgetCategories(userId: string | undefined) {
+  return useQuery<BudgetCategory[]>({
+    queryKey: ['budget_categories', userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const sb = createClient()
+      const { data, error } = await sb
+        .from('budget_categories')
+        .select('*')
+        .eq('user_id', userId!)
+        .eq('is_active', true)
+        .order('sort_order')
+      if (error) throw error
+      return data
+    },
+  })
+}
+
+export function useAllPersonalExpenses(userId: string | undefined) {
+  return useQuery<PersonalExpense[]>({
+    queryKey: ['all_personal_expenses', userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const sb = createClient()
+      const { data, error } = await sb
+        .from('personal_expenses')
+        .select('*, budget_categories(*)')
+        .eq('user_id', userId!)
+        .order('period_id')
+      if (error) throw error
+      return data
+    },
+  })
+}
+
+export function useAddExpense() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (expense: Omit<PersonalExpense, 'id' | 'budget_categories'>) => {
+      const sb = createClient()
+      const { data, error } = await sb
+        .from('personal_expenses')
+        .insert(expense)
+        .select('*, budget_categories(*)')
+        .single()
+      if (error) throw error
+      return data
+    },
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: ['personal_expenses', vars.period_id, vars.user_id] })
+    },
+  })
+}
+
+export function useDeleteExpense() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, period_id, user_id }: { id: number; period_id: number; user_id: string }) => {
+      const sb = createClient()
+      const { error } = await sb.from('personal_expenses').delete().eq('id', id)
+      if (error) throw error
+      return { period_id, user_id }
+    },
+    onSuccess: ({ period_id, user_id }) => {
+      qc.invalidateQueries({ queryKey: ['personal_expenses', period_id, user_id] })
+    },
+  })
+}
