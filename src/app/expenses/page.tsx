@@ -4,7 +4,7 @@ import { useUser } from '@/lib/queries/useUser'
 import { usePeriods, useCurrentPeriod } from '@/lib/queries/usePeriods'
 import { usePersonalExpenses, useBudgetCategories, useAddExpense, useDeleteExpense } from '@/lib/queries/useExpenses'
 import { useSharedExpenses, useUpsertSharedExpense, useDeleteSharedExpense } from '@/lib/queries/useShared'
-import { useSinkingFunds } from '@/lib/queries/useSinking'
+import { useSinkingFunds, useAddSinkingTransaction } from '@/lib/queries/useSinking'
 import { formatCurrency } from '@/lib/utils'
 import { useSharedPeriod } from '@/lib/context/PeriodContext'
 import { parseExpenseExcel, createExpenseTemplate } from '@/lib/excel-import'
@@ -63,6 +63,7 @@ export default function ExpensesPage() {
   const deleteExpense = useDeleteExpense()
   const upsertShared  = useUpsertSharedExpense()
   const deleteShared  = useDeleteSharedExpense()
+  const addSinkingTx  = useAddSinkingTransaction()
   const recurringPersonal = useRecurringPersonal(user?.id)
   const recurringShared   = useRecurringShared(user?.id)
 
@@ -138,7 +139,10 @@ export default function ExpensesPage() {
   }
 
   function downloadTemplate() {
-    const blob = createExpenseTemplate(categories?.map(c => c.name) ?? [])
+    const blob = createExpenseTemplate(
+      categories?.map(c => c.name) ?? [],
+      funds?.map(f => f.name) ?? []
+    )
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a'); a.href = url; a.download = 'תבנית_הוצאות.xlsx'; a.click()
     URL.revokeObjectURL(url)
@@ -149,11 +153,32 @@ export default function ExpensesPage() {
     const valid = importRows.filter(r => r.categoryId && r.amount > 0)
     if (!valid.length) { toast.error('לא נבחרו קטגוריות'); return }
     try {
-      await Promise.all(valid.map(r => addExpense.mutateAsync({
-        period_id: selectedPeriodId, user_id: user.id,
-        category_id: Number(r.categoryId), amount: r.amount,
-        description: r.description, expense_date: new Date().toISOString().split('T')[0],
-      })))
+      const today = new Date().toISOString().split('T')[0]
+      await Promise.all(valid.map(async r => {
+        // שמור כהוצאה אישית או משותפת
+        if (r.is_shared) {
+          await upsertShared.mutateAsync({
+            period_id: selectedPeriodId, category: `u_${Date.now()}` as any,
+            total_amount: r.amount, notes: r.description,
+          })
+        } else {
+          await addExpense.mutateAsync({
+            period_id: selectedPeriodId, user_id: user.id,
+            category_id: Number(r.categoryId), amount: r.amount,
+            description: r.description, expense_date: today,
+          })
+        }
+        // אם צוינה קרן — גם הוצאה מהקרן (סכום שלילי)
+        if (r.fund_name) {
+          const fund = (funds ?? []).find(f => f.name === r.fund_name)
+          if (fund) {
+            await addSinkingTx.mutateAsync({
+              fund_id: fund.id, period_id: selectedPeriodId,
+              amount: -r.amount, description: r.description, transaction_date: today,
+            })
+          }
+        }
+      }))
       toast.success(`יובאו ${valid.length} הוצאות`)
       setShowImport(false); setImportRows([])
     } catch { toast.error('שגיאה בייבוא') }
