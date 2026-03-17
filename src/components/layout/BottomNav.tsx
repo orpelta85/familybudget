@@ -7,7 +7,6 @@ import { LayoutDashboard, Receipt, Users, Home, BarChart3 } from 'lucide-react'
 const nav = [
   { href: '/',          label: 'דשבורד',  icon: LayoutDashboard },
   { href: '/expenses',  label: 'הוצאות',  icon: Receipt },
-  { href: '/shared',    label: 'משותף',   icon: Users },
   { href: '/apartment', label: 'דירה',    icon: Home },
   { href: '/analytics', label: 'שנתי',    icon: BarChart3 },
 ]
