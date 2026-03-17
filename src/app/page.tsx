@@ -63,6 +63,34 @@ export default function Dashboard() {
   const { data: funds } = useSinkingFunds(user?.id)
   const { data: allSinkingTx } = useAllSinkingTransactions(user?.id)
 
+  // ── 3-month rolling average (must be before early returns) ────────────────
+  const avgByCat = useMemo(() => {
+    if (!allExpenses || !periods || !selectedPeriodId) return {} as Record<number, number>
+    const idx = periods.findIndex(p => p.id === selectedPeriodId)
+    const prev = periods.slice(Math.max(0, idx - 3), idx)
+    if (prev.length === 0) return {} as Record<number, number>
+    const prevIds = new Set(prev.map(p => p.id))
+    const sums: Record<number, number> = {}
+    allExpenses.forEach(e => {
+      if (prevIds.has(e.period_id)) sums[e.category_id] = (sums[e.category_id] ?? 0) + e.amount
+    })
+    const result: Record<number, number> = {}
+    Object.keys(sums).forEach(k => { result[Number(k)] = sums[Number(k)] / prev.length })
+    return result
+  }, [allExpenses, periods, selectedPeriodId])
+
+  // ── Year-over-year (must be before early returns) ─────────────────────────
+  const yearAgoPeriodId = useMemo(() => {
+    if (!periods || !selectedPeriodId) return undefined
+    const idx = periods.findIndex(p => p.id === selectedPeriodId)
+    return idx >= 12 ? periods[idx - 12]?.id : undefined
+  }, [periods, selectedPeriodId])
+
+  const yearAgoExpenses = useMemo(() => {
+    if (!allExpenses || !yearAgoPeriodId) return 0
+    return allExpenses.filter(e => e.period_id === yearAgoPeriodId).reduce((s, e) => s + e.amount, 0)
+  }, [allExpenses, yearAgoPeriodId])
+
   if (userLoading || setupLoading) return (
     <div style={{ padding: 40, color: 'oklch(0.55 0.01 250)', fontSize: 14 }}>טוען...</div>
   )
@@ -83,22 +111,6 @@ export default function Dashboard() {
     return acc
   }, {})
 
-  // ── 3-month rolling average ───────────────────────────────────────────────
-  const avgByCat = useMemo(() => {
-    if (!allExpenses || !periods || !selectedPeriodId) return {} as Record<number, number>
-    const idx = periods.findIndex(p => p.id === selectedPeriodId)
-    const prev = periods.slice(Math.max(0, idx - 3), idx)
-    if (prev.length === 0) return {} as Record<number, number>
-    const prevIds = new Set(prev.map(p => p.id))
-    const sums: Record<number, number> = {}
-    allExpenses.forEach(e => {
-      if (prevIds.has(e.period_id)) sums[e.category_id] = (sums[e.category_id] ?? 0) + e.amount
-    })
-    const result: Record<number, number> = {}
-    Object.keys(sums).forEach(k => { result[Number(k)] = sums[Number(k)] / prev.length })
-    return result
-  }, [allExpenses, periods, selectedPeriodId])
-
   // ── Forecast ──────────────────────────────────────────────────────────────
   const fixedTargets = (categories ?? []).filter(c => c.type === 'fixed').reduce((s, c) => s + c.monthly_target, 0)
   const variableCats = (categories ?? []).filter(c => c.type === 'variable')
@@ -108,18 +120,8 @@ export default function Dashboard() {
   const safeToSpend = totalIncome - fixedTargets - totalShared - variableSpent
 
   // ── Year-over-year ────────────────────────────────────────────────────────
-  const yearAgoPeriodId = useMemo(() => {
-    if (!periods || !selectedPeriodId) return undefined
-    const idx = periods.findIndex(p => p.id === selectedPeriodId)
-    return idx >= 12 ? periods[idx - 12]?.id : undefined
-  }, [periods, selectedPeriodId])
-
   const yearAgoIncome = allIncome?.find(i => i.period_id === yearAgoPeriodId)
   const yearAgoTotalIncome = yearAgoIncome ? yearAgoIncome.salary + yearAgoIncome.bonus + yearAgoIncome.other : null
-  const yearAgoExpenses = useMemo(() => {
-    if (!allExpenses || !yearAgoPeriodId) return 0
-    return allExpenses.filter(e => e.period_id === yearAgoPeriodId).reduce((s, e) => s + e.amount, 0)
-  }, [allExpenses, yearAgoPeriodId])
   const yearAgoPeriod = periods?.find(p => p.id === yearAgoPeriodId)
 
   // ── Donut data ─────────────────────────────────────────────────────────────
