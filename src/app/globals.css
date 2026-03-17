@@ -101,6 +101,34 @@
   }
 }
 
+/* Responsive grids */
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+  margin-bottom: 14px;
+}
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 14px;
+}
+.grid-kpi {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+@media (max-width: 768px) {
+  .grid-2, .grid-3 {
+    grid-template-columns: 1fr !important;
+  }
+  .grid-kpi {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
 /* Number/currency — always LTR */
 .ltr { direction: ltr; unicode-bidi: embed; }
 

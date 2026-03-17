@@ -9,6 +9,27 @@ import { useEffect, useState } from 'react'
 import { BarChart3 } from 'lucide-react'
 import { toast } from 'sonner'
 
+const THRESHOLD_OPTIONS = [70, 80, 90, 100]
+
+function useThresholds(userId: string | undefined) {
+  const key = userId ? `thresholds_${userId}` : null
+  function get(catId: number): number {
+    if (!key || typeof window === 'undefined') return 90
+    try {
+      const stored = JSON.parse(localStorage.getItem(key) ?? '{}')
+      return stored[catId] ?? 90
+    } catch { return 90 }
+  }
+  function set(catId: number, pct: number) {
+    if (!key) return
+    try {
+      const stored = JSON.parse(localStorage.getItem(key) ?? '{}')
+      localStorage.setItem(key, JSON.stringify({ ...stored, [catId]: pct }))
+    } catch { /* ignore */ }
+  }
+  return { get, set }
+}
+
 const TYPE_LABELS: Record<string, { label: string; color: string }> = {
   fixed:    { label: 'קבועות',       color: 'oklch(0.65 0.18 250)' },
   variable: { label: 'משתנות',      color: 'oklch(0.72 0.18 55)' },
@@ -24,6 +45,8 @@ export default function BudgetPage() {
 
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editValue, setEditValue] = useState('')
+  const [, forceUpdate] = useState(0)
+  const thresholds = useThresholds(user?.id)
 
   useEffect(() => {
     if (!loading && !user) router.push('/login')
@@ -68,7 +91,7 @@ export default function BudgetPage() {
         {currentPeriod?.label ?? '...'} · לחץ על יעד כדי לערוך
       </p>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14, marginBottom: 20 }}>
+      <div className="grid-3" style={{ marginBottom: 20 }}>
         {[
           { label: 'תקציב כולל', value: formatCurrency(totalBudget), color: 'oklch(0.65 0.18 250)' },
           { label: 'בוצע עד כה', value: formatCurrency(totalSpent), color: 'oklch(0.72 0.18 55)' },
@@ -110,8 +133,10 @@ export default function BudgetPage() {
               {cats.map(cat => {
                 const spent = spendByCat[cat.id] ?? 0
                 const pct = cat.monthly_target > 0 ? spent / cat.monthly_target : 0
-                const barColor = pct > 1 ? 'oklch(0.62 0.22 27)' : pct > 0.9 ? 'oklch(0.72 0.18 55)' : meta.color
                 const isEditing = editingId === cat.id
+                const threshold = thresholds.get(cat.id)
+                const alertPct = pct * 100
+                const barColor = pct > 1 ? 'oklch(0.62 0.22 27)' : alertPct >= threshold ? 'oklch(0.72 0.18 55)' : meta.color
 
                 return (
                   <div key={cat.id} style={{ marginBottom: 12 }}>
@@ -141,8 +166,20 @@ export default function BudgetPage() {
                         )}
                       </div>
                     </div>
-                    <div style={{ height: 5, borderRadius: 3, background: 'oklch(0.22 0.01 250)', overflow: 'hidden' }}>
-                      <div style={{ height: '100%', borderRadius: 3, width: `${Math.min(pct * 100, 100)}%`, background: barColor, transition: 'width 0.4s ease' }} />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ flex: 1, height: 5, borderRadius: 3, background: 'oklch(0.22 0.01 250)', overflow: 'hidden', position: 'relative' }}>
+                        <div style={{ height: '100%', borderRadius: 3, width: `${Math.min(pct * 100, 100)}%`, background: barColor, transition: 'width 0.4s ease' }} />
+                        {/* threshold marker */}
+                        <div style={{ position: 'absolute', top: 0, bottom: 0, left: `${threshold}%`, width: 1, background: 'oklch(0.45 0.01 250)', opacity: 0.6 }} />
+                      </div>
+                      <select
+                        value={threshold}
+                        onChange={e => { thresholds.set(cat.id, Number(e.target.value)); forceUpdate(n => n + 1) }}
+                        title="סף התראה"
+                        style={{ fontSize: 10, background: 'oklch(0.20 0.01 250)', border: '1px solid oklch(0.28 0.01 250)', borderRadius: 4, color: 'oklch(0.55 0.01 250)', padding: '1px 2px', cursor: 'pointer' }}
+                      >
+                        {THRESHOLD_OPTIONS.map(t => <option key={t} value={t}>{t}%</option>)}
+                      </select>
                     </div>
                   </div>
                 )

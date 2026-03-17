@@ -1,6 +1,7 @@
 'use client'
 
 import type { Period } from '@/lib/types'
+import { periodLabel } from '@/lib/utils'
 
 interface Props {
   periods: Period[]
@@ -26,7 +27,7 @@ export function PeriodSelector({ periods, selectedId, onChange }: Props) {
         }}
       >
         {periods.map(p => (
-          <option key={p.id} value={p.id}>{p.label}</option>
+          <option key={p.id} value={p.id}>{periodLabel(p.start_date)}</option>
         ))}
       </select>
     </div>
