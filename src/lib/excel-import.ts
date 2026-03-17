@@ -48,6 +48,7 @@ export interface RawExpenseRow {
   description: string
   amount: number
   category?: string
+  is_shared?: boolean
 }
 
 // פירוט אשראי ישראלי — מנסה לזהות עמודות שונות
@@ -70,13 +71,20 @@ export function parseExpenseExcel(file: File): Promise<RawExpenseRow[]> {
         const dateKey = keys.find(k => /תאריך|date/i.test(k)) ?? keys[0]
         const descKey = keys.find(k => /עסק|שם|תיאור|description|merchant/i.test(k)) ?? keys[1]
         const amountKey = keys.find(k => /סכום|חיוב|amount|sum/i.test(k)) ?? keys[2]
+        const catKey = keys.find(k => /קטגוריה|category/i.test(k))
+        const typeKey = keys.find(k => /אישי|משותף|סוג|type/i.test(k))
 
         const parsed: RawExpenseRow[] = rows
-          .map(row => ({
-            date: String(row[dateKey] ?? ''),
-            description: String(row[descKey] ?? '').trim(),
-            amount: Math.abs(parseFloat(String(row[amountKey] ?? '0').replace(/[^\d.]/g, '')) || 0),
-          }))
+          .map(row => {
+            const typeVal = typeKey ? String(row[typeKey] ?? '').trim() : ''
+            return {
+              date: String(row[dateKey] ?? ''),
+              description: String(row[descKey] ?? '').trim(),
+              amount: Math.abs(parseFloat(String(row[amountKey] ?? '0').replace(/[^\d.]/g, '')) || 0),
+              category: catKey ? String(row[catKey] ?? '').trim() || undefined : undefined,
+              is_shared: typeVal === 'משותף' || typeVal === 'shared',
+            }
+          })
           .filter(r => r.amount > 0 && r.description)
 
         resolve(parsed)
@@ -88,28 +96,55 @@ export function parseExpenseExcel(file: File): Promise<RawExpenseRow[]> {
   })
 }
 
-// יוצר קובץ Excel תבנית להוצאות עם עמודת קטגוריה
+// יוצר קובץ Excel תבנית להוצאות — הכל בגיליון אחד
 export function createExpenseTemplate(categories: string[]): Blob {
   const wb = XLSX.utils.book_new()
 
-  const headers = ['תאריך', 'תיאור עסק', 'סכום (₪)', 'קטגוריה']
+  // עמודות A-E: נתוני הוצאה | עמודה G: רשימת קטגוריות לעיון
+  const headers = ['תאריך', 'תיאור עסק', 'סכום (₪)', 'קטגוריה', 'אישי / משותף', '', 'קטגוריות זמינות']
   const examples = [
-    ['15/01/2025', 'סופרסל', '250', 'מזון'],
-    ['16/01/2025', 'תחנת דלק', '300', 'דלק'],
-    ['17/01/2025', 'בית קפה', '45', 'קפה/מסעדות'],
+    ['15/01/2025', 'סופרסל', '250', categories[0] ?? 'מזון', 'אישי', '', categories[0] ?? ''],
+    ['16/01/2025', 'תחנת דלק', '300', categories[1] ?? 'דלק', 'אישי', '', categories[1] ?? ''],
+    ['17/01/2025', 'ארוחת צהריים ביחד', '120', categories[2] ?? 'מסעדות', 'משותף', '', categories[2] ?? ''],
   ]
 
-  const ws = XLSX.utils.aoa_to_sheet([headers, ...examples])
+  // שאר הקטגוריות בעמודה G (מהשורה הרביעית)
+  const maxRows = Math.max(examples.length, categories.length)
+  const rows: (string | number)[][] = []
+  for (let i = 0; i < maxRows; i++) {
+    if (i < examples.length) {
+      const row = [...examples[i]]
+      // אם יש קטגוריה נוספת בשורה זו (מעבר לאלו שכבר ב-examples)
+      if (i >= 3 && categories[i]) row[6] = categories[i]
+      rows.push(row)
+    } else {
+      // שורה ריקה עם קטגוריה נוספת רק בעמודה G
+      rows.push(['', '', '', '', '', '', categories[i] ?? ''])
+    }
+  }
 
-  // רוחב עמודות
-  ws['!cols'] = [{ wch: 14 }, { wch: 30 }, { wch: 12 }, { wch: 20 }]
+  // הוסף שאר הקטגוריות שלא נכנסו לדוגמאות
+  for (let i = examples.length; i < categories.length; i++) {
+    rows[i] = rows[i] ?? ['', '', '', '', '', '', '']
+    rows[i][6] = categories[i]
+  }
 
-  // גיליון קטגוריות
-  const catWs = XLSX.utils.aoa_to_sheet([['קטגוריות זמינות'], ...categories.map(c => [c])])
-  catWs['!cols'] = [{ wch: 25 }]
+  const ws = XLSX.utils.aoa_to_sheet([headers, ...rows])
+
+  ws['!cols'] = [
+    { wch: 14 }, // תאריך
+    { wch: 28 }, // תיאור עסק
+    { wch: 12 }, // סכום
+    { wch: 22 }, // קטגוריה
+    { wch: 16 }, // אישי/משותף
+    { wch: 2  }, // רווח
+    { wch: 25 }, // קטגוריות זמינות
+  ]
+
+  // הדגש כותרת עמודה G
+  ws['G1'] = { v: 'קטגוריות זמינות', t: 's' }
 
   XLSX.utils.book_append_sheet(wb, ws, 'הוצאות')
-  XLSX.utils.book_append_sheet(wb, catWs, 'קטגוריות')
 
   const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' })
   return new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
