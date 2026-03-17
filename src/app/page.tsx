@@ -194,7 +194,7 @@ export default function Dashboard() {
       )}
 
       {/* ── KPI cards ──────────────────────────────────────────────────────── */}
-      <div className="grid-kpi">
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(155px, 1fr))', gap: 12, marginBottom: 16 }}>
         {[
           { label: 'הכנסה נטו', value: dataLoading ? '—' : formatCurrency(totalIncome), color: 'oklch(0.65 0.18 250)', Icon: Wallet },
           { label: 'הוצאות החודש', value: dataLoading ? '—' : formatCurrency(totalExpenses), color: 'oklch(0.72 0.18 55)', Icon: Receipt },
@@ -221,7 +221,7 @@ export default function Dashboard() {
       </div>
 
       {/* ── Forecast + Year-over-year ──────────────────────────────────────── */}
-      <div className="grid-2">
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14, marginBottom: 14 }}>
 
         {/* Forecast */}
         <div style={CARD}>
@@ -326,7 +326,7 @@ export default function Dashboard() {
       </div>
 
       {/* ── Budget utilization + Donut ─────────────────────────────────────── */}
-      <div className="grid-2">
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14, marginBottom: 14 }}>
 
         {/* Budget bars */}
         <div style={CARD}>
@@ -400,7 +400,7 @@ export default function Dashboard() {
       </div>
 
       {/* ── Sinking funds + Apartment ──────────────────────────────────────── */}
-      <div className="grid-2" style={{ marginBottom: 0 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14, marginBottom: 0 }}>
 
         {/* Sinking funds */}
         <div style={CARD}>
