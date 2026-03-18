@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest",
+        "--browser", "msedge",
+        "--caps", "core,vision,pdf,devtools",
+        "--user-data-dir", "C:\\Users\\User\\.playwright-mcp-familybudget",
+        "--save-session",
+        "--shared-browser-context",
+        "--ignore-https-errors",
+        "--snapshot-mode", "incremental",
+        "--console-level", "info",
+        "--output-dir", "C:\\Users\\User\\.playwright-output-familybudget",
+        "--image-responses", "allow"
+      ]
+    }
+  }
+}

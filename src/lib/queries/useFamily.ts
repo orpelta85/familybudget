@@ -2,6 +2,33 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import type { Family, FamilyMember } from '@/lib/types'
 
+export interface FamilyMemberSummary {
+  user_id: string
+  display_name: string
+  income: number
+  personal_expenses: number
+  show_details: boolean
+}
+
+export interface FamilySummary {
+  total_income: number
+  total_personal_expenses: number
+  total_shared_expenses: number
+  members: FamilyMemberSummary[]
+}
+
+export function useFamilySummary(periodId: number | undefined, enabled: boolean) {
+  return useQuery<FamilySummary>({
+    queryKey: ['family_summary', periodId],
+    enabled: !!periodId && enabled,
+    queryFn: async () => {
+      const res = await fetch(`/api/family/summary?period_id=${periodId}`)
+      if (!res.ok) throw new Error('Failed to fetch family summary')
+      return res.json()
+    },
+  })
+}
+
 export function useFamily(userId: string | undefined) {
   return useQuery<{ family: Family | null; members: FamilyMember[] }>({
     queryKey: ['family', userId],

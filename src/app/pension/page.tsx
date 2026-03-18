@@ -9,7 +9,7 @@ import { toast } from 'sonner'
 import {
   Upload, ChevronDown, ChevronUp, Shield, Heart, TrendingUp,
   Wallet, Building2, FileText, AlertCircle, Check, X, Clock, PiggyBank,
-  Users, Pencil, FileUp,
+  Users, Pencil, FileUp, Camera,
 } from 'lucide-react'
 import type { PensionReport, PensionProduct, PensionProductType } from '@/lib/types'
 
@@ -118,7 +118,8 @@ export default function PensionPage() {
   const [formSurvivors, setFormSurvivors] = useState('')
   const [formProducts, setFormProducts] = useState<ManualProduct[]>([emptyProduct(1)])
   const [uploadFile, setUploadFile] = useState<File | null>(null)
-  const [uploadMode, setUploadMode] = useState<'manual' | 'pdf'>('manual')
+  const [uploadMode, setUploadMode] = useState<'manual' | 'pdf' | 'image'>('image')
+  const [imageExtracting, setImageExtracting] = useState(false)
 
   useEffect(() => {
     if (!loading && !user) router.push('/login')
@@ -146,8 +147,56 @@ export default function PensionPage() {
     return acc
   }, {} as Record<string, number>)
 
+  const handleImageExtract = async () => {
+    if (!user || !uploadFile) return
+    setImageExtracting(true)
+    try {
+      const fd = new FormData()
+      fd.append('file', uploadFile)
+      const res = await fetch('/api/pension/extract-image', { method: 'POST', body: fd })
+      const json = await res.json()
+      if (!res.ok || json.error) throw new Error(json.error || 'extraction failed')
+
+      const d = json.data
+      // Save extracted data via the existing pension API
+      await uploadMutation.mutateAsync({ userId: user.id, manualData: {
+        report_date: d.report_date || '',
+        advisor_name: d.advisor_name || '',
+        total_savings: d.total_savings || 0,
+        ytd_return: d.ytd_return || 0,
+        total_monthly_deposits: d.total_monthly_deposits || 0,
+        insurance_premium: d.insurance_premium || 0,
+        estimated_pension: d.estimated_pension || 0,
+        disability_coverage: d.disability_coverage || 0,
+        survivors_pension: d.survivors_pension || 0,
+        death_coverage: d.death_coverage || 0,
+        products: (d.products || []).map((p: Record<string, unknown>, i: number) => ({
+          ...p,
+          product_number: p.product_number || i + 1,
+          investment_tracks: [],
+          deposit_history: [],
+          extra_data: {},
+        })),
+        health_coverages: d.health_coverages || [],
+        summary_json: {},
+      }})
+      toast.success('הדוח נקרא ונשמר בהצלחה!')
+      setShowUpload(false)
+      setUploadFile(null)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'שגיאה בקריאת התמונה'
+      toast.error(msg)
+    }
+    setImageExtracting(false)
+  }
+
   const handleSubmitReport = async () => {
     if (!user) return
+
+    if (uploadMode === 'image' && uploadFile) {
+      await handleImageExtract()
+      return
+    }
 
     if (uploadMode === 'pdf' && uploadFile) {
       try {
@@ -561,7 +610,7 @@ export default function PensionPage() {
 
             {/* Mode Toggle */}
             <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
-              {(['manual', 'pdf'] as const).map(mode => (
+              {(['image', 'manual', 'pdf'] as const).map(mode => (
                 <button
                   key={mode}
                   onClick={() => setUploadMode(mode)}
@@ -577,12 +626,61 @@ export default function PensionPage() {
                     fontWeight: 600,
                   }}
                 >
-                  {mode === 'manual' ? <><Pencil size={14} style={{ marginLeft: 6 }} /> הזנה ידנית</> : <><FileUp size={14} style={{ marginLeft: 6 }} /> העלאת PDF</>}
+                  {mode === 'image' ? <><Camera size={14} style={{ marginLeft: 6 }} /> צילום/תמונה</>
+                    : mode === 'manual' ? <><Pencil size={14} style={{ marginLeft: 6 }} /> הזנה ידנית</>
+                    : <><FileUp size={14} style={{ marginLeft: 6 }} /> העלאת PDF</>}
                 </button>
               ))}
             </div>
 
-            {uploadMode === 'pdf' ? (
+            {uploadMode === 'image' ? (
+              /* Image Upload with AI */
+              <div>
+                <div
+                  onClick={() => fileRef.current?.click()}
+                  style={{
+                    border: '2px dashed oklch(0.30 0.05 145)',
+                    borderRadius: 12,
+                    padding: 40,
+                    textAlign: 'center',
+                    cursor: 'pointer',
+                    marginBottom: 16,
+                    background: uploadFile ? 'oklch(0.18 0.03 145)' : 'oklch(0.16 0.01 250)',
+                  }}
+                >
+                  {uploadFile ? (
+                    <>
+                      <Check size={32} style={{ color: 'oklch(0.70 0.18 145)', marginBottom: 8 }} />
+                      <div style={{ fontWeight: 600 }}>{uploadFile.name}</div>
+                      <div style={{ fontSize: 12, color: 'oklch(0.55 0.01 250)', marginTop: 4 }}>
+                        {(uploadFile.size / 1024).toFixed(0)} KB
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <Camera size={32} style={{ color: 'oklch(0.70 0.18 145)', marginBottom: 8 }} />
+                      <div style={{ fontWeight: 600 }}>לחץ לבחירת תמונה של הדוח</div>
+                      <div style={{ fontSize: 12, color: 'oklch(0.50 0.01 250)', marginTop: 4 }}>PNG, JPG — צילום מסך או תמונה מהטלפון</div>
+                    </>
+                  )}
+                </div>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                  onChange={e => setUploadFile(e.target.files?.[0] || null)}
+                />
+                <div style={{ fontSize: 12, color: 'oklch(0.50 0.01 250)', marginBottom: 16 }}>
+                  * AI קורא את הנתונים מהתמונה אוטומטית. וודא שהתמונה חדה וכל הטקסט קריא.
+                </div>
+                {imageExtracting && (
+                  <div style={{ textAlign: 'center', padding: 16, color: 'oklch(0.70 0.18 145)', fontSize: 14 }}>
+                    🔍 קורא את הדוח... נא להמתין
+                  </div>
+                )}
+              </div>
+            ) : uploadMode === 'pdf' ? (
               /* PDF Upload */
               <div>
                 <div
@@ -789,7 +887,7 @@ export default function PensionPage() {
                 fontWeight: 700,
               }}
             >
-              {uploadMutation.isPending ? 'שומר...' : 'שמור דוח'}
+              {imageExtracting ? 'קורא את הדוח...' : uploadMutation.isPending ? 'שומר...' : uploadMode === 'image' ? 'קרא ושמור דוח' : 'שמור דוח'}
             </button>
           </div>
         </div>

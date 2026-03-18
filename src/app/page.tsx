@@ -12,10 +12,11 @@ import { useHasSetup } from '@/lib/queries/useSetup'
 import { formatCurrency, periodLabel } from '@/lib/utils'
 import { useSharedPeriod } from '@/lib/context/PeriodContext'
 import { useFamilyContext } from '@/lib/context/FamilyContext'
+import { useFamilySummary } from '@/lib/queries/useFamily'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useMemo } from 'react'
 import { PeriodSelector } from '@/components/layout/PeriodSelector'
-import { Wallet, Receipt, TrendingUp, PiggyBank, Home, AlertTriangle, CalendarDays } from 'lucide-react'
+import { Wallet, Receipt, TrendingUp, PiggyBank, Home, AlertTriangle, CalendarDays, Users } from 'lucide-react'
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 
 const CARD: React.CSSProperties = {
@@ -44,6 +45,8 @@ export default function Dashboard() {
   const currentPeriod = useCurrentPeriod()
   const { selectedPeriodId, setSelectedPeriodId } = useSharedPeriod()
   const { familyId } = useFamilyContext()
+  const [viewMode, setViewMode] = useState<'personal' | 'family'>('personal')
+  const { data: familySummary } = useFamilySummary(selectedPeriodId, viewMode === 'family')
 
   useEffect(() => {
     if (currentPeriod && !selectedPeriodId) setSelectedPeriodId(currentPeriod.id)
@@ -196,14 +199,59 @@ export default function Dashboard() {
   return (
     <div>
       {/* Header */}
-      <div style={{ marginBottom: 16 }}>
-        <h1 style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em' }}>דשבורד</h1>
-        <p style={{ color: 'oklch(0.60 0.01 250)', fontSize: 14, marginTop: 4 }}>
-          {selectedPeriod ? periodLabel(selectedPeriod.start_date) : '...'}
-        </p>
+      <div style={{ marginBottom: 16, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <h1 style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em' }}>דשבורד</h1>
+          <p style={{ color: 'oklch(0.60 0.01 250)', fontSize: 14, marginTop: 4 }}>
+            {selectedPeriod ? periodLabel(selectedPeriod.start_date) : '...'}
+          </p>
+        </div>
+        {familyId && (
+          <div style={{ display: 'flex', border: '1px solid oklch(0.25 0.01 250)', borderRadius: 8, overflow: 'hidden' }}>
+            {([
+              { key: 'personal' as const, label: 'אישי' },
+              { key: 'family' as const, label: 'משפחתי' },
+            ]).map(opt => (
+              <button
+                key={opt.key}
+                onClick={() => setViewMode(opt.key)}
+                style={{
+                  padding: '6px 16px',
+                  fontSize: 13,
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  border: 'none',
+                  background: viewMode === opt.key ? 'oklch(0.22 0.05 250)' : 'transparent',
+                  color: viewMode === opt.key ? 'oklch(0.90 0.01 250)' : 'oklch(0.55 0.01 250)',
+                  borderRight: opt.key === 'personal' ? '1px solid oklch(0.25 0.01 250)' : 'none',
+                  ...(viewMode === opt.key ? { boxShadow: 'inset 0 0 0 1px oklch(0.45 0.15 250)' } : {}),
+                }}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {periods && <PeriodSelector periods={periods} selectedId={selectedPeriodId} onChange={setSelectedPeriodId} />}
+
+      {/* ── Family View ──────────────────────────────────────────────────── */}
+      {viewMode === 'family' && (
+        <FamilyDashboard
+          summary={familySummary}
+          totalSharedFromPersonal={totalShared}
+          shared={shared}
+          deposits={deposits}
+          APARTMENT_TARGET={APARTMENT_TARGET}
+          totalSaved={totalSaved}
+          apartmentPct={apartmentPct}
+          dataLoading={dataLoading}
+        />
+      )}
+
+      {/* ── Personal View ────────────────────────────────────────────────── */}
+      {viewMode === 'personal' && <>
 
       {/* ── Alert bar ──────────────────────────────────────────────────────── */}
       {showAlert && (
@@ -536,6 +584,149 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+
+      </>}
     </div>
+  )
+}
+
+// ── Family Dashboard Component ──────────────────────────────────────────────
+function FamilyDashboard({
+  summary,
+  totalSharedFromPersonal,
+  shared,
+  deposits,
+  APARTMENT_TARGET,
+  totalSaved,
+  apartmentPct,
+  dataLoading,
+}: {
+  summary: import('@/lib/queries/useFamily').FamilySummary | undefined
+  totalSharedFromPersonal: number
+  shared: import('@/lib/types').SharedExpense[] | undefined
+  deposits: import('@/lib/types').ApartmentDeposit[] | undefined
+  APARTMENT_TARGET: number
+  totalSaved: number
+  apartmentPct: number
+  dataLoading: boolean
+}) {
+  if (!summary) {
+    return <div style={{ color: 'oklch(0.55 0.01 250)', fontSize: 14, padding: 20 }}>טוען נתוני משפחה...</div>
+  }
+
+  const totalExpenses = summary.total_personal_expenses + summary.total_shared_expenses
+  const familyNet = summary.total_income - totalExpenses
+  const familySavingsPct = summary.total_income > 0 ? Math.round((familyNet / summary.total_income) * 100) : 0
+
+  return (
+    <>
+      {/* Family KPIs */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(155px, 1fr))', gap: 12, marginBottom: 16 }}>
+        {[
+          { label: 'הכנסה משפחתית', value: formatCurrency(summary.total_income), color: 'oklch(0.65 0.18 250)', Icon: Wallet },
+          { label: 'הוצאות כוללות', value: formatCurrency(totalExpenses), color: 'oklch(0.72 0.18 55)', Icon: Receipt },
+          {
+            label: 'תזרים משפחתי',
+            value: formatCurrency(familyNet),
+            color: familyNet >= 0 ? 'oklch(0.70 0.18 145)' : 'oklch(0.62 0.22 27)',
+            Icon: TrendingUp,
+          },
+          {
+            label: '% חיסכון משפחתי',
+            value: `${familySavingsPct}%`,
+            color: familySavingsPct >= 20 ? 'oklch(0.70 0.18 145)' : familySavingsPct >= 0 ? 'oklch(0.72 0.18 55)' : 'oklch(0.62 0.22 27)',
+            Icon: PiggyBank,
+          },
+        ].map(kpi => (
+          <div key={kpi.label} style={CARD}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+              <span style={{ fontSize: 11, color: 'oklch(0.55 0.01 250)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>{kpi.label}</span>
+              <kpi.Icon size={14} style={{ color: kpi.color, opacity: 0.7 }} />
+            </div>
+            <div style={{ fontSize: 22, fontWeight: 700, color: kpi.color, direction: 'ltr', letterSpacing: '-0.02em' }}>{kpi.value}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* Per-member breakdown */}
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(summary.members.length, 3)}, 1fr)`, gap: 14, marginBottom: 16 }}>
+        {summary.members.map(member => {
+          const memberNet = member.income - member.personal_expenses
+          return (
+            <div key={member.user_id} style={CARD}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+                <Users size={14} style={{ color: 'oklch(0.65 0.18 250)' }} />
+                <span style={{ fontWeight: 600, fontSize: 14 }}>{member.display_name}</span>
+              </div>
+              {member.show_details ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 13 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: 'oklch(0.55 0.01 250)' }}>הכנסה</span>
+                    <span style={{ direction: 'ltr', fontWeight: 500, color: 'oklch(0.70 0.18 145)' }}>{formatCurrency(member.income)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <span style={{ color: 'oklch(0.55 0.01 250)' }}>הוצאות אישיות</span>
+                    <span style={{ direction: 'ltr', fontWeight: 500, color: 'oklch(0.72 0.18 55)' }}>{formatCurrency(member.personal_expenses)}</span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid oklch(0.22 0.01 250)', paddingTop: 8 }}>
+                    <span style={{ fontWeight: 600 }}>נטו</span>
+                    <span style={{ direction: 'ltr', fontWeight: 700, color: memberNet >= 0 ? 'oklch(0.70 0.18 145)' : 'oklch(0.62 0.22 27)' }}>{formatCurrency(memberNet)}</span>
+                  </div>
+                </div>
+              ) : (
+                <div style={{ fontSize: 13, color: 'oklch(0.50 0.01 250)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                    <span>הכנסה</span>
+                    <span style={{ direction: 'ltr', fontWeight: 500, color: 'oklch(0.70 0.18 145)' }}>{formatCurrency(member.income)}</span>
+                  </div>
+                  <div style={{ fontSize: 12, color: 'oklch(0.45 0.01 250)', fontStyle: 'italic' }}>פרטי הוצאות מוסתרים</div>
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Shared expenses breakdown */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14, marginBottom: 14 }}>
+        <div style={CARD}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontWeight: 600, fontSize: 14, marginBottom: 14 }}>
+            <Receipt size={14} style={{ color: 'oklch(0.68 0.12 310)' }} /> הוצאות משותפות
+          </div>
+          <div style={{ fontSize: 22, fontWeight: 700, color: 'oklch(0.68 0.12 310)', direction: 'ltr', letterSpacing: '-0.02em', marginBottom: 14 }}>
+            {formatCurrency(summary.total_shared_expenses)}
+          </div>
+          {(shared ?? []).length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12 }}>
+              {(shared ?? []).map(s => (
+                <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: 'oklch(0.55 0.01 250)' }}>{s.category}</span>
+                  <span style={{ direction: 'ltr', color: 'oklch(0.70 0.01 250)' }}>{formatCurrency(s.total_amount)}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Apartment */}
+        <div style={CARD}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontWeight: 600, marginBottom: 6, fontSize: 14 }}>
+            <Home size={14} style={{ color: 'oklch(0.70 0.18 145)' }} /> יעד הדירה
+          </div>
+          <div style={{ fontSize: 11, color: 'oklch(0.50 0.01 250)', marginBottom: 16 }}>3,500 &#8362; x 36 = 126,000 &#8362;</div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 14 }}>
+            <span style={{ fontSize: 26, fontWeight: 700, direction: 'ltr', color: 'oklch(0.70 0.18 145)' }}>{formatCurrency(totalSaved)}</span>
+            <span style={{ fontSize: 12, color: 'oklch(0.55 0.01 250)' }}>מתוך {formatCurrency(APARTMENT_TARGET)}</span>
+          </div>
+          <div style={{ height: 7, borderRadius: 4, background: 'oklch(0.22 0.01 250)', overflow: 'hidden', marginBottom: 8 }}>
+            <div style={{ height: '100%', borderRadius: 4, width: `${apartmentPct}%`, background: 'linear-gradient(90deg, oklch(0.55 0.18 145), oklch(0.70 0.18 145))', transition: 'width 0.4s ease' }} />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'oklch(0.55 0.01 250)' }}>
+            <span>{apartmentPct.toFixed(1)}% מהיעד</span>
+            <span style={{ direction: 'ltr' }}>{formatCurrency(APARTMENT_TARGET - totalSaved)} נותר</span>
+          </div>
+        </div>
+      </div>
+    </>
   )
 }

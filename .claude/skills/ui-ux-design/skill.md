@@ -195,6 +195,11 @@ Layer 3: modal overlay (rgba(0,0,0,0.7)) + card
 - Larger touch targets (min 44px)
 - Swipe actions for list items
 
+**Critical: Inline styles override Tailwind responsive classes!**
+- NEVER put `display` in inline style if you use Tailwind `hidden`/`md:hidden`/`flex`
+- Inline `display: 'flex'` will ALWAYS override `className="md:hidden"`
+- Solution: put `display` in className (`className="flex md:hidden"`), keep other props inline
+
 **RTL Responsive:**
 - Use logical properties: `padding-inline-start` not `padding-right`
 - Flex direction accounts for RTL automatically

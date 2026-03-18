@@ -6,7 +6,7 @@ import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import {
   LayoutDashboard, Wallet, BarChart3, Receipt,
-  Users, PiggyBank, Target, Home, TrendingUp, Link2, ListChecks, Mail, Copy, X, Send
+  Users, PiggyBank, Target, Home, TrendingUp, Link2, ListChecks, Mail, Copy, X, Send, Settings
 } from 'lucide-react'
 import { useFamilyContext } from '@/lib/context/FamilyContext'
 import { toast } from 'sonner'
@@ -21,6 +21,7 @@ const nav = [
   { href: '/apartment', label: 'יעד הדירה',        icon: Home },
   { href: '/pension',   label: 'פנסיה',            icon: TrendingUp },
   { href: '/analytics', label: 'ניתוח שנתי',       icon: BarChart3 },
+  { href: '/family',    label: 'הגדרות',           icon: Settings },
 ]
 
 export function Sidebar() {
