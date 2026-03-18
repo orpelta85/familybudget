@@ -19,9 +19,9 @@ export function BottomNav() {
       position: 'fixed', bottom: 0, right: 0, left: 0, height: 60,
       background: 'oklch(0.14 0.01 250)',
       borderTop: '1px solid oklch(0.22 0.01 250)',
-      display: 'flex', alignItems: 'center',
+      alignItems: 'center',
       zIndex: 40,
-    }} className="md:hidden">
+    }} className="flex md:hidden">
       {nav.map(item => {
         const active = pathname === item.href
         const Icon = item.icon
