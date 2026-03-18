@@ -158,9 +158,11 @@ export default function ExpensesPage() {
         return { ...row, categoryId }
       })
       setImportRows(mapped); setShowImport(true)
+      const sharedCount = mapped.filter(r => r.is_shared).length
       const matched = mapped.filter(r => r.categoryId && !r.categoryId.startsWith('__new__')).length
       const newCats = new Set(mapped.filter(r => r.categoryId.startsWith('__new__')).map(r => r.category)).size
       let msg = `נטענו ${r.length} שורות`
+      if (sharedCount > 0) msg += ` · ${sharedCount} משותפות`
       if (matched > 0) msg += ` · ${matched} קטגוריות זוהו`
       if (newCats > 0) msg += ` · ${newCats} קטגוריות חדשות ייווצרו`
       toast.success(msg)
