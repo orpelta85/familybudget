@@ -101,6 +101,23 @@ export function useDeleteAllPeriodExpenses() {
   })
 }
 
+export function useAddBudgetCategory() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (cat: { user_id: string; name: string; type: string; monthly_target: number; sort_order: number }) => {
+      const sb = createClient()
+      const { data, error } = await sb
+        .from('budget_categories')
+        .insert(cat)
+        .select('*')
+        .single()
+      if (error) throw error
+      return data as BudgetCategory
+    },
+    onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: ['budget_categories', vars.user_id] }),
+  })
+}
+
 export function useDeleteExpense() {
   const qc = useQueryClient()
   return useMutation({

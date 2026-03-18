@@ -2,7 +2,7 @@
 
 import { useUser } from '@/lib/queries/useUser'
 import { usePeriods, useCurrentPeriod } from '@/lib/queries/usePeriods'
-import { usePersonalExpenses, useBudgetCategories, useAddExpense, useDeleteExpense } from '@/lib/queries/useExpenses'
+import { usePersonalExpenses, useBudgetCategories, useAddExpense, useDeleteExpense, useAddBudgetCategory } from '@/lib/queries/useExpenses'
 import { useSharedExpenses, useUpsertSharedExpense, useDeleteSharedExpense } from '@/lib/queries/useShared'
 import { useSinkingFunds, useAddSinkingTransaction } from '@/lib/queries/useSinking'
 import { formatCurrency } from '@/lib/utils'
@@ -66,6 +66,7 @@ export default function ExpensesPage() {
   const upsertShared  = useUpsertSharedExpense()
   const deleteShared  = useDeleteSharedExpense()
   const addSinkingTx  = useAddSinkingTransaction()
+  const addCategory   = useAddBudgetCategory()
   const recurringPersonal = useRecurringPersonal(user?.id)
   const recurringShared   = useRecurringShared(user?.id)
 
@@ -137,8 +138,24 @@ export default function ExpensesPage() {
     const file = e.target.files?.[0]; if (!file) return
     try {
       const r = await parseExpenseExcel(file)
-      setImportRows(r.map(row => ({ ...row, categoryId: '' }))); setShowImport(true)
-      toast.success(`נטענו ${r.length} שורות`)
+      const cats = categories ?? []
+      const mapped = r.map(row => {
+        // Auto-match category name from Excel to existing budget categories
+        let categoryId = ''
+        if (row.category) {
+          const match = cats.find(c => c.name === row.category)
+          if (match) categoryId = String(match.id)
+          else categoryId = `__new__${row.category}` // marker for auto-create
+        }
+        return { ...row, categoryId }
+      })
+      setImportRows(mapped); setShowImport(true)
+      const matched = mapped.filter(r => r.categoryId && !r.categoryId.startsWith('__new__')).length
+      const newCats = new Set(mapped.filter(r => r.categoryId.startsWith('__new__')).map(r => r.category)).size
+      let msg = `נטענו ${r.length} שורות`
+      if (matched > 0) msg += ` · ${matched} קטגוריות זוהו`
+      if (newCats > 0) msg += ` · ${newCats} קטגוריות חדשות ייווצרו`
+      toast.success(msg)
     } catch { toast.error('שגיאה בקריאת הקובץ') }
     e.target.value = ''
   }
@@ -160,8 +177,28 @@ export default function ExpensesPage() {
     try {
       const today = new Date().toISOString().split('T')[0]
       if (!familyId) { toast.error('לא משויך למשפחה'); return }
+
+      // Auto-create new categories from Excel before saving expenses
+      const newCatNames = [...new Set(valid.filter(r => r.categoryId.startsWith('__new__')).map(r => r.categoryId.replace('__new__', '')))]
+      const createdCatMap: Record<string, number> = {}
+      const maxSort = Math.max(0, ...(categories ?? []).map(c => c.sort_order ?? 0))
+      for (let i = 0; i < newCatNames.length; i++) {
+        const created = await addCategory.mutateAsync({
+          user_id: user.id, name: newCatNames[i], type: 'variable',
+          monthly_target: 0, sort_order: maxSort + i + 1,
+        })
+        createdCatMap[newCatNames[i]] = created.id
+      }
+
       await Promise.all(valid.map(async r => {
-        // שמור כהוצאה אישית או משותפת
+        // Resolve category ID — either existing or newly created
+        let resolvedCatId: number
+        if (r.categoryId.startsWith('__new__')) {
+          resolvedCatId = createdCatMap[r.categoryId.replace('__new__', '')]
+        } else {
+          resolvedCatId = Number(r.categoryId)
+        }
+
         if (r.is_shared) {
           await upsertShared.mutateAsync({
             period_id: selectedPeriodId, category: `u_${Date.now()}` as any,
@@ -170,7 +207,7 @@ export default function ExpensesPage() {
         } else {
           await addExpense.mutateAsync({
             period_id: selectedPeriodId, user_id: user.id,
-            category_id: Number(r.categoryId), amount: r.amount,
+            category_id: resolvedCatId, amount: r.amount,
             description: r.description, expense_date: today,
           })
         }
@@ -185,7 +222,8 @@ export default function ExpensesPage() {
           }
         }
       }))
-      toast.success(`יובאו ${valid.length} הוצאות`)
+      const newCount = newCatNames.length
+      toast.success(`יובאו ${valid.length} הוצאות` + (newCount ? ` · ${newCount} קטגוריות חדשות נוצרו` : ''))
       setShowImport(false); setImportRows([])
     } catch { toast.error('שגיאה בייבוא') }
   }
@@ -248,21 +286,31 @@ export default function ExpensesPage() {
             <button onClick={() => setShowImport(false)} style={{ ...S.iconBtn, color: 'oklch(0.55 0.01 250)' }}><X size={14} /></button>
           </div>
           <div style={{ maxHeight: 220, overflowY: 'auto', marginBottom: 10 }}>
-            {importRows.map((row, i) => (
-              <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 80px 150px', gap: 6, padding: '4px 0', borderBottom: '1px solid oklch(0.20 0.01 250)', alignItems: 'center' }}>
-                <span style={{ fontSize: 12, color: 'oklch(0.80 0.01 250)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.description}</span>
-                <span style={{ fontSize: 12, fontWeight: 600, direction: 'ltr', textAlign: 'right', color: 'oklch(0.72 0.18 55)' }}>{formatCurrency(row.amount)}</span>
-                <select value={row.categoryId} onChange={e => setImportRows(p => p.map((r, j) => j === i ? { ...r, categoryId: e.target.value } : r))}
-                  style={{ ...S.input, padding: '3px 6px', fontSize: 11 }}>
-                  <option value="">בחר...</option>
-                  {categories?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                </select>
-              </div>
-            ))}
+            {importRows.map((row, i) => {
+              const isAutoMatched = row.categoryId && !row.categoryId.startsWith('__new__') && row.category
+              const isNewCat = row.categoryId.startsWith('__new__')
+              return (
+                <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 80px 150px', gap: 6, padding: '4px 0', borderBottom: '1px solid oklch(0.20 0.01 250)', alignItems: 'center' }}>
+                  <span style={{ fontSize: 12, color: 'oklch(0.80 0.01 250)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.description}</span>
+                  <span style={{ fontSize: 12, fontWeight: 600, direction: 'ltr', textAlign: 'right', color: 'oklch(0.72 0.18 55)' }}>{formatCurrency(row.amount)}</span>
+                  {isAutoMatched ? (
+                    <span style={{ fontSize: 11, color: 'oklch(0.70 0.18 150)', fontWeight: 500 }}>{row.category}</span>
+                  ) : isNewCat ? (
+                    <span style={{ fontSize: 11, color: 'oklch(0.72 0.18 55)', fontWeight: 500 }}>{row.category} (חדש)</span>
+                  ) : (
+                    <select value={row.categoryId} onChange={e => setImportRows(p => p.map((r, j) => j === i ? { ...r, categoryId: e.target.value } : r))}
+                      style={{ ...S.input, padding: '3px 6px', fontSize: 11 }}>
+                      <option value="">בחר...</option>
+                      {categories?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                  )}
+                </div>
+              )
+            })}
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={handleImportSave} disabled={addExpense.isPending} style={{ flex: 1, background: 'oklch(0.65 0.18 250)', border: 'none', borderRadius: 8, padding: '8px 0', color: 'oklch(0.12 0.01 250)', fontWeight: 600, cursor: 'pointer', fontSize: 12 }}>
-              ייבא {importRows.filter(r => r.categoryId).length}
+              ייבא {importRows.filter(r => r.categoryId && r.amount > 0).length}
             </button>
             <button onClick={() => { setShowImport(false); setImportRows([]) }} style={{ ...S.input, padding: '8px 12px', cursor: 'pointer', fontSize: 12, width: 'auto' }}>ביטול</button>
           </div>
