@@ -415,27 +415,26 @@ export default function ExpensesPage() {
           </div>
 
           <form onSubmit={handleAdd} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {/* Category — same for both types */}
+            {/* Category — identical for both types */}
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
                 <label style={S.label}>קטגוריה</label>
-                {expType === 'personal' && (
-                  <button type="button" onClick={() => setUseCustom(v => !v)}
-                    style={{ background: 'none', border: 'none', fontSize: 10, color: 'oklch(0.55 0.18 250)', cursor: 'pointer', padding: 0 }}>
-                    {useCustomCat ? '← מרשימה' : '+ ידנית'}
-                  </button>
-                )}
+                <button type="button" onClick={() => setUseCustom(v => !v)}
+                  style={{ background: 'none', border: 'none', fontSize: 10, color: 'oklch(0.55 0.18 250)', cursor: 'pointer', padding: 0 }}>
+                  {useCustomCat ? '← מרשימה' : '+ ידנית'}
+                </button>
               </div>
-              {expType === 'personal' && !useCustomCat ? (
-                <select value={categoryId} onChange={e => setCategoryId(e.target.value)} style={{ ...S.input, width: '100%' }}>
+              {useCustomCat ? (
+                <input type="text" value={expType === 'shared' ? sharedLabel : customCat}
+                  onChange={e => expType === 'shared' ? setSharedLabel(e.target.value) : setCustomCat(e.target.value)}
+                  placeholder="שם קטגוריה חופשי..."
+                  style={{ ...S.input, width: '100%' }} />
+              ) : (
+                <select value={categoryId} onChange={e => { setCategoryId(e.target.value); if (expType === 'shared') setSharedLabel(categories?.find(c => c.id === Number(e.target.value))?.name ?? '') }}
+                  style={{ ...S.input, width: '100%' }}>
                   <option value="">בחר...</option>
                   {categories?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
-              ) : (
-                <input type="text" value={expType === 'shared' ? sharedLabel : customCat}
-                  onChange={e => expType === 'shared' ? setSharedLabel(e.target.value) : setCustomCat(e.target.value)}
-                  placeholder={expType === 'shared' ? 'שכירות, חשמל, מכולת...' : 'שם קטגוריה חופשי...'}
-                  style={{ ...S.input, width: '100%' }} />
               )}
             </div>
 
