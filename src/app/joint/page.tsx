@@ -4,13 +4,15 @@ import { useUser } from '@/lib/queries/useUser'
 import { usePeriods, useCurrentPeriod } from '@/lib/queries/usePeriods'
 import { useJointPoolIncome, useJointPoolExpenses, useUpsertJointIncome, useAddJointExpense } from '@/lib/queries/useJoint'
 import { formatCurrency } from '@/lib/utils'
+import { createClient } from '@/lib/supabase/client'
+import { useQueryClient } from '@tanstack/react-query'
 import { useSharedPeriod } from '@/lib/context/PeriodContext'
 import { useFamilyContext } from '@/lib/context/FamilyContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { PeriodSelector } from '@/components/layout/PeriodSelector'
 import { toast } from 'sonner'
-import { PiggyBank } from 'lucide-react'
+import { PiggyBank, Trash2 } from 'lucide-react'
 import type { PoolCategory } from '@/lib/types'
 
 const POOL_CATEGORIES: { key: PoolCategory; label: string }[] = [
@@ -41,6 +43,7 @@ export default function JointPage() {
   const { data: poolExpenses } = useJointPoolExpenses(selectedPeriodId, familyId)
   const upsertIncome = useUpsertJointIncome()
   const addExpense = useAddJointExpense()
+  const queryClient = useQueryClient()
 
   const [myContrib, setMyContrib] = useState('')
   const [partnerContrib, setPartnerContrib] = useState('')
@@ -56,6 +59,20 @@ export default function JointPage() {
   }, [poolIncome, selectedPeriodId])
 
   if (loading || !user) return <div style={{ padding: 40, textAlign: 'center', color: 'oklch(0.55 0.01 250)' }}>טוען...</div>
+
+  async function handleResetPool() {
+    if (!selectedPeriodId || !familyId) return
+    if (!confirm('למחוק את כל הנתונים של הקופה למחזור הנוכחי?')) return
+    try {
+      const sb = createClient()
+      await sb.from('joint_pool_income').delete().eq('period_id', selectedPeriodId).eq('family_id', familyId)
+      await sb.from('joint_pool_expenses').delete().eq('period_id', selectedPeriodId).eq('family_id', familyId)
+      queryClient.invalidateQueries({ queryKey: ['joint_pool_income', selectedPeriodId] })
+      queryClient.invalidateQueries({ queryKey: ['joint_pool_expenses', selectedPeriodId] })
+      setMyContrib(''); setPartnerContrib('')
+      toast.success('הקופה אופסה')
+    } catch { toast.error('שגיאה באיפוס') }
+  }
 
   const totalIncome = (Number(myContrib) || 0) + (Number(partnerContrib) || 0)
   const totalExpenses = poolExpenses?.reduce((s, e) => s + e.amount, 0) ?? 0
@@ -86,9 +103,14 @@ export default function JointPage() {
 
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-        <PiggyBank size={18} style={{ color: 'oklch(0.68 0.18 295)' }} />
-        <h1 style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em' }}>קופה משותפת</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <PiggyBank size={18} style={{ color: 'oklch(0.68 0.18 295)' }} />
+          <h1 style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em' }}>קופה משותפת</h1>
+        </div>
+        <button onClick={handleResetPool} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: '1px solid oklch(0.25 0.01 250)', borderRadius: 8, padding: '7px 14px', color: 'oklch(0.55 0.01 250)', fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>
+          <Trash2 size={13} /> אפס קופה
+        </button>
       </div>
       <p style={{ color: 'oklch(0.55 0.01 250)', fontSize: 13, marginBottom: 20 }}>{selectedPeriod?.label ?? '...'}</p>
 

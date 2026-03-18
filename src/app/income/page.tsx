@@ -8,7 +8,7 @@ import { useSharedPeriod } from '@/lib/context/PeriodContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { PeriodSelector } from '@/components/layout/PeriodSelector'
-import { Wallet, TrendingUp } from 'lucide-react'
+import { Wallet, TrendingUp, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 
@@ -78,6 +78,20 @@ export default function IncomePage() {
     }
   }
 
+  async function handleResetIncome() {
+    if (!user || !selectedPeriodId) return
+    if (!confirm('לאפס את ההכנסה של המחזור הנוכחי?')) return
+    try {
+      await upsert.mutateAsync({
+        period_id: selectedPeriodId,
+        user_id: user.id,
+        salary: 0, bonus: 0, other: 0, notes: '',
+      })
+      setSalary(''); setBonus(''); setOther(''); setNotes('')
+      toast.success('הכנסה אופסה')
+    } catch { toast.error('שגיאה באיפוס') }
+  }
+
   const selectedPeriod = periods?.find(p => p.id === selectedPeriodId)
 
   // Trend: last 6 periods with income data
@@ -104,9 +118,14 @@ export default function IncomePage() {
 
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-        <Wallet size={18} style={{ color: 'oklch(0.65 0.18 250)' }} />
-        <h1 style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em' }}>הכנסה</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Wallet size={18} style={{ color: 'oklch(0.65 0.18 250)' }} />
+          <h1 style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em' }}>הכנסה</h1>
+        </div>
+        <button onClick={handleResetIncome} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: '1px solid oklch(0.25 0.01 250)', borderRadius: 8, padding: '7px 14px', color: 'oklch(0.55 0.01 250)', fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>
+          <Trash2 size={13} /> אפס הכנסה
+        </button>
       </div>
       <p style={{ color: 'oklch(0.60 0.01 250)', fontSize: 14, marginBottom: 20 }}>
         {selectedPeriod ? periodLabel(selectedPeriod.start_date) : '...'}

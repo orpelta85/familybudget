@@ -4,6 +4,8 @@ import { useUser } from '@/lib/queries/useUser'
 import { usePeriods } from '@/lib/queries/usePeriods'
 import { useSinkingFunds, useAllSinkingTransactions, useAddSinkingTransaction, useUpdateSinkingFund, useAddSinkingFund, useDeleteSinkingFund } from '@/lib/queries/useSinking'
 import { formatCurrency } from '@/lib/utils'
+import { createClient } from '@/lib/supabase/client'
+import { useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
@@ -48,6 +50,7 @@ export default function SinkingPage() {
   const updateFund = useUpdateSinkingFund()
   const addFund = useAddSinkingFund()
   const deleteFund = useDeleteSinkingFund()
+  const queryClient = useQueryClient()
 
   // Fund create / edit
   const [newFund, setNewFund] = useState<FundForm | null>(null)
@@ -75,6 +78,21 @@ export default function SinkingPage() {
   }, [periods, txPeriodId])
 
   if (loading || !user) return <div style={{ padding: 40, textAlign: 'center', color: 'oklch(0.55 0.01 250)' }}>טוען...</div>
+
+  async function handleResetBalances() {
+    if (!user) return
+    if (!confirm('למחוק את כל התנועות בקרנות? היתרות יתאפסו.')) return
+    try {
+      const sb = createClient()
+      const fundIds = (funds ?? []).map(f => f.id)
+      if (fundIds.length > 0) {
+        await sb.from('sinking_fund_transactions').delete().in('fund_id', fundIds)
+      }
+      queryClient.invalidateQueries({ queryKey: ['all_sinking_transactions'] })
+      queryClient.invalidateQueries({ queryKey: ['sinking_transactions'] })
+      toast.success('כל היתרות אופסו')
+    } catch { toast.error('שגיאה באיפוס') }
+  }
 
   function getFundBalance(fundId: number) {
     const txns = allTxns?.filter(t => t.fund_id === fundId) ?? []
@@ -150,12 +168,17 @@ export default function SinkingPage() {
           <Target size={18} style={{ color: 'oklch(0.70 0.15 185)' }} />
           <h1 style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em' }}>קרנות שנתיות</h1>
         </div>
-        <button
-          onClick={() => setNewFund({ name: '', totalAnnual: '', isShared: false })}
-          style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'oklch(0.20 0.04 185)', border: '1px solid oklch(0.32 0.08 185)', borderRadius: 8, padding: '7px 14px', color: 'oklch(0.70 0.15 185)', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}
-        >
-          <Plus size={13} /> קרן חדשה
-        </button>
+        <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={handleResetBalances} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: '1px solid oklch(0.25 0.01 250)', borderRadius: 8, padding: '7px 14px', color: 'oklch(0.55 0.01 250)', fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>
+            <Trash2 size={13} /> אפס יתרות
+          </button>
+          <button
+            onClick={() => setNewFund({ name: '', totalAnnual: '', isShared: false })}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'oklch(0.20 0.04 185)', border: '1px solid oklch(0.32 0.08 185)', borderRadius: 8, padding: '7px 14px', color: 'oklch(0.70 0.15 185)', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}
+          >
+            <Plus size={13} /> קרן חדשה
+          </button>
+        </div>
       </div>
       <p style={{ color: 'oklch(0.55 0.01 250)', fontSize: 13, marginBottom: 20 }}>
         סה&quot;כ הפרשה חודשית: <span style={{ direction: 'ltr', display: 'inline-block', fontWeight: 600, color: 'oklch(0.70 0.15 185)' }}>{formatCurrency(totalMonthly)}</span>

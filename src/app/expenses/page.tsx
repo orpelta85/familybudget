@@ -6,6 +6,8 @@ import { usePersonalExpenses, useBudgetCategories, useAddExpense, useDeleteExpen
 import { useSharedExpenses, useUpsertSharedExpense, useDeleteSharedExpense } from '@/lib/queries/useShared'
 import { useSinkingFunds, useAddSinkingTransaction } from '@/lib/queries/useSinking'
 import { formatCurrency } from '@/lib/utils'
+import { createClient } from '@/lib/supabase/client'
+import { useQueryClient } from '@tanstack/react-query'
 import { useSharedPeriod } from '@/lib/context/PeriodContext'
 import { useFamilyContext } from '@/lib/context/FamilyContext'
 import { parseExpenseExcel, createExpenseTemplate } from '@/lib/excel-import'
@@ -14,7 +16,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState, useRef } from 'react'
 import { PeriodSelector } from '@/components/layout/PeriodSelector'
 import { toast } from 'sonner'
-import { Receipt, Upload, Download, Plus, X, FileSpreadsheet, User, Users, Lock, Unlock, Target } from 'lucide-react'
+import { Receipt, Upload, Download, Plus, X, FileSpreadsheet, User, Users, Lock, Unlock, Target, Trash2 } from 'lucide-react'
 import type { RawExpenseRow } from '@/lib/excel-import'
 import type { BudgetCategory } from '@/lib/types'
 
@@ -69,6 +71,7 @@ export default function ExpensesPage() {
   const addCategory   = useAddBudgetCategory()
   const recurringPersonal = useRecurringPersonal(user?.id)
   const recurringShared   = useRecurringShared(user?.id)
+  const queryClient = useQueryClient()
 
   // ── Add form state ──────────────────────────────────────────────────────────
   const [expType, setExpType]         = useState<ExpType>('personal')
@@ -257,6 +260,19 @@ export default function ExpensesPage() {
     }
   }
 
+  async function handleResetExpenses() {
+    if (!user || !selectedPeriodId) return
+    if (!confirm('למחוק את כל ההוצאות של המחזור הנוכחי?')) return
+    try {
+      const sb = createClient()
+      await sb.from('personal_expenses').delete().eq('period_id', selectedPeriodId).eq('user_id', user.id)
+      await sb.from('shared_expenses').delete().eq('period_id', selectedPeriodId).eq('family_id', familyId!)
+      queryClient.invalidateQueries({ queryKey: ['personal_expenses', selectedPeriodId, user.id] })
+      queryClient.invalidateQueries({ queryKey: ['shared_expenses', selectedPeriodId] })
+      toast.success('כל ההוצאות אופסו')
+    } catch { toast.error('שגיאה באיפוס') }
+  }
+
   const isPending = addExpense.isPending || upsertShared.isPending
 
   return (
@@ -271,6 +287,9 @@ export default function ExpensesPage() {
           <p style={{ color: 'oklch(0.55 0.01 250)', fontSize: 13 }}>{selectedPeriod?.label ?? '...'}</p>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
+          <button onClick={handleResetExpenses} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: '1px solid oklch(0.25 0.01 250)', borderRadius: 8, padding: '7px 14px', color: 'oklch(0.55 0.01 250)', fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>
+            <Trash2 size={13} /> אפס הוצאות
+          </button>
           <button onClick={downloadTemplate} style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'oklch(0.22 0.01 250)', border: '1px solid oklch(0.28 0.01 250)', borderRadius: 8, padding: '7px 11px', color: 'oklch(0.75 0.01 250)', fontSize: 12, cursor: 'pointer' }}>
             <Download size={13} /> תבנית
           </button>

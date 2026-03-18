@@ -4,12 +4,14 @@ import { useUser } from '@/lib/queries/useUser'
 import { usePeriods, useCurrentPeriod } from '@/lib/queries/usePeriods'
 import { useApartmentDeposits, useUpsertApartmentDeposit } from '@/lib/queries/useApartment'
 import { formatCurrency } from '@/lib/utils'
+import { createClient } from '@/lib/supabase/client'
+import { useQueryClient } from '@tanstack/react-query'
 import { useSharedPeriod } from '@/lib/context/PeriodContext'
 import { useFamilyContext } from '@/lib/context/FamilyContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { Home, CheckCircle, Circle } from 'lucide-react'
+import { Home, CheckCircle, Circle, Trash2 } from 'lucide-react'
 
 const MONTHLY_TARGET = 3500
 const TOTAL_PERIODS = 36
@@ -23,6 +25,7 @@ export default function ApartmentPage() {
   const { familyId } = useFamilyContext()
   const { data: deposits } = useApartmentDeposits(familyId)
   const upsert = useUpsertApartmentDeposit()
+  const queryClient = useQueryClient()
   const [amount, setAmount] = useState(MONTHLY_TARGET.toString())
   const { selectedPeriodId, setSelectedPeriodId } = useSharedPeriod()
 
@@ -44,6 +47,17 @@ export default function ApartmentPage() {
 
   const milestones = [25, 50, 75, 100]
 
+  async function handleResetDeposits() {
+    if (!familyId) return
+    if (!confirm('למחוק את כל ההפקדות לדירה?')) return
+    try {
+      const sb = createClient()
+      await sb.from('apartment_deposits').delete().eq('family_id', familyId)
+      queryClient.invalidateQueries({ queryKey: ['apartment_deposits'] })
+      toast.success('כל ההפקדות אופסו')
+    } catch { toast.error('שגיאה באיפוס') }
+  }
+
   async function handleDeposit() {
     if (!selectedPeriodId || !amount) return
     if (!familyId) { toast.error('לא משויך למשפחה'); return }
@@ -57,9 +71,14 @@ export default function ApartmentPage() {
 
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-        <Home size={18} style={{ color: 'oklch(0.70 0.18 145)' }} />
-        <h1 style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em' }}>יעד הדירה</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Home size={18} style={{ color: 'oklch(0.70 0.18 145)' }} />
+          <h1 style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em' }}>יעד הדירה</h1>
+        </div>
+        <button onClick={handleResetDeposits} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: '1px solid oklch(0.25 0.01 250)', borderRadius: 8, padding: '7px 14px', color: 'oklch(0.55 0.01 250)', fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>
+          <Trash2 size={13} /> אפס הפקדות
+        </button>
       </div>
       <p style={{ color: 'oklch(0.55 0.01 250)', fontSize: 13, marginBottom: 20 }}>
         חיסכון של 3,500 ₪ לחודש × 36 מחזורים
