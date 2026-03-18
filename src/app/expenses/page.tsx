@@ -16,7 +16,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState, useRef } from 'react'
 import { PeriodSelector } from '@/components/layout/PeriodSelector'
 import { toast } from 'sonner'
-import { Receipt, Upload, Download, Plus, X, FileSpreadsheet, User, Users, Lock, Unlock, Target, Trash2 } from 'lucide-react'
+import { Receipt, Upload, Download, Plus, X, FileSpreadsheet, User, Users, Lock, Unlock, Target, Trash2, Inbox } from 'lucide-react'
 import type { RawExpenseRow } from '@/lib/excel-import'
 import type { BudgetCategory, SharedCategory } from '@/lib/types'
 
@@ -86,7 +86,7 @@ export default function ExpensesPage() {
   const [showImport, setShowImport] = useState(false)
   const [importing, setImporting] = useState(false)
 
-  if (loading || !user) return <div style={{ padding: 40, textAlign: 'center', color: 'oklch(0.55 0.01 250)' }}>טוען...</div>
+  if (loading || !user) return <div className="loading-pulse" style={{ padding: 40, textAlign: 'center', color: 'oklch(0.55 0.01 250)' }}>טוען...</div>
 
   const selectedPeriod = periods?.find(p => p.id === selectedPeriodId)
   const totalPersonal  = (personalExp ?? []).reduce((s, e) => s + e.amount, 0)
@@ -325,7 +325,7 @@ export default function ExpensesPage() {
           <button onClick={downloadTemplate} style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'oklch(0.22 0.01 250)', border: '1px solid oklch(0.28 0.01 250)', borderRadius: 8, padding: '7px 11px', color: 'oklch(0.75 0.01 250)', fontSize: 12, cursor: 'pointer' }}>
             <Download size={13} /> תבנית
           </button>
-          <button onClick={() => fileRef.current?.click()} style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'oklch(0.65 0.18 250)', border: 'none', borderRadius: 8, padding: '7px 11px', color: 'oklch(0.12 0.01 250)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+          <button onClick={() => fileRef.current?.click()} className="btn-hover" style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'oklch(0.65 0.18 250)', border: 'none', borderRadius: 8, padding: '7px 11px', color: 'oklch(0.12 0.01 250)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
             <Upload size={13} /> Excel
           </button>
           <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" style={{ display: 'none' }} onChange={handleExcelUpload} />
@@ -451,7 +451,7 @@ export default function ExpensesPage() {
               )}
             </div>
 
-            <button type="submit" disabled={isPending} style={{
+            <button type="submit" disabled={isPending} className="btn-hover" style={{
               background: expType === 'personal' ? 'oklch(0.65 0.18 250)' : 'oklch(0.55 0.12 310)',
               color: 'oklch(0.12 0.01 250)', border: 'none', borderRadius: 8,
               padding: '9px 0', fontWeight: 600, fontSize: 13, cursor: 'pointer',
@@ -470,7 +470,7 @@ export default function ExpensesPage() {
               { label: 'משותף (חלקי)', value: totalSharedMy, color: 'oklch(0.65 0.12 310)' },
               { label: 'סה"כ', value: totalAll, color: 'oklch(0.72 0.18 55)' },
             ].filter(t => t.value > 0).map(t => (
-              <div key={t.label} style={{ background: 'oklch(0.16 0.01 250)', border: '1px solid oklch(0.25 0.01 250)', borderRadius: 8, padding: '8px 14px' }}>
+              <div key={t.label} className="card-transition" style={{ background: 'oklch(0.16 0.01 250)', border: '1px solid oklch(0.25 0.01 250)', borderRadius: 8, padding: '8px 14px' }}>
                 <div style={{ fontSize: 10, color: 'oklch(0.50 0.01 250)', marginBottom: 2 }}>{t.label}</div>
                 <div style={{ fontSize: 15, fontWeight: 700, color: t.color, direction: 'ltr' }}>{formatCurrency(t.value)}</div>
               </div>
@@ -514,7 +514,7 @@ export default function ExpensesPage() {
               <span style={{ fontSize: 14, fontWeight: 700, direction: 'ltr', color: 'oklch(0.65 0.18 250)' }}>{formatCurrency(totalPersonal)}</span>
             </div>
             {!(personalExp?.length)
-              ? <div style={{ fontSize: 12, color: 'oklch(0.45 0.01 250)', textAlign: 'center', padding: '16px 0' }}>אין הוצאות אישיות</div>
+              ? <div style={{ fontSize: 12, color: 'oklch(0.45 0.01 250)', textAlign: 'center', padding: '24px 0' }}><Inbox size={32} style={{ color: 'oklch(0.30 0.01 250)', margin: '0 auto 8px' }} />אין הוצאות אישיות</div>
               : personalExp.map(e => {
                 const itemId = personalItemId(e.category_id, e.description ?? '', e.id)
                 const locked = recurringPersonal.isLocked(itemId)
@@ -554,7 +554,7 @@ export default function ExpensesPage() {
               הסכום שמוצג הוא חלקך (50%) — ניתן לנעול הוצאות קבועות
             </div>
             {!(sharedExp?.length)
-              ? <div style={{ fontSize: 12, color: 'oklch(0.45 0.01 250)', textAlign: 'center', padding: '16px 0' }}>אין הוצאות משותפות</div>
+              ? <div style={{ fontSize: 12, color: 'oklch(0.45 0.01 250)', textAlign: 'center', padding: '24px 0' }}><Inbox size={32} style={{ color: 'oklch(0.30 0.01 250)', margin: '0 auto 8px' }} />אין הוצאות משותפות</div>
               : sharedExp.map(e => {
                 const myAmt = e.my_share ?? e.total_amount / 2
                 const locked = recurringShared.isLocked(e.category)

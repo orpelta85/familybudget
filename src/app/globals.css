@@ -172,3 +172,37 @@
   border-radius: 4px;
   transition: width 0.5s ease;
 }
+
+/* ── Polish utilities ──────────────────────────────────────────────────────── */
+
+/* Hover effects for buttons (inline styles can't do :hover) */
+.btn-hover { transition: filter 0.15s ease; }
+.btn-hover:hover { filter: brightness(1.15); }
+
+/* Card hover — subtle border highlight */
+.card-hover { transition: border-color 0.2s ease, box-shadow 0.2s ease; }
+.card-hover:hover { border-color: oklch(0.35 0.01 250) !important; }
+
+/* Smooth card transitions */
+.card-transition { transition: border-color 0.2s ease, box-shadow 0.2s ease; }
+
+/* Loading pulse animation */
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+.loading-pulse { animation: pulse-subtle 1.5s ease-in-out infinite; }
+
+/* Dark scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: oklch(0.14 0.01 250); }
+::-webkit-scrollbar-thumb { background: oklch(0.30 0.01 250); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: oklch(0.40 0.01 250); }
+html { scrollbar-color: oklch(0.30 0.01 250) oklch(0.14 0.01 250); scrollbar-width: thin; }
+
+/* Toast dark theme override */
+.cn-toast {
+  background: oklch(0.18 0.01 250) !important;
+  border: 1px solid oklch(0.28 0.01 250) !important;
+  color: oklch(0.90 0.01 250) !important;
+}

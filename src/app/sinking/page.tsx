@@ -9,7 +9,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { Target, Plus, X, Pencil, Users, User, Trash2 } from 'lucide-react'
+import { Target, Plus, X, Pencil, Users, User, Trash2, Inbox } from 'lucide-react'
 
 // ── Fund type (personal / shared) stored in localStorage ─────────────────────
 function getFundMeta(userId: string): Record<string, boolean> {
@@ -77,7 +77,7 @@ export default function SinkingPage() {
     }
   }, [periods, txPeriodId])
 
-  if (loading || !user) return <div style={{ padding: 40, textAlign: 'center', color: 'oklch(0.55 0.01 250)' }}>טוען...</div>
+  if (loading || !user) return <div className="loading-pulse" style={{ padding: 40, textAlign: 'center', color: 'oklch(0.55 0.01 250)' }}>טוען...</div>
 
   async function handleResetBalances() {
     if (!user) return
@@ -174,6 +174,7 @@ export default function SinkingPage() {
           </button>
           <button
             onClick={() => setNewFund({ name: '', totalAnnual: '', isShared: false })}
+            className="btn-hover"
             style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'oklch(0.20 0.04 185)', border: '1px solid oklch(0.32 0.08 185)', borderRadius: 8, padding: '7px 14px', color: 'oklch(0.70 0.15 185)', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}
           >
             <Plus size={13} /> קרן חדשה
@@ -191,7 +192,8 @@ export default function SinkingPage() {
       {!funds?.length
         ? (
           <div style={{ background: 'oklch(0.16 0.01 250)', border: '1px solid oklch(0.25 0.01 250)', borderRadius: 12, padding: 40, textAlign: 'center' }}>
-            <div style={{ color: 'oklch(0.55 0.01 250)', fontSize: 14 }}>אין קרנות — לחץ "קרן חדשה" להתחיל</div>
+            <Inbox size={36} style={{ color: 'oklch(0.30 0.01 250)', margin: '0 auto 10px' }} />
+            <div style={{ color: 'oklch(0.55 0.01 250)', fontSize: 14 }}>אין קרנות -- לחץ &quot;קרן חדשה&quot; להתחיל</div>
           </div>
         )
         : (
@@ -203,7 +205,7 @@ export default function SinkingPage() {
               const pct = totalAnnual > 0 ? Math.min((balance / totalAnnual) * 100, 100) : 0
 
               return (
-                <div key={fund.id} style={{ background: 'oklch(0.16 0.01 250)', border: '1px solid oklch(0.25 0.01 250)', borderRadius: 12, padding: '14px 18px' }}>
+                <div key={fund.id} className="card-hover card-transition" style={{ background: 'oklch(0.16 0.01 250)', border: '1px solid oklch(0.25 0.01 250)', borderRadius: 12, padding: '14px 18px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     {/* Name + type */}
                     <div style={{ flex: 1, minWidth: 0 }}>

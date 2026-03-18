@@ -103,7 +103,7 @@ export default function Dashboard() {
   }, [allExpenses, allShared, yearAgoPeriodId])
 
   if (userLoading || setupLoading) return (
-    <div style={{ padding: 40, color: 'oklch(0.55 0.01 250)', fontSize: 14 }}>טוען...</div>
+    <div className="loading-pulse" style={{ padding: 40, color: 'oklch(0.55 0.01 250)', fontSize: 14 }}>טוען...</div>
   )
   if (!user) return null
 

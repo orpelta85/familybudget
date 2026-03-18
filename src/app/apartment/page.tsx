@@ -37,7 +37,7 @@ export default function ApartmentPage() {
     if (!loading && !user) router.push('/login')
   }, [user, loading, router])
 
-  if (loading || !user) return <div style={{ padding: 40, textAlign: 'center', color: 'oklch(0.55 0.01 250)' }}>טוען...</div>
+  if (loading || !user) return <div className="loading-pulse" style={{ padding: 40, textAlign: 'center', color: 'oklch(0.55 0.01 250)' }}>טוען...</div>
 
   const totalSaved = deposits?.reduce((s, d) => s + d.amount_deposited, 0) ?? 0
   const pct = Math.min((totalSaved / TOTAL_GOAL) * 100, 100)

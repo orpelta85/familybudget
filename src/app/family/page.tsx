@@ -167,7 +167,7 @@ export default function FamilyPage() {
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
-        <div style={{ color: 'oklch(0.55 0.01 250)', fontSize: 14 }}>טוען...</div>
+        <div className="loading-pulse" style={{ color: 'oklch(0.55 0.01 250)', fontSize: 14 }}>טוען...</div>
       </div>
     )
   }

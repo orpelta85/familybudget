@@ -268,7 +268,7 @@ export default function PensionPage() {
   }
 
   if (loading || loadingReports) {
-    return <div style={{ padding: 40, textAlign: 'center', color: 'oklch(0.55 0.01 250)' }}>טוען...</div>
+    return <div className="loading-pulse" style={{ padding: 40, textAlign: 'center', color: 'oklch(0.55 0.01 250)' }}>טוען...</div>
   }
 
   return (

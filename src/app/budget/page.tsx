@@ -7,7 +7,7 @@ import { useIncome } from '@/lib/queries/useIncome'
 import { formatCurrency } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { BarChart3 } from 'lucide-react'
+import { BarChart3, Inbox } from 'lucide-react'
 import { toast } from 'sonner'
 
 const TYPE_LABELS: Record<string, { label: string; color: string }> = {
@@ -40,7 +40,7 @@ export default function BudgetPage() {
   const { data: expenses } = usePersonalExpenses(currentPeriod?.id, user?.id)
   const { data: income } = useIncome(currentPeriod?.id, user?.id)
 
-  if (loading || !user) return <div style={{ padding: 40, textAlign: 'center', color: 'oklch(0.55 0.01 250)' }}>טוען...</div>
+  if (loading || !user) return <div className="loading-pulse" style={{ padding: 40, textAlign: 'center', color: 'oklch(0.55 0.01 250)' }}>טוען...</div>
 
   const grouped = (categories ?? []).reduce<Record<string, typeof categories>>((acc, c) => {
     if (!acc[c.type]) acc[c.type] = []
@@ -118,6 +118,7 @@ export default function BudgetPage() {
       {!categories?.length
         ? (
           <div style={{ ...card, textAlign: 'center', padding: 40 }}>
+            <Inbox size={36} style={{ color: 'oklch(0.30 0.01 250)', margin: '0 auto 10px' }} />
             <div style={{ color: 'oklch(0.55 0.01 250)', fontSize: 14 }}>אין קטגוריות תקציב</div>
           </div>
         )
@@ -128,7 +129,7 @@ export default function BudgetPage() {
           const typeSpent = cats.reduce((s, c) => s + (spendByCat[c.id] ?? 0), 0)
 
           return (
-            <div key={type} style={{ ...card, marginBottom: 16 }}>
+            <div key={type} className="card-transition" style={{ ...card, marginBottom: 16 }}>
               {/* Section Header */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, paddingBottom: 12, borderBottom: '1px solid oklch(0.22 0.01 250)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

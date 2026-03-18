@@ -57,7 +57,7 @@ export default function IncomePage() {
     }
   }, [income, selectedPeriodId])
 
-  if (loading || !user) return <div style={{ padding: 40, textAlign: 'center', color: 'oklch(0.55 0.01 250)' }}>טוען...</div>
+  if (loading || !user) return <div className="loading-pulse" style={{ padding: 40, textAlign: 'center', color: 'oklch(0.55 0.01 250)' }}>טוען...</div>
 
   const total = (Number(salary) || 0) + (Number(bonus) || 0) + (Number(other) || 0)
 
@@ -197,6 +197,7 @@ export default function IncomePage() {
           <button
             onClick={handleSave}
             disabled={upsert.isPending}
+            className="btn-hover"
             style={{ width: '100%', background: 'oklch(0.65 0.18 250)', color: 'oklch(0.12 0.01 250)', border: 'none', borderRadius: 8, padding: '12px 0', fontWeight: 600, fontSize: 15, cursor: 'pointer', opacity: upsert.isPending ? 0.7 : 1 }}
           >
             {upsert.isPending ? 'שומר...' : 'שמור הכנסה'}

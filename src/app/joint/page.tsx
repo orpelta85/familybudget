@@ -12,7 +12,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { PeriodSelector } from '@/components/layout/PeriodSelector'
 import { toast } from 'sonner'
-import { PiggyBank, Trash2 } from 'lucide-react'
+import { PiggyBank, Trash2, Inbox } from 'lucide-react'
 import type { PoolCategory } from '@/lib/types'
 
 const POOL_CATEGORIES: { key: PoolCategory; label: string }[] = [
@@ -58,7 +58,7 @@ export default function JointPage() {
     }
   }, [poolIncome, selectedPeriodId])
 
-  if (loading || !user) return <div style={{ padding: 40, textAlign: 'center', color: 'oklch(0.55 0.01 250)' }}>טוען...</div>
+  if (loading || !user) return <div className="loading-pulse" style={{ padding: 40, textAlign: 'center', color: 'oklch(0.55 0.01 250)' }}>טוען...</div>
 
   async function handleResetPool() {
     if (!selectedPeriodId || !familyId) return
@@ -151,6 +151,7 @@ export default function JointPage() {
             </div>
           ))}
           <button onClick={saveIncome} disabled={upsertIncome.isPending}
+            className="btn-hover"
             style={{ width: '100%', background: 'oklch(0.68 0.18 295)', border: 'none', borderRadius: 8, padding: '10px 0', fontWeight: 600, fontSize: 13, color: 'oklch(0.10 0.02 295)', cursor: 'pointer' }}>
             שמור הכנסות
           </button>
@@ -168,7 +169,7 @@ export default function JointPage() {
               style={{ background: 'oklch(0.22 0.01 250)', border: '1px solid oklch(0.28 0.01 250)', borderRadius: 8, padding: '9px 12px', color: 'inherit', fontSize: 15, direction: 'ltr', textAlign: 'right' }} />
             <input type="text" value={expDesc} onChange={e => setExpDesc(e.target.value)} placeholder="תיאור (אופציונלי)"
               style={{ background: 'oklch(0.22 0.01 250)', border: '1px solid oklch(0.28 0.01 250)', borderRadius: 8, padding: '9px 12px', color: 'inherit', fontSize: 13 }} />
-            <button type="submit" style={{ background: 'oklch(0.72 0.18 55)', border: 'none', borderRadius: 8, padding: '10px 0', fontWeight: 600, fontSize: 13, color: 'oklch(0.10 0.01 250)', cursor: 'pointer' }}>
+            <button type="submit" className="btn-hover" style={{ background: 'oklch(0.72 0.18 55)', border: 'none', borderRadius: 8, padding: '10px 0', fontWeight: 600, fontSize: 13, color: 'oklch(0.10 0.01 250)', cursor: 'pointer' }}>
               + הוסף הוצאה
             </button>
           </form>
@@ -176,20 +177,23 @@ export default function JointPage() {
       </div>
 
       {/* Expense list */}
-      {!!poolExpenses?.length && (
-        <div style={card}>
-          <div style={{ fontWeight: 600, marginBottom: 14, fontSize: 14 }}>הוצאות המחזור</div>
-          {poolExpenses.map(e => (
-            <div key={e.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 0', borderBottom: '1px solid oklch(0.20 0.01 250)', fontSize: 13 }}>
-              <div>
-                <span style={{ fontWeight: 500 }}>{POOL_CATEGORIES.find(c => c.key === e.category)?.label ?? e.category}</span>
-                {e.description && <span style={{ color: 'oklch(0.55 0.01 250)', marginRight: 8 }}>· {e.description}</span>}
-              </div>
-              <span style={{ direction: 'ltr', fontWeight: 600, color: 'oklch(0.72 0.18 55)' }}>{formatCurrency(e.amount)}</span>
+      <div style={card}>
+        <div style={{ fontWeight: 600, marginBottom: 14, fontSize: 14 }}>הוצאות המחזור</div>
+        {poolExpenses?.length ? poolExpenses.map(e => (
+          <div key={e.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 0', borderBottom: '1px solid oklch(0.20 0.01 250)', fontSize: 13 }}>
+            <div>
+              <span style={{ fontWeight: 500 }}>{POOL_CATEGORIES.find(c => c.key === e.category)?.label ?? e.category}</span>
+              {e.description && <span style={{ color: 'oklch(0.55 0.01 250)', marginRight: 8 }}>· {e.description}</span>}
             </div>
-          ))}
-        </div>
-      )}
+            <span style={{ direction: 'ltr', fontWeight: 600, color: 'oklch(0.72 0.18 55)' }}>{formatCurrency(e.amount)}</span>
+          </div>
+        )) : (
+          <div style={{ textAlign: 'center', padding: '24px 0' }}>
+            <Inbox size={32} style={{ color: 'oklch(0.30 0.01 250)', margin: '0 auto 8px' }} />
+            <div style={{ fontSize: 12, color: 'oklch(0.45 0.01 250)' }}>אין הוצאות עדיין</div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
