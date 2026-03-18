@@ -415,35 +415,33 @@ export default function ExpensesPage() {
           </div>
 
           <form onSubmit={handleAdd} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {expType === 'personal' ? (
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                  <label style={S.label}>קטגוריה</label>
+            {/* Category — same for both types */}
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                <label style={S.label}>קטגוריה</label>
+                {expType === 'personal' && (
                   <button type="button" onClick={() => setUseCustom(v => !v)}
                     style={{ background: 'none', border: 'none', fontSize: 10, color: 'oklch(0.55 0.18 250)', cursor: 'pointer', padding: 0 }}>
                     {useCustomCat ? '← מרשימה' : '+ ידנית'}
                   </button>
-                </div>
-                {useCustomCat
-                  ? <input type="text" value={customCat} onChange={e => setCustomCat(e.target.value)} placeholder="שם קטגוריה חופשי..." style={{ ...S.input, width: '100%' }} />
-                  : (
-                    <select value={categoryId} onChange={e => setCategoryId(e.target.value)} style={{ ...S.input, width: '100%' }}>
-                      <option value="">בחר...</option>
-                      {categories?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                    </select>
-                  )
-                }
+                )}
               </div>
-            ) : (
-              <div>
-                <label style={S.label}>תיאור</label>
-                <input type="text" value={sharedLabel} onChange={e => setSharedLabel(e.target.value)}
-                  placeholder="שכירות, חשמל, מכולת..." style={{ ...S.input, width: '100%' }} />
-              </div>
-            )}
+              {expType === 'personal' && !useCustomCat ? (
+                <select value={categoryId} onChange={e => setCategoryId(e.target.value)} style={{ ...S.input, width: '100%' }}>
+                  <option value="">בחר...</option>
+                  {categories?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                </select>
+              ) : (
+                <input type="text" value={expType === 'shared' ? sharedLabel : customCat}
+                  onChange={e => expType === 'shared' ? setSharedLabel(e.target.value) : setCustomCat(e.target.value)}
+                  placeholder={expType === 'shared' ? 'שכירות, חשמל, מכולת...' : 'שם קטגוריה חופשי...'}
+                  style={{ ...S.input, width: '100%' }} />
+              )}
+            </div>
 
+            {/* Amount */}
             <div>
-              <label style={S.label}>{expType === 'shared' ? 'סכום כולל ₪ (חלקך 50%)' : 'סכום (₪)'}</label>
+              <label style={S.label}>סכום (₪){expType === 'shared' ? ' — כולל (חלקך 50%)' : ''}</label>
               <input type="number" value={amount} onChange={e => setAmount(e.target.value)}
                 placeholder="0" required min="0.01" step="0.01"
                 style={{ ...S.input, width: '100%', direction: 'ltr', textAlign: 'right' }} />
