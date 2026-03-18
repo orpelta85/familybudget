@@ -72,7 +72,7 @@ export function parseExpenseExcel(file: File): Promise<RawExpenseRow[]> {
         const dateKey   = keys.find(k => /תאריך|date/i.test(k)) ?? keys[0]
         const descKey   = keys.find(k => /עסק|שם|תיאור|description|merchant/i.test(k)) ?? keys[1]
         const amountKey = keys.find(k => /סכום|חיוב|amount|sum/i.test(k)) ?? keys[2]
-        const catKey    = keys.find(k => /קטגוריה|category/i.test(k))
+        const catKey    = keys.find(k => /קטגוריה|category|סוג הוצאה|קטגורי/i.test(k))
         const typeKey   = keys.find(k => /אישי|משותף|סוג|type/i.test(k))
         const fundKey   = keys.find(k => /קרן|fund/i.test(k))
 

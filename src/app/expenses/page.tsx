@@ -143,9 +143,13 @@ export default function ExpensesPage() {
         // Auto-match category name from Excel to existing budget categories
         let categoryId = ''
         if (row.category) {
-          const match = cats.find(c => c.name === row.category)
+          const catName = row.category.trim()
+          // Try exact match first, then case-insensitive, then includes
+          const match = cats.find(c => c.name === catName)
+            || cats.find(c => c.name.trim().toLowerCase() === catName.toLowerCase())
+            || cats.find(c => c.name.includes(catName) || catName.includes(c.name))
           if (match) categoryId = String(match.id)
-          else categoryId = `__new__${row.category}` // marker for auto-create
+          else categoryId = `__new__${catName}` // marker for auto-create
         }
         return { ...row, categoryId }
       })
@@ -172,8 +176,12 @@ export default function ExpensesPage() {
 
   async function handleImportSave() {
     if (!user || !selectedPeriodId) return
-    const valid = importRows.filter(r => r.categoryId && r.amount > 0)
-    if (!valid.length) { toast.error('לא נבחרו קטגוריות'); return }
+    const valid = importRows.filter(r => (r.categoryId || r.category) && r.amount > 0)
+    if (!valid.length) { toast.error('אין שורות עם קטגוריה וסכום'); return }
+    // Auto-assign __new__ for rows that have category name but no categoryId
+    valid.forEach(r => {
+      if (!r.categoryId && r.category) r.categoryId = `__new__${r.category.trim()}`
+    })
     try {
       const today = new Date().toISOString().split('T')[0]
       if (!familyId) { toast.error('לא משויך למשפחה'); return }
