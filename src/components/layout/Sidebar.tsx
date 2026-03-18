@@ -64,9 +64,8 @@ export function Sidebar() {
       height: '100vh',
       background: 'oklch(0.14 0.01 250)',
       borderLeft: '1px solid oklch(0.22 0.01 250)',
-      display: 'flex', flexDirection: 'column',
       zIndex: 40,
-    }} className="hidden md:flex">
+    }} className="hidden md:flex md:flex-col">
       {/* Logo */}
       <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid oklch(0.20 0.01 250)' }}>
         <div style={{ fontSize: 15, fontWeight: 700, color: 'oklch(0.92 0.01 250)', letterSpacing: '-0.01em' }}>
