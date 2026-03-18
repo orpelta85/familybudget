@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
 
 export default function LoginPage() {
@@ -11,7 +11,22 @@ export default function LoginPage() {
   const [isSignup, setIsSignup] = useState(false)
   const [loading, setLoading] = useState(false)
   const [resetSent, setResetSent] = useState(false)
+  const [inviteFamilyName, setInviteFamilyName] = useState('')
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const inviteCode = searchParams.get('invite')
+
+  // Store invite code and fetch family name
+  useEffect(() => {
+    if (inviteCode) {
+      localStorage.setItem('familyInvite', inviteCode)
+      setIsSignup(true)
+      fetch(`/api/family/join?code=${inviteCode}`)
+        .then(r => r.json())
+        .then(d => { if (d.family_name) setInviteFamilyName(d.family_name) })
+        .catch(() => {})
+    }
+  }, [inviteCode])
 
   async function handleReset() {
     if (!email) { toast.error('הזן אימייל קודם'); return }
@@ -32,9 +47,11 @@ export default function LoginPage() {
     const sb = createClient()
 
     if (isSignup) {
+      const invite = inviteCode || localStorage.getItem('familyInvite') || ''
+      const setupUrl = invite ? `/setup?invite=${invite}` : '/setup'
       const { error } = await sb.auth.signUp({
         email, password,
-        options: { emailRedirectTo: `${window.location.origin}/auth/callback?next=/setup` }
+        options: { emailRedirectTo: `${window.location.origin}/auth/callback?next=${setupUrl}` }
       })
       if (error) { toast.error(error.message); setLoading(false); return }
       toast.success('נרשמת! בדוק את המייל לאימות ולחץ על הקישור.')
@@ -54,7 +71,9 @@ export default function LoginPage() {
       <div style={{ width: 380, background: 'oklch(0.16 0.01 250)', border: '1px solid oklch(0.25 0.01 250)', borderRadius: 12, padding: 32 }}>
         <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 6 }}>תקציב חכם</h1>
         <p style={{ color: 'oklch(0.60 0.01 250)', fontSize: 14, marginBottom: 28 }}>
-          {isSignup ? 'יצירת חשבון חדש' : 'התחברות לחשבון'}
+          {inviteFamilyName
+            ? `הצטרפות ל${inviteFamilyName}`
+            : isSignup ? 'יצירת חשבון חדש' : 'התחברות לחשבון'}
         </p>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>

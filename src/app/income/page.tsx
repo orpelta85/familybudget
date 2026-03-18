@@ -57,7 +57,7 @@ export default function IncomePage() {
     }
   }, [income, selectedPeriodId])
 
-  if (loading || !user) return null
+  if (loading || !user) return <div style={{ padding: 40, textAlign: 'center', color: 'oklch(0.55 0.01 250)' }}>טוען...</div>
 
   const total = (Number(salary) || 0) + (Number(bonus) || 0) + (Number(other) || 0)
 

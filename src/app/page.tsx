@@ -4,12 +4,14 @@ import { useUser } from '@/lib/queries/useUser'
 import { usePeriods, useCurrentPeriod } from '@/lib/queries/usePeriods'
 import { useIncome, useAllIncome } from '@/lib/queries/useIncome'
 import { usePersonalExpenses, useBudgetCategories, useAllPersonalExpenses } from '@/lib/queries/useExpenses'
-import { useSharedExpenses } from '@/lib/queries/useShared'
+import { useSharedExpenses, useAllSharedExpenses } from '@/lib/queries/useShared'
 import { useApartmentDeposits } from '@/lib/queries/useApartment'
 import { useSinkingFunds, useAllSinkingTransactions } from '@/lib/queries/useSinking'
+import { usePensionReports } from '@/lib/queries/usePension'
 import { useHasSetup } from '@/lib/queries/useSetup'
 import { formatCurrency, periodLabel } from '@/lib/utils'
 import { useSharedPeriod } from '@/lib/context/PeriodContext'
+import { useFamilyContext } from '@/lib/context/FamilyContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useMemo } from 'react'
 import { PeriodSelector } from '@/components/layout/PeriodSelector'
@@ -41,6 +43,7 @@ export default function Dashboard() {
   const { data: periods } = usePeriods()
   const currentPeriod = useCurrentPeriod()
   const { selectedPeriodId, setSelectedPeriodId } = useSharedPeriod()
+  const { familyId } = useFamilyContext()
 
   useEffect(() => {
     if (currentPeriod && !selectedPeriodId) setSelectedPeriodId(currentPeriod.id)
@@ -57,8 +60,10 @@ export default function Dashboard() {
   const { data: income } = useIncome(selectedPeriodId, user?.id)
   const { data: allIncome } = useAllIncome(user?.id)
   const { data: expenses } = usePersonalExpenses(selectedPeriodId, user?.id)
-  const { data: shared } = useSharedExpenses(selectedPeriodId)
-  const { data: deposits } = useApartmentDeposits()
+  const { data: shared } = useSharedExpenses(selectedPeriodId, familyId)
+  const { data: allShared } = useAllSharedExpenses(familyId)
+  const { data: deposits } = useApartmentDeposits(familyId)
+  const { data: pensionReports } = usePensionReports(user?.id)
   const { data: categories } = useBudgetCategories(user?.id)
   const { data: allExpenses } = useAllPersonalExpenses(user?.id)
   const { data: funds } = useSinkingFunds(user?.id)
@@ -89,8 +94,10 @@ export default function Dashboard() {
 
   const yearAgoExpenses = useMemo(() => {
     if (!allExpenses || !yearAgoPeriodId) return 0
-    return allExpenses.filter(e => e.period_id === yearAgoPeriodId).reduce((s, e) => s + e.amount, 0)
-  }, [allExpenses, yearAgoPeriodId])
+    const personal = allExpenses.filter(e => e.period_id === yearAgoPeriodId).reduce((s, e) => s + e.amount, 0)
+    const sharedYearAgo = (allShared ?? []).filter(e => e.period_id === yearAgoPeriodId).reduce((s, e) => s + (e.my_share ?? e.total_amount * 0.5), 0)
+    return personal + sharedYearAgo
+  }, [allExpenses, allShared, yearAgoPeriodId])
 
   if (userLoading || setupLoading) return (
     <div style={{ padding: 40, color: 'oklch(0.55 0.01 250)', fontSize: 14 }}>טוען...</div>
@@ -120,7 +127,7 @@ export default function Dashboard() {
   const variableRemaining = variableTargets - variableSpent
   const sinkingTargets = (categories ?? []).filter(c => c.type === 'sinking').reduce((s, c) => s + c.monthly_target, 0)
   const savingsTargets = (categories ?? []).filter(c => c.type === 'savings').reduce((s, c) => s + c.monthly_target, 0)
-  const safeToSpend = totalIncome - fixedTargets - sinkingTargets - savingsTargets - totalShared - variableSpent
+  const safeToSpend = totalIncome - fixedTargets - variableTargets - sinkingTargets - savingsTargets - totalShared
 
   // ── Year-over-year ────────────────────────────────────────────────────────
   const yearAgoIncome = allIncome?.find(i => i.period_id === yearAgoPeriodId)
@@ -159,19 +166,38 @@ export default function Dashboard() {
   })
   const showAlert = !dataLoading && (netFlow < 0 || overspentCats.length > 0)
 
-  function diffBadge(current: number, prev: number) {
-    if (!prev) return null
-    const pct = Math.round(((current - prev) / prev) * 100)
-    const up = pct >= 0
-    const color = up ? 'oklch(0.70 0.18 145)' : 'oklch(0.62 0.22 27)'
-    return <span style={{ fontSize: 11, color, fontWeight: 600 }}>{up ? '↑' : '↓'}{Math.abs(pct)}%</span>
+  // ── Net Worth ─────────────────────────────────────────────────────────────
+  const pensionTotal = pensionReports?.[0]?.total_savings ?? 0
+  const netWorth = totalFundBalance + totalSaved + pensionTotal
+
+  // ── Financial Health Score (0-100) ─────────────────────────────────────────
+  const healthScores: number[] = []
+  // 1. Savings rate (0-30 points): 20%+ = full, 0% = 0
+  if (totalIncome > 0) healthScores.push(Math.min(savingsPct / 20 * 30, 30))
+  // 2. Budget adherence (0-20 points): % of categories under target
+  const catsWithTarget = (categories ?? []).filter(c => c.monthly_target > 0)
+  if (catsWithTarget.length > 0) {
+    const underBudget = catsWithTarget.filter(c => (spendByCat[c.id] ?? 0) <= c.monthly_target).length
+    healthScores.push((underBudget / catsWithTarget.length) * 20)
   }
+  // 3. Emergency fund (0-20 points): 3 months expenses = full
+  const monthlyExpenses = totalExpenses || 1
+  const emergencyMonths = totalFundBalance / monthlyExpenses
+  healthScores.push(Math.min(emergencyMonths / 3 * 20, 20))
+  // 4. Pension saving (0-15 points): has pension = 15
+  healthScores.push(pensionTotal > 0 ? 15 : 0)
+  // 5. Apartment progress (0-15 points): proportional to target
+  healthScores.push((totalSaved / APARTMENT_TARGET) * 15)
+
+  const healthScore = Math.round(healthScores.reduce((s, v) => s + v, 0))
+  const healthColor = healthScore >= 75 ? 'oklch(0.70 0.18 145)' : healthScore >= 50 ? 'oklch(0.72 0.18 55)' : 'oklch(0.62 0.22 27)'
+  const healthLabel = healthScore >= 75 ? 'מצוין' : healthScore >= 50 ? 'סביר' : 'דורש שיפור'
 
   return (
     <div>
       {/* Header */}
       <div style={{ marginBottom: 16 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.02em' }}>דשבורד</h1>
+        <h1 style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em' }}>דשבורד</h1>
         <p style={{ color: 'oklch(0.60 0.01 250)', fontSize: 14, marginTop: 4 }}>
           {selectedPeriod ? periodLabel(selectedPeriod.start_date) : '...'}
         </p>
@@ -238,7 +264,7 @@ export default function Dashboard() {
                   { label: 'הכנסה ידועה', value: totalIncome, color: 'oklch(0.70 0.18 145)', sign: '+' },
                   { label: 'הוצאות קבועות (יעד)', value: -fixedTargets, color: 'oklch(0.55 0.01 250)', sign: '-' },
                   { label: 'משותפות (שהוזן)', value: -totalShared, color: 'oklch(0.55 0.01 250)', sign: '-' },
-                  { label: 'משתנות - הוצאתי', value: -variableSpent, color: 'oklch(0.72 0.18 55)', sign: '-' },
+                  { label: 'משתנות (יעד)', value: -variableTargets, color: 'oklch(0.72 0.18 55)', sign: '-' },
                   ...(sinkingTargets > 0 ? [{ label: 'קרנות צבירה (יעד חודשי)', value: -sinkingTargets, color: 'oklch(0.70 0.15 185)', sign: '-' }] : []),
                   ...(savingsTargets > 0 ? [{ label: 'חיסכון (יעד חודשי)', value: -savingsTargets, color: 'oklch(0.70 0.18 145)', sign: '-' }] : []),
                 ].map(row => (
@@ -289,8 +315,8 @@ export default function Dashboard() {
                     positiveIsGood: true,
                   },
                   {
-                    label: 'הוצאות אישיות',
-                    current: totalPersonal,
+                    label: 'הוצאות',
+                    current: totalExpenses,
                     prev: yearAgoExpenses,
                     positiveIsGood: false,
                   },
@@ -340,9 +366,10 @@ export default function Dashboard() {
               .slice(0, 7)
               .map(cat => {
                 const spent = spendByCat[cat.id] ?? 0
-                const pct = Math.min(spent / cat.monthly_target, 1)
-                const pctNum = Math.round(pct * 100)
-                const barColor = pct >= 1 ? 'oklch(0.62 0.22 27)' : pct >= 0.9 ? 'oklch(0.72 0.18 55)' : 'oklch(0.65 0.18 250)'
+                const rawPct = spent / cat.monthly_target
+                const pct = Math.min(rawPct, 1)
+                const pctDisplay = Math.round(rawPct * 100)
+                const barColor = rawPct >= 1 ? 'oklch(0.62 0.22 27)' : rawPct >= 0.9 ? 'oklch(0.72 0.18 55)' : 'oklch(0.65 0.18 250)'
                 const avg = avgByCat[cat.id]
                 const deviation = avg && avg > 0 ? Math.round(((spent - avg) / avg) * 100) : null
                 return (
@@ -355,11 +382,11 @@ export default function Dashboard() {
                             {deviation > 0 ? `↑${deviation}%` : `↓${Math.abs(deviation)}%`}
                           </span>
                         )}
-                        <span style={{ color: barColor, fontWeight: 600 }}>{pctNum}%</span>
+                        <span style={{ color: barColor, fontWeight: 600 }}>{pctDisplay}%</span>
                       </div>
                     </div>
                     <div style={{ height: 4, borderRadius: 2, background: 'oklch(0.22 0.01 250)', overflow: 'hidden' }}>
-                      <div style={{ height: '100%', borderRadius: 2, width: `${pctNum}%`, background: barColor, transition: 'width 0.4s ease' }} />
+                      <div style={{ height: '100%', borderRadius: 2, width: `${Math.round(pct * 100)}%`, background: barColor, transition: 'width 0.4s ease' }} />
                     </div>
                   </div>
                 )
@@ -455,6 +482,60 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* ── Net Worth + Health Score ───────────────────────────────────────── */}
+      {!dataLoading && totalIncome > 0 && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14, marginTop: 14 }}>
+          {/* Net Worth */}
+          <div style={CARD}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontWeight: 600, fontSize: 14, marginBottom: 14 }}>
+              <Wallet size={14} style={{ color: 'oklch(0.68 0.18 295)' }} /> שווי נקי
+            </div>
+            <div style={{ fontSize: 28, fontWeight: 700, direction: 'ltr', textAlign: 'left', color: netWorth >= 0 ? 'oklch(0.68 0.18 295)' : 'oklch(0.62 0.22 27)', marginBottom: 14 }}>
+              {formatCurrency(netWorth)}
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12 }}>
+              {pensionTotal > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: 'oklch(0.55 0.01 250)' }}>פנסיה והשקעות</span>
+                  <span style={{ direction: 'ltr', color: 'oklch(0.70 0.01 250)' }}>{formatCurrency(pensionTotal)}</span>
+                </div>
+              )}
+              {totalFundBalance !== 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: 'oklch(0.55 0.01 250)' }}>קרנות צבירה</span>
+                  <span style={{ direction: 'ltr', color: 'oklch(0.70 0.01 250)' }}>{formatCurrency(totalFundBalance)}</span>
+                </div>
+              )}
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: 'oklch(0.55 0.01 250)' }}>חיסכון לדירה</span>
+                <span style={{ direction: 'ltr', color: 'oklch(0.70 0.01 250)' }}>{formatCurrency(totalSaved)}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Health Score */}
+          <div style={CARD}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontWeight: 600, fontSize: 14, marginBottom: 14 }}>
+              <TrendingUp size={14} style={{ color: healthColor }} /> בריאות פיננסית
+            </div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 8 }}>
+              <span style={{ fontSize: 36, fontWeight: 700, color: healthColor }}>{healthScore}</span>
+              <span style={{ fontSize: 14, color: 'oklch(0.55 0.01 250)' }}>/ 100</span>
+              <span style={{ fontSize: 13, color: healthColor, fontWeight: 600 }}>{healthLabel}</span>
+            </div>
+            <div style={{ height: 6, borderRadius: 3, background: 'oklch(0.22 0.01 250)', overflow: 'hidden', marginBottom: 12 }}>
+              <div style={{ height: '100%', borderRadius: 3, width: `${healthScore}%`, background: healthColor, transition: 'width 0.4s ease' }} />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 11, color: 'oklch(0.50 0.01 250)' }}>
+              <span>חיסכון {savingsPct}% מההכנסה {savingsPct >= 20 ? '✓' : ''}</span>
+              <span>קרנות: {emergencyMonths.toFixed(1)} חודשי הוצאות</span>
+              <span>פנסיה: {pensionTotal > 0 ? '✓ פעילה' : '✗ אין נתונים'}</span>
+              <span>דירה: {apartmentPct.toFixed(0)}% מהיעד</span>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -3,6 +3,7 @@
 import { useUser } from '@/lib/queries/useUser'
 import { useBudgetCategories, usePersonalExpenses, useUpdateCategoryTarget } from '@/lib/queries/useExpenses'
 import { useCurrentPeriod } from '@/lib/queries/usePeriods'
+import { useIncome } from '@/lib/queries/useIncome'
 import { formatCurrency } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -54,8 +55,9 @@ export default function BudgetPage() {
 
   const { data: categories } = useBudgetCategories(user?.id)
   const { data: expenses } = usePersonalExpenses(currentPeriod?.id, user?.id)
+  const { data: income } = useIncome(currentPeriod?.id, user?.id)
 
-  if (loading || !user) return null
+  if (loading || !user) return <div style={{ padding: 40, textAlign: 'center', color: 'oklch(0.55 0.01 250)' }}>טוען...</div>
 
   const grouped = (categories ?? []).reduce<Record<string, typeof categories>>((acc, c) => {
     if (!acc[c.type]) acc[c.type] = []
@@ -93,15 +95,25 @@ export default function BudgetPage() {
 
       <div className="grid-3" style={{ marginBottom: 20 }}>
         {[
-          { label: 'תקציב כולל', value: formatCurrency(totalBudget), color: 'oklch(0.65 0.18 250)' },
-          { label: 'בוצע עד כה', value: formatCurrency(totalSpent), color: 'oklch(0.72 0.18 55)' },
-          { label: 'נותר', value: formatCurrency(totalBudget - totalSpent), color: totalBudget - totalSpent >= 0 ? 'oklch(0.70 0.18 145)' : 'oklch(0.62 0.22 27)' },
-        ].map(k => (
-          <div key={k.label} style={card}>
-            <div style={{ fontSize: 11, color: 'oklch(0.55 0.01 250)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.03em' }}>{k.label}</div>
-            <div style={{ fontSize: 22, fontWeight: 700, color: k.color, direction: 'ltr' }}>{k.value}</div>
-          </div>
-        ))}
+          { label: 'תקציב כולל', value: formatCurrency(totalBudget), color: 'oklch(0.65 0.18 250)', showRatio: true },
+          { label: 'בוצע עד כה', value: formatCurrency(totalSpent), color: 'oklch(0.72 0.18 55)', showRatio: false },
+          { label: 'נותר', value: formatCurrency(totalBudget - totalSpent), color: totalBudget - totalSpent >= 0 ? 'oklch(0.70 0.18 145)' : 'oklch(0.62 0.22 27)', showRatio: false },
+        ].map(k => {
+          const totalIncome = income ? (income.salary + income.bonus + income.other) : 0
+          const budgetToIncome = totalIncome > 0 ? (totalBudget / totalIncome) * 100 : 0
+          const ratioColor = budgetToIncome <= 80 ? 'oklch(0.70 0.18 145)' : budgetToIncome <= 100 ? 'oklch(0.72 0.18 55)' : 'oklch(0.62 0.22 27)'
+          return (
+            <div key={k.label} style={card}>
+              <div style={{ fontSize: 11, color: 'oklch(0.55 0.01 250)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.03em' }}>{k.label}</div>
+              <div style={{ fontSize: 22, fontWeight: 700, color: k.color, direction: 'ltr' }}>{k.value}</div>
+              {k.showRatio && totalIncome > 0 && (
+                <div style={{ fontSize: 12, color: ratioColor, marginTop: 6 }}>
+                  {budgetToIncome.toFixed(0)}% מההכנסה
+                </div>
+              )}
+            </div>
+          )
+        })}
       </div>
 
       {!categories?.length

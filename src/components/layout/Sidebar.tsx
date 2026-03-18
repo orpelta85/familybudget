@@ -5,13 +5,15 @@ import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import {
   LayoutDashboard, Wallet, BarChart3, Receipt,
-  Users, PiggyBank, Target, Home, TrendingUp
+  Users, PiggyBank, Target, Home, TrendingUp, Link2, ListChecks
 } from 'lucide-react'
+import { useFamilyContext } from '@/lib/context/FamilyContext'
+import { toast } from 'sonner'
 
 const nav = [
   { href: '/',          label: 'דשבורד',          icon: LayoutDashboard },
   { href: '/income',    label: 'הכנסה',            icon: Wallet },
-  { href: '/budget',    label: 'תקציב מתוכנן',     icon: BarChart3 },
+  { href: '/budget',    label: 'תקציב מתוכנן',     icon: ListChecks },
   { href: '/expenses',  label: 'הוצאות',           icon: Receipt },
   { href: '/joint',     label: 'קופה משותפת',      icon: PiggyBank },
   { href: '/sinking',   label: 'קרנות צבירה',      icon: Target },
@@ -22,6 +24,14 @@ const nav = [
 
 export function Sidebar() {
   const pathname = usePathname()
+  const { family, isAdmin } = useFamilyContext()
+
+  function copyInviteLink() {
+    if (!family) return
+    const url = `${window.location.origin}/login?invite=${family.invite_code}`
+    navigator.clipboard.writeText(url)
+    toast.success('לינק הזמנה הועתק!')
+  }
 
   return (
     <aside style={{
@@ -36,7 +46,7 @@ export function Sidebar() {
       {/* Logo */}
       <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid oklch(0.20 0.01 250)' }}>
         <div style={{ fontSize: 15, fontWeight: 700, color: 'oklch(0.92 0.01 250)', letterSpacing: '-0.01em' }}>
-          תקציב חכם
+          {family?.name || 'תקציב חכם'}
         </div>
         <div style={{ fontSize: 11, color: 'oklch(0.50 0.01 250)', marginTop: 3, letterSpacing: '0.03em', textTransform: 'uppercase' }}>
           Family Finance
@@ -72,7 +82,22 @@ export function Sidebar() {
       </nav>
 
       {/* Footer */}
-      <div style={{ padding: '12px 20px', borderTop: '1px solid oklch(0.20 0.01 250)' }}>
+      <div style={{ padding: '12px 20px', borderTop: '1px solid oklch(0.20 0.01 250)', display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {isAdmin && family && (
+          <button
+            onClick={copyInviteLink}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 6,
+              background: 'none', border: '1px solid oklch(0.25 0.01 250)',
+              borderRadius: 6, padding: '6px 10px',
+              color: 'oklch(0.60 0.18 250)', fontSize: 11, fontWeight: 500,
+              cursor: 'pointer',
+            }}
+          >
+            <Link2 size={12} />
+            הזמן חבר משפחה
+          </button>
+        )}
         <div style={{ fontSize: 11, color: 'oklch(0.40 0.01 250)', lineHeight: 1.5 }}>
           מחזור: יום 11 – יום 10
         </div>

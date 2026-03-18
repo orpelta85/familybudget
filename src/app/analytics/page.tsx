@@ -7,6 +7,7 @@ import { useAllPersonalExpenses } from '@/lib/queries/useExpenses'
 import { useAllSharedExpenses } from '@/lib/queries/useShared'
 import { useApartmentDeposits } from '@/lib/queries/useApartment'
 import { formatCurrency } from '@/lib/utils'
+import { useFamilyContext } from '@/lib/context/FamilyContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, Legend, Cell } from 'recharts'
@@ -34,11 +35,12 @@ const ALL_PERIOD_LABELS = [
 export default function AnalyticsPage() {
   const { user, loading } = useUser()
   const router = useRouter()
+  const { familyId } = useFamilyContext()
   const { data: periods } = usePeriods()
   const { data: allIncome } = useAllIncome(user?.id)
   const { data: allPersonal } = useAllPersonalExpenses(user?.id)
-  const { data: allShared } = useAllSharedExpenses()
-  const { data: deposits } = useApartmentDeposits()
+  const { data: allShared } = useAllSharedExpenses(familyId)
+  const { data: deposits } = useApartmentDeposits(familyId)
 
   const [selectedYearIdx, setSelectedYearIdx] = useState(0)
 
@@ -149,58 +151,6 @@ export default function AnalyticsPage() {
         ))}
       </div>
 
-      {/* Monthly breakdown table — shown first */}
-      <div style={{ ...card, marginBottom: 16 }}>
-        <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 14 }}>פירוט חודשי</div>
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-            <thead>
-              <tr style={{ borderBottom: '1px solid oklch(0.22 0.01 250)' }}>
-                {['מחזור', 'הכנסה', 'הוצאות', 'תזרים', '% חיסכון', 'לדירה'].map(h => (
-                  <th key={h} style={{ padding: '8px 10px', textAlign: 'right', color: 'oklch(0.55 0.01 250)', fontWeight: 500, fontSize: 11, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {chartData.map((row, i) => {
-                const hasData = row.income > 0 || row.expenses > 0
-                const savingsPct = row.income > 0 ? Math.round((row.net / row.income) * 100) : null
-                return (
-                  <tr key={i} style={{ borderBottom: '1px solid oklch(0.20 0.01 250)', opacity: hasData ? 1 : 0.3 }}>
-                    <td style={{ padding: '8px 10px', color: 'oklch(0.75 0.01 250)', whiteSpace: 'nowrap' }}>{row.name}</td>
-                    <td style={{ padding: '8px 10px', direction: 'ltr', textAlign: 'right', color: 'oklch(0.65 0.18 250)', fontWeight: 500 }}>{row.income > 0 ? formatCurrency(row.income) : '—'}</td>
-                    <td style={{ padding: '8px 10px', direction: 'ltr', textAlign: 'right', color: 'oklch(0.72 0.18 55)' }}>{row.expenses > 0 ? formatCurrency(row.expenses) : '—'}</td>
-                    <td style={{ padding: '8px 10px', direction: 'ltr', textAlign: 'right', fontWeight: 600, color: row.net >= 0 ? 'oklch(0.70 0.18 145)' : 'oklch(0.62 0.22 27)' }}>
-                      {row.income > 0 ? formatCurrency(row.net) : '—'}
-                    </td>
-                    <td style={{ padding: '8px 10px', textAlign: 'center' }}>
-                      {savingsPct !== null ? (
-                        <span style={{
-                          background: savingsPct >= 20 ? 'oklch(0.22 0.05 145)' : savingsPct >= 0 ? 'oklch(0.22 0.03 55)' : 'oklch(0.22 0.05 27)',
-                          color: savingsPct >= 20 ? 'oklch(0.70 0.18 145)' : savingsPct >= 0 ? 'oklch(0.72 0.18 55)' : 'oklch(0.62 0.22 27)',
-                          borderRadius: 6, padding: '2px 8px', fontSize: 12, fontWeight: 600,
-                        }}>{savingsPct}%</span>
-                      ) : '—'}
-                    </td>
-                    <td style={{ padding: '8px 10px', direction: 'ltr', textAlign: 'right', color: 'oklch(0.70 0.18 145)' }}>{row.saved > 0 ? formatCurrency(row.saved) : '—'}</td>
-                  </tr>
-                )
-              })}
-            </tbody>
-            <tfoot>
-              <tr style={{ borderTop: '2px solid oklch(0.25 0.01 250)' }}>
-                <td style={{ padding: '10px 10px', fontWeight: 600, color: 'oklch(0.75 0.01 250)' }}>סה&quot;כ</td>
-                <td style={{ padding: '10px 10px', direction: 'ltr', textAlign: 'right', fontWeight: 700, color: 'oklch(0.65 0.18 250)' }}>{formatCurrency(yearIncome)}</td>
-                <td style={{ padding: '10px 10px', direction: 'ltr', textAlign: 'right', fontWeight: 700, color: 'oklch(0.72 0.18 55)' }}>{formatCurrency(yearExpenses)}</td>
-                <td style={{ padding: '10px 10px', direction: 'ltr', textAlign: 'right', fontWeight: 700, color: yearNet >= 0 ? 'oklch(0.70 0.18 145)' : 'oklch(0.62 0.22 27)' }}>{formatCurrency(yearNet)}</td>
-                <td style={{ padding: '10px 10px', textAlign: 'center', fontWeight: 700, color: 'oklch(0.70 0.15 185)' }}>{avgSavingsPct.toFixed(1)}%</td>
-                <td style={{ padding: '10px 10px', direction: 'ltr', textAlign: 'right', fontWeight: 700, color: 'oklch(0.70 0.18 145)' }}>{formatCurrency(yearSaved)}</td>
-              </tr>
-            </tfoot>
-          </table>
-        </div>
-      </div>
-
       {/* Income vs Expenses bar chart */}
       <div style={{ ...card, marginBottom: 16 }}>
         <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -273,7 +223,7 @@ export default function AnalyticsPage() {
                 const hasData = row.income > 0 || row.expenses > 0
                 return (
                   <tr key={i} style={{ borderBottom: '1px solid oklch(0.20 0.01 250)', opacity: hasData ? 1 : 0.35 }}>
-                    <td style={{ padding: '8px 12px', color: 'oklch(0.75 0.01 250)' }}>{PERIOD_SHORT_LABELS[i]}</td>
+                    <td style={{ padding: '8px 12px', color: 'oklch(0.75 0.01 250)' }}>{row.name}</td>
                     <td style={{ padding: '8px 12px', direction: 'ltr', textAlign: 'right', color: 'oklch(0.65 0.18 250)', fontWeight: 500 }}>{row.income > 0 ? formatCurrency(row.income) : '—'}</td>
                     <td style={{ padding: '8px 12px', direction: 'ltr', textAlign: 'right' }}>{row.personal > 0 ? formatCurrency(row.personal) : '—'}</td>
                     <td style={{ padding: '8px 12px', direction: 'ltr', textAlign: 'right' }}>{row.shared > 0 ? formatCurrency(row.shared) : '—'}</td>

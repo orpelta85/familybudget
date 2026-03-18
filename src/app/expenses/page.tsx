@@ -7,6 +7,7 @@ import { useSharedExpenses, useUpsertSharedExpense, useDeleteSharedExpense } fro
 import { useSinkingFunds, useAddSinkingTransaction } from '@/lib/queries/useSinking'
 import { formatCurrency } from '@/lib/utils'
 import { useSharedPeriod } from '@/lib/context/PeriodContext'
+import { useFamilyContext } from '@/lib/context/FamilyContext'
 import { parseExpenseExcel, createExpenseTemplate } from '@/lib/excel-import'
 import { useRecurringPersonal, useRecurringShared, personalItemId } from '@/lib/hooks/useRecurring'
 import { useRouter } from 'next/navigation'
@@ -37,7 +38,7 @@ const S = {
   } as React.CSSProperties,
   label: { fontSize: 11, color: 'oklch(0.55 0.01 250)', display: 'block', marginBottom: 4, fontWeight: 500 } as React.CSSProperties,
   row: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid oklch(0.20 0.01 250)' } as React.CSSProperties,
-  iconBtn: { background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 3 } as React.CSSProperties,
+  iconBtn: { background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 8, minWidth: 36, minHeight: 36 } as React.CSSProperties,
 }
 
 export default function ExpensesPage() {
@@ -47,6 +48,7 @@ export default function ExpensesPage() {
   const currentPeriod = useCurrentPeriod()
   const { selectedPeriodId, setSelectedPeriodId } = useSharedPeriod()
   const fileRef = useRef<HTMLInputElement>(null)
+  const { familyId } = useFamilyContext()
 
   useEffect(() => {
     if (currentPeriod && !selectedPeriodId) setSelectedPeriodId(currentPeriod.id)
@@ -56,7 +58,7 @@ export default function ExpensesPage() {
   }, [user, loading, router])
 
   const { data: personalExp } = usePersonalExpenses(selectedPeriodId, user?.id)
-  const { data: sharedExp }   = useSharedExpenses(selectedPeriodId)
+  const { data: sharedExp }   = useSharedExpenses(selectedPeriodId, familyId)
   const { data: categories }  = useBudgetCategories(user?.id)
   const { data: funds }       = useSinkingFunds(user?.id)
   const addExpense    = useAddExpense()
@@ -79,7 +81,7 @@ export default function ExpensesPage() {
   const [importRows, setImportRows] = useState<(RawExpenseRow & { categoryId: string })[]>([])
   const [showImport, setShowImport] = useState(false)
 
-  if (loading || !user) return null
+  if (loading || !user) return <div style={{ padding: 40, textAlign: 'center', color: 'oklch(0.55 0.01 250)' }}>טוען...</div>
 
   const selectedPeriod = periods?.find(p => p.id === selectedPeriodId)
   const totalPersonal  = (personalExp ?? []).reduce((s, e) => s + e.amount, 0)
@@ -108,8 +110,9 @@ export default function ExpensesPage() {
         })
       } else {
         const label = sharedLabel.trim() || 'הוצאה משותפת'
+        if (!familyId) { toast.error('לא משויך למשפחה'); return }
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await upsertShared.mutateAsync({ period_id: selectedPeriodId, category: `u_${Date.now()}` as any, total_amount: amt, notes: label })
+        await upsertShared.mutateAsync({ period_id: selectedPeriodId, category: `u_${Date.now()}` as any, total_amount: amt, notes: label, family_id: familyId })
       }
       setAmount(''); setSharedLabel(''); setCustomCat(''); setCategoryId('')
       toast.success('הוצאה נוספה')
@@ -118,11 +121,13 @@ export default function ExpensesPage() {
 
   // ── Delete ──────────────────────────────────────────────────────────────────
   async function handleDeletePersonal(exp: { id: number; category_id: number; amount: number; description?: string }) {
+    if (!confirm('למחוק את ההוצאה?')) return
     await deleteExpense.mutateAsync({ id: exp.id, period_id: selectedPeriodId!, user_id: user!.id })
     toast.success('נמחק')
   }
 
   async function handleDeleteShared(id: number) {
+    if (!confirm('למחוק את ההוצאה?')) return
     await deleteShared.mutateAsync({ id, period_id: selectedPeriodId! })
     toast.success('נמחק')
   }
@@ -154,12 +159,13 @@ export default function ExpensesPage() {
     if (!valid.length) { toast.error('לא נבחרו קטגוריות'); return }
     try {
       const today = new Date().toISOString().split('T')[0]
+      if (!familyId) { toast.error('לא משויך למשפחה'); return }
       await Promise.all(valid.map(async r => {
         // שמור כהוצאה אישית או משותפת
         if (r.is_shared) {
           await upsertShared.mutateAsync({
             period_id: selectedPeriodId, category: `u_${Date.now()}` as any,
-            total_amount: r.amount, notes: r.description,
+            total_amount: r.amount, notes: r.description, family_id: familyId,
           })
         } else {
           await addExpense.mutateAsync({
@@ -405,7 +411,7 @@ export default function ExpensesPage() {
                         style={{ ...S.iconBtn, color: locked ? 'oklch(0.70 0.15 185)' : 'oklch(0.35 0.01 250)' }}>
                         {locked ? <Lock size={12} /> : <Unlock size={12} />}
                       </button>
-                      <button onClick={() => handleDeletePersonal(e)} style={{ ...S.iconBtn, color: 'oklch(0.40 0.01 250)' }}>
+                      <button onClick={() => handleDeletePersonal(e)} aria-label="מחק הוצאה" style={{ ...S.iconBtn, color: 'oklch(0.40 0.01 250)' }}>
                         <X size={13} />
                       </button>
                     </div>
@@ -447,7 +453,7 @@ export default function ExpensesPage() {
                         style={{ ...S.iconBtn, color: locked ? 'oklch(0.70 0.15 185)' : 'oklch(0.35 0.01 250)' }}>
                         {locked ? <Lock size={12} /> : <Unlock size={12} />}
                       </button>
-                      <button onClick={() => handleDeleteShared(e.id)} style={{ ...S.iconBtn, color: 'oklch(0.40 0.01 250)' }}>
+                      <button onClick={() => handleDeleteShared(e.id)} aria-label="מחק הוצאה" style={{ ...S.iconBtn, color: 'oklch(0.40 0.01 250)' }}>
                         <X size={13} />
                       </button>
                     </div>

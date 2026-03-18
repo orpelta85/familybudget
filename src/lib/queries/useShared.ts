@@ -28,16 +28,17 @@ export function useDeleteAllPeriodSharedExpenses() {
   })
 }
 
-export function useSharedExpenses(periodId: number | undefined) {
+export function useSharedExpenses(periodId: number | undefined, familyId: string | undefined) {
   return useQuery<SharedExpense[]>({
-    queryKey: ['shared_expenses', periodId],
-    enabled: !!periodId,
+    queryKey: ['shared_expenses', periodId, familyId],
+    enabled: !!periodId && !!familyId,
     queryFn: async () => {
       const sb = createClient()
       const { data, error } = await sb
         .from('shared_expenses')
         .select('*')
         .eq('period_id', periodId!)
+        .eq('family_id', familyId!)
         .order('created_at')
       if (error) throw error
       return data
@@ -45,14 +46,16 @@ export function useSharedExpenses(periodId: number | undefined) {
   })
 }
 
-export function useAllSharedExpenses() {
+export function useAllSharedExpenses(familyId: string | undefined) {
   return useQuery<SharedExpense[]>({
-    queryKey: ['all_shared_expenses'],
+    queryKey: ['all_shared_expenses', familyId],
+    enabled: !!familyId,
     queryFn: async () => {
       const sb = createClient()
       const { data, error } = await sb
         .from('shared_expenses')
         .select('*')
+        .eq('family_id', familyId!)
         .order('period_id')
       if (error) throw error
       return data
@@ -67,7 +70,7 @@ export function useUpsertSharedExpense() {
       const sb = createClient()
       const { data, error } = await sb
         .from('shared_expenses')
-        .upsert(expense, { onConflict: 'period_id,category' })
+        .upsert(expense, { onConflict: 'family_id,period_id,category' })
         .select()
         .single()
       if (error) throw error

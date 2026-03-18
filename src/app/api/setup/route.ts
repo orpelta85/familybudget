@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
+import { getAuthUser } from '@/lib/supabase/auth'
 
 const STARTER_CATEGORIES = [
   { name: 'שכירות (חלקי)', type: 'fixed', monthly_target: 2500, sort_order: 1 },
@@ -34,13 +35,62 @@ const STARTER_FUNDS = [
 ]
 
 export async function POST(req: NextRequest) {
-  const { userId } = await req.json()
+  const authUser = await getAuthUser()
+  const { userId, familyName, inviteCode } = await req.json()
   if (!userId) return NextResponse.json({ error: 'missing userId' }, { status: 400 })
+
+  if (!authUser || authUser.id !== userId) {
+    return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+  }
 
   const sb = createServiceClient()
 
   // Upsert profile
   await sb.from('profiles').upsert({ id: userId, name: 'אורי' }, { onConflict: 'id' })
+
+  // Family: join existing or create new
+  if (inviteCode) {
+    // Join existing family via invite code
+    const { data: family, error: famErr } = await sb
+      .from('families')
+      .select('id')
+      .eq('invite_code', inviteCode)
+      .single()
+    if (famErr || !family) {
+      return NextResponse.json({ error: 'קוד הזמנה לא תקין' }, { status: 400 })
+    }
+    const { error: joinErr } = await sb
+      .from('family_members')
+      .insert({ family_id: family.id, user_id: userId, role: 'member' })
+    if (joinErr && !joinErr.message.includes('duplicate')) {
+      return NextResponse.json({ error: joinErr.message }, { status: 500 })
+    }
+  } else {
+    // Create new family (admin)
+    const name = familyName || 'המשפחה שלי'
+    const { data: existingMember } = await sb
+      .from('family_members')
+      .select('id')
+      .eq('user_id', userId)
+      .limit(1)
+      .maybeSingle()
+
+    if (!existingMember) {
+      const { data: family, error: famErr } = await sb
+        .from('families')
+        .insert({ name, created_by: userId })
+        .select()
+        .single()
+      if (famErr) return NextResponse.json({ error: famErr.message }, { status: 500 })
+
+      await sb.from('family_members').insert({
+        family_id: family.id,
+        user_id: userId,
+        role: 'admin',
+        show_personal_to_family: true,
+      })
+    }
+  }
 
   // Insert categories (skip if already exist)
   const { error: catError } = await sb

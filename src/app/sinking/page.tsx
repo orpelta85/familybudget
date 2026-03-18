@@ -74,7 +74,7 @@ export default function SinkingPage() {
     }
   }, [periods, txPeriodId])
 
-  if (loading || !user) return null
+  if (loading || !user) return <div style={{ padding: 40, textAlign: 'center', color: 'oklch(0.55 0.01 250)' }}>טוען...</div>
 
   function getFundBalance(fundId: number) {
     const txns = allTxns?.filter(t => t.fund_id === fundId) ?? []
@@ -218,19 +218,21 @@ export default function SinkingPage() {
                     <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
                       <button
                         onClick={() => { setTxModal({ fundId: fund.id, fundName: fund.name, type: 'use' }); setTxAmount('') }}
-                        style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'oklch(0.20 0.02 55)', border: '1px solid oklch(0.28 0.06 55)', borderRadius: 7, padding: '6px 10px', color: 'oklch(0.72 0.18 55)', fontSize: 12, cursor: 'pointer' }}
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, background: 'oklch(0.20 0.02 55)', border: '1px solid oklch(0.28 0.06 55)', borderRadius: 7, padding: '8px 10px', minHeight: 36, color: 'oklch(0.72 0.18 55)', fontSize: 12, cursor: 'pointer' }}
                       >
                         <X size={11} /> הוצאה
                       </button>
                       <button
                         onClick={() => openEdit(fund)}
-                        style={{ display: 'flex', alignItems: 'center', background: 'oklch(0.20 0.01 250)', border: '1px solid oklch(0.28 0.01 250)', borderRadius: 7, padding: '6px 10px', color: 'oklch(0.55 0.01 250)', fontSize: 12, cursor: 'pointer' }}
+                        aria-label="ערוך קרן"
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'oklch(0.20 0.01 250)', border: '1px solid oklch(0.28 0.01 250)', borderRadius: 7, padding: 8, minWidth: 36, minHeight: 36, color: 'oklch(0.55 0.01 250)', fontSize: 12, cursor: 'pointer' }}
                       >
                         <Pencil size={12} />
                       </button>
                       <button
                         onClick={() => handleDeleteFund(fund.id, fund.name)}
-                        style={{ display: 'flex', alignItems: 'center', background: 'oklch(0.18 0.03 15)', border: '1px solid oklch(0.28 0.06 15)', borderRadius: 7, padding: '6px 10px', color: 'oklch(0.60 0.18 15)', fontSize: 12, cursor: 'pointer' }}
+                        aria-label="מחק קרן"
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'oklch(0.18 0.03 15)', border: '1px solid oklch(0.28 0.06 15)', borderRadius: 7, padding: 8, minWidth: 36, minHeight: 36, color: 'oklch(0.60 0.18 15)', fontSize: 12, cursor: 'pointer' }}
                       >
                         <Trash2 size={12} />
                       </button>
@@ -238,12 +240,24 @@ export default function SinkingPage() {
                   </div>
 
                   {/* Balance row if any transactions */}
-                  {balance !== 0 && (
-                    <div style={{ marginTop: 8, fontSize: 12, color: 'oklch(0.55 0.01 250)', display: 'flex', justifyContent: 'space-between', paddingTop: 8, borderTop: '1px solid oklch(0.20 0.01 250)' }}>
-                      <span>צבור: <span style={{ color: balance > 0 ? 'oklch(0.70 0.15 185)' : 'oklch(0.62 0.22 27)', fontWeight: 600, direction: 'ltr', display: 'inline-block' }}>{formatCurrency(balance)}</span></span>
-                      <span style={{ direction: 'ltr' }}>{pct.toFixed(0)}% מהיעד השנתי</span>
-                    </div>
-                  )}
+                  {balance !== 0 && (() => {
+                    const currentMonth = new Date().getMonth() + 1
+                    const expectedPct = (currentMonth / 12) * 100
+                    const trackStatus = pct >= expectedPct
+                      ? { text: 'בזמן ✓', color: 'oklch(0.70 0.18 145)' }
+                      : pct >= expectedPct * 0.8
+                        ? { text: 'קצת מאחור', color: 'oklch(0.72 0.18 55)' }
+                        : { text: 'מאחור', color: 'oklch(0.62 0.22 27)' }
+                    return (
+                      <div style={{ marginTop: 8, fontSize: 12, color: 'oklch(0.55 0.01 250)', display: 'flex', justifyContent: 'space-between', paddingTop: 8, borderTop: '1px solid oklch(0.20 0.01 250)' }}>
+                        <span>צבור: <span style={{ color: balance > 0 ? 'oklch(0.70 0.15 185)' : 'oklch(0.62 0.22 27)', fontWeight: 600, direction: 'ltr', display: 'inline-block' }}>{formatCurrency(balance)}</span></span>
+                        <span style={{ direction: 'ltr', display: 'flex', alignItems: 'center', gap: 8 }}>
+                          {pct.toFixed(0)}% מהיעד השנתי
+                          <span style={{ fontSize: 11, fontWeight: 500, color: trackStatus.color }}>{trackStatus.text}</span>
+                        </span>
+                      </div>
+                    )
+                  })()}
                 </div>
               )
             })}
@@ -342,7 +356,7 @@ function ModalHeader({ title, onClose }: { title: string; onClose: () => void })
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
       <span style={{ fontWeight: 600, fontSize: 15 }}>{title}</span>
-      <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'oklch(0.55 0.01 250)', cursor: 'pointer' }}><X size={18} /></button>
+      <button onClick={onClose} aria-label="סגור" style={{ background: 'none', border: 'none', color: 'oklch(0.55 0.01 250)', cursor: 'pointer', padding: 8, minWidth: 36, minHeight: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={18} /></button>
     </div>
   )
 }

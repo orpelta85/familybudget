@@ -5,6 +5,7 @@ import { usePeriods, useCurrentPeriod } from '@/lib/queries/usePeriods'
 import { useApartmentDeposits, useUpsertApartmentDeposit } from '@/lib/queries/useApartment'
 import { formatCurrency } from '@/lib/utils'
 import { useSharedPeriod } from '@/lib/context/PeriodContext'
+import { useFamilyContext } from '@/lib/context/FamilyContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
@@ -19,7 +20,8 @@ export default function ApartmentPage() {
   const router = useRouter()
   const { data: periods } = usePeriods()
   const currentPeriod = useCurrentPeriod()
-  const { data: deposits } = useApartmentDeposits()
+  const { familyId } = useFamilyContext()
+  const { data: deposits } = useApartmentDeposits(familyId)
   const upsert = useUpsertApartmentDeposit()
   const [amount, setAmount] = useState(MONTHLY_TARGET.toString())
   const { selectedPeriodId, setSelectedPeriodId } = useSharedPeriod()
@@ -32,7 +34,7 @@ export default function ApartmentPage() {
     if (!loading && !user) router.push('/login')
   }, [user, loading, router])
 
-  if (loading || !user) return null
+  if (loading || !user) return <div style={{ padding: 40, textAlign: 'center', color: 'oklch(0.55 0.01 250)' }}>טוען...</div>
 
   const totalSaved = deposits?.reduce((s, d) => s + d.amount_deposited, 0) ?? 0
   const pct = Math.min((totalSaved / TOTAL_GOAL) * 100, 100)
@@ -44,8 +46,9 @@ export default function ApartmentPage() {
 
   async function handleDeposit() {
     if (!selectedPeriodId || !amount) return
+    if (!familyId) { toast.error('לא משויך למשפחה'); return }
     try {
-      await upsert.mutateAsync({ period_id: selectedPeriodId, amount_deposited: Number(amount), notes: '' })
+      await upsert.mutateAsync({ period_id: selectedPeriodId, amount_deposited: Number(amount), notes: '', family_id: familyId })
       toast.success('הפקדה נשמרה!')
     } catch { toast.error('שגיאה בשמירה') }
   }

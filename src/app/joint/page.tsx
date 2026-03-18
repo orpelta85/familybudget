@@ -5,6 +5,7 @@ import { usePeriods, useCurrentPeriod } from '@/lib/queries/usePeriods'
 import { useJointPoolIncome, useJointPoolExpenses, useUpsertJointIncome, useAddJointExpense } from '@/lib/queries/useJoint'
 import { formatCurrency } from '@/lib/utils'
 import { useSharedPeriod } from '@/lib/context/PeriodContext'
+import { useFamilyContext } from '@/lib/context/FamilyContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { PeriodSelector } from '@/components/layout/PeriodSelector'
@@ -26,6 +27,7 @@ export default function JointPage() {
   const { data: periods } = usePeriods()
   const currentPeriod = useCurrentPeriod()
   const { selectedPeriodId, setSelectedPeriodId } = useSharedPeriod()
+  const { familyId } = useFamilyContext()
 
   useEffect(() => {
     if (currentPeriod && !selectedPeriodId) setSelectedPeriodId(currentPeriod.id)
@@ -35,8 +37,8 @@ export default function JointPage() {
     if (!loading && !user) router.push('/login')
   }, [user, loading, router])
 
-  const { data: poolIncome } = useJointPoolIncome(selectedPeriodId)
-  const { data: poolExpenses } = useJointPoolExpenses(selectedPeriodId)
+  const { data: poolIncome } = useJointPoolIncome(selectedPeriodId, familyId)
+  const { data: poolExpenses } = useJointPoolExpenses(selectedPeriodId, familyId)
   const upsertIncome = useUpsertJointIncome()
   const addExpense = useAddJointExpense()
 
@@ -53,7 +55,7 @@ export default function JointPage() {
     }
   }, [poolIncome, selectedPeriodId])
 
-  if (loading || !user) return null
+  if (loading || !user) return <div style={{ padding: 40, textAlign: 'center', color: 'oklch(0.55 0.01 250)' }}>טוען...</div>
 
   const totalIncome = (Number(myContrib) || 0) + (Number(partnerContrib) || 0)
   const totalExpenses = poolExpenses?.reduce((s, e) => s + e.amount, 0) ?? 0
@@ -62,8 +64,9 @@ export default function JointPage() {
 
   async function saveIncome() {
     if (!selectedPeriodId) return
+    if (!familyId) { toast.error('לא משויך למשפחה'); return }
     try {
-      await upsertIncome.mutateAsync({ period_id: selectedPeriodId, my_contribution: Number(myContrib) || 0, partner_contribution: Number(partnerContrib) || 0, notes: '' })
+      await upsertIncome.mutateAsync({ period_id: selectedPeriodId, my_contribution: Number(myContrib) || 0, partner_contribution: Number(partnerContrib) || 0, notes: '', family_id: familyId })
       toast.success('הכנסות נשמרו')
     } catch { toast.error('שגיאה') }
   }
@@ -71,8 +74,9 @@ export default function JointPage() {
   async function addExp(e: React.FormEvent) {
     e.preventDefault()
     if (!selectedPeriodId || !expAmount) return
+    if (!familyId) { toast.error('לא משויך למשפחה'); return }
     try {
-      await addExpense.mutateAsync({ period_id: selectedPeriodId, category: expCategory, amount: Number(expAmount), description: expDesc, expense_date: new Date().toISOString().split('T')[0] })
+      await addExpense.mutateAsync({ period_id: selectedPeriodId, category: expCategory, amount: Number(expAmount), description: expDesc, expense_date: new Date().toISOString().split('T')[0], family_id: familyId })
       setExpAmount(''); setExpDesc('')
       toast.success('הוצאה נוספה')
     } catch { toast.error('שגיאה') }

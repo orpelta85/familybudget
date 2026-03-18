@@ -2,14 +2,16 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import type { ApartmentDeposit } from '@/lib/types'
 
-export function useApartmentDeposits() {
+export function useApartmentDeposits(familyId: string | undefined) {
   return useQuery<ApartmentDeposit[]>({
-    queryKey: ['apartment_deposits'],
+    queryKey: ['apartment_deposits', familyId],
+    enabled: !!familyId,
     queryFn: async () => {
       const sb = createClient()
       const { data, error } = await sb
         .from('apartment_deposits')
         .select('*')
+        .eq('family_id', familyId!)
         .order('period_id')
       if (error) throw error
       return data
@@ -24,7 +26,7 @@ export function useUpsertApartmentDeposit() {
       const sb = createClient()
       const { data, error } = await sb
         .from('apartment_deposits')
-        .upsert(deposit, { onConflict: 'period_id' })
+        .upsert(deposit, { onConflict: 'family_id,period_id' })
         .select().single()
       if (error) throw error
       return data
