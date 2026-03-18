@@ -30,23 +30,28 @@ export async function POST(req: NextRequest) {
   const origin = req.headers.get('origin') || req.headers.get('referer')?.replace(/\/+$/, '') || ''
   const redirectUrl = `${origin}/auth/callback?next=/setup?invite=${inviteCode}`
 
-  const { error } = await sb.auth.admin.inviteUserByEmail(email, {
-    redirectTo: redirectUrl,
-    data: {
-      invited_to_family: familyName,
-      invite_code: inviteCode,
-    },
-  })
+  try {
+    const { error } = await sb.auth.admin.inviteUserByEmail(email, {
+      redirectTo: redirectUrl,
+      data: {
+        invited_to_family: familyName,
+        invite_code: inviteCode,
+      },
+    })
 
-  if (error) {
-    // If user already exists, just send them the link info
-    if (error.message.includes('already been registered')) {
-      return NextResponse.json({
-        ok: true,
-        note: 'המשתמש כבר רשום — שלח לו את הלינק ישירות',
-      })
+    if (error) {
+      // If user already exists, just send them the link info
+      if (error.message.includes('already') || error.message.includes('registered')) {
+        return NextResponse.json({
+          ok: true,
+          note: 'המשתמש כבר רשום — שלח לו את הלינק ישירות',
+        })
+      }
+      return NextResponse.json({ error: error.message }, { status: 500 })
     }
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'unknown error'
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 
   return NextResponse.json({ ok: true })

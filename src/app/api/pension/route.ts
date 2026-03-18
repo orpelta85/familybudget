@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { getAuthUser } from '@/lib/supabase/auth'
-import { PDFParse } from 'pdf-parse'
 
 function extractNumber(text: string, pattern: RegExp): number {
   const m = text.match(pattern)
@@ -211,6 +210,7 @@ export async function POST(req: NextRequest) {
     // Try PDF parsing if file provided
     if (file && file.size > 0) {
       try {
+        const { PDFParse } = await import('pdf-parse')
         const buffer = Buffer.from(await file.arrayBuffer())
         const parser = new PDFParse({ data: new Uint8Array(buffer) })
         const textResult = await parser.getText()
@@ -220,7 +220,7 @@ export async function POST(req: NextRequest) {
         }
         // If text is too short, PDF is likely image-based — fall through to manual data
       } catch {
-        // PDF parsing failed (password protected, corrupted, etc.)
+        // PDF parsing failed (password protected, corrupted, DOMMatrix not available in serverless, etc.)
         // Fall through to manual data
       }
     }
