@@ -187,56 +187,84 @@ export default function ExpensesPage() {
     })
     try {
       const today = new Date().toISOString().split('T')[0]
-      if (!familyId) { toast.error('לא משויך למשפחה'); return }
+      const sb = createClient()
 
-      // Auto-create new categories from Excel before saving expenses
+      // Auto-create new categories from Excel
       const newCatNames = [...new Set(valid.filter(r => r.categoryId.startsWith('__new__')).map(r => r.categoryId.replace('__new__', '')))]
       const createdCatMap: Record<string, number> = {}
       const maxSort = Math.max(0, ...(categories ?? []).map(c => c.sort_order ?? 0))
       for (let i = 0; i < newCatNames.length; i++) {
-        const created = await addCategory.mutateAsync({
-          user_id: user.id, name: newCatNames[i], type: 'variable',
-          monthly_target: 0, sort_order: maxSort + i + 1,
-        })
-        createdCatMap[newCatNames[i]] = created.id
+        try {
+          const created = await addCategory.mutateAsync({
+            user_id: user.id, name: newCatNames[i], type: 'variable',
+            monthly_target: 0, sort_order: maxSort + i + 1,
+          })
+          createdCatMap[newCatNames[i]] = created.id
+        } catch {
+          // Category might already exist — find it
+          const existing = (categories ?? []).find(c => c.name.includes(newCatNames[i]))
+          if (existing) createdCatMap[newCatNames[i]] = existing.id
+        }
       }
 
-      await Promise.all(valid.map(async r => {
-        // Resolve category ID — either existing or newly created
-        let resolvedCatId: number
-        if (r.categoryId.startsWith('__new__')) {
-          resolvedCatId = createdCatMap[r.categoryId.replace('__new__', '')]
-        } else {
-          resolvedCatId = Number(r.categoryId)
-        }
+      // Save expenses one by one (not Promise.all — avoids one failure killing all)
+      let imported = 0
+      let failed = 0
+      for (const r of valid) {
+        try {
+          let resolvedCatId: number
+          if (r.categoryId.startsWith('__new__')) {
+            resolvedCatId = createdCatMap[r.categoryId.replace('__new__', '')]
+          } else {
+            resolvedCatId = Number(r.categoryId)
+          }
+          if (!resolvedCatId || isNaN(resolvedCatId)) {
+            // Last resort — use first category
+            resolvedCatId = categories?.[0]?.id ?? 1
+          }
 
-        if (r.is_shared) {
-          await upsertShared.mutateAsync({
-            period_id: selectedPeriodId, category: `u_${Date.now()}` as any,
-            total_amount: r.amount, notes: r.description, family_id: familyId,
-          })
-        } else {
-          await addExpense.mutateAsync({
-            period_id: selectedPeriodId, user_id: user.id,
-            category_id: resolvedCatId, amount: r.amount,
-            description: r.description, expense_date: today,
-          })
-        }
-        // אם צוינה קרן — גם הוצאה מהקרן (סכום שלילי)
-        if (r.fund_name) {
-          const fund = (funds ?? []).find(f => f.name === r.fund_name)
-          if (fund) {
-            await addSinkingTx.mutateAsync({
-              fund_id: fund.id, period_id: selectedPeriodId,
-              amount: -r.amount, description: r.description, transaction_date: today,
+          if (r.is_shared && familyId) {
+            await sb.from('shared_expenses').insert({
+              period_id: selectedPeriodId, category: `u_${Date.now()}_${imported}`,
+              total_amount: r.amount, notes: r.description, family_id: familyId,
+            })
+          } else {
+            await sb.from('personal_expenses').insert({
+              period_id: selectedPeriodId, user_id: user.id,
+              category_id: resolvedCatId, amount: r.amount,
+              description: r.description, expense_date: today,
             })
           }
+          // Fund deduction
+          if (r.fund_name) {
+            const fund = (funds ?? []).find(f => f.name === r.fund_name)
+            if (fund) {
+              await sb.from('sinking_fund_transactions').insert({
+                fund_id: fund.id, period_id: selectedPeriodId,
+                amount: -r.amount, description: r.description, transaction_date: today,
+              })
+            }
+          }
+          imported++
+        } catch {
+          failed++
         }
-      }))
+      }
+      // Invalidate queries
+      queryClient.invalidateQueries({ queryKey: ['personal_expenses'] })
+      queryClient.invalidateQueries({ queryKey: ['shared_expenses'] })
+      queryClient.invalidateQueries({ queryKey: ['all_sinking_transactions'] })
+
       const newCount = newCatNames.length
-      toast.success(`יובאו ${valid.length} הוצאות` + (newCount ? ` · ${newCount} קטגוריות חדשות נוצרו` : ''))
+      let msg = `יובאו ${imported} הוצאות`
+      if (newCount) msg += ` · ${newCount} קטגוריות חדשות`
+      if (failed) msg += ` · ${failed} נכשלו`
+      toast.success(msg)
       setShowImport(false); setImportRows([])
-    } catch { toast.error('שגיאה בייבוא') }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'שגיאה בייבוא'
+      toast.error(msg)
+    }
   }
 
   // ── Lock helpers ────────────────────────────────────────────────────────────
