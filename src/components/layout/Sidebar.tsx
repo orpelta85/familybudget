@@ -2,10 +2,11 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import {
   LayoutDashboard, Wallet, BarChart3, Receipt,
-  Users, PiggyBank, Target, Home, TrendingUp, Link2, ListChecks
+  Users, PiggyBank, Target, Home, TrendingUp, Link2, ListChecks, Mail, Copy, X, Send
 } from 'lucide-react'
 import { useFamilyContext } from '@/lib/context/FamilyContext'
 import { toast } from 'sonner'
@@ -25,6 +26,9 @@ const nav = [
 export function Sidebar() {
   const pathname = usePathname()
   const { family, isAdmin } = useFamilyContext()
+  const [showInvite, setShowInvite] = useState(false)
+  const [inviteEmail, setInviteEmail] = useState('')
+  const [sendingEmail, setSendingEmail] = useState(false)
 
   function copyInviteLink() {
     if (!family) return
@@ -33,7 +37,26 @@ export function Sidebar() {
     toast.success('לינק הזמנה הועתק!')
   }
 
-  return (
+  async function sendInviteEmail() {
+    if (!family || !inviteEmail) return
+    setSendingEmail(true)
+    try {
+      const res = await fetch('/api/family/invite-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: inviteEmail, familyName: family.name, inviteCode: family.invite_code }),
+      })
+      if (!res.ok) throw new Error('failed')
+      toast.success(`הזמנה נשלחה ל-${inviteEmail}`)
+      setInviteEmail('')
+      setShowInvite(false)
+    } catch {
+      toast.error('שגיאה בשליחת ההזמנה')
+    }
+    setSendingEmail(false)
+  }
+
+  return (<>
     <aside style={{
       width: 'var(--sidebar-width)',
       position: 'fixed', top: 0, right: 0,
@@ -85,7 +108,7 @@ export function Sidebar() {
       <div style={{ padding: '12px 20px', borderTop: '1px solid oklch(0.20 0.01 250)', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {isAdmin && family && (
           <button
-            onClick={copyInviteLink}
+            onClick={() => setShowInvite(true)}
             style={{
               display: 'flex', alignItems: 'center', gap: 6,
               background: 'none', border: '1px solid oklch(0.25 0.01 250)',
@@ -94,7 +117,7 @@ export function Sidebar() {
               cursor: 'pointer',
             }}
           >
-            <Link2 size={12} />
+            <Users size={12} />
             הזמן חבר משפחה
           </button>
         )}
@@ -103,5 +126,95 @@ export function Sidebar() {
         </div>
       </div>
     </aside>
+
+    {/* Invite Modal */}
+    {showInvite && (
+      <div style={{
+        position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 1000,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <div style={{
+          background: 'oklch(0.14 0.01 250)', borderRadius: 16, padding: 28,
+          width: 400, border: '1px solid oklch(0.25 0.01 250)',
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+            <h3 style={{ fontSize: 16, fontWeight: 700 }}>הזמן חבר משפחה</h3>
+            <button onClick={() => setShowInvite(false)} aria-label="סגור"
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'oklch(0.55 0.01 250)', padding: 8 }}>
+              <X size={18} />
+            </button>
+          </div>
+
+          {/* Option 1: Copy Link */}
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Link2 size={14} style={{ color: 'oklch(0.65 0.18 250)' }} />
+              שתף לינק הזמנה
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input
+                readOnly
+                value={`${typeof window !== 'undefined' ? window.location.origin : ''}/login?invite=${family?.invite_code}`}
+                style={{
+                  flex: 1, background: 'oklch(0.22 0.01 250)', border: '1px solid oklch(0.28 0.01 250)',
+                  borderRadius: 8, padding: '8px 12px', color: 'oklch(0.70 0.01 250)', fontSize: 12,
+                  direction: 'ltr',
+                }}
+              />
+              <button onClick={copyInviteLink} style={{
+                background: 'oklch(0.22 0.01 250)', border: '1px solid oklch(0.28 0.01 250)',
+                borderRadius: 8, padding: '8px 12px', cursor: 'pointer', color: 'oklch(0.70 0.01 250)',
+                display: 'flex', alignItems: 'center', gap: 4, fontSize: 12,
+              }}>
+                <Copy size={13} /> העתק
+              </button>
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+            <div style={{ flex: 1, height: 1, background: 'oklch(0.25 0.01 250)' }} />
+            <span style={{ fontSize: 11, color: 'oklch(0.45 0.01 250)' }}>או</span>
+            <div style={{ flex: 1, height: 1, background: 'oklch(0.25 0.01 250)' }} />
+          </div>
+
+          {/* Option 2: Email Invite */}
+          <div>
+            <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Mail size={14} style={{ color: 'oklch(0.70 0.18 145)' }} />
+              שלח הזמנה במייל
+            </div>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <input
+                type="email"
+                value={inviteEmail}
+                onChange={e => setInviteEmail(e.target.value)}
+                placeholder="email@example.com"
+                style={{
+                  flex: 1, background: 'oklch(0.22 0.01 250)', border: '1px solid oklch(0.28 0.01 250)',
+                  borderRadius: 8, padding: '8px 12px', color: 'inherit', fontSize: 13,
+                  direction: 'ltr',
+                }}
+                onKeyDown={e => { if (e.key === 'Enter') sendInviteEmail() }}
+              />
+              <button
+                onClick={sendInviteEmail}
+                disabled={!inviteEmail || sendingEmail}
+                style={{
+                  background: 'oklch(0.65 0.18 250)', border: 'none',
+                  borderRadius: 8, padding: '8px 16px', cursor: sendingEmail ? 'wait' : 'pointer',
+                  color: 'oklch(0.12 0.01 250)', fontWeight: 600, fontSize: 13,
+                  display: 'flex', alignItems: 'center', gap: 4,
+                  opacity: !inviteEmail || sendingEmail ? 0.5 : 1,
+                }}
+              >
+                <Send size={13} /> שלח
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )}
+  </>
   )
 }
