@@ -18,7 +18,7 @@ import { PeriodSelector } from '@/components/layout/PeriodSelector'
 import { toast } from 'sonner'
 import { Receipt, Upload, Download, Plus, X, FileSpreadsheet, User, Users, Lock, Unlock, Target, Trash2 } from 'lucide-react'
 import type { RawExpenseRow } from '@/lib/excel-import'
-import type { BudgetCategory } from '@/lib/types'
+import type { BudgetCategory, SharedCategory } from '@/lib/types'
 
 type ExpType = 'personal' | 'shared'
 
@@ -116,8 +116,7 @@ export default function ExpensesPage() {
       } else {
         const label = sharedLabel.trim() || 'הוצאה משותפת'
         if (!familyId) { toast.error('לא משויך למשפחה'); return }
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        await upsertShared.mutateAsync({ period_id: selectedPeriodId, category: `u_${Date.now()}` as any, total_amount: amt, notes: label, family_id: familyId })
+        await upsertShared.mutateAsync({ period_id: selectedPeriodId, category: 'misc' as SharedCategory, total_amount: amt, notes: label, family_id: familyId })
       }
       setAmount(''); setSharedLabel(''); setCustomCat(''); setCategoryId('')
       toast.success('הוצאה נוספה')
@@ -229,7 +228,7 @@ export default function ExpensesPage() {
 
           if (r.is_shared && familyId) {
             await sb.from('shared_expenses').insert({
-              period_id: selectedPeriodId, category: `u_${Date.now()}_${imported}`,
+              period_id: selectedPeriodId, category: 'misc',
               total_amount: r.amount, notes: r.description, family_id: familyId,
             })
           } else {
@@ -506,6 +505,9 @@ export default function ExpensesPage() {
             </div>
           )}
 
+          {/* ── Personal + Shared side by side ──────────────────────────────── */}
+          <div className="grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, alignItems: 'start' }}>
+
           {/* ── Personal expenses ─────────────────────────────────────────────── */}
           <div style={S.card}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
@@ -544,7 +546,7 @@ export default function ExpensesPage() {
           </div>
 
           {/* ── Shared expenses ────────────────────────────────────────────────── */}
-          <div style={{ ...S.card, marginTop: 12 }}>
+          <div style={S.card}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600 }}>
                 <Users size={12} style={{ color: 'oklch(0.65 0.12 310)' }} /> הוצאות משותפות
@@ -584,6 +586,7 @@ export default function ExpensesPage() {
               })
             }
           </div>
+          </div>{/* close grid-2 */}
         </div>
       </div>
     </div>
