@@ -345,14 +345,28 @@ export default function ExpensesPage() {
             </div>
             <button onClick={() => setShowImport(false)} style={{ ...S.iconBtn, color: 'oklch(0.55 0.01 250)' }}><X size={14} /></button>
           </div>
-          <div style={{ maxHeight: 220, overflowY: 'auto', marginBottom: 10 }}>
+          <div style={{ maxHeight: 320, overflowY: 'auto', marginBottom: 10 }}>
             {importRows.map((row, i) => {
               const isAutoMatched = row.categoryId && !row.categoryId.startsWith('__new__') && row.category
-              const isNewCat = row.categoryId.startsWith('__new__')
+              const isNewCat = row.categoryId?.startsWith('__new__')
               return (
-                <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 80px 150px', gap: 6, padding: '4px 0', borderBottom: '1px solid oklch(0.20 0.01 250)', alignItems: 'center' }}>
+                <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 70px 60px 140px', gap: 6, padding: '5px 0', borderBottom: '1px solid oklch(0.20 0.01 250)', alignItems: 'center' }}>
                   <span style={{ fontSize: 12, color: 'oklch(0.80 0.01 250)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.description}</span>
                   <span style={{ fontSize: 12, fontWeight: 600, direction: 'ltr', textAlign: 'right', color: 'oklch(0.72 0.18 55)' }}>{formatCurrency(row.amount)}</span>
+                  {/* Toggle אישי/משותף */}
+                  <button
+                    onClick={() => setImportRows(p => p.map((r, j) => j === i ? { ...r, is_shared: !r.is_shared } : r))}
+                    style={{
+                      background: row.is_shared ? 'oklch(0.22 0.05 295)' : 'oklch(0.22 0.01 250)',
+                      border: row.is_shared ? '1px solid oklch(0.40 0.12 295)' : '1px solid oklch(0.28 0.01 250)',
+                      borderRadius: 6, padding: '2px 8px', fontSize: 10, fontWeight: 600,
+                      color: row.is_shared ? 'oklch(0.75 0.15 295)' : 'oklch(0.55 0.01 250)',
+                      cursor: 'pointer', whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {row.is_shared ? 'משותף' : 'אישי'}
+                  </button>
+                  {/* קטגוריה */}
                   {isAutoMatched ? (
                     <span style={{ fontSize: 11, color: 'oklch(0.70 0.18 150)', fontWeight: 500 }}>{row.category}</span>
                   ) : isNewCat ? (
