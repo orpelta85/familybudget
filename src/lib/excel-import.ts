@@ -73,7 +73,7 @@ export function parseExpenseExcel(file: File): Promise<RawExpenseRow[]> {
         const descKey   = keys.find(k => /עסק|שם|תיאור|description|merchant/i.test(k)) ?? keys[1]
         const amountKey = keys.find(k => /סכום|חיוב|amount|sum/i.test(k)) ?? keys[2]
         const catKey    = keys.find(k => /קטגוריה|category|סוג הוצאה|קטגורי/i.test(k))
-        const typeKey   = keys.find(k => /אישי|משותף|סוג|type/i.test(k))
+        const typeKey   = keys.find(k => /אישי|משותף|סוג|type|personal|shared/i.test(k))
         const fundKey   = keys.find(k => /קרן|fund/i.test(k))
 
         const parsed: RawExpenseRow[] = rows
@@ -85,7 +85,7 @@ export function parseExpenseExcel(file: File): Promise<RawExpenseRow[]> {
               description: String(row[descKey] ?? '').trim(),
               amount: Math.abs(parseFloat(String(row[amountKey] ?? '0').replace(/[^\d.]/g, '')) || 0),
               category: catKey ? String(row[catKey] ?? '').trim() || undefined : undefined,
-              is_shared: typeVal === 'משותף' || typeVal === 'shared',
+              is_shared: /משותף|shared/i.test(typeVal),
               fund_name: fundVal || undefined,
             }
           })

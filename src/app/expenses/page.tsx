@@ -84,6 +84,7 @@ export default function ExpensesPage() {
   // Excel import
   const [importRows, setImportRows] = useState<(RawExpenseRow & { categoryId: string })[]>([])
   const [showImport, setShowImport] = useState(false)
+  const [importing, setImporting] = useState(false)
 
   if (loading || !user) return <div style={{ padding: 40, textAlign: 'center', color: 'oklch(0.55 0.01 250)' }}>טוען...</div>
 
@@ -178,7 +179,8 @@ export default function ExpensesPage() {
   }
 
   async function handleImportSave() {
-    if (!user || !selectedPeriodId) return
+    if (!user || !selectedPeriodId || importing) return
+    setImporting(true)
     const valid = importRows.filter(r => (r.categoryId || r.category) && r.amount > 0)
     if (!valid.length) { toast.error('אין שורות עם קטגוריה וסכום'); return }
     // Auto-assign __new__ for rows that have category name but no categoryId
@@ -265,15 +267,16 @@ export default function ExpensesPage() {
       const msg = err instanceof Error ? err.message : 'שגיאה בייבוא'
       toast.error(msg)
     }
+    setImporting(false)
   }
 
   // ── Lock helpers ────────────────────────────────────────────────────────────
-  function toggleLockPersonal(exp: { category_id: number; amount: number; description?: string }) {
+  function toggleLockPersonal(exp: { id: number; category_id: number; amount: number; description?: string }) {
     const catName = (categories ?? []).find(c => c.id === exp.category_id)?.name ?? ''
     const desc = exp.description ?? ''
-    const id = personalItemId(exp.category_id, desc)
-    recurringPersonal.toggle({ id, category_id: exp.category_id, category_name: catName, amount: exp.amount, description: desc })
-    toast.success(recurringPersonal.isLocked(id) ? `בוטל נעילה: ${catName || desc}` : `נעול: ${catName || desc}`)
+    const lockId = personalItemId(exp.category_id, desc, exp.id)
+    recurringPersonal.toggle({ id: lockId, category_id: exp.category_id, category_name: catName, amount: exp.amount, description: desc })
+    toast.success(recurringPersonal.isLocked(lockId) ? `בוטל נעילה: ${desc || catName}` : `נעול: ${desc || catName}`)
   }
 
   function toggleLockShared(exp: { id: number; category: string; total_amount: number; notes?: string | null }) {
@@ -364,8 +367,8 @@ export default function ExpensesPage() {
             })}
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={handleImportSave} disabled={addExpense.isPending} style={{ flex: 1, background: 'oklch(0.65 0.18 250)', border: 'none', borderRadius: 8, padding: '8px 0', color: 'oklch(0.12 0.01 250)', fontWeight: 600, cursor: 'pointer', fontSize: 12 }}>
-              ייבא {importRows.filter(r => r.categoryId && r.amount > 0).length}
+            <button onClick={handleImportSave} disabled={importing} style={{ flex: 1, background: importing ? 'oklch(0.40 0.05 250)' : 'oklch(0.65 0.18 250)', border: 'none', borderRadius: 8, padding: '8px 0', color: 'oklch(0.12 0.01 250)', fontWeight: 600, cursor: importing ? 'wait' : 'pointer', fontSize: 12 }}>
+              {importing ? 'מייבא... נא להמתין' : `ייבא ${importRows.filter(r => (r.categoryId || r.category) && r.amount > 0).length}`}
             </button>
             <button onClick={() => { setShowImport(false); setImportRows([]) }} style={{ ...S.input, padding: '8px 12px', cursor: 'pointer', fontSize: 12, width: 'auto' }}>ביטול</button>
           </div>
@@ -498,7 +501,7 @@ export default function ExpensesPage() {
             {!(personalExp?.length)
               ? <div style={{ fontSize: 12, color: 'oklch(0.45 0.01 250)', textAlign: 'center', padding: '16px 0' }}>אין הוצאות אישיות</div>
               : personalExp.map(e => {
-                const itemId = personalItemId(e.category_id, e.description ?? '')
+                const itemId = personalItemId(e.category_id, e.description ?? '', e.id)
                 const locked = recurringPersonal.isLocked(itemId)
                 const catName = (e.budget_categories as BudgetCategory)?.name ?? 'כללי'
                 return (

@@ -76,7 +76,8 @@ export function useRecurringPersonal(userId: string | undefined) {
   return { items, toggle, isLocked }
 }
 
-// Stable key for identifying a personal expense template
-export function personalItemId(category_id: number, description: string) {
+// Unique key for identifying a personal expense — uses DB id for uniqueness
+export function personalItemId(category_id: number, description: string, expenseId?: number) {
+  if (expenseId) return `${category_id}_${expenseId}`
   return `${category_id}_${(description || '').trim().toLowerCase()}`
 }
