@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
+  <!-- House base -->
+  <rect x="5" y="16" width="22" height="14" rx="2.5" fill="oklch(0.65 0.18 250)" opacity="0.15"/>
+  <!-- House roof -->
+  <path d="M2 17L16 4L30 17" stroke="oklch(0.65 0.18 250)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- Growth arrow -->
+  <path d="M9 27L14 18L19 22L25 13" stroke="oklch(0.70 0.18 145)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- Arrow tip -->
+  <path d="M22 13L25 13L25 16" stroke="oklch(0.70 0.18 145)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>

@@ -68,12 +68,17 @@ export function Sidebar() {
     }} className="hidden md:flex md:flex-col">
       {/* Logo */}
       <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid oklch(0.20 0.01 250)' }}>
-        <div style={{ fontSize: 15, fontWeight: 700, color: 'oklch(0.92 0.01 250)', letterSpacing: '-0.01em' }}>
-          {family?.name || 'תקציב חכם'}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+          <img src="/favicon.svg" alt="" width={20} height={20} style={{ flexShrink: 0 }} />
+          <span style={{ fontSize: 13, fontWeight: 600, color: 'oklch(0.85 0.01 250)', letterSpacing: '-0.01em' }}>
+            My Family Finance
+          </span>
         </div>
-        <div style={{ fontSize: 11, color: 'oklch(0.50 0.01 250)', marginTop: 3, letterSpacing: '0.03em', textTransform: 'uppercase' }}>
-          Family Finance
-        </div>
+        {family?.name && (
+          <div style={{ fontSize: 11, color: 'oklch(0.50 0.01 250)', letterSpacing: '0.02em' }}>
+            {family.name}
+          </div>
+        )}
       </div>
 
       {/* Nav */}

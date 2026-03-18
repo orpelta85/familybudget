@@ -6,8 +6,11 @@ import { BottomNav } from "@/components/layout/BottomNav";
 import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
-  title: "תקציב חכם",
-  description: "ניהול תקציב משפחתי",
+  title: "My Family Finance",
+  description: "Family budget management dashboard",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
