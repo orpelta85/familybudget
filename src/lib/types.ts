@@ -126,6 +126,8 @@ export interface Kid {
   family_id?: string
   name: string
   birth_date?: string
+  monthly_savings: number
+  savings_years: number
   is_active: boolean
   created_at: string
 }

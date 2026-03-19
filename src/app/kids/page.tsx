@@ -3,7 +3,7 @@
 import { useUser } from '@/lib/queries/useUser'
 import { usePeriods, useCurrentPeriod } from '@/lib/queries/usePeriods'
 import {
-  useKids, useCreateKid, useDeleteKid,
+  useKids, useCreateKid, useUpdateKid, useDeleteKid,
   useAllKidExpenses, useCreateKidExpense, useDeleteKidExpense,
   useAllKidActivities, useCreateKidActivity, useUpdateKidActivity, useDeleteKidActivity,
 } from '@/lib/queries/useKids'
@@ -13,7 +13,7 @@ import { useSharedPeriod } from '@/lib/context/PeriodContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useMemo } from 'react'
 import { toast } from 'sonner'
-import { Users, Plus, ChevronDown, ChevronUp, Trash2, X, Baby, Heart, TrendingUp, Coins } from 'lucide-react'
+import { Users, Plus, ChevronDown, ChevronUp, Trash2, X, Baby, Heart, TrendingUp, Coins, PiggyBank } from 'lucide-react'
 import { TableSkeleton } from '@/components/ui/Skeleton'
 import { useConfirmDialog } from '@/components/ui/ConfirmDialog'
 import type { Kid, KidActivity } from '@/lib/types'
@@ -211,10 +211,6 @@ function KidCard({
   const monthlyCost = activities.reduce((s, a) => s + a.monthly_cost, 0)
   const currentMonthExpenses = currentExpenses.reduce((s, e) => s + e.amount, 0)
 
-  // Savings projection
-  const yearsToEighteen = age !== null ? Math.max(18 - age, 0) : 0
-  const projectedSavings = BITUACH_LEUMI_SAVINGS * 12 * yearsToEighteen
-
   return (
     <div className="card card-hover">
       <button onClick={onToggle}
@@ -244,7 +240,6 @@ function KidCard({
           currentExpenses={currentExpenses}
           monthlyCost={monthlyCost}
           currentMonthExpenses={currentMonthExpenses}
-          projectedSavings={projectedSavings}
           age={age}
           onDelete={onDelete}
           periods={periods}
@@ -263,7 +258,6 @@ function KidExpandedView({
   currentExpenses,
   monthlyCost,
   currentMonthExpenses,
-  projectedSavings,
   age,
   onDelete,
   periods,
@@ -275,7 +269,6 @@ function KidExpandedView({
   currentExpenses: import('@/lib/types').KidExpense[]
   monthlyCost: number
   currentMonthExpenses: number
-  projectedSavings: number
   age: number | null
   onDelete: () => void
   periods: import('@/lib/types').Period[] | undefined
@@ -284,11 +277,35 @@ function KidExpandedView({
 }) {
   const [showAddActivity, setShowAddActivity] = useState(false)
   const [showAddExpense, setShowAddExpense] = useState(false)
+  const [editingSavings, setEditingSavings] = useState(false)
+  const [savingsAmount, setSavingsAmount] = useState(String(kid.monthly_savings ?? 0))
+  const [savingsYears, setSavingsYears] = useState(String(kid.savings_years ?? 18))
   const confirm = useConfirmDialog()
   const deleteActivity = useDeleteKidActivity()
   const deleteExpense = useDeleteKidExpense()
+  const updateKid = useUpdateKid()
 
   const totalMonthly = monthlyCost + currentMonthExpenses
+
+  const monthlySavings = Number(kid.monthly_savings) || 0
+  const targetAge = Number(kid.savings_years) || 18
+  const remainingYears = age !== null ? Math.max(targetAge - age, 0) : 0
+  const totalMonthlySavingsWithBL = monthlySavings + BITUACH_LEUMI_SAVINGS
+  const projectedSavings = totalMonthlySavingsWithBL * 12 * remainingYears
+
+  async function handleSaveSavings() {
+    updateKid.mutate({
+      id: kid.id,
+      monthly_savings: Number(savingsAmount) || 0,
+      savings_years: Number(savingsYears) || 18,
+    }, {
+      onSuccess: () => {
+        toast.success('חיסכון עודכן')
+        setEditingSavings(false)
+      },
+      onError: () => toast.error('שגיאה בעדכון'),
+    })
+  }
 
   async function handleDeleteActivity(id: number) {
     if (!(await confirm({ message: 'למחוק חוג זה?' }))) return
@@ -327,6 +344,80 @@ function KidExpandedView({
         </div>
       </div>
 
+      {/* Personal savings */}
+      {age !== null && (
+        <div className="bg-[oklch(0.13_0.02_280)] border border-[oklch(0.25_0.04_280)] rounded-xl p-4 mb-5">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <PiggyBank size={14} className="text-accent-purple" />
+              <span className="font-semibold text-sm">חיסכון אישי</span>
+            </div>
+            {!editingSavings && (
+              <button onClick={() => setEditingSavings(true)}
+                className="btn-secondary text-[12px] py-1 px-2.5">
+                עריכה
+              </button>
+            )}
+          </div>
+          {editingSavings ? (
+            <div className="flex flex-col gap-3">
+              <div className="grid-2 !mb-0">
+                <div>
+                  <label className="text-xs block mb-[5px] text-text-secondary">חיסכון חודשי (₪)</label>
+                  <input type="number" value={savingsAmount} onChange={e => setSavingsAmount(e.target.value)}
+                    className="input-field w-full ltr text-right" />
+                </div>
+                <div>
+                  <label className="text-xs block mb-[5px] text-text-secondary">לכמה שנים (עד גיל)</label>
+                  <input type="number" value={savingsYears} onChange={e => setSavingsYears(e.target.value)}
+                    className="input-field w-full ltr text-right" />
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button onClick={handleSaveSavings} disabled={updateKid.isPending}
+                  className="btn-primary text-[12px] py-1.5 px-3">
+                  {updateKid.isPending ? '...' : 'שמור'}
+                </button>
+                <button onClick={() => setEditingSavings(false)}
+                  className="btn-secondary text-[12px] py-1.5 px-3">
+                  ביטול
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="grid-2 !mb-0">
+              <div className="bg-[oklch(0.16_0.02_280)] rounded-lg px-3 py-2.5 text-center">
+                <div className="text-lg font-bold text-accent-purple ltr">{formatCurrency(monthlySavings)}</div>
+                <div className="text-[11px] text-text-secondary mt-0.5">חיסכון חודשי</div>
+              </div>
+              <div className="bg-[oklch(0.16_0.02_280)] rounded-lg px-3 py-2.5 text-center">
+                <div className="text-lg font-bold text-accent-purple ltr">{formatCurrency(projectedSavings)}</div>
+                <div className="text-[11px] text-text-secondary mt-0.5">תחזית לגיל {targetAge}</div>
+              </div>
+            </div>
+          )}
+          {!editingSavings && (
+            <div className="text-[11px] text-text-secondary mt-2">
+              ({formatCurrency(monthlySavings)} חיסכון + {BITUACH_LEUMI_SAVINGS} ₪ ביטוח לאומי) × 12 × {remainingYears} שנים
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Bituach Leumi savings */}
+      {age !== null && (
+        <div className="bg-[oklch(0.15_0.02_185)] border border-[oklch(0.25_0.05_185)] rounded-xl p-4 mb-5 text-[13px]">
+          <div className="flex items-center gap-2 mb-2">
+            <TrendingUp size={14} className="text-accent-teal" />
+            <span className="font-semibold">חיסכון ביטוח לאומי</span>
+          </div>
+          <p className="text-text-body">
+            {BITUACH_LEUMI_SAVINGS} ₪ לחודש × 12 × {remainingYears} שנים ={' '}
+            <strong className="text-accent-teal">{formatCurrency(BITUACH_LEUMI_SAVINGS * 12 * remainingYears)}</strong>
+          </p>
+        </div>
+      )}
+
       <div className="grid-2">
         {/* Activities */}
         <div>
@@ -360,10 +451,10 @@ function KidExpandedView({
           )}
         </div>
 
-        {/* Recent expenses */}
+        {/* Monthly expenses (current period) */}
         <div>
           <div className="flex justify-between items-center mb-3">
-            <span className="font-semibold text-sm">הוצאות אחרונות</span>
+            <span className="font-semibold text-sm">הוצאות חודשיות</span>
             <button onClick={() => setShowAddExpense(true)} className="btn-secondary text-[12px] py-1 px-2.5 flex items-center gap-1">
               <Plus size={12} /> הוסף
             </button>
@@ -371,41 +462,32 @@ function KidExpandedView({
           {currentExpenses.length === 0 ? (
             <div className="text-text-secondary text-[13px]">אין הוצאות בתקופה הנוכחית</div>
           ) : (
-            <div className="flex flex-col gap-1.5">
-              {currentExpenses.slice(0, 10).map(e => (
-                <div key={e.id} className="flex justify-between items-center py-2 px-2 rounded-lg hover:bg-[oklch(0.18_0.01_250)] transition-colors text-[13px]">
-                  <div>
-                    <span className="text-text-heading">{e.description || e.category}</span>
-                    <div className="text-[11px] text-text-secondary mt-0.5">{e.category}</div>
+            <>
+              <div className="flex flex-col gap-1.5">
+                {currentExpenses.map(e => (
+                  <div key={e.id} className="flex justify-between items-center py-2 px-2 rounded-lg hover:bg-[oklch(0.18_0.01_250)] transition-colors text-[13px]">
+                    <div>
+                      <span className="text-text-heading">{e.description || e.category}</span>
+                      <div className="text-[11px] text-text-secondary mt-0.5">{e.category}</div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="ltr font-medium text-accent-red">{formatCurrency(e.amount)}</span>
+                      <button onClick={() => handleDeleteExpense(e.id)} aria-label="מחק"
+                        className="bg-transparent border-none cursor-pointer text-text-secondary hover:text-accent-red p-1">
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="ltr font-medium text-accent-red">{formatCurrency(e.amount)}</span>
-                    <button onClick={() => handleDeleteExpense(e.id)} aria-label="מחק"
-                      className="bg-transparent border-none cursor-pointer text-text-secondary hover:text-accent-red p-1">
-                      <Trash2 size={13} />
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+              <div className="flex justify-between items-center mt-3 pt-3 border-t border-t-[oklch(0.22_0.01_250)] text-sm">
+                <span className="font-semibold text-text-secondary">סה"כ חודשי</span>
+                <span className="font-bold text-accent-red ltr">{formatCurrency(currentMonthExpenses)}</span>
+              </div>
+            </>
           )}
         </div>
       </div>
-
-      {/* Savings projection */}
-      {age !== null && (
-        <div className="bg-[oklch(0.15_0.02_185)] border border-[oklch(0.25_0.05_185)] rounded-xl p-4 mt-5 text-[13px]">
-          <div className="flex items-center gap-2 mb-2">
-            <TrendingUp size={14} className="text-accent-teal" />
-            <span className="font-semibold">תחזית חיסכון</span>
-          </div>
-          <p className="text-text-body">
-            בגיל 18 יהיה ל{kid.name}{' '}
-            <strong className="text-accent-teal">{formatCurrency(projectedSavings)}</strong>{' '}
-            מחיסכון ביטוח לאומי ({BITUACH_LEUMI_SAVINGS} ₪ × 12 × {18 - age} שנים)
-          </p>
-        </div>
-      )}
 
       {/* Delete kid */}
       <div className="mt-5">
