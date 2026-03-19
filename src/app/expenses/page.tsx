@@ -395,24 +395,34 @@ export default function ExpensesPage() {
                   >
                     {row.is_shared ? 'משותף' : 'אישי'}
                   </button>
-                  {/* קטגוריה — always editable dropdown */}
-                  <select
-                    value={row.categoryId?.startsWith('__new__') ? '__new__' : (row.categoryId || '')}
-                    onChange={e => {
-                      const val = e.target.value
-                      const text = e.target.selectedOptions[0]?.text || ''
-                      setImportRows(p => p.map((r, j) => j === i ? { ...r, categoryId: val === '__new__' ? `__new__${r.category}` : val, category: val === '__new__' ? r.category : text } : r))
-                    }}
-                    aria-label="בחר קטגוריה"
-                    className={`min-w-[120px] bg-[oklch(0.20_0.01_250)] border-2 rounded-lg px-2 py-1 text-[12px] text-inherit outline-none cursor-pointer appearance-auto ${
-                      isAutoMatched ? 'border-[oklch(0.50_0.15_150)] text-[oklch(0.80_0.10_150)]'
-                      : isNewCat ? 'border-[oklch(0.50_0.15_55)] text-[oklch(0.80_0.10_55)]'
-                      : 'border-[oklch(0.40_0.01_250)] text-[oklch(0.65_0.01_250)]'
-                    }`}>
-                    {isNewCat && <option value="__new__">{row.category} (חדש)</option>}
-                    {!isNewCat && !row.categoryId && <option value="">— בחר קטגוריה —</option>}
-                    {categories?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </select>
+                  {/* קטגוריה — dropdown + manual input */}
+                  <div className="flex items-center gap-1">
+                    <select
+                      value={row.categoryId?.startsWith('__new__') ? '__new__' : (row.categoryId || '')}
+                      onChange={e => {
+                        const val = e.target.value
+                        if (val === '__manual__') {
+                          const name = prompt('שם קטגוריה חדשה:')
+                          if (name?.trim()) {
+                            setImportRows(p => p.map((r, j) => j === i ? { ...r, categoryId: `__new__${name.trim()}`, category: name.trim() } : r))
+                          }
+                        } else {
+                          const text = e.target.selectedOptions[0]?.text || ''
+                          setImportRows(p => p.map((r, j) => j === i ? { ...r, categoryId: val === '__new__' ? `__new__${r.category}` : val, category: val === '__new__' ? r.category : text } : r))
+                        }
+                      }}
+                      aria-label="בחר קטגוריה"
+                      className={`min-w-[120px] bg-[oklch(0.20_0.01_250)] border-2 rounded-lg px-2 py-1 text-[12px] text-inherit outline-none cursor-pointer appearance-auto ${
+                        isAutoMatched ? 'border-[oklch(0.50_0.15_150)] text-[oklch(0.80_0.10_150)]'
+                        : isNewCat ? 'border-[oklch(0.50_0.15_55)] text-[oklch(0.80_0.10_55)]'
+                        : 'border-[oklch(0.40_0.01_250)] text-[oklch(0.65_0.01_250)]'
+                      }`}>
+                      {isNewCat && <option value="__new__">{row.category} (חדש)</option>}
+                      {!isNewCat && !row.categoryId && <option value="">— בחר —</option>}
+                      {categories?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                      <option value="__manual__">+ קטגוריה חדשה...</option>
+                    </select>
+                  </div>
                 </div>
               )
             })}
