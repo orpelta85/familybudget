@@ -10,6 +10,7 @@ export function usePeriods() {
       const { data, error } = await sb
         .from('periods')
         .select('*')
+        .gte('start_date', '2025-11-11')
         .order('id')
       if (error) throw error
       return data

@@ -217,7 +217,7 @@ export default function Dashboard() {
                   viewMode === opt.key
                     ? 'bg-bg-hover text-text-primary shadow-[inset_0_0_0_1px_var(--accent-blue)]'
                     : 'bg-transparent text-text-secondary'
-                } ${opt.key === 'personal' ? 'border-e border-e-border-default' : ''}`}
+                } ${opt.key === 'personal' ? 'border-l border-l-border-default' : ''}`}
               >
                 {opt.label}
               </button>
@@ -318,7 +318,7 @@ export default function Dashboard() {
                   </span>
                 </div>
                 {variableRemaining > 0 && (
-                  <div className="text-[11px] text-text-secondary mt-1.5 ltr text-start">
+                  <div className="text-[11px] text-text-secondary mt-1.5 ltr text-right">
                     יתרת תקציב משתנות: {formatCurrency(variableRemaining)}
                   </div>
                 )}
@@ -486,7 +486,7 @@ export default function Dashboard() {
             <h2 className="card-header mb-3.5">
               <Wallet size={14} className="text-accent-purple" /> שווי נקי
             </h2>
-            <div className={`text-[28px] font-bold ltr text-start mb-3.5 ${netWorth >= 0 ? 'text-accent-purple' : 'text-accent-red'}`}>
+            <div className={`text-[28px] font-bold ltr text-right mb-3.5 ${netWorth >= 0 ? 'text-accent-purple' : 'text-accent-red'}`}>
               {formatCurrency(netWorth)}
             </div>
             <div className="flex flex-col gap-1.5 text-xs">

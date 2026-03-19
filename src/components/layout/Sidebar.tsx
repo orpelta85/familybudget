@@ -66,7 +66,7 @@ export function Sidebar() {
       {/* Logo */}
       <div className="px-5 pt-5 pb-4 border-b border-[oklch(0.20_0.01_250)]">
         <div className="flex items-center gap-2 mb-1.5">
-          <img src="/favicon.svg" alt="" width={20} height={20} className="shrink-0" />
+          <img src="/favicon.svg" alt="" width={28} height={28} className="shrink-0" />
           <span className="text-[13px] font-semibold text-[oklch(0.85_0.01_250)] tracking-tight">
             My Family Finance
           </span>
