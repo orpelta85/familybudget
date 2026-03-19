@@ -166,7 +166,7 @@ export default function SinkingPage() {
       </div>
       <p className="text-[oklch(0.65_0.01_250)] text-[13px] mb-5">
         סה&quot;כ הפרשה חודשית: <span className="ltr inline-block font-semibold text-[oklch(0.70_0.15_185)]">{formatCurrency(totalMonthly)}</span>
-        <span className="mr-2 text-[oklch(0.65_0.01_250)] text-xs">
+        <span className="ms-2 text-[oklch(0.65_0.01_250)] text-xs">
           (יעד שנתי: {formatCurrency((funds ?? []).reduce((s, f) => s + (f.yearly_target || f.monthly_allocation * 12), 0))})
         </span>
       </p>
@@ -214,10 +214,10 @@ export default function SinkingPage() {
 
                     {/* Amounts */}
                     <div className="text-left ltr shrink-0">
-                      <div className="text-base font-bold text-[oklch(0.88_0.01_250)]">{formatCurrency(fund.monthly_allocation)}<span className="text-[11px] font-normal text-[oklch(0.65_0.01_250)] mr-[3px]">/חודש</span></div>
+                      <div className="text-base font-bold text-[oklch(0.88_0.01_250)]">{formatCurrency(fund.monthly_allocation)}<span className="text-[11px] font-normal text-[oklch(0.65_0.01_250)] ms-[3px]">/חודש</span></div>
                       <div className="text-xs text-[oklch(0.65_0.01_250)]">
                         יעד שנתי: {formatCurrency(totalAnnual)}
-                        {shared && <span className="mr-1 text-[oklch(0.65_0.01_250)]">(חלקי: {formatCurrency(fund.monthly_allocation * 12)})</span>}
+                        {shared && <span className="ms-1 text-[oklch(0.65_0.01_250)]">(חלקי: {formatCurrency(fund.monthly_allocation * 12)})</span>}
                       </div>
                     </div>
 
@@ -417,7 +417,7 @@ function FundFormFields({ form, onChange, splitFrac }: { form: FundForm; onChang
         <div className="bg-[oklch(0.20_0.02_185)] rounded-lg px-3.5 py-2.5 text-[13px] text-[oklch(0.70_0.15_185)]">
           <div className="ltr text-left">
             חלקך: <strong>{formatCurrency(monthly)}</strong> לחודש
-            {form.isShared && <span className="text-[oklch(0.65_0.01_250)] mr-1.5">({formatCurrency(monthly * 12)} לשנה)</span>}
+            {form.isShared && <span className="text-[oklch(0.65_0.01_250)] ms-1.5">({formatCurrency(monthly * 12)} לשנה)</span>}
           </div>
           {form.isShared && (
             <div className="text-[11px] text-[oklch(0.65_0.01_250)] mt-[3px] ltr text-left">

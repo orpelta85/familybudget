@@ -641,7 +641,7 @@ export default function ExpensesPage() {
             <div className="bg-card border border-border rounded-xl p-5 mb-3">
               <div className="flex items-center gap-1.5 mb-2.5 text-xs text-[oklch(0.70_0.15_185)] font-semibold">
                 <Target size={12} /> קרנות שנתיות — הפרשה חודשית
-                <span className="font-normal text-muted-foreground mr-1">(נעולות — לשינוי עבור לעמוד הקרנות)</span>
+                <span className="font-normal text-muted-foreground ms-1">(נעולות — לשינוי עבור לעמוד הקרנות)</span>
               </div>
               {(funds ?? []).map(fund => (
                 <div key={fund.id} className="flex justify-between items-center py-2.5 border-b border-[oklch(0.20_0.01_250)] opacity-85">
