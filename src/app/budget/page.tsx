@@ -8,17 +8,10 @@ import { formatCurrency } from '@/lib/utils'
 import { useSharedPeriod } from '@/lib/context/PeriodContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useMemo } from 'react'
-import { BarChart3, Inbox } from 'lucide-react'
+import { BarChart3, Inbox, Check, Clock } from 'lucide-react'
 import { toast } from 'sonner'
 import { TableSkeleton } from '@/components/ui/Skeleton'
 import { PeriodSelector } from '@/components/layout/PeriodSelector'
-
-const TYPE_LABELS: Record<string, { label: string; color: string }> = {
-  fixed:    { label: 'קבועות',       color: 'oklch(0.65 0.18 250)' },
-  variable: { label: 'משתנות',      color: 'oklch(0.72 0.18 55)' },
-  sinking:  { label: 'קרנות צבירה', color: 'oklch(0.70 0.15 185)' },
-  savings:  { label: 'חיסכון',      color: 'oklch(0.70 0.18 145)' },
-}
 
 function getBarColor(pct: number): string {
   if (pct > 0.9) return 'oklch(0.62 0.22 27)'
@@ -46,7 +39,6 @@ export default function BudgetPage() {
   }, [user, loading, router])
 
   const selectedPeriod = useMemo(() => periods?.find(p => p.id === selectedPeriodId), [periods, selectedPeriodId])
-  const selectedYear = selectedPeriod?.year_number ?? currentPeriod?.year_number
 
   const { data: categories } = useBudgetCategories(user?.id)
   const { data: expenses } = usePersonalExpenses(selectedPeriodId ?? currentPeriod?.id, user?.id)
@@ -54,23 +46,22 @@ export default function BudgetPage() {
 
   if (loading || !user) return <TableSkeleton rows={8} />
 
-  const grouped = (categories ?? []).reduce<Record<string, typeof categories>>((acc, c) => {
-    if (!acc[c.type]) acc[c.type] = []
-    acc[c.type]!.push(c)
-    return acc
-  }, {})
+  // Split categories by type
+  const fixedCats = (categories ?? []).filter(c => c.type === 'fixed')
+  const variableCats = (categories ?? []).filter(c => c.type === 'variable')
 
+  // Spending by category
   const spendByCat = (expenses ?? []).reduce<Record<number, number>>((acc, e) => {
     acc[e.category_id] = (acc[e.category_id] ?? 0) + e.amount
     return acc
   }, {})
 
-  const totalBudget = categories?.reduce((s, c) => s + c.monthly_target, 0) ?? 0
-  const totalSpent = expenses?.reduce((s, e) => s + e.amount, 0) ?? 0
-  const totalRemaining = totalBudget - totalSpent
+  // Totals
   const totalIncome = income ? (income.salary + income.bonus + income.other) : 0
-  const budgetToIncome = totalIncome > 0 ? (totalBudget / totalIncome) * 100 : 0
-  const ratioColor = budgetToIncome <= 80 ? 'oklch(0.70 0.18 145)' : budgetToIncome <= 100 ? 'oklch(0.72 0.18 55)' : 'oklch(0.62 0.22 27)'
+  const totalFixed = fixedCats.reduce((s, c) => s + (spendByCat[c.id] ?? 0), 0)
+  const totalVariableActual = variableCats.reduce((s, c) => s + (spendByCat[c.id] ?? 0), 0)
+  const totalVariableBudget = variableCats.reduce((s, c) => s + c.monthly_target, 0)
+  const remaining = totalIncome - totalFixed - totalVariableActual
 
   async function saveTarget(catId: number) {
     const val = Number(editValue)
@@ -84,7 +75,7 @@ export default function BudgetPage() {
     <div>
       <div className="flex items-center gap-2 mb-1.5">
         <BarChart3 size={18} className="text-primary" />
-        <h1 className="text-xl font-bold tracking-tight">תקציב מתוכנן</h1>
+        <h1 className="text-xl font-bold tracking-tight">תקציב חודשי</h1>
       </div>
       <p className="text-muted-foreground text-[13px] mb-5">
         {selectedPeriod?.label ?? currentPeriod?.label ?? '...'}
@@ -93,40 +84,38 @@ export default function BudgetPage() {
       {periods && <PeriodSelector periods={periods} selectedId={selectedPeriodId} onChange={setSelectedPeriodId} />}
 
       {/* KPI Cards */}
-      <div className="grid-3 mb-6">
-        <div className="bg-card border border-border rounded-xl p-5">
-          <div className="text-[11px] text-muted-foreground mb-1.5 uppercase tracking-wide">תקציב כולל</div>
-          <div className="text-[28px] font-bold text-primary ltr leading-none">{formatCurrency(totalBudget)}</div>
+      <div className="grid-kpi mb-6">
+        <div className="bg-card border border-border rounded-xl p-4">
+          <div className="text-[11px] text-muted-foreground mb-1 uppercase tracking-wide">הכנסה נטו</div>
+          <div className="text-[22px] font-bold text-primary ltr leading-none">{formatCurrency(totalIncome)}</div>
+        </div>
+        <div className="bg-card border border-border rounded-xl p-4">
+          <div className="text-[11px] text-muted-foreground mb-1 uppercase tracking-wide">סה״כ קבועות</div>
+          <div className="text-[22px] font-bold text-[oklch(0.65_0.18_250)] ltr leading-none">{formatCurrency(totalFixed)}</div>
+        </div>
+        <div className="bg-card border border-border rounded-xl p-4">
+          <div className="text-[11px] text-muted-foreground mb-1 uppercase tracking-wide">סה״כ משתנות בפועל</div>
+          <div className="text-[22px] font-bold text-[oklch(0.72_0.18_55)] ltr leading-none">{formatCurrency(totalVariableActual)}</div>
+          {totalVariableBudget > 0 && (
+            <div className="text-[11px] text-muted-foreground mt-1.5">
+              מתוך {formatCurrency(totalVariableBudget)} תקציב
+            </div>
+          )}
+        </div>
+        <div className="bg-card border border-border rounded-xl p-4">
+          <div className="text-[11px] text-muted-foreground mb-1 uppercase tracking-wide">נשאר פנוי</div>
+          <div className={`text-[22px] font-bold ltr leading-none ${remaining >= 0 ? 'text-[oklch(0.70_0.18_145)]' : 'text-[oklch(0.62_0.22_27)]'}`}>
+            {formatCurrency(remaining)}
+          </div>
           {totalIncome > 0 && (
-            <div className="flex items-center gap-1.5 mt-2.5">
-              <div className="flex-1 h-[3px] rounded-sm bg-secondary overflow-hidden">
-                <div className="h-full rounded-sm transition-[width] duration-400 ease-out" style={{ width: `${Math.min(budgetToIncome, 100)}%`, background: ratioColor }} />
-              </div>
-              <span className="text-xs font-semibold whitespace-nowrap" style={{ color: ratioColor }}>{budgetToIncome.toFixed(0)}% מההכנסה</span>
-            </div>
-          )}
-        </div>
-        <div className="bg-card border border-border rounded-xl p-5">
-          <div className="text-[11px] text-muted-foreground mb-1.5 uppercase tracking-wide">בוצע עד כה</div>
-          <div className="text-[28px] font-bold text-[oklch(0.72_0.18_55)] ltr leading-none">{formatCurrency(totalSpent)}</div>
-          {totalBudget > 0 && (
-            <div className="text-xs text-muted-foreground mt-2.5">
-              {((totalSpent / totalBudget) * 100).toFixed(0)}% מהתקציב
-            </div>
-          )}
-        </div>
-        <div className="bg-card border border-border rounded-xl p-5">
-          <div className="text-[11px] text-muted-foreground mb-1.5 uppercase tracking-wide">נותר</div>
-          <div className={`text-[28px] font-bold ltr leading-none ${totalRemaining >= 0 ? 'text-[oklch(0.70_0.18_145)]' : 'text-[oklch(0.62_0.22_27)]'}`}>{formatCurrency(totalRemaining)}</div>
-          {totalBudget > 0 && (
-            <div className="text-xs text-muted-foreground mt-2.5">
-              {((totalRemaining / totalBudget) * 100).toFixed(0)}% נותר
+            <div className="text-[11px] text-muted-foreground mt-1.5">
+              {Math.round((remaining / totalIncome) * 100)}% מההכנסה
             </div>
           )}
         </div>
       </div>
 
-      {/* Category Sections */}
+      {/* Two-column layout: Right = Fixed, Left = Variable */}
       {!categories?.length
         ? (
           <div className="bg-card border border-border rounded-xl text-center p-10">
@@ -134,79 +123,158 @@ export default function BudgetPage() {
             <div className="text-muted-foreground text-sm">אין קטגוריות תקציב</div>
           </div>
         )
-        : Object.entries(TYPE_LABELS).map(([type, meta]) => {
-          const cats = grouped[type] ?? []
-          if (!cats.length) return null
-          const typeBudget = cats.reduce((s, c) => s + c.monthly_target, 0)
-          const typeSpent = cats.reduce((s, c) => s + (spendByCat[c.id] ?? 0), 0)
-
-          return (
-            <div key={type} className="card-transition bg-card border border-border rounded-xl p-5 mb-4">
-              {/* Section Header */}
+        : (
+          <div className="grid-2" style={{ alignItems: 'start' }}>
+            {/* Right column: Fixed expenses */}
+            <div className="card-transition bg-card border border-border rounded-xl p-5">
               <div className="flex justify-between items-center mb-4 pb-3 border-b border-[oklch(0.22_0.01_250)]">
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full" style={{ background: meta.color }} />
-                  <span className="font-bold text-sm">{meta.label}</span>
-                  <span className="text-[11px] text-muted-foreground bg-secondary rounded px-1.5 py-px">{cats.length}</span>
+                  <div className="w-2 h-2 rounded-full" style={{ background: 'oklch(0.65 0.18 250)' }} />
+                  <span className="font-bold text-sm">הוצאות קבועות</span>
+                  <span className="text-[11px] text-muted-foreground bg-secondary rounded px-1.5 py-px">{fixedCats.length}</span>
                 </div>
-                <div className="ltr text-[13px]">
-                  <span className="font-bold text-[oklch(0.80_0.01_250)]">{formatCurrency(typeSpent)}</span>
-                  <span className="text-muted-foreground mx-1">/</span>
-                  <span className="text-muted-foreground">{formatCurrency(typeBudget)}</span>
+                <div className="ltr text-[13px] font-bold text-[oklch(0.80_0.01_250)]">
+                  {formatCurrency(totalFixed)}
                 </div>
               </div>
 
-              {/* Category Rows */}
-              {cats.map(cat => {
-                const spent = spendByCat[cat.id] ?? 0
-                const pct = cat.monthly_target > 0 ? spent / cat.monthly_target : 0
-                const pctDisplay = Math.round(pct * 100)
-                const isEditing = editingId === cat.id
-                const barColor = getBarColor(pct)
-                const spentColor = pct > 1 ? 'oklch(0.62 0.22 27)' : pct > 0.9 ? 'oklch(0.72 0.18 55)' : 'oklch(0.70 0.18 145)'
+              {fixedCats.length === 0 ? (
+                <div className="text-muted-foreground text-sm text-center py-6">אין הוצאות קבועות</div>
+              ) : (
+                <div className="space-y-1">
+                  {fixedCats.map(cat => {
+                    const spent = spendByCat[cat.id] ?? 0
+                    const isPaid = spent > 0
 
-                return (
-                  <div key={cat.id} className="mb-3.5">
-                    {/* Row 1: Name + Spent / Target */}
-                    <div className="flex justify-between items-baseline mb-1.5">
-                      <span className="font-semibold text-[13px] text-[oklch(0.82_0.01_250)]">{cat.name}</span>
-                      <div className="flex items-baseline gap-1 ltr text-[13px]">
-                        <span className="font-semibold" style={{ color: spentColor }}>{formatCurrency(spent)}</span>
-                        <span className="text-muted-foreground">/</span>
-                        {isEditing ? (
-                          <input
-                            autoFocus
-                            type="number"
-                            value={editValue}
-                            onChange={e => setEditValue(e.target.value)}
-                            onBlur={() => saveTarget(cat.id)}
-                            onKeyDown={e => { if (e.key === 'Enter') saveTarget(cat.id); if (e.key === 'Escape') setEditingId(null) }}
-                            className="w-20 bg-[oklch(0.20_0.01_250)] border border-[oklch(0.45_0.18_250)] rounded-md px-1.5 py-0.5 text-inherit text-[13px] text-end"
-                          />
-                        ) : (
-                          <span
-                            onClick={() => { setEditingId(cat.id); setEditValue(String(cat.monthly_target)) }}
-                            title="לחץ לעריכה"
-                            className="text-muted-foreground cursor-pointer border-b border-dashed border-[oklch(0.38_0.01_250)] pb-px transition-colors duration-150 hover:text-[oklch(0.75_0.01_250)]"
-                          >
-                            {formatCurrency(cat.monthly_target)}
+                    return (
+                      <div
+                        key={cat.id}
+                        className="flex justify-between items-center py-2.5 px-2 rounded-lg hover:bg-[oklch(0.18_0.01_250)] transition-colors duration-150"
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <div className={`w-5 h-5 rounded-full flex items-center justify-center ${isPaid ? 'bg-[oklch(0.70_0.18_145)]' : 'bg-[oklch(0.25_0.01_250)]'}`}>
+                            {isPaid
+                              ? <Check size={12} className="text-[oklch(0.15_0_0)]" />
+                              : <Clock size={12} className="text-[oklch(0.45_0.01_250)]" />
+                            }
+                          </div>
+                          <span className={`text-[13px] font-medium ${isPaid ? 'text-[oklch(0.82_0.01_250)]' : 'text-[oklch(0.50_0.01_250)]'}`}>
+                            {cat.name}
                           </span>
-                        )}
+                        </div>
+                        <span className={`ltr text-[13px] font-semibold ${isPaid ? 'text-[oklch(0.82_0.01_250)]' : 'text-[oklch(0.40_0.01_250)]'}`}>
+                          {isPaid ? formatCurrency(spent) : '—'}
+                        </span>
                       </div>
-                    </div>
-                    {/* Row 2: Progress bar + percentage */}
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 h-[5px] rounded-sm bg-secondary overflow-hidden">
-                        <div className="h-full rounded-sm transition-[width] duration-400 ease-out" style={{ width: `${Math.min(pct * 100, 100)}%`, background: barColor }} />
-                      </div>
-                      <span className="text-[11px] font-medium min-w-8 text-start ltr" style={{ color: barColor }}>{pctDisplay > 200 ? '200%+' : `${pctDisplay}%`}</span>
-                    </div>
-                  </div>
-                )
-              })}
+                    )
+                  })}
+                </div>
+              )}
+
+              {/* Fixed total bar */}
+              {fixedCats.length > 0 && (
+                <div className="flex justify-between items-center mt-4 pt-3 border-t border-[oklch(0.22_0.01_250)]">
+                  <span className="text-[12px] text-muted-foreground">
+                    {fixedCats.filter(c => (spendByCat[c.id] ?? 0) > 0).length}/{fixedCats.length} שולמו
+                  </span>
+                  <span className="ltr text-[14px] font-bold text-[oklch(0.65_0.18_250)]">
+                    {formatCurrency(totalFixed)}
+                  </span>
+                </div>
+              )}
             </div>
-          )
-        })
+
+            {/* Left column: Variable expenses */}
+            <div className="card-transition bg-card border border-border rounded-xl p-5">
+              <div className="flex justify-between items-center mb-4 pb-3 border-b border-[oklch(0.22_0.01_250)]">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full" style={{ background: 'oklch(0.72 0.18 55)' }} />
+                  <span className="font-bold text-sm">הוצאות משתנות</span>
+                  <span className="text-[11px] text-muted-foreground bg-secondary rounded px-1.5 py-px">{variableCats.length}</span>
+                </div>
+                <div className="ltr text-[13px]">
+                  <span className="font-bold text-[oklch(0.80_0.01_250)]">{formatCurrency(totalVariableActual)}</span>
+                  <span className="text-muted-foreground mx-1">/</span>
+                  <span className="text-muted-foreground">{formatCurrency(totalVariableBudget)}</span>
+                </div>
+              </div>
+
+              {variableCats.length === 0 ? (
+                <div className="text-muted-foreground text-sm text-center py-6">אין הוצאות משתנות</div>
+              ) : (
+                variableCats.map(cat => {
+                  const spent = spendByCat[cat.id] ?? 0
+                  const pct = cat.monthly_target > 0 ? spent / cat.monthly_target : 0
+                  const pctDisplay = Math.round(pct * 100)
+                  const isEditing = editingId === cat.id
+                  const barColor = getBarColor(pct)
+                  const remaining = cat.monthly_target - spent
+
+                  return (
+                    <div key={cat.id} className="mb-4">
+                      {/* Row 1: Name + remaining */}
+                      <div className="flex justify-between items-baseline mb-1">
+                        <span className="font-semibold text-[13px] text-[oklch(0.82_0.01_250)]">{cat.name}</span>
+                        <span className={`text-[12px] font-medium ${remaining >= 0 ? 'text-[oklch(0.70_0.18_145)]' : 'text-[oklch(0.62_0.22_27)]'}`}>
+                          {remaining >= 0 ? `נותר ${formatCurrency(remaining)}` : `חריגה ${formatCurrency(Math.abs(remaining))}`}
+                        </span>
+                      </div>
+                      {/* Row 2: Actual / Target */}
+                      <div className="flex justify-between items-baseline mb-1.5">
+                        <div className="flex items-baseline gap-1 ltr text-[13px]">
+                          <span className="font-semibold" style={{ color: barColor }}>{formatCurrency(spent)}</span>
+                          <span className="text-muted-foreground">/</span>
+                          {isEditing ? (
+                            <input
+                              autoFocus
+                              type="number"
+                              value={editValue}
+                              onChange={e => setEditValue(e.target.value)}
+                              onBlur={() => saveTarget(cat.id)}
+                              onKeyDown={e => { if (e.key === 'Enter') saveTarget(cat.id); if (e.key === 'Escape') setEditingId(null) }}
+                              className="w-20 bg-[oklch(0.20_0.01_250)] border border-[oklch(0.45_0.18_250)] rounded-md px-1.5 py-0.5 text-inherit text-[13px] text-left"
+                            />
+                          ) : (
+                            <span
+                              onClick={() => { setEditingId(cat.id); setEditValue(String(cat.monthly_target)) }}
+                              title="לחץ לעריכה"
+                              className="text-muted-foreground cursor-pointer border-b border-dashed border-[oklch(0.38_0.01_250)] pb-px transition-colors duration-150 hover:text-[oklch(0.75_0.01_250)]"
+                            >
+                              {formatCurrency(cat.monthly_target)}
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-[11px] font-medium" style={{ color: barColor }}>
+                          {pctDisplay > 200 ? '200%+' : `${pctDisplay}%`}
+                        </span>
+                      </div>
+                      {/* Row 3: Progress bar */}
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 h-[5px] rounded-sm bg-secondary overflow-hidden">
+                          <div className="h-full rounded-sm transition-[width] duration-400 ease-out" style={{ width: `${Math.min(pct * 100, 100)}%`, background: barColor }} />
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })
+              )}
+
+              {/* Variable total bar */}
+              {variableCats.length > 0 && (
+                <div className="flex justify-between items-center mt-2 pt-3 border-t border-[oklch(0.22_0.01_250)]">
+                  <span className="text-[12px] text-muted-foreground">
+                    {totalVariableBudget > 0 ? `${Math.round((totalVariableActual / totalVariableBudget) * 100)}% מהתקציב` : ''}
+                  </span>
+                  <div className="ltr text-[14px]">
+                    <span className="font-bold text-[oklch(0.80_0.01_250)]">{formatCurrency(totalVariableActual)}</span>
+                    <span className="text-muted-foreground mx-1">/</span>
+                    <span className="text-muted-foreground">{formatCurrency(totalVariableBudget)}</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )
       }
     </div>
   )
