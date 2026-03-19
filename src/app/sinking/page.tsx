@@ -144,7 +144,7 @@ export default function SinkingPage() {
     if (!user) return
     const shared = isFundShared(user.id, fund.id)
     const totalAnnual = shared
-      ? fund.monthly_allocation * 12 * 2   // reconstruct total from user's half
+      ? Math.round(fund.monthly_allocation * 12 / splitFrac)   // reconstruct total from user's share
       : fund.monthly_allocation * 12
     setEditFund({ id: fund.id, name: fund.name, totalAnnual: String(totalAnnual), isShared: shared })
   }
@@ -190,7 +190,7 @@ export default function SinkingPage() {
           <div className="flex flex-col gap-2.5">
             {funds.map(fund => {
               const shared = isFundShared(user.id, fund.id)
-              const totalAnnual = shared ? fund.monthly_allocation * 12 * 2 : fund.monthly_allocation * 12
+              const totalAnnual = shared ? Math.round(fund.monthly_allocation * 12 / splitFrac) : fund.monthly_allocation * 12
               const balance = getFundBalance(fund.id)
               const pct = totalAnnual > 0 ? Math.min((balance / totalAnnual) * 100, 100) : 0
 
@@ -283,7 +283,7 @@ export default function SinkingPage() {
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <div className="bg-[oklch(0.18_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-[14px] p-7 w-[360px]">
             <ModalHeader title="קרן שנתית חדשה" onClose={() => setNewFund(null)} />
-            <FundFormFields form={newFund} onChange={setNewFund} />
+            <FundFormFields form={newFund} onChange={setNewFund} splitFrac={splitFrac} />
             <button
               onClick={handleAddFund}
               disabled={addFund.isPending || !newFund.name.trim() || Number(newFund.totalAnnual) < 0}
@@ -300,7 +300,7 @@ export default function SinkingPage() {
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <div className="bg-[oklch(0.18_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-[14px] p-7 w-[360px]">
             <ModalHeader title="עריכת קרן" onClose={() => setEditFund(null)} />
-            <FundFormFields form={editFund} onChange={f => setEditFund(prev => prev && { ...prev, ...f })} />
+            <FundFormFields form={editFund} onChange={f => setEditFund(prev => prev && { ...prev, ...f })} splitFrac={splitFrac} />
             <button
               onClick={handleEditFund}
               disabled={updateFund.isPending || !editFund.name.trim() || Number(editFund.totalAnnual) < 0}
@@ -375,9 +375,9 @@ function ModalHeader({ title, onClose }: { title: string; onClose: () => void })
   )
 }
 
-function FundFormFields({ form, onChange }: { form: FundForm; onChange: (f: FundForm) => void }) {
+function FundFormFields({ form, onChange, splitFrac }: { form: FundForm; onChange: (f: FundForm) => void; splitFrac: number }) {
   const total = Number(form.totalAnnual)
-  const monthly = total > 0 ? (form.isShared ? Math.round(total / 12 / 2) : Math.round(total / 12)) : 0
+  const monthly = total > 0 ? (form.isShared ? Math.round(total / 12 * splitFrac) : Math.round(total / 12)) : 0
 
   return (
     <div className="flex flex-col gap-3.5 mb-4">
@@ -422,7 +422,7 @@ function FundFormFields({ form, onChange }: { form: FundForm; onChange: (f: Fund
           </div>
           {form.isShared && (
             <div className="text-[11px] text-[oklch(0.65_0.01_250)] mt-[3px] ltr text-left">
-              יעד כולל: {formatCurrency(Number(form.totalAnnual))} ÷ 2 ÷ 12
+              יעד כולל: {formatCurrency(Number(form.totalAnnual))} × {Math.round(splitFrac * 100)}% ÷ 12
             </div>
           )}
         </div>

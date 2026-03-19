@@ -23,6 +23,8 @@ export function useProfile(userId: string | undefined) {
 /** Returns the user's split fraction (0-1). Defaults to 0.5 if not set. */
 export function useSplitFraction(userId: string | undefined): number {
   const { data: profile } = useProfile(userId)
-  const pct = profile?.shared_split_pct ?? 50
-  return pct / 100
+  const raw = profile?.shared_split_pct ?? 50
+  // DB may store as fraction (0.5) or percentage (50) — normalize to 0-1
+  const pct = raw <= 1 ? raw : raw / 100
+  return pct
 }
