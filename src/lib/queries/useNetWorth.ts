@@ -17,6 +17,9 @@ export interface NetWorthEntry {
   owner: 'personal' | 'shared'
   name: string | null
   return_pct: number | null
+  cumulative_return_pct: number | null
+  start_date: string | null
+  end_date: string | null
   updated_at: string
   created_at: string
 }
@@ -83,6 +86,9 @@ export function useUpsertNetWorthEntry() {
       owner?: 'personal' | 'shared'
       name?: string | null
       return_pct?: number | null
+      cumulative_return_pct?: number | null
+      start_date?: string | null
+      end_date?: string | null
     }) => {
       const sb = createClient()
       if (entry.id) {
@@ -97,6 +103,9 @@ export function useUpsertNetWorthEntry() {
           owner: entry.owner,
           name: entry.name,
           return_pct: entry.return_pct,
+          cumulative_return_pct: entry.cumulative_return_pct,
+          start_date: entry.start_date,
+          end_date: entry.end_date,
           updated_at: new Date().toISOString(),
         }).eq('id', entry.id)
         if (error) throw error
@@ -113,6 +122,9 @@ export function useUpsertNetWorthEntry() {
           owner: entry.owner ?? 'personal',
           name: entry.name ?? null,
           return_pct: entry.return_pct ?? null,
+          cumulative_return_pct: entry.cumulative_return_pct ?? null,
+          start_date: entry.start_date ?? null,
+          end_date: entry.end_date ?? null,
         })
         if (error) throw error
       }

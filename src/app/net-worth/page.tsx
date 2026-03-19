@@ -6,6 +6,7 @@ import {
   useDeleteNetWorthEntry, useSyncFromExistingData, useSaveSnapshot,
   type NetWorthEntry, type LiquidityType,
 } from '@/lib/queries/useNetWorth'
+import { usePensionReports } from '@/lib/queries/usePension'
 import { useFamilyContext } from '@/lib/context/FamilyContext'
 import { formatCurrency } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
@@ -14,7 +15,7 @@ import { toast } from 'sonner'
 import { useConfirmDialog } from '@/components/ui/ConfirmDialog'
 import {
   TrendingUp, Plus, X, Check, Trash2, Inbox, RefreshCw,
-  Droplets, Clock, Lock, Building2, Pencil,
+  Droplets, Clock, Lock, Building2, Pencil, CalendarDays,
 } from 'lucide-react'
 import { TableSkeleton } from '@/components/ui/Skeleton'
 import dynamic from 'next/dynamic'
@@ -74,6 +75,27 @@ type EntryForm = {
   amount: string
   name: string
   owner: 'personal' | 'shared'
+  return_pct: string
+  start_date: string
+  end_date: string
+}
+
+function monthsRemaining(endDate: string | null): number | null {
+  if (!endDate) return null
+  const end = new Date(endDate)
+  const now = new Date()
+  const months = (end.getFullYear() - now.getFullYear()) * 12 + (end.getMonth() - now.getMonth())
+  return months > 0 ? months : 0
+}
+
+function formatMonthsRemaining(months: number): string {
+  if (months === 0) return 'הסתיים'
+  if (months === 1) return 'נשאר חודש אחד'
+  if (months < 12) return `נשארו ${months} חודשים`
+  const years = Math.floor(months / 12)
+  const rem = months % 12
+  if (rem === 0) return `נשארו ${years} שנים`
+  return `נשארו ${years} שנים ו-${rem} חודשים`
 }
 
 export default function NetWorthPage() {
@@ -82,6 +104,7 @@ export default function NetWorthPage() {
   const { familyId } = useFamilyContext()
   const { data: entries } = useNetWorthEntries(user?.id)
   const { data: snapshots } = useNetWorthSnapshots(user?.id)
+  const { data: pensionReports } = usePensionReports(user?.id)
   const upsert = useUpsertNetWorthEntry()
   const deleteEntry = useDeleteNetWorthEntry()
   const syncMutation = useSyncFromExistingData()
@@ -96,6 +119,20 @@ export default function NetWorthPage() {
   useEffect(() => {
     if (!loading && !user) router.push('/login')
   }, [user, loading, router])
+
+  // Build a map of pension product id -> ytd_return from the latest pension report
+  const pensionReturnMap = useMemo(() => {
+    const map: Record<number, { ytd: number; name: string }> = {}
+    if (!pensionReports?.length) return map
+    const latest = pensionReports[0] // already sorted desc by date
+    if (latest?.pension_products) {
+      for (const p of latest.pension_products) {
+        // Store report-level ytd_return per product
+        map[p.id] = { ytd: latest.ytd_return, name: p.product_name }
+      }
+    }
+    return map
+  }, [pensionReports])
 
   // Filter entries by view mode
   const filteredEntries = useMemo(() => {
@@ -139,6 +176,23 @@ export default function NetWorthPage() {
     return list.find(c => c.value === cat)?.label ?? cat
   }
 
+  function getReturnForEntry(entry: NetWorthEntry): { annual: number | null; cumulative: number | null; source: 'pension' | 'manual' } {
+    // For pension-sourced entries, use the pension report ytd_return
+    if (entry.source === 'pension' && entry.source_ref_id && pensionReturnMap[entry.source_ref_id]) {
+      return {
+        annual: pensionReturnMap[entry.source_ref_id].ytd,
+        cumulative: entry.cumulative_return_pct,
+        source: 'pension',
+      }
+    }
+    // For manual entries, use return_pct field
+    return {
+      annual: entry.return_pct,
+      cumulative: entry.cumulative_return_pct,
+      source: 'manual',
+    }
+  }
+
   async function handleAdd() {
     if (!newEntry || !user) return
     const amount = Number(newEntry.amount)
@@ -153,6 +207,9 @@ export default function NetWorthPage() {
         source: 'manual',
         owner: newEntry.owner,
         name: newEntry.name || null,
+        return_pct: newEntry.type === 'asset' && newEntry.return_pct ? Number(newEntry.return_pct) : null,
+        start_date: newEntry.start_date || null,
+        end_date: newEntry.end_date || null,
       })
       toast.success('נוסף')
       setNewEntry(null)
@@ -215,6 +272,8 @@ export default function NetWorthPage() {
   }
 
   const allCategories = newEntry?.type === 'liability' ? LIABILITY_CATEGORIES : ASSET_CATEGORIES
+  const isLiabilityForm = newEntry?.type === 'liability'
+  const isAssetForm = newEntry?.type === 'asset'
 
   return (
     <div>
@@ -302,60 +361,81 @@ export default function NetWorthPage() {
                 items.map(entry => {
                   const isEditing = editingId === entry.id
                   const isAuto = entry.source !== 'manual'
+                  const returns = getReturnForEntry(entry)
                   return (
-                    <div key={entry.id} className="flex justify-between items-center py-2.5 border-b border-[oklch(0.20_0.01_250)] last:border-b-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[13px] font-medium">
-                          {entry.name || getLabelForCategory(entry.category, entry.type)}
-                        </span>
-                        {isAuto && (
-                          <span className="text-[10px] bg-[oklch(0.25_0.02_250)] text-[oklch(0.70_0.18_250)] px-1.5 py-0.5 rounded-md font-medium">
-                            אוטומטי
+                    <div key={entry.id} className="py-2.5 border-b border-[oklch(0.20_0.01_250)] last:border-b-0">
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[13px] font-medium">
+                            {entry.name || getLabelForCategory(entry.category, entry.type)}
                           </span>
-                        )}
-                        {entry.owner === 'shared' && viewMode === 'family' && (
-                          <span className="text-[10px] bg-[oklch(0.25_0.02_180)] text-[oklch(0.70_0.15_180)] px-1.5 py-0.5 rounded-md font-medium">
-                            משותף
-                          </span>
-                        )}
-                        {entry.tax_note && (
-                          <span className="text-[10px] text-[oklch(0.55_0.01_250)]" title={entry.tax_note}>
-                            💡
-                          </span>
-                        )}
+                          {isAuto && (
+                            <span className="text-[10px] bg-[oklch(0.25_0.02_250)] text-[oklch(0.70_0.18_250)] px-1.5 py-0.5 rounded-md font-medium">
+                              אוטומטי
+                            </span>
+                          )}
+                          {entry.owner === 'shared' && viewMode === 'family' && (
+                            <span className="text-[10px] bg-[oklch(0.25_0.02_180)] text-[oklch(0.70_0.15_180)] px-1.5 py-0.5 rounded-md font-medium">
+                              משותף
+                            </span>
+                          )}
+                          {entry.tax_note && (
+                            <span className="text-[10px] text-[oklch(0.55_0.01_250)]" title={entry.tax_note}>
+                              *
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          {isEditing ? (
+                            <>
+                              <input
+                                type="number"
+                                value={editAmount}
+                                onChange={e => setEditAmount(e.target.value)}
+                                autoFocus
+                                onKeyDown={e => { if (e.key === 'Enter') handleSaveEdit(entry); if (e.key === 'Escape') setEditingId(null) }}
+                                className="w-28 bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-md px-2 py-1 text-inherit text-[13px] ltr text-left"
+                              />
+                              <button onClick={() => handleSaveEdit(entry)} className="bg-transparent border-none cursor-pointer p-1 text-[oklch(0.70_0.18_145)]"><Check size={14} /></button>
+                              <button onClick={() => setEditingId(null)} className="bg-transparent border-none cursor-pointer p-1 text-[oklch(0.65_0.01_250)]"><X size={14} /></button>
+                            </>
+                          ) : (
+                            <>
+                              <span className="text-[13px] font-semibold ltr" style={{ color: group.color }}>{formatCurrency(entry.amount)}</span>
+                              {!isAuto && (
+                                <>
+                                  <button onClick={() => { setEditingId(entry.id); setEditAmount(String(entry.amount)) }} aria-label="ערוך" className="bg-transparent border-none cursor-pointer p-1.5 text-[oklch(0.45_0.01_250)]"><Pencil size={11} /></button>
+                                  <button onClick={() => handleDelete(entry.id)} aria-label="מחק" className="bg-transparent border-none cursor-pointer p-1.5 text-[oklch(0.45_0.01_250)]"><Trash2 size={11} /></button>
+                                </>
+                              )}
+                            </>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1.5">
-                        {isEditing ? (
-                          <>
-                            <input
-                              type="number"
-                              value={editAmount}
-                              onChange={e => setEditAmount(e.target.value)}
-                              autoFocus
-                              onKeyDown={e => { if (e.key === 'Enter') handleSaveEdit(entry); if (e.key === 'Escape') setEditingId(null) }}
-                              className="w-28 bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-md px-2 py-1 text-inherit text-[13px] ltr text-left"
-                            />
-                            <button onClick={() => handleSaveEdit(entry)} className="bg-transparent border-none cursor-pointer p-1 text-[oklch(0.70_0.18_145)]"><Check size={14} /></button>
-                            <button onClick={() => setEditingId(null)} className="bg-transparent border-none cursor-pointer p-1 text-[oklch(0.65_0.01_250)]"><X size={14} /></button>
-                          </>
-                        ) : (
-                          <>
-                            <span className="text-[13px] font-semibold ltr" style={{ color: group.color }}>{formatCurrency(entry.amount)}</span>
-                            {!isAuto && (
-                              <>
-                                <button onClick={() => { setEditingId(entry.id); setEditAmount(String(entry.amount)) }} aria-label="ערוך" className="bg-transparent border-none cursor-pointer p-1.5 text-[oklch(0.45_0.01_250)]"><Pencil size={11} /></button>
-                                <button onClick={() => handleDelete(entry.id)} aria-label="מחק" className="bg-transparent border-none cursor-pointer p-1.5 text-[oklch(0.45_0.01_250)]"><Trash2 size={11} /></button>
-                              </>
-                            )}
-                          </>
-                        )}
-                      </div>
+                      {/* Return info row */}
+                      {(returns.annual !== null || returns.cumulative !== null) && (
+                        <div className="flex gap-3 mt-1">
+                          {returns.annual !== null && (
+                            <span className={`text-[11px] ltr ${returns.annual >= 0 ? 'text-[oklch(0.70_0.18_145)]' : 'text-[oklch(0.62_0.22_27)]'}`}>
+                              תשואה שנתית: {returns.annual.toFixed(1)}%
+                              {returns.source === 'pension' && (
+                                <span className="text-[oklch(0.50_0.01_250)] mr-1">(מדוח פנסיה)</span>
+                              )}
+                            </span>
+                          )}
+                          {returns.cumulative !== null && (
+                            <span className={`text-[11px] ltr ${returns.cumulative >= 0 ? 'text-[oklch(0.65_0.15_180)]' : 'text-[oklch(0.62_0.22_27)]'}`}>
+                              תשואה מצטברת: {returns.cumulative.toFixed(1)}%
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
                   )
                 })
               )}
               <button
-                onClick={() => setNewEntry({ category: '', type: 'asset', amount: '', name: '', owner: viewMode === 'family' ? 'shared' : 'personal' })}
+                onClick={() => setNewEntry({ category: '', type: 'asset', amount: '', name: '', owner: viewMode === 'family' ? 'shared' : 'personal', return_pct: '', start_date: '', end_date: '' })}
                 className="flex items-center gap-1 mt-3 bg-transparent border border-[oklch(0.25_0.01_250)] rounded-lg px-3 py-1.5 text-[oklch(0.65_0.01_250)] text-xs cursor-pointer"
               >
                 <Plus size={12} /> הוסף נכס
@@ -381,39 +461,63 @@ export default function NetWorthPage() {
           ) : (
             liabilities.map(entry => {
               const isEditing = editingId === entry.id
+              const remaining = monthsRemaining(entry.end_date)
               return (
-                <div key={entry.id} className="flex justify-between items-center py-2.5 border-b border-[oklch(0.20_0.01_250)] last:border-b-0">
-                  <span className="text-[13px] font-medium">
-                    {entry.name || getLabelForCategory(entry.category, entry.type)}
-                  </span>
-                  <div className="flex items-center gap-1.5">
-                    {isEditing ? (
-                      <>
-                        <input
-                          type="number"
-                          value={editAmount}
-                          onChange={e => setEditAmount(e.target.value)}
-                          autoFocus
-                          onKeyDown={e => { if (e.key === 'Enter') handleSaveEdit(entry); if (e.key === 'Escape') setEditingId(null) }}
-                          className="w-28 bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-md px-2 py-1 text-inherit text-[13px] ltr text-left"
-                        />
-                        <button onClick={() => handleSaveEdit(entry)} className="bg-transparent border-none cursor-pointer p-1 text-[oklch(0.70_0.18_145)]"><Check size={14} /></button>
-                        <button onClick={() => setEditingId(null)} className="bg-transparent border-none cursor-pointer p-1 text-[oklch(0.65_0.01_250)]"><X size={14} /></button>
-                      </>
-                    ) : (
-                      <>
-                        <span className="text-[13px] font-semibold ltr text-[oklch(0.62_0.22_27)]">{formatCurrency(entry.amount)}</span>
-                        <button onClick={() => { setEditingId(entry.id); setEditAmount(String(entry.amount)) }} aria-label="ערוך" className="bg-transparent border-none cursor-pointer p-1.5 text-[oklch(0.45_0.01_250)]"><Pencil size={11} /></button>
-                        <button onClick={() => handleDelete(entry.id)} aria-label="מחק" className="bg-transparent border-none cursor-pointer p-1.5 text-[oklch(0.45_0.01_250)]"><Trash2 size={11} /></button>
-                      </>
-                    )}
+                <div key={entry.id} className="py-2.5 border-b border-[oklch(0.20_0.01_250)] last:border-b-0">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[13px] font-medium">
+                      {entry.name || getLabelForCategory(entry.category, entry.type)}
+                    </span>
+                    <div className="flex items-center gap-1.5">
+                      {isEditing ? (
+                        <>
+                          <input
+                            type="number"
+                            value={editAmount}
+                            onChange={e => setEditAmount(e.target.value)}
+                            autoFocus
+                            onKeyDown={e => { if (e.key === 'Enter') handleSaveEdit(entry); if (e.key === 'Escape') setEditingId(null) }}
+                            className="w-28 bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-md px-2 py-1 text-inherit text-[13px] ltr text-left"
+                          />
+                          <button onClick={() => handleSaveEdit(entry)} className="bg-transparent border-none cursor-pointer p-1 text-[oklch(0.70_0.18_145)]"><Check size={14} /></button>
+                          <button onClick={() => setEditingId(null)} className="bg-transparent border-none cursor-pointer p-1 text-[oklch(0.65_0.01_250)]"><X size={14} /></button>
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-[13px] font-semibold ltr text-[oklch(0.62_0.22_27)]">{formatCurrency(entry.amount)}</span>
+                          <button onClick={() => { setEditingId(entry.id); setEditAmount(String(entry.amount)) }} aria-label="ערוך" className="bg-transparent border-none cursor-pointer p-1.5 text-[oklch(0.45_0.01_250)]"><Pencil size={11} /></button>
+                          <button onClick={() => handleDelete(entry.id)} aria-label="מחק" className="bg-transparent border-none cursor-pointer p-1.5 text-[oklch(0.45_0.01_250)]"><Trash2 size={11} /></button>
+                        </>
+                      )}
+                    </div>
                   </div>
+                  {/* Date info row */}
+                  {(entry.start_date || entry.end_date) && (
+                    <div className="flex items-center gap-3 mt-1">
+                      <CalendarDays size={11} className="text-[oklch(0.45_0.01_250)]" />
+                      {entry.start_date && (
+                        <span className="text-[11px] text-[oklch(0.55_0.01_250)]">
+                          מ-{new Date(entry.start_date).toLocaleDateString('he-IL')}
+                        </span>
+                      )}
+                      {entry.end_date && (
+                        <span className="text-[11px] text-[oklch(0.55_0.01_250)]">
+                          עד {new Date(entry.end_date).toLocaleDateString('he-IL')}
+                        </span>
+                      )}
+                      {remaining !== null && (
+                        <span className={`text-[11px] font-medium ${remaining <= 6 ? 'text-[oklch(0.70_0.18_145)]' : 'text-[oklch(0.65_0.18_250)]'}`}>
+                          {formatMonthsRemaining(remaining)}
+                        </span>
+                      )}
+                    </div>
+                  )}
                 </div>
               )
             })
           )}
           <button
-            onClick={() => setNewEntry({ category: '', type: 'liability', amount: '', name: '', owner: 'personal' })}
+            onClick={() => setNewEntry({ category: '', type: 'liability', amount: '', name: '', owner: 'personal', return_pct: '', start_date: '', end_date: '' })}
             className="flex items-center gap-1 mt-3 bg-transparent border border-[oklch(0.25_0.01_250)] rounded-lg px-3 py-1.5 text-[oklch(0.65_0.01_250)] text-xs cursor-pointer"
           >
             <Plus size={12} /> הוסף התחייבות
@@ -438,7 +542,7 @@ export default function NetWorthPage() {
       {/* Add Modal */}
       {newEntry && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-[oklch(0.18_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-[14px] p-7 w-[380px]">
+          <div className="bg-[oklch(0.18_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-[14px] p-7 w-[380px] max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-5">
               <span className="font-semibold text-[15px]">הוסף {newEntry.type === 'asset' ? 'נכס' : 'התחייבות'}</span>
               <button onClick={() => setNewEntry(null)} aria-label="סגור" className="bg-transparent border-none text-[oklch(0.65_0.01_250)] cursor-pointer p-2"><X size={18} /></button>
@@ -476,6 +580,46 @@ export default function NetWorthPage() {
                   className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left"
                 />
               </div>
+
+              {/* Return % for assets */}
+              {isAssetForm && (
+                <div>
+                  <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">תשואה שנתית % (אופציונלי)</label>
+                  <input
+                    type="number"
+                    step="0.1"
+                    value={newEntry.return_pct}
+                    onChange={e => setNewEntry(prev => prev && { ...prev, return_pct: e.target.value })}
+                    placeholder="לדוגמה: 7.5"
+                    className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-sm ltr text-left"
+                  />
+                </div>
+              )}
+
+              {/* Date fields for liabilities */}
+              {isLiabilityForm && (
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">תאריך התחלה</label>
+                    <input
+                      type="date"
+                      value={newEntry.start_date}
+                      onChange={e => setNewEntry(prev => prev && { ...prev, start_date: e.target.value })}
+                      className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">תאריך סיום</label>
+                    <input
+                      type="date"
+                      value={newEntry.end_date}
+                      onChange={e => setNewEntry(prev => prev && { ...prev, end_date: e.target.value })}
+                      className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-sm"
+                    />
+                  </div>
+                </div>
+              )}
+
               {/* Owner toggle */}
               <div>
                 <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">בעלות</label>
