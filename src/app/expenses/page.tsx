@@ -423,6 +423,16 @@ export default function ExpensesPage() {
                       <option value="__manual__">+ קטגוריה חדשה...</option>
                     </select>
                   </div>
+                  {/* קרן — optional fund dropdown */}
+                  <select
+                    value={row.fund_name || ''}
+                    onChange={e => setImportRows(p => p.map((r, j) => j === i ? { ...r, fund_name: e.target.value || undefined } : r))}
+                    aria-label="בחר קרן"
+                    className="min-w-[90px] bg-[oklch(0.20_0.01_250)] border border-[oklch(0.30_0.01_250)] rounded-lg px-1.5 py-1 text-[11px] text-inherit outline-none cursor-pointer appearance-auto"
+                  >
+                    <option value="">ללא קרן</option>
+                    {funds?.map(f => <option key={f.id} value={f.name}>{f.name}</option>)}
+                  </select>
                 </div>
               )
             })}
