@@ -12,6 +12,8 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { Home, CheckCircle, Circle, Trash2 } from 'lucide-react'
+import { TableSkeleton } from '@/components/ui/Skeleton'
+import { useConfirmDialog } from '@/components/ui/ConfirmDialog'
 
 const MONTHLY_TARGET = 3500
 const TOTAL_PERIODS = 36
@@ -28,6 +30,7 @@ export default function ApartmentPage() {
   const queryClient = useQueryClient()
   const [amount, setAmount] = useState(MONTHLY_TARGET.toString())
   const { selectedPeriodId, setSelectedPeriodId } = useSharedPeriod()
+  const confirm = useConfirmDialog()
 
   useEffect(() => {
     if (currentPeriod && !selectedPeriodId) setSelectedPeriodId(currentPeriod.id)
@@ -37,7 +40,7 @@ export default function ApartmentPage() {
     if (!loading && !user) router.push('/login')
   }, [user, loading, router])
 
-  if (loading || !user) return <div className="loading-pulse" style={{ padding: 40, textAlign: 'center', color: 'oklch(0.55 0.01 250)' }}>טוען...</div>
+  if (loading || !user) return <TableSkeleton rows={5} />
 
   const totalSaved = deposits?.reduce((s, d) => s + d.amount_deposited, 0) ?? 0
   const pct = Math.min((totalSaved / TOTAL_GOAL) * 100, 100)
@@ -49,7 +52,7 @@ export default function ApartmentPage() {
 
   async function handleResetDeposits() {
     if (!familyId) return
-    if (!confirm('למחוק את כל ההפקדות לדירה?')) return
+    if (!(await confirm({ message: 'למחוק את כל ההפקדות לדירה?' }))) return
     try {
       const sb = createClient()
       await sb.from('apartment_deposits').delete().eq('family_id', familyId)
@@ -76,11 +79,11 @@ export default function ApartmentPage() {
           <Home size={18} style={{ color: 'oklch(0.70 0.18 145)' }} />
           <h1 style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em' }}>יעד הדירה</h1>
         </div>
-        <button onClick={handleResetDeposits} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: '1px solid oklch(0.25 0.01 250)', borderRadius: 8, padding: '7px 14px', color: 'oklch(0.55 0.01 250)', fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>
+        <button onClick={handleResetDeposits} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: '1px solid oklch(0.25 0.01 250)', borderRadius: 8, padding: '7px 14px', color: 'oklch(0.65 0.01 250)', fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>
           <Trash2 size={13} /> אפס הפקדות
         </button>
       </div>
-      <p style={{ color: 'oklch(0.55 0.01 250)', fontSize: 13, marginBottom: 20 }}>
+      <p style={{ color: 'oklch(0.65 0.01 250)', fontSize: 13, marginBottom: 20 }}>
         חיסכון של 3,500 ₪ לחודש × 36 מחזורים
       </p>
 
@@ -113,7 +116,7 @@ export default function ApartmentPage() {
         </div>
 
         {/* Stats */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginTop: 20 }}>
+        <div className="grid-3" style={{ marginTop: 20, marginBottom: 0 }}>
           {[
             { label: 'הפקדות', value: deposits?.length ?? 0 },
             { label: 'מחזורים נותרים', value: periodsLeft },
@@ -127,13 +130,14 @@ export default function ApartmentPage() {
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '280px 1fr', gap: 16, alignItems: 'start' }}>
+      <div className="grid-sidebar">
         {/* Deposit form */}
         <div style={card}>
           <div style={{ fontWeight: 600, marginBottom: 14, fontSize: 14 }}>הפקדה חדשה</div>
           <div style={{ marginBottom: 12 }}>
             <label style={{ fontSize: 12, display: 'block', marginBottom: 5, color: 'oklch(0.60 0.01 250)' }}>מחזור</label>
             <select value={selectedPeriodId ?? ''} onChange={e => setSelectedPeriodId(Number(e.target.value))}
+              aria-label="מחזור"
               style={{ width: '100%', background: 'oklch(0.22 0.01 250)', border: '1px solid oklch(0.28 0.01 250)', borderRadius: 8, padding: '9px 12px', color: 'inherit', fontSize: 13 }}>
               {periods?.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
             </select>
@@ -152,7 +156,7 @@ export default function ApartmentPage() {
         {/* Period table */}
         <div style={card}>
           <div style={{ fontWeight: 600, marginBottom: 14, fontSize: 14 }}>36 מחזורים</div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 6 }}>
+          <div className="grid-6">
             {Array.from({ length: TOTAL_PERIODS }, (_, i) => {
               const period = periods?.[i]
               const deposited = period ? depositMap.get(period.id) : undefined
@@ -161,7 +165,7 @@ export default function ApartmentPage() {
                   style={{ borderRadius: 6, padding: '6px 4px', textAlign: 'center', fontSize: 11,
                     background: deposited ? 'oklch(0.20 0.05 145)' : 'oklch(0.20 0.01 250)',
                     border: `1px solid ${deposited ? 'oklch(0.35 0.08 145)' : 'oklch(0.25 0.01 250)'}`,
-                    color: deposited ? 'oklch(0.75 0.12 145)' : 'oklch(0.45 0.01 250)',
+                    color: deposited ? 'oklch(0.75 0.12 145)' : 'oklch(0.65 0.01 250)',
                   }}>
                   {deposited ? <CheckCircle size={12} style={{ margin: '0 auto' }} /> : <Circle size={12} style={{ margin: '0 auto', opacity: 0.3 }} />}
                   <div style={{ marginTop: 3 }}>{i + 1}</div>

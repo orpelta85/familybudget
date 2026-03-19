@@ -6,12 +6,23 @@ import { useAllIncome } from '@/lib/queries/useIncome'
 import { useAllPersonalExpenses } from '@/lib/queries/useExpenses'
 import { useAllSharedExpenses } from '@/lib/queries/useShared'
 import { useApartmentDeposits } from '@/lib/queries/useApartment'
+import { useSplitFraction } from '@/lib/queries/useProfile'
 import { formatCurrency } from '@/lib/utils'
 import { useFamilyContext } from '@/lib/context/FamilyContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, Legend, Cell } from 'recharts'
-import { TrendingUp, BarChart3 } from 'lucide-react'
+import { BarChart3 } from 'lucide-react'
+import dynamic from 'next/dynamic'
+import { ChartSkeleton } from '@/components/ui/Skeleton'
+
+const IncomeVsExpensesChart = dynamic(() => import('@/components/dashboard/AnalyticsCharts').then(m => ({ default: m.IncomeVsExpensesChart })), {
+  loading: () => <ChartSkeleton height={220} />,
+  ssr: false,
+})
+const NetFlowChart = dynamic(() => import('@/components/dashboard/AnalyticsCharts').then(m => ({ default: m.NetFlowChart })), {
+  loading: () => <ChartSkeleton height={180} />,
+  ssr: false,
+})
 
 const YEAR_OPTIONS = [
   { label: 'הכל', periods: Array.from({ length: 36 }, (_, i) => i + 1) },
@@ -36,6 +47,7 @@ export default function AnalyticsPage() {
   const { user, loading } = useUser()
   const router = useRouter()
   const { familyId } = useFamilyContext()
+  const splitFrac = useSplitFraction(user?.id)
   const { data: periods } = usePeriods()
   const { data: allIncome } = useAllIncome(user?.id)
   const { data: allPersonal } = useAllPersonalExpenses(user?.id)
@@ -65,7 +77,7 @@ export default function AnalyticsPage() {
 
     const totalIncome = income ? income.salary + income.bonus + income.other : 0
     const totalPersonal = personalExpenses.reduce((s, e) => s + e.amount, 0)
-    const totalShared = sharedExpenses.reduce((s, e) => s + (e.my_share ?? e.total_amount * 0.5), 0)
+    const totalShared = sharedExpenses.reduce((s, e) => s + (e.my_share ?? e.total_amount * splitFrac), 0)
     const totalExpenses = totalPersonal + totalShared
     const netFlow = totalIncome - totalExpenses
     const deposit = deposits?.find(d => d.period_id === periodId)
@@ -98,25 +110,13 @@ export default function AnalyticsPage() {
     padding: 20,
   }
 
-  const tooltipStyle = {
-    contentStyle: {
-      background: 'oklch(0.18 0.01 250)',
-      border: '1px solid oklch(0.28 0.01 250)',
-      borderRadius: 8,
-      fontSize: 12,
-      direction: 'rtl' as const,
-    },
-    labelStyle: { color: 'oklch(0.75 0.01 250)', fontWeight: 600 },
-    itemStyle: { color: 'oklch(0.65 0.01 250)' },
-  }
-
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
         <BarChart3 size={18} style={{ color: 'oklch(0.65 0.18 250)' }} />
         <h1 style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em' }}>ניתוח שנתי</h1>
       </div>
-      <p style={{ color: 'oklch(0.55 0.01 250)', fontSize: 13, marginBottom: 20 }}>
+      <p style={{ color: 'oklch(0.65 0.01 250)', fontSize: 13, marginBottom: 20 }}>
         סיכום הכנסות, הוצאות וחיסכון לאורך השנה
       </p>
 
@@ -136,7 +136,7 @@ export default function AnalyticsPage() {
       </div>
 
       {/* Annual KPI cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, marginBottom: 20 }}>
+      <div className="grid-kpi" style={{ marginBottom: 20 }}>
         {[
           { label: 'הכנסות', value: formatCurrency(yearIncome), color: 'oklch(0.65 0.18 250)' },
           { label: 'הוצאות', value: formatCurrency(yearExpenses), color: 'oklch(0.72 0.18 55)' },
@@ -145,7 +145,7 @@ export default function AnalyticsPage() {
           { label: 'חיסכון לדירה', value: formatCurrency(yearSaved), color: 'oklch(0.70 0.18 145)' },
         ].map(kpi => (
           <div key={kpi.label} style={{ ...card, padding: 16 }}>
-            <div style={{ fontSize: 11, color: 'oklch(0.55 0.01 250)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.03em' }}>{kpi.label}</div>
+            <div style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.03em' }}>{kpi.label}</div>
             <div style={{ fontSize: 20, fontWeight: 700, color: kpi.color, direction: 'ltr', letterSpacing: '-0.03em' }}>{kpi.value}</div>
           </div>
         ))}
@@ -154,31 +154,14 @@ export default function AnalyticsPage() {
       {/* Income vs Expenses bar chart */}
       <div style={{ ...card, marginBottom: 16 }}>
         <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <TrendingUp size={14} style={{ color: 'oklch(0.65 0.18 250)' }} />
           הכנסות מול הוצאות — לפי מחזור
         </div>
-        <ResponsiveContainer width="100%" height={220}>
-          <BarChart data={chartData} barGap={2}>
-            <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'oklch(0.55 0.01 250)' }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fontSize: 11, fill: 'oklch(0.55 0.01 250)' }} axisLine={false} tickLine={false}
-              tickFormatter={v => v === 0 ? '0' : `${(v / 1000).toFixed(0)}K`} />
-            <Tooltip
-              {...tooltipStyle}
-              formatter={(value, name) => [
-                formatCurrency(Number(value)),
-                name === 'income' ? 'הכנסות' : name === 'expenses' ? 'הוצאות' : String(name),
-              ]}
-              labelFormatter={(label) => chartData.find(d => d.name === label)?.label ?? label}
-            />
-            <Bar dataKey="income" name="income" fill="oklch(0.65 0.18 250)" radius={[4, 4, 0, 0]} maxBarSize={28} />
-            <Bar dataKey="expenses" name="expenses" fill="oklch(0.72 0.18 55)" radius={[4, 4, 0, 0]} maxBarSize={28} />
-          </BarChart>
-        </ResponsiveContainer>
+        <IncomeVsExpensesChart data={chartData} />
         <div style={{ display: 'flex', gap: 16, justifyContent: 'center', marginTop: 8 }}>
-          <span style={{ fontSize: 12, color: 'oklch(0.55 0.01 250)', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontSize: 12, color: 'oklch(0.65 0.01 250)', display: 'flex', alignItems: 'center', gap: 6 }}>
             <span style={{ width: 10, height: 10, borderRadius: 2, background: 'oklch(0.65 0.18 250)', display: 'inline-block' }} /> הכנסות
           </span>
-          <span style={{ fontSize: 12, color: 'oklch(0.55 0.01 250)', display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontSize: 12, color: 'oklch(0.65 0.01 250)', display: 'flex', alignItems: 'center', gap: 6 }}>
             <span style={{ width: 10, height: 10, borderRadius: 2, background: 'oklch(0.72 0.18 55)', display: 'inline-block' }} /> הוצאות
           </span>
         </div>
@@ -187,23 +170,7 @@ export default function AnalyticsPage() {
       {/* Net flow line chart */}
       <div style={{ ...card, marginBottom: 16 }}>
         <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 16 }}>תזרים נקי לאורך השנה</div>
-        <ResponsiveContainer width="100%" height={180}>
-          <LineChart data={chartData}>
-            <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'oklch(0.55 0.01 250)' }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fontSize: 11, fill: 'oklch(0.55 0.01 250)' }} axisLine={false} tickLine={false}
-              tickFormatter={v => v === 0 ? '0' : `${(v / 1000).toFixed(0)}K`} />
-            <Tooltip
-              {...tooltipStyle}
-              formatter={(value) => [formatCurrency(Number(value)), 'תזרים נקי']}
-              labelFormatter={(label) => chartData.find(d => d.name === label)?.label ?? label}
-            />
-            <Line
-              type="monotone" dataKey="net" stroke="oklch(0.70 0.18 145)" strokeWidth={2}
-              dot={{ r: 3, fill: 'oklch(0.70 0.18 145)', strokeWidth: 0 }}
-              activeDot={{ r: 5 }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+        <NetFlowChart data={chartData} />
       </div>
 
       {/* Monthly breakdown table */}
@@ -214,7 +181,7 @@ export default function AnalyticsPage() {
             <thead>
               <tr style={{ borderBottom: '1px solid oklch(0.22 0.01 250)' }}>
                 {['מחזור', 'הכנסות', 'אישי', 'משותף', 'סה"כ הוצ׳', 'תזרים', 'דירה'].map(h => (
-                  <th key={h} style={{ padding: '8px 12px', textAlign: 'right', color: 'oklch(0.55 0.01 250)', fontWeight: 500, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.03em' }}>{h}</th>
+                  <th key={h} style={{ padding: '8px 12px', textAlign: 'right', color: 'oklch(0.65 0.01 250)', fontWeight: 500, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.03em' }}>{h}</th>
                 ))}
               </tr>
             </thead>

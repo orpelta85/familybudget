@@ -15,6 +15,8 @@ ALTER TABLE sinking_fund_transactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE apartment_deposits        ENABLE ROW LEVEL SECURITY;
 ALTER TABLE joint_pool_income         ENABLE ROW LEVEL SECURITY;
 ALTER TABLE joint_pool_expenses       ENABLE ROW LEVEL SECURITY;
+ALTER TABLE families                  ENABLE ROW LEVEL SECURITY;
+ALTER TABLE family_members            ENABLE ROW LEVEL SECURITY;
 
 -- ── 2. Drop existing policies (למניעת קונפליקטים) ────────────
 DO $$ DECLARE r RECORD;
@@ -55,12 +57,19 @@ CREATE POLICY "personal_expenses: own"
   USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
 
--- ── 8. shared_expenses — כל משתמש מחובר רואה וכותב ──────────
---    (הוצאות משותפות — אורי + שרה ביחד)
-CREATE POLICY "shared_expenses: all authenticated"
+-- ── 8. shared_expenses — רק חברי המשפחה ──────────────────────
+CREATE POLICY "shared_expenses: family members"
   ON shared_expenses FOR ALL
-  USING (auth.uid() IS NOT NULL)
-  WITH CHECK (auth.uid() IS NOT NULL);
+  USING (
+    auth.uid() IN (
+      SELECT user_id FROM family_members WHERE family_id = shared_expenses.family_id
+    )
+  )
+  WITH CHECK (
+    auth.uid() IN (
+      SELECT user_id FROM family_members WHERE family_id = shared_expenses.family_id
+    )
+  );
 
 -- ── 9. sinking_funds — per user ──────────────────────────────
 CREATE POLICY "sinking_funds: own"
@@ -82,23 +91,73 @@ CREATE POLICY "sinking_transactions: via fund"
     )
   );
 
--- ── 11. apartment_deposits — משותף לכולם ─────────────────────
-CREATE POLICY "apartment_deposits: all authenticated"
+-- ── 11. apartment_deposits — רק חברי המשפחה ─────────────────
+CREATE POLICY "apartment_deposits: family members"
   ON apartment_deposits FOR ALL
-  USING (auth.uid() IS NOT NULL)
-  WITH CHECK (auth.uid() IS NOT NULL);
+  USING (
+    auth.uid() IN (
+      SELECT user_id FROM family_members WHERE family_id = apartment_deposits.family_id
+    )
+  )
+  WITH CHECK (
+    auth.uid() IN (
+      SELECT user_id FROM family_members WHERE family_id = apartment_deposits.family_id
+    )
+  );
 
--- ── 12. joint_pool_income — משותף לכולם ─────────────────────
-CREATE POLICY "joint_pool_income: all authenticated"
+-- ── 12. joint_pool_income — רק חברי המשפחה ─────────────────
+CREATE POLICY "joint_pool_income: family members"
   ON joint_pool_income FOR ALL
-  USING (auth.uid() IS NOT NULL)
-  WITH CHECK (auth.uid() IS NOT NULL);
+  USING (
+    auth.uid() IN (
+      SELECT user_id FROM family_members WHERE family_id = joint_pool_income.family_id
+    )
+  )
+  WITH CHECK (
+    auth.uid() IN (
+      SELECT user_id FROM family_members WHERE family_id = joint_pool_income.family_id
+    )
+  );
 
--- ── 13. joint_pool_expenses — משותף לכולם ───────────────────
-CREATE POLICY "joint_pool_expenses: all authenticated"
+-- ── 13. joint_pool_expenses — רק חברי המשפחה ───────────────
+CREATE POLICY "joint_pool_expenses: family members"
   ON joint_pool_expenses FOR ALL
-  USING (auth.uid() IS NOT NULL)
-  WITH CHECK (auth.uid() IS NOT NULL);
+  USING (
+    auth.uid() IN (
+      SELECT user_id FROM family_members WHERE family_id = joint_pool_expenses.family_id
+    )
+  )
+  WITH CHECK (
+    auth.uid() IN (
+      SELECT user_id FROM family_members WHERE family_id = joint_pool_expenses.family_id
+    )
+  );
+
+-- ── 14. families — רק חברי המשפחה רואים את המשפחה ──────────
+CREATE POLICY "families: family members"
+  ON families FOR SELECT
+  USING (
+    auth.uid() IN (
+      SELECT user_id FROM family_members WHERE family_id = families.id
+    )
+  );
+
+CREATE POLICY "families: creator can insert"
+  ON families FOR INSERT
+  WITH CHECK (auth.uid() = created_by);
+
+-- ── 15. family_members — רק חברי אותה משפחה רואים ──────────
+CREATE POLICY "family_members: own membership"
+  ON family_members FOR SELECT
+  USING (
+    auth.uid() IN (
+      SELECT user_id FROM family_members fm WHERE fm.family_id = family_members.family_id
+    )
+  );
+
+CREATE POLICY "family_members: insert own"
+  ON family_members FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
 
 -- ── סיום ─────────────────────────────────────────────────────
 SELECT 'RLS policies applied successfully ✅' AS result;

@@ -11,7 +11,7 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
     <div style={{ padding: 40, textAlign: 'center' }}>
       <div style={{ fontSize: 32, marginBottom: 16 }}>⚠️</div>
       <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>משהו השתבש</h2>
-      <p style={{ color: 'oklch(0.55 0.01 250)', fontSize: 14, marginBottom: 24 }}>
+      <p style={{ color: 'oklch(0.65 0.01 250)', fontSize: 14, marginBottom: 24 }}>
         אירעה שגיאה בטעינת העמוד. נסה שוב.
       </p>
       <button

@@ -3,13 +3,16 @@
 import { useUser } from '@/lib/queries/useUser'
 import { usePeriods } from '@/lib/queries/usePeriods'
 import { useSinkingFunds, useAllSinkingTransactions, useAddSinkingTransaction, useUpdateSinkingFund, useAddSinkingFund, useDeleteSinkingFund } from '@/lib/queries/useSinking'
+import { useSplitFraction } from '@/lib/queries/useProfile'
 import { formatCurrency } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
+import { useConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { Target, Plus, X, Pencil, Users, User, Trash2, Inbox } from 'lucide-react'
+import { TableSkeleton } from '@/components/ui/Skeleton'
 
 // ── Fund type (personal / shared) stored in localStorage ─────────────────────
 function getFundMeta(userId: string): Record<string, boolean> {
@@ -43,6 +46,7 @@ const inputBase: React.CSSProperties = {
 export default function SinkingPage() {
   const { user, loading } = useUser()
   const router = useRouter()
+  const splitFrac = useSplitFraction(user?.id)
   const { data: periods } = usePeriods()
   const { data: funds } = useSinkingFunds(user?.id)
   const { data: allTxns } = useAllSinkingTransactions(user?.id)
@@ -51,6 +55,7 @@ export default function SinkingPage() {
   const addFund = useAddSinkingFund()
   const deleteFund = useDeleteSinkingFund()
   const queryClient = useQueryClient()
+  const confirm = useConfirmDialog()
 
   // Fund create / edit
   const [newFund, setNewFund] = useState<FundForm | null>(null)
@@ -77,11 +82,11 @@ export default function SinkingPage() {
     }
   }, [periods, txPeriodId])
 
-  if (loading || !user) return <div className="loading-pulse" style={{ padding: 40, textAlign: 'center', color: 'oklch(0.55 0.01 250)' }}>טוען...</div>
+  if (loading || !user) return <TableSkeleton rows={5} />
 
   async function handleResetBalances() {
     if (!user) return
-    if (!confirm('למחוק את כל התנועות בקרנות? היתרות יתאפסו.')) return
+    if (!(await confirm({ message: 'למחוק את כל התנועות בקרנות? היתרות יתאפסו.' }))) return
     try {
       const sb = createClient()
       const fundIds = (funds ?? []).map(f => f.id)
@@ -102,7 +107,7 @@ export default function SinkingPage() {
   }
 
   async function handleDeleteFund(id: number, name: string) {
-    if (!confirm(`למחוק את קרן "${name}"? הפעולה לא תמחק את היסטוריית העסקאות.`)) return
+    if (!(await confirm({ message: `למחוק את קרן "${name}"? הפעולה לא תמחק את היסטוריית העסקאות.` }))) return
     try {
       await deleteFund.mutateAsync(id)
       toast.success('קרן נמחקה')
@@ -113,7 +118,7 @@ export default function SinkingPage() {
     if (!newFund || !user) return
     const total = Number(newFund.totalAnnual)
     if (!newFund.name.trim() || total < 0) return
-    const monthly = newFund.isShared ? Math.round(total / 12 / 2) : Math.round(total / 12)
+    const monthly = newFund.isShared ? Math.round(total / 12 * splitFrac) : Math.round(total / 12)
     try {
       const created = await addFund.mutateAsync({ name: newFund.name.trim(), monthly_allocation: monthly, user_id: user.id })
       if (created?.id) {
@@ -129,7 +134,7 @@ export default function SinkingPage() {
     if (!editFund || !user) return
     const total = Number(editFund.totalAnnual)
     if (total < 0) return
-    const monthly = editFund.isShared ? Math.round(total / 12 / 2) : Math.round(total / 12)
+    const monthly = editFund.isShared ? Math.round(total / 12 * splitFrac) : Math.round(total / 12)
     await updateFund.mutateAsync({ id: editFund.id, name: editFund.name, monthly_allocation: monthly })
     setFundShared(user.id, editFund.id, editFund.isShared)
     forceUpdate(n => n + 1)
@@ -169,7 +174,7 @@ export default function SinkingPage() {
           <h1 style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em' }}>קרנות שנתיות</h1>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={handleResetBalances} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: '1px solid oklch(0.25 0.01 250)', borderRadius: 8, padding: '7px 14px', color: 'oklch(0.55 0.01 250)', fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>
+          <button onClick={handleResetBalances} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: '1px solid oklch(0.25 0.01 250)', borderRadius: 8, padding: '7px 14px', color: 'oklch(0.65 0.01 250)', fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>
             <Trash2 size={13} /> אפס יתרות
           </button>
           <button
@@ -181,9 +186,9 @@ export default function SinkingPage() {
           </button>
         </div>
       </div>
-      <p style={{ color: 'oklch(0.55 0.01 250)', fontSize: 13, marginBottom: 20 }}>
+      <p style={{ color: 'oklch(0.65 0.01 250)', fontSize: 13, marginBottom: 20 }}>
         סה&quot;כ הפרשה חודשית: <span style={{ direction: 'ltr', display: 'inline-block', fontWeight: 600, color: 'oklch(0.70 0.15 185)' }}>{formatCurrency(totalMonthly)}</span>
-        <span style={{ marginRight: 8, color: 'oklch(0.45 0.01 250)', fontSize: 12 }}>
+        <span style={{ marginRight: 8, color: 'oklch(0.65 0.01 250)', fontSize: 12 }}>
           (יעד שנתי: {formatCurrency(totalMonthly * 12)})
         </span>
       </p>
@@ -193,7 +198,7 @@ export default function SinkingPage() {
         ? (
           <div style={{ background: 'oklch(0.16 0.01 250)', border: '1px solid oklch(0.25 0.01 250)', borderRadius: 12, padding: 40, textAlign: 'center' }}>
             <Inbox size={36} style={{ color: 'oklch(0.30 0.01 250)', margin: '0 auto 10px' }} />
-            <div style={{ color: 'oklch(0.55 0.01 250)', fontSize: 14 }}>אין קרנות -- לחץ &quot;קרן חדשה&quot; להתחיל</div>
+            <div style={{ color: 'oklch(0.65 0.01 250)', fontSize: 14 }}>אין קרנות -- לחץ &quot;קרן חדשה&quot; להתחיל</div>
           </div>
         )
         : (
@@ -232,10 +237,10 @@ export default function SinkingPage() {
 
                     {/* Amounts */}
                     <div style={{ textAlign: 'left', direction: 'ltr', flexShrink: 0 }}>
-                      <div style={{ fontSize: 16, fontWeight: 700, color: 'oklch(0.88 0.01 250)' }}>{formatCurrency(fund.monthly_allocation)}<span style={{ fontSize: 11, fontWeight: 400, color: 'oklch(0.55 0.01 250)', marginRight: 3 }}>/חודש</span></div>
-                      <div style={{ fontSize: 12, color: 'oklch(0.50 0.01 250)' }}>
+                      <div style={{ fontSize: 16, fontWeight: 700, color: 'oklch(0.88 0.01 250)' }}>{formatCurrency(fund.monthly_allocation)}<span style={{ fontSize: 11, fontWeight: 400, color: 'oklch(0.65 0.01 250)', marginRight: 3 }}>/חודש</span></div>
+                      <div style={{ fontSize: 12, color: 'oklch(0.65 0.01 250)' }}>
                         יעד שנתי: {formatCurrency(totalAnnual)}
-                        {shared && <span style={{ marginRight: 4, color: 'oklch(0.50 0.01 250)' }}>(חלקי: {formatCurrency(fund.monthly_allocation * 12)})</span>}
+                        {shared && <span style={{ marginRight: 4, color: 'oklch(0.65 0.01 250)' }}>(חלקי: {formatCurrency(fund.monthly_allocation * 12)})</span>}
                       </div>
                     </div>
 
@@ -250,7 +255,7 @@ export default function SinkingPage() {
                       <button
                         onClick={() => openEdit(fund)}
                         aria-label="ערוך קרן"
-                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'oklch(0.20 0.01 250)', border: '1px solid oklch(0.28 0.01 250)', borderRadius: 7, padding: 8, minWidth: 36, minHeight: 36, color: 'oklch(0.55 0.01 250)', fontSize: 12, cursor: 'pointer' }}
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'oklch(0.20 0.01 250)', border: '1px solid oklch(0.28 0.01 250)', borderRadius: 7, padding: 8, minWidth: 36, minHeight: 36, color: 'oklch(0.65 0.01 250)', fontSize: 12, cursor: 'pointer' }}
                       >
                         <Pencil size={12} />
                       </button>
@@ -274,8 +279,8 @@ export default function SinkingPage() {
                         ? { text: 'קצת מאחור', color: 'oklch(0.72 0.18 55)' }
                         : { text: 'מאחור', color: 'oklch(0.62 0.22 27)' }
                     return (
-                      <div style={{ marginTop: 8, fontSize: 12, color: 'oklch(0.55 0.01 250)', display: 'flex', justifyContent: 'space-between', paddingTop: 8, borderTop: '1px solid oklch(0.20 0.01 250)' }}>
-                        <span>צבור: <span style={{ color: balance > 0 ? 'oklch(0.70 0.15 185)' : 'oklch(0.62 0.22 27)', fontWeight: 600, direction: 'ltr', display: 'inline-block' }}>{formatCurrency(balance)}</span>{balance < 0 && <span style={{ fontSize: 11, color: 'oklch(0.45 0.01 250)', marginRight: 4 }}>(הוצאה גדולה מהצבירה)</span>}</span>
+                      <div style={{ marginTop: 8, fontSize: 12, color: 'oklch(0.65 0.01 250)', display: 'flex', justifyContent: 'space-between', paddingTop: 8, borderTop: '1px solid oklch(0.20 0.01 250)' }}>
+                        <span>צבור: <span style={{ color: balance > 0 ? 'oklch(0.70 0.15 185)' : 'oklch(0.62 0.22 27)', fontWeight: 600, direction: 'ltr', display: 'inline-block' }}>{formatCurrency(balance)}</span>{balance < 0 && <span style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)', marginRight: 4 }}>(הוצאה גדולה מהצבירה)</span>}</span>
                         <span style={{ direction: 'ltr', display: 'flex', alignItems: 'center', gap: 8 }}>
                           {pct.toFixed(0)}% מהיעד השנתי
                           <span style={{ fontSize: 11, fontWeight: 500, color: trackStatus.color }}>{trackStatus.text}</span>
@@ -333,6 +338,7 @@ export default function SinkingPage() {
               <div>
                 <label style={labelStyle}>מחזור</label>
                 <select value={txPeriodId ?? ''} onChange={e => setTxPeriodId(Number(e.target.value))}
+                  aria-label="מחזור"
                   style={inputBase}>
                   {periods?.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
                 </select>
@@ -381,7 +387,7 @@ function ModalHeader({ title, onClose }: { title: string; onClose: () => void })
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
       <span style={{ fontWeight: 600, fontSize: 15 }}>{title}</span>
-      <button onClick={onClose} aria-label="סגור" style={{ background: 'none', border: 'none', color: 'oklch(0.55 0.01 250)', cursor: 'pointer', padding: 8, minWidth: 36, minHeight: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={18} /></button>
+      <button onClick={onClose} aria-label="סגור" style={{ background: 'none', border: 'none', color: 'oklch(0.65 0.01 250)', cursor: 'pointer', padding: 8, minWidth: 36, minHeight: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={18} /></button>
     </div>
   )
 }
@@ -418,7 +424,7 @@ function FundFormFields({ form, onChange }: { form: FundForm; onChange: (f: Fund
                 background: form.isShared === shared ? (shared ? 'oklch(0.24 0.06 250)' : 'oklch(0.24 0.06 185)') : 'oklch(0.20 0.01 250)',
                 border: `1px solid ${form.isShared === shared ? (shared ? 'oklch(0.40 0.10 250)' : 'oklch(0.40 0.10 185)') : 'oklch(0.28 0.01 250)'}`,
                 borderRadius: 8, padding: '9px 0',
-                color: form.isShared === shared ? (shared ? 'oklch(0.75 0.15 250)' : 'oklch(0.75 0.15 185)') : 'oklch(0.55 0.01 250)',
+                color: form.isShared === shared ? (shared ? 'oklch(0.75 0.15 250)' : 'oklch(0.75 0.15 185)') : 'oklch(0.65 0.01 250)',
                 fontSize: 13, cursor: 'pointer', fontWeight: form.isShared === shared ? 600 : 400,
               }}>
               {shared ? <><Users size={13} /> משותף</> : <><User size={13} /> אישי</>}
@@ -430,10 +436,10 @@ function FundFormFields({ form, onChange }: { form: FundForm; onChange: (f: Fund
         <div style={{ background: 'oklch(0.20 0.02 185)', borderRadius: 8, padding: '10px 14px', fontSize: 13, color: 'oklch(0.70 0.15 185)' }}>
           <div style={{ direction: 'ltr', textAlign: 'left' }}>
             חלקך: <strong>{formatCurrency(monthly)}</strong> לחודש
-            {form.isShared && <span style={{ color: 'oklch(0.55 0.01 250)', marginRight: 6 }}>({formatCurrency(monthly * 12)} לשנה)</span>}
+            {form.isShared && <span style={{ color: 'oklch(0.65 0.01 250)', marginRight: 6 }}>({formatCurrency(monthly * 12)} לשנה)</span>}
           </div>
           {form.isShared && (
-            <div style={{ fontSize: 11, color: 'oklch(0.50 0.01 250)', marginTop: 3, direction: 'ltr', textAlign: 'left' }}>
+            <div style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)', marginTop: 3, direction: 'ltr', textAlign: 'left' }}>
               יעד כולל: {formatCurrency(Number(form.totalAnnual))} ÷ 2 ÷ 12
             </div>
           )}

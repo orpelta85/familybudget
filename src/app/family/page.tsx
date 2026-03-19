@@ -9,6 +9,7 @@ import { toast } from 'sonner'
 import {
   Users, Copy, Mail, Send, X, Link2, Pencil, Check, Shield, Eye, EyeOff,
 } from 'lucide-react'
+import { TableSkeleton } from '@/components/ui/Skeleton'
 
 const S = {
   card: {
@@ -29,7 +30,7 @@ const S = {
   } as React.CSSProperties,
   label: {
     fontSize: 11,
-    color: 'oklch(0.55 0.01 250)',
+    color: 'oklch(0.65 0.01 250)',
     display: 'block',
     marginBottom: 4,
     fontWeight: 500,
@@ -165,17 +166,13 @@ export default function FamilyPage() {
   }
 
   if (loading) {
-    return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
-        <div className="loading-pulse" style={{ color: 'oklch(0.55 0.01 250)', fontSize: 14 }}>טוען...</div>
-      </div>
-    )
+    return <TableSkeleton rows={4} />
   }
 
   if (!family) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
-        <div style={{ color: 'oklch(0.55 0.01 250)', fontSize: 14 }}>לא נמצאה משפחה</div>
+        <div style={{ color: 'oklch(0.65 0.01 250)', fontSize: 14 }}>לא נמצאה משפחה</div>
       </div>
     )
   }
@@ -190,7 +187,7 @@ export default function FamilyPage() {
             הגדרות משפחה
           </h1>
         </div>
-        <p style={{ fontSize: 13, color: 'oklch(0.50 0.01 250)', margin: 0 }}>
+        <p style={{ fontSize: 13, color: 'oklch(0.65 0.01 250)', margin: 0 }}>
           {family.name}
         </p>
       </div>
@@ -240,7 +237,7 @@ export default function FamilyPage() {
                   {isAdmin && (
                     <button
                       onClick={() => { setNameValue(family.name); setEditingName(true) }}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'oklch(0.55 0.01 250)', padding: 4 }}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'oklch(0.65 0.01 250)', padding: 4 }}
                       aria-label="ערוך שם"
                     >
                       <Pencil size={13} />
@@ -310,7 +307,7 @@ export default function FamilyPage() {
                       <span style={{ fontSize: 13, fontWeight: 500 }}>
                         {member.user_id.slice(0, 8)}...
                         {isMe && (
-                          <span style={{ color: 'oklch(0.55 0.01 250)', fontWeight: 400 }}> (את/ה)</span>
+                          <span style={{ color: 'oklch(0.65 0.01 250)', fontWeight: 400 }}> (את/ה)</span>
                         )}
                       </span>
                       <span style={isMemberAdmin ? S.badge('145') : S.badge('250')}>
@@ -319,7 +316,7 @@ export default function FamilyPage() {
                         ) : 'חבר'}
                       </span>
                     </div>
-                    <div style={{ fontSize: 11, color: 'oklch(0.45 0.01 250)', marginTop: 2 }}>
+                    <div style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)', marginTop: 2 }}>
                       הצטרף/ה {formatDate(member.joined_at)}
                     </div>
                   </div>
@@ -348,7 +345,7 @@ export default function FamilyPage() {
                               background: 'none',
                               border: '1px solid oklch(0.25 0.01 250)',
                               borderRadius: 6, padding: '4px 8px',
-                              color: 'oklch(0.55 0.01 250)', fontSize: 11,
+                              color: 'oklch(0.65 0.01 250)', fontSize: 11,
                               cursor: 'pointer',
                             }}
                           >
@@ -360,7 +357,7 @@ export default function FamilyPage() {
                           onClick={() => setConfirmDeleteId(member.id)}
                           style={{
                             background: 'none', border: 'none', cursor: 'pointer',
-                            color: 'oklch(0.45 0.01 250)', padding: 6,
+                            color: 'oklch(0.65 0.01 250)', padding: 6,
                           }}
                           aria-label="הסר חבר"
                         >
@@ -402,7 +399,7 @@ export default function FamilyPage() {
           {/* Divider */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
             <div style={{ flex: 1, height: 1, background: 'oklch(0.25 0.01 250)' }} />
-            <span style={{ fontSize: 11, color: 'oklch(0.45 0.01 250)' }}>או</span>
+            <span style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)' }}>או</span>
             <div style={{ flex: 1, height: 1, background: 'oklch(0.25 0.01 250)' }} />
           </div>
 
@@ -448,11 +445,11 @@ export default function FamilyPage() {
                 {myMembership?.show_personal_to_family ? (
                   <Eye size={14} style={{ color: 'oklch(0.70 0.15 145)' }} />
                 ) : (
-                  <EyeOff size={14} style={{ color: 'oklch(0.55 0.01 250)' }} />
+                  <EyeOff size={14} style={{ color: 'oklch(0.65 0.01 250)' }} />
                 )}
                 הצג הוצאות אישיות למשפחה
               </div>
-              <p style={{ fontSize: 11, color: 'oklch(0.45 0.01 250)', margin: 0, lineHeight: 1.5 }}>
+              <p style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)', margin: 0, lineHeight: 1.5 }}>
                 כאשר מופעל, חברי המשפחה האחרים יוכלו לראות את ההוצאות האישיות שלך בדשבורד המשפחתי.
               </p>
             </div>

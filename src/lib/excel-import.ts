@@ -1,13 +1,16 @@
-import * as XLSX from 'xlsx'
-
 // ── Shared expenses Excel ─────────────────────────────────────────────────────
+
+async function getXLSX() {
+  return await import('xlsx')
+}
 
 export interface RawSharedRow {
   label: string
   total_amount: number
 }
 
-export function createSharedTemplate(categoryLabels: string[]): Blob {
+export async function createSharedTemplate(categoryLabels: string[]): Promise<Blob> {
+  const XLSX = await getXLSX()
   const wb = XLSX.utils.book_new()
   const headers = ['קטגוריה', 'סכום כולל (₪)', 'הערות']
   const rows = categoryLabels.map(label => [label, '', ''])
@@ -18,7 +21,8 @@ export function createSharedTemplate(categoryLabels: string[]): Blob {
   return new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
 }
 
-export function parseSharedExcel(file: File): Promise<RawSharedRow[]> {
+export async function parseSharedExcel(file: File): Promise<RawSharedRow[]> {
+  const XLSX = await getXLSX()
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
     reader.onload = (e) => {
@@ -53,7 +57,8 @@ export interface RawExpenseRow {
 }
 
 // פירוט אשראי ישראלי — מנסה לזהות עמודות שונות
-export function parseExpenseExcel(file: File): Promise<RawExpenseRow[]> {
+export async function parseExpenseExcel(file: File): Promise<RawExpenseRow[]> {
+  const XLSX = await getXLSX()
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
     reader.onload = (e) => {
@@ -103,7 +108,8 @@ export function parseExpenseExcel(file: File): Promise<RawExpenseRow[]> {
 
 // יוצר קובץ Excel תבנית להוצאות — הכל בגיליון אחד
 // A-F: נתוני הוצאה | H: קטגוריות לעיון | I: קרנות לעיון
-export function createExpenseTemplate(categories: string[], funds: string[] = []): Blob {
+export async function createExpenseTemplate(categories: string[], funds: string[] = []): Promise<Blob> {
+  const XLSX = await getXLSX()
   const wb = XLSX.utils.book_new()
 
   const headers = ['תאריך', 'תיאור עסק', 'סכום (₪)', 'קטגוריה', 'אישי / משותף', 'קרן (אופציונלי)', '', 'קטגוריות זמינות', 'קרנות זמינות']

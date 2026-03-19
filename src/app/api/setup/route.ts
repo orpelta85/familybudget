@@ -36,7 +36,7 @@ const STARTER_FUNDS = [
 
 export async function POST(req: NextRequest) {
   const authUser = await getAuthUser()
-  const { userId, familyName, inviteCode } = await req.json()
+  const { userId, familyName, inviteCode, name: requestName } = await req.json()
   if (!userId) return NextResponse.json({ error: 'missing userId' }, { status: 400 })
 
   if (!authUser || authUser.id !== userId) {
@@ -45,8 +45,9 @@ export async function POST(req: NextRequest) {
 
   const sb = createServiceClient()
 
-  // Upsert profile
-  await sb.from('profiles').upsert({ id: userId, name: 'אורי' }, { onConflict: 'id' })
+  // Upsert profile — use provided name, fall back to email username
+  const profileName = requestName || authUser.email?.split('@')[0] || 'משתמש'
+  await sb.from('profiles').upsert({ id: userId, name: profileName }, { onConflict: 'id' })
 
   // Family: join existing or create new
   if (inviteCode) {

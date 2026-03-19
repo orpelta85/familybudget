@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { BarChart3, Inbox } from 'lucide-react'
 import { toast } from 'sonner'
+import { TableSkeleton } from '@/components/ui/Skeleton'
 
 const TYPE_LABELS: Record<string, { label: string; color: string }> = {
   fixed:    { label: 'קבועות',       color: 'oklch(0.65 0.18 250)' },
@@ -36,11 +37,11 @@ export default function BudgetPage() {
     if (!loading && !user) router.push('/login')
   }, [user, loading, router])
 
-  const { data: categories } = useBudgetCategories(user?.id)
+  const { data: categories } = useBudgetCategories(user?.id, currentPeriod?.year_number)
   const { data: expenses } = usePersonalExpenses(currentPeriod?.id, user?.id)
   const { data: income } = useIncome(currentPeriod?.id, user?.id)
 
-  if (loading || !user) return <div className="loading-pulse" style={{ padding: 40, textAlign: 'center', color: 'oklch(0.55 0.01 250)' }}>טוען...</div>
+  if (loading || !user) return <TableSkeleton rows={8} />
 
   const grouped = (categories ?? []).reduce<Record<string, typeof categories>>((acc, c) => {
     if (!acc[c.type]) acc[c.type] = []
@@ -76,14 +77,14 @@ export default function BudgetPage() {
         <BarChart3 size={18} style={{ color: 'oklch(0.65 0.18 250)' }} />
         <h1 style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em' }}>תקציב מתוכנן</h1>
       </div>
-      <p style={{ color: 'oklch(0.55 0.01 250)', fontSize: 13, marginBottom: 20 }}>
+      <p style={{ color: 'oklch(0.65 0.01 250)', fontSize: 13, marginBottom: 20 }}>
         {currentPeriod?.label ?? '...'}
       </p>
 
       {/* KPI Cards */}
       <div className="grid-3" style={{ marginBottom: 24 }}>
         <div style={card}>
-          <div style={{ fontSize: 11, color: 'oklch(0.55 0.01 250)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.03em' }}>תקציב כולל</div>
+          <div style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.03em' }}>תקציב כולל</div>
           <div style={{ fontSize: 28, fontWeight: 700, color: 'oklch(0.65 0.18 250)', direction: 'ltr', lineHeight: 1.1 }}>{formatCurrency(totalBudget)}</div>
           {totalIncome > 0 && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 10 }}>
@@ -95,19 +96,19 @@ export default function BudgetPage() {
           )}
         </div>
         <div style={card}>
-          <div style={{ fontSize: 11, color: 'oklch(0.55 0.01 250)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.03em' }}>בוצע עד כה</div>
+          <div style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.03em' }}>בוצע עד כה</div>
           <div style={{ fontSize: 28, fontWeight: 700, color: 'oklch(0.72 0.18 55)', direction: 'ltr', lineHeight: 1.1 }}>{formatCurrency(totalSpent)}</div>
           {totalBudget > 0 && (
-            <div style={{ fontSize: 12, color: 'oklch(0.50 0.01 250)', marginTop: 10 }}>
+            <div style={{ fontSize: 12, color: 'oklch(0.65 0.01 250)', marginTop: 10 }}>
               {((totalSpent / totalBudget) * 100).toFixed(0)}% מהתקציב
             </div>
           )}
         </div>
         <div style={card}>
-          <div style={{ fontSize: 11, color: 'oklch(0.55 0.01 250)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.03em' }}>נותר</div>
+          <div style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.03em' }}>נותר</div>
           <div style={{ fontSize: 28, fontWeight: 700, color: totalRemaining >= 0 ? 'oklch(0.70 0.18 145)' : 'oklch(0.62 0.22 27)', direction: 'ltr', lineHeight: 1.1 }}>{formatCurrency(totalRemaining)}</div>
           {totalBudget > 0 && (
-            <div style={{ fontSize: 12, color: 'oklch(0.50 0.01 250)', marginTop: 10 }}>
+            <div style={{ fontSize: 12, color: 'oklch(0.65 0.01 250)', marginTop: 10 }}>
               {((totalRemaining / totalBudget) * 100).toFixed(0)}% נותר
             </div>
           )}
@@ -119,7 +120,7 @@ export default function BudgetPage() {
         ? (
           <div style={{ ...card, textAlign: 'center', padding: 40 }}>
             <Inbox size={36} style={{ color: 'oklch(0.30 0.01 250)', margin: '0 auto 10px' }} />
-            <div style={{ color: 'oklch(0.55 0.01 250)', fontSize: 14 }}>אין קטגוריות תקציב</div>
+            <div style={{ color: 'oklch(0.65 0.01 250)', fontSize: 14 }}>אין קטגוריות תקציב</div>
           </div>
         )
         : Object.entries(TYPE_LABELS).map(([type, meta]) => {
@@ -135,12 +136,12 @@ export default function BudgetPage() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <div style={{ width: 8, height: 8, borderRadius: '50%', background: meta.color }} />
                   <span style={{ fontWeight: 700, fontSize: 14 }}>{meta.label}</span>
-                  <span style={{ fontSize: 11, color: 'oklch(0.45 0.01 250)', background: 'oklch(0.20 0.01 250)', borderRadius: 4, padding: '1px 6px' }}>{cats.length}</span>
+                  <span style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)', background: 'oklch(0.20 0.01 250)', borderRadius: 4, padding: '1px 6px' }}>{cats.length}</span>
                 </div>
                 <div style={{ direction: 'ltr', fontSize: 13 }}>
                   <span style={{ fontWeight: 700, color: 'oklch(0.80 0.01 250)' }}>{formatCurrency(typeSpent)}</span>
-                  <span style={{ color: 'oklch(0.45 0.01 250)', margin: '0 4px' }}>/</span>
-                  <span style={{ color: 'oklch(0.50 0.01 250)' }}>{formatCurrency(typeBudget)}</span>
+                  <span style={{ color: 'oklch(0.65 0.01 250)', margin: '0 4px' }}>/</span>
+                  <span style={{ color: 'oklch(0.65 0.01 250)' }}>{formatCurrency(typeBudget)}</span>
                 </div>
               </div>
 
@@ -160,7 +161,7 @@ export default function BudgetPage() {
                       <span style={{ fontWeight: 600, fontSize: 13, color: 'oklch(0.82 0.01 250)' }}>{cat.name}</span>
                       <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, direction: 'ltr', fontSize: 13 }}>
                         <span style={{ color: spentColor, fontWeight: 600 }}>{formatCurrency(spent)}</span>
-                        <span style={{ color: 'oklch(0.40 0.01 250)' }}>/</span>
+                        <span style={{ color: 'oklch(0.65 0.01 250)' }}>/</span>
                         {isEditing ? (
                           <input
                             autoFocus
@@ -175,9 +176,9 @@ export default function BudgetPage() {
                           <span
                             onClick={() => { setEditingId(cat.id); setEditValue(String(cat.monthly_target)) }}
                             title="לחץ לעריכה"
-                            style={{ color: 'oklch(0.55 0.01 250)', cursor: 'pointer', borderBottom: '1px dashed oklch(0.38 0.01 250)', paddingBottom: 1, transition: 'color 0.15s' }}
+                            style={{ color: 'oklch(0.65 0.01 250)', cursor: 'pointer', borderBottom: '1px dashed oklch(0.38 0.01 250)', paddingBottom: 1, transition: 'color 0.15s' }}
                             onMouseEnter={e => (e.currentTarget.style.color = 'oklch(0.75 0.01 250)')}
-                            onMouseLeave={e => (e.currentTarget.style.color = 'oklch(0.55 0.01 250)')}
+                            onMouseLeave={e => (e.currentTarget.style.color = 'oklch(0.65 0.01 250)')}
                           >
                             {formatCurrency(cat.monthly_target)}
                           </span>

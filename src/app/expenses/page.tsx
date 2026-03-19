@@ -5,6 +5,7 @@ import { usePeriods, useCurrentPeriod } from '@/lib/queries/usePeriods'
 import { usePersonalExpenses, useBudgetCategories, useAddExpense, useDeleteExpense, useAddBudgetCategory } from '@/lib/queries/useExpenses'
 import { useSharedExpenses, useUpsertSharedExpense, useDeleteSharedExpense } from '@/lib/queries/useShared'
 import { useSinkingFunds, useAddSinkingTransaction } from '@/lib/queries/useSinking'
+import { useSplitFraction } from '@/lib/queries/useProfile'
 import { formatCurrency } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { useQueryClient } from '@tanstack/react-query'
@@ -13,12 +14,13 @@ import { useFamilyContext } from '@/lib/context/FamilyContext'
 import { parseExpenseExcel, createExpenseTemplate } from '@/lib/excel-import'
 import { useRecurringPersonal, useRecurringShared, personalItemId } from '@/lib/hooks/useRecurring'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useMemo } from 'react'
 import { PeriodSelector } from '@/components/layout/PeriodSelector'
 import { toast } from 'sonner'
 import { Receipt, Upload, Download, Plus, X, FileSpreadsheet, User, Users, Lock, Unlock, Target, Trash2, Inbox } from 'lucide-react'
 import type { RawExpenseRow } from '@/lib/excel-import'
 import type { BudgetCategory, SharedCategory } from '@/lib/types'
+import { useConfirmDialog } from '@/components/ui/ConfirmDialog'
 
 type ExpType = 'personal' | 'shared'
 
@@ -52,7 +54,7 @@ const S = {
     fontSize: 13,
     outline: 'none',
   } as React.CSSProperties,
-  label: { fontSize: 11, color: 'oklch(0.55 0.01 250)', display: 'block', marginBottom: 4, fontWeight: 500 } as React.CSSProperties,
+  label: { fontSize: 11, color: 'oklch(0.65 0.01 250)', display: 'block', marginBottom: 4, fontWeight: 500 } as React.CSSProperties,
   row: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid oklch(0.20 0.01 250)' } as React.CSSProperties,
   iconBtn: { background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 8, minWidth: 36, minHeight: 36 } as React.CSSProperties,
 }
@@ -65,6 +67,8 @@ export default function ExpensesPage() {
   const { selectedPeriodId, setSelectedPeriodId } = useSharedPeriod()
   const fileRef = useRef<HTMLInputElement>(null)
   const { familyId } = useFamilyContext()
+  const splitFrac = useSplitFraction(user?.id)
+  const splitPctLabel = Math.round(splitFrac * 100)
 
   useEffect(() => {
     if (currentPeriod && !selectedPeriodId) setSelectedPeriodId(currentPeriod.id)
@@ -73,9 +77,14 @@ export default function ExpensesPage() {
     if (!loading && !user) router.push('/login')
   }, [user, loading, router])
 
+  const selectedYear = useMemo(() => {
+    if (!periods || !selectedPeriodId) return undefined
+    return periods.find(p => p.id === selectedPeriodId)?.year_number
+  }, [periods, selectedPeriodId])
+
   const { data: personalExp } = usePersonalExpenses(selectedPeriodId, user?.id)
   const { data: sharedExp }   = useSharedExpenses(selectedPeriodId, familyId)
-  const { data: categories }  = useBudgetCategories(user?.id)
+  const { data: categories }  = useBudgetCategories(user?.id, selectedYear)
   const { data: funds }       = useSinkingFunds(user?.id)
   const addExpense    = useAddExpense()
   const deleteExpense = useDeleteExpense()
@@ -86,6 +95,7 @@ export default function ExpensesPage() {
   const recurringPersonal = useRecurringPersonal(user?.id)
   const recurringShared   = useRecurringShared(user?.id)
   const queryClient = useQueryClient()
+  const confirm = useConfirmDialog()
 
   // ── Add form state ──────────────────────────────────────────────────────────
   const [expType, setExpType]         = useState<ExpType>('personal')
@@ -101,11 +111,11 @@ export default function ExpensesPage() {
   const [showImport, setShowImport] = useState(false)
   const [importing, setImporting] = useState(false)
 
-  if (loading || !user) return <div className="loading-pulse" style={{ padding: 40, textAlign: 'center', color: 'oklch(0.55 0.01 250)' }}>טוען...</div>
+  if (loading || !user) return <div className="loading-pulse" style={{ padding: 40, textAlign: 'center', color: 'oklch(0.65 0.01 250)' }}>טוען...</div>
 
   const selectedPeriod = periods?.find(p => p.id === selectedPeriodId)
   const totalPersonal  = (personalExp ?? []).reduce((s, e) => s + e.amount, 0)
-  const totalSharedMy  = (sharedExp ?? []).reduce((s, e) => s + (e.my_share ?? e.total_amount / 2), 0)
+  const totalSharedMy  = (sharedExp ?? []).reduce((s, e) => s + (e.my_share ?? e.total_amount * splitFrac), 0)
   const totalSinking   = (funds ?? []).reduce((s, f) => s + f.monthly_allocation, 0)
   const totalAll       = totalPersonal + totalSharedMy
 
@@ -144,13 +154,13 @@ export default function ExpensesPage() {
 
   // ── Delete ──────────────────────────────────────────────────────────────────
   async function handleDeletePersonal(exp: { id: number; category_id: number; amount: number; description?: string }) {
-    if (!confirm('למחוק את ההוצאה?')) return
+    if (!(await confirm({ message: 'למחוק את ההוצאה?' }))) return
     await deleteExpense.mutateAsync({ id: exp.id, period_id: selectedPeriodId!, user_id: user!.id })
     toast.success('נמחק')
   }
 
   async function handleDeleteShared(id: number) {
-    if (!confirm('למחוק את ההוצאה?')) return
+    if (!(await confirm({ message: 'למחוק את ההוצאה?' }))) return
     await deleteShared.mutateAsync({ id, period_id: selectedPeriodId! })
     toast.success('נמחק')
   }
@@ -188,8 +198,8 @@ export default function ExpensesPage() {
     e.target.value = ''
   }
 
-  function downloadTemplate() {
-    const blob = createExpenseTemplate(
+  async function downloadTemplate() {
+    const blob = await createExpenseTemplate(
       categories?.map(c => c.name) ?? [],
       funds?.map(f => f.name) ?? []
     )
@@ -284,6 +294,7 @@ export default function ExpensesPage() {
       toast.success(msg)
       setShowImport(false); setImportRows([])
     } catch (err) {
+      console.error('Import failed:', err)
       const msg = err instanceof Error ? err.message : 'שגיאה בייבוא'
       toast.error(msg)
     }
@@ -312,14 +323,17 @@ export default function ExpensesPage() {
 
   async function handleResetExpenses() {
     if (!user || !selectedPeriodId) return
-    if (!confirm('למחוק את כל ההוצאות של המחזור הנוכחי?')) return
+    const hasShared = (sharedExp ?? []).length > 0
+    const msg = hasShared
+      ? 'למחוק את כל ההוצאות האישיות של המחזור הנוכחי?\n(הוצאות משותפות לא יימחקו — יש למחוק אותן בנפרד)'
+      : 'למחוק את כל ההוצאות האישיות של המחזור הנוכחי?'
+    if (!(await confirm({ message: msg }))) return
     try {
       const sb = createClient()
       await sb.from('personal_expenses').delete().eq('period_id', selectedPeriodId).eq('user_id', user.id)
-      await sb.from('shared_expenses').delete().eq('period_id', selectedPeriodId).eq('family_id', familyId!)
       queryClient.invalidateQueries({ queryKey: ['personal_expenses', selectedPeriodId, user.id] })
-      queryClient.invalidateQueries({ queryKey: ['shared_expenses', selectedPeriodId] })
-      toast.success('כל ההוצאות אופסו')
+      toast.success('ההוצאות האישיות אופסו')
+      if (hasShared) toast.info('הוצאות משותפות לא נמחקו — ניתן למחוק כל אחת בנפרד')
     } catch { toast.error('שגיאה באיפוס') }
   }
 
@@ -334,10 +348,10 @@ export default function ExpensesPage() {
             <Receipt size={18} style={{ color: 'oklch(0.72 0.18 55)' }} />
             <h1 style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em' }}>הוצאות</h1>
           </div>
-          <p style={{ color: 'oklch(0.55 0.01 250)', fontSize: 13 }}>{selectedPeriod?.label ?? '...'}</p>
+          <p style={{ color: 'oklch(0.65 0.01 250)', fontSize: 13 }}>{selectedPeriod?.label ?? '...'}</p>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={handleResetExpenses} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: '1px solid oklch(0.25 0.01 250)', borderRadius: 8, padding: '7px 14px', color: 'oklch(0.55 0.01 250)', fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>
+          <button onClick={handleResetExpenses} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: '1px solid oklch(0.25 0.01 250)', borderRadius: 8, padding: '7px 14px', color: 'oklch(0.65 0.01 250)', fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>
             <Trash2 size={13} /> אפס הוצאות
           </button>
           <button onClick={downloadTemplate} style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'oklch(0.22 0.01 250)', border: '1px solid oklch(0.28 0.01 250)', borderRadius: 8, padding: '7px 11px', color: 'oklch(0.75 0.01 250)', fontSize: 12, cursor: 'pointer' }}>
@@ -360,14 +374,14 @@ export default function ExpensesPage() {
               <FileSpreadsheet size={14} style={{ color: 'oklch(0.65 0.18 250)' }} />
               <span style={{ fontWeight: 600, fontSize: 13 }}>{importRows.length} שורות מ-Excel</span>
             </div>
-            <button onClick={() => setShowImport(false)} style={{ ...S.iconBtn, color: 'oklch(0.55 0.01 250)' }}><X size={14} /></button>
+            <button onClick={() => setShowImport(false)} aria-label="סגור ייבוא" style={{ ...S.iconBtn, color: 'oklch(0.65 0.01 250)' }}><X size={14} /></button>
           </div>
           <div style={{ maxHeight: 320, overflowY: 'auto', marginBottom: 10 }}>
             {importRows.map((row, i) => {
               const isAutoMatched = row.categoryId && !row.categoryId.startsWith('__new__') && row.category
               const isNewCat = row.categoryId?.startsWith('__new__')
               return (
-                <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 70px 60px 140px', gap: 6, padding: '5px 0', borderBottom: '1px solid oklch(0.20 0.01 250)', alignItems: 'center' }}>
+                <div key={i} className="grid-import-row" style={{ padding: '5px 0', borderBottom: '1px solid oklch(0.20 0.01 250)' }}>
                   <span style={{ fontSize: 12, color: 'oklch(0.80 0.01 250)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.description}</span>
                   <span style={{ fontSize: 12, fontWeight: 600, direction: 'ltr', textAlign: 'right', color: 'oklch(0.72 0.18 55)' }}>{formatCurrency(row.amount)}</span>
                   {/* Toggle אישי/משותף */}
@@ -377,7 +391,7 @@ export default function ExpensesPage() {
                       background: row.is_shared ? 'oklch(0.22 0.05 295)' : 'oklch(0.22 0.01 250)',
                       border: row.is_shared ? '1px solid oklch(0.40 0.12 295)' : '1px solid oklch(0.28 0.01 250)',
                       borderRadius: 6, padding: '2px 8px', fontSize: 10, fontWeight: 600,
-                      color: row.is_shared ? 'oklch(0.75 0.15 295)' : 'oklch(0.55 0.01 250)',
+                      color: row.is_shared ? 'oklch(0.75 0.15 295)' : 'oklch(0.65 0.01 250)',
                       cursor: 'pointer', whiteSpace: 'nowrap',
                     }}
                   >
@@ -390,6 +404,7 @@ export default function ExpensesPage() {
                     <span style={{ fontSize: 11, color: 'oklch(0.72 0.18 55)', fontWeight: 500 }}>{row.category} (חדש)</span>
                   ) : (
                     <select value={row.categoryId} onChange={e => setImportRows(p => p.map((r, j) => j === i ? { ...r, categoryId: e.target.value } : r))}
+                      aria-label="בחר קטגוריה"
                       style={{ ...S.input, padding: '3px 6px', fontSize: 11 }}>
                       <option value="">בחר...</option>
                       {categories?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -424,7 +439,7 @@ export default function ExpensesPage() {
                 flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
                 background: expType === t ? (t === 'personal' ? 'oklch(0.65 0.18 250)' : 'oklch(0.55 0.12 310)') : 'transparent',
                 border: 'none', borderRadius: 7, padding: '6px 0',
-                color: expType === t ? 'oklch(0.12 0.01 250)' : 'oklch(0.55 0.01 250)',
+                color: expType === t ? 'oklch(0.12 0.01 250)' : 'oklch(0.65 0.01 250)',
                 fontSize: 12, fontWeight: expType === t ? 600 : 400, cursor: 'pointer',
               }}>
                 {t === 'personal' ? <><User size={11} /> אישית</> : <><Users size={11} /> משותפת</>}
@@ -464,13 +479,13 @@ export default function ExpensesPage() {
 
             {/* Amount */}
             <div>
-              <label htmlFor="expense-amount" style={S.label}>סכום (₪){expType === 'shared' ? ' — כולל (חלקך 50%)' : ''}</label>
+              <label htmlFor="expense-amount" style={S.label}>סכום (₪){expType === 'shared' ? ` — כולל (חלקך ${splitPctLabel}%)` : ''}</label>
               <input id="expense-amount" type="number" value={amount} onChange={e => setAmount(e.target.value)}
                 placeholder="0" required min="0.01" step="0.01"
                 style={{ ...S.input, width: '100%', direction: 'ltr', textAlign: 'right' }} />
               {expType === 'shared' && Number(amount) > 0 && (
                 <div style={{ marginTop: 4, fontSize: 11, color: 'oklch(0.65 0.12 310)' }}>
-                  חלקך: {formatCurrency(Number(amount) / 2)}
+                  חלקך: {formatCurrency(Number(amount) * splitFrac)}
                 </div>
               )}
             </div>
@@ -495,7 +510,7 @@ export default function ExpensesPage() {
               { label: 'סה"כ', value: totalAll, color: 'oklch(0.72 0.18 55)' },
             ].filter(t => t.value > 0).map(t => (
               <div key={t.label} className="card-transition" style={{ background: 'oklch(0.16 0.01 250)', border: '1px solid oklch(0.25 0.01 250)', borderRadius: 8, padding: '8px 14px' }}>
-                <div style={{ fontSize: 10, color: 'oklch(0.50 0.01 250)', marginBottom: 2 }}>{t.label}</div>
+                <div style={{ fontSize: 10, color: 'oklch(0.65 0.01 250)', marginBottom: 2 }}>{t.label}</div>
                 <div style={{ fontSize: 15, fontWeight: 700, color: t.color, direction: 'ltr' }}>{formatCurrency(t.value)}</div>
               </div>
             ))}
@@ -506,7 +521,7 @@ export default function ExpensesPage() {
             <div style={{ ...S.card, marginBottom: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10, fontSize: 12, color: 'oklch(0.70 0.15 185)', fontWeight: 600 }}>
                 <Target size={12} /> קרנות שנתיות — הפרשה חודשית
-                <span style={{ fontWeight: 400, color: 'oklch(0.50 0.01 250)', marginRight: 4 }}>(נעולות — לשינוי עבור לעמוד הקרנות)</span>
+                <span style={{ fontWeight: 400, color: 'oklch(0.65 0.01 250)', marginRight: 4 }}>(נעולות — לשינוי עבור לעמוד הקרנות)</span>
               </div>
               {(funds ?? []).map(fund => (
                 <div key={fund.id} style={{ ...S.row, opacity: 0.85 }}>
@@ -527,7 +542,7 @@ export default function ExpensesPage() {
           )}
 
           {/* ── Personal + Shared side by side ──────────────────────────────── */}
-          <div className="grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, alignItems: 'start' }}>
+          <div className="grid-2" style={{ alignItems: 'start' }}>
 
           {/* ── Personal expenses ─────────────────────────────────────────────── */}
           <div style={S.card}>
@@ -538,7 +553,7 @@ export default function ExpensesPage() {
               <span style={{ fontSize: 14, fontWeight: 700, direction: 'ltr', color: 'oklch(0.65 0.18 250)' }}>{formatCurrency(totalPersonal)}</span>
             </div>
             {!(personalExp?.length)
-              ? <div style={{ fontSize: 12, color: 'oklch(0.45 0.01 250)', textAlign: 'center', padding: '24px 0' }}><Inbox size={32} style={{ color: 'oklch(0.30 0.01 250)', margin: '0 auto 8px' }} />אין הוצאות אישיות</div>
+              ? <div style={{ fontSize: 12, color: 'oklch(0.65 0.01 250)', textAlign: 'center', padding: '24px 0' }}><Inbox size={32} style={{ color: 'oklch(0.30 0.01 250)', margin: '0 auto 8px' }} />אין הוצאות אישיות</div>
               : personalExp.map(e => {
                 const itemId = personalItemId(e.category_id, e.description ?? '', e.id)
                 const locked = recurringPersonal.isLocked(itemId)
@@ -547,16 +562,17 @@ export default function ExpensesPage() {
                   <div key={e.id} style={S.row}>
                     <div>
                       <div style={{ fontSize: 13, fontWeight: 500 }}>{e.description || catName}</div>
-                      {e.description && <div style={{ fontSize: 11, color: 'oklch(0.50 0.01 250)' }}>{catName}</div>}
+                      {e.description && <div style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)' }}>{catName}</div>}
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <span style={{ fontSize: 13, fontWeight: 600, direction: 'ltr' }}>{formatCurrency(e.amount)}</span>
                       <button onClick={() => toggleLockPersonal(e)}
                         title={locked ? 'בטל נעילה' : 'נעל לחודשים הבאים'}
+                        aria-label={locked ? 'בטל נעילה' : 'נעל לחודשים הבאים'}
                         style={{ ...S.iconBtn, color: locked ? 'oklch(0.70 0.15 185)' : 'oklch(0.35 0.01 250)' }}>
                         {locked ? <Lock size={12} /> : <Unlock size={12} />}
                       </button>
-                      <button onClick={() => handleDeletePersonal(e)} aria-label="מחק הוצאה" style={{ ...S.iconBtn, color: 'oklch(0.40 0.01 250)' }}>
+                      <button onClick={() => handleDeletePersonal(e)} aria-label="מחק הוצאה" style={{ ...S.iconBtn, color: 'oklch(0.65 0.01 250)' }}>
                         <X size={13} />
                       </button>
                     </div>
@@ -574,20 +590,20 @@ export default function ExpensesPage() {
               </div>
               <span style={{ fontSize: 14, fontWeight: 700, direction: 'ltr', color: 'oklch(0.65 0.12 310)' }}>{formatCurrency(totalSharedMy)}</span>
             </div>
-            <div style={{ fontSize: 11, color: 'oklch(0.50 0.01 250)', marginBottom: 10 }}>
-              הסכום שמוצג הוא חלקך (50%) — ניתן לנעול הוצאות קבועות
+            <div style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)', marginBottom: 10 }}>
+              הסכום שמוצג הוא חלקך ({splitPctLabel}%) — ניתן לנעול הוצאות קבועות
             </div>
             {!(sharedExp?.length)
-              ? <div style={{ fontSize: 12, color: 'oklch(0.45 0.01 250)', textAlign: 'center', padding: '24px 0' }}><Inbox size={32} style={{ color: 'oklch(0.30 0.01 250)', margin: '0 auto 8px' }} />אין הוצאות משותפות</div>
+              ? <div style={{ fontSize: 12, color: 'oklch(0.65 0.01 250)', textAlign: 'center', padding: '24px 0' }}><Inbox size={32} style={{ color: 'oklch(0.30 0.01 250)', margin: '0 auto 8px' }} />אין הוצאות משותפות</div>
               : sharedExp.map(e => {
-                const myAmt = e.my_share ?? e.total_amount / 2
+                const myAmt = e.my_share ?? e.total_amount * splitFrac
                 const locked = recurringShared.isLocked(e.category)
                 const label = e.notes || e.category
                 return (
                   <div key={e.id} style={S.row}>
                     <div>
                       <div style={{ fontSize: 13, fontWeight: 500 }}>{label}</div>
-                      <div style={{ fontSize: 11, color: 'oklch(0.50 0.01 250)', direction: 'ltr', marginTop: 1 }}>
+                      <div style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)', direction: 'ltr', marginTop: 1 }}>
                         סה&quot;כ {formatCurrency(e.total_amount)} · חלקי {formatCurrency(myAmt)}
                       </div>
                     </div>
@@ -595,10 +611,11 @@ export default function ExpensesPage() {
                       <span style={{ fontSize: 13, fontWeight: 600, direction: 'ltr', color: 'oklch(0.65 0.12 310)' }}>{formatCurrency(myAmt)}</span>
                       <button onClick={() => toggleLockShared(e)}
                         title={locked ? 'בטל נעילה' : 'נעל לחודשים הבאים'}
+                        aria-label={locked ? 'בטל נעילה' : 'נעל לחודשים הבאים'}
                         style={{ ...S.iconBtn, color: locked ? 'oklch(0.70 0.15 185)' : 'oklch(0.35 0.01 250)' }}>
                         {locked ? <Lock size={12} /> : <Unlock size={12} />}
                       </button>
-                      <button onClick={() => handleDeleteShared(e.id)} aria-label="מחק הוצאה" style={{ ...S.iconBtn, color: 'oklch(0.40 0.01 250)' }}>
+                      <button onClick={() => handleDeleteShared(e.id)} aria-label="מחק הוצאה" style={{ ...S.iconBtn, color: 'oklch(0.65 0.01 250)' }}>
                         <X size={13} />
                       </button>
                     </div>

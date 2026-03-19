@@ -7,7 +7,7 @@ import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
   title: "My Family Finance",
-  description: "Family budget management dashboard",
+  description: "ניהול תקציב משפחתי חכם",
   icons: {
     icon: "/favicon.svg",
   },

@@ -4,10 +4,15 @@ import { useState, useEffect, Suspense } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { toast } from 'sonner'
+import { Skeleton } from '@/components/ui/Skeleton'
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'oklch(0.55 0.01 250)' }}>טוען...</div>}>
+    <Suspense fallback={
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Skeleton variant="card" width={360} height={320} />
+      </div>
+    }>
       <LoginForm />
     </Suspense>
   )
@@ -77,7 +82,7 @@ function LoginForm() {
     <div className="min-h-screen flex items-center justify-center p-4"
          style={{ marginRight: 0, maxWidth: '100vw' }}>
       <div style={{ width: 380, background: 'oklch(0.16 0.01 250)', border: '1px solid oklch(0.25 0.01 250)', borderRadius: 12, padding: 32 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 6 }}>תקציב חכם</h1>
+        <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 6 }}>My Family Finance</h1>
         <p style={{ color: 'oklch(0.60 0.01 250)', fontSize: 14, marginBottom: 28 }}>
           {inviteFamilyName
             ? `הצטרפות ל${inviteFamilyName}`
@@ -125,7 +130,7 @@ function LoginForm() {
           <button
             onClick={handleReset}
             disabled={loading || resetSent}
-            style={{ marginTop: 10, width: '100%', background: 'none', border: 'none', color: 'oklch(0.55 0.01 250)', cursor: resetSent ? 'default' : 'pointer', fontSize: 12 }}
+            style={{ marginTop: 10, width: '100%', background: 'none', border: 'none', color: 'oklch(0.65 0.01 250)', cursor: resetSent ? 'default' : 'pointer', fontSize: 12 }}
           >
             {resetSent ? '✓ מייל נשלח' : 'שכחתי סיסמה'}
           </button>

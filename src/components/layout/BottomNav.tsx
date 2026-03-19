@@ -57,7 +57,7 @@ export function BottomNav() {
               flex: 1, display: 'flex', flexDirection: 'column',
               alignItems: 'center', gap: 4, padding: '8px 0',
               textDecoration: 'none',
-              color: active ? 'oklch(0.65 0.18 250)' : 'oklch(0.50 0.01 250)',
+              color: active ? 'oklch(0.65 0.18 250)' : 'oklch(0.65 0.01 250)',
               transition: 'color 0.15s',
               fontSize: 10,
             }}
@@ -76,7 +76,7 @@ export function BottomNav() {
             width: '100%', display: 'flex', flexDirection: 'column',
             alignItems: 'center', gap: 4, padding: '8px 0',
             background: 'none', border: 'none', cursor: 'pointer',
-            color: isMoreActive ? 'oklch(0.65 0.18 250)' : 'oklch(0.50 0.01 250)',
+            color: isMoreActive ? 'oklch(0.65 0.18 250)' : 'oklch(0.65 0.01 250)',
             transition: 'color 0.15s',
             fontSize: 10,
           }}

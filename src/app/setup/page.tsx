@@ -51,7 +51,7 @@ export default function SetupPage() {
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, marginRight: 0 }}>
       <div style={{ ...card, maxWidth: 440, width: '100%' }}>
         <div style={{ marginBottom: 24 }}>
-          <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 8 }}>ברוך הבא לתקציב חכם</h1>
+          <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 8 }}>ברוך הבא ל-My Family Finance</h1>
           <p style={{ color: 'oklch(0.60 0.01 250)', fontSize: 14, lineHeight: 1.6 }}>
             אתחל את החשבון שלך עם ברירות מחדל מוכנות. תוכל לשנות הכל אחר כך.
           </p>

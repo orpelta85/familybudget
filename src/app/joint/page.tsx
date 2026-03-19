@@ -14,6 +14,8 @@ import { PeriodSelector } from '@/components/layout/PeriodSelector'
 import { toast } from 'sonner'
 import { PiggyBank, Trash2, Inbox } from 'lucide-react'
 import type { PoolCategory } from '@/lib/types'
+import { TableSkeleton } from '@/components/ui/Skeleton'
+import { useConfirmDialog } from '@/components/ui/ConfirmDialog'
 
 const POOL_CATEGORIES: { key: PoolCategory; label: string }[] = [
   { key: 'restaurants', label: 'מסעדות' },
@@ -44,6 +46,7 @@ export default function JointPage() {
   const upsertIncome = useUpsertJointIncome()
   const addExpense = useAddJointExpense()
   const queryClient = useQueryClient()
+  const confirm = useConfirmDialog()
 
   const [myContrib, setMyContrib] = useState('')
   const [partnerContrib, setPartnerContrib] = useState('')
@@ -58,11 +61,11 @@ export default function JointPage() {
     }
   }, [poolIncome, selectedPeriodId])
 
-  if (loading || !user) return <div className="loading-pulse" style={{ padding: 40, textAlign: 'center', color: 'oklch(0.55 0.01 250)' }}>טוען...</div>
+  if (loading || !user) return <TableSkeleton rows={5} />
 
   async function handleResetPool() {
     if (!selectedPeriodId || !familyId) return
-    if (!confirm('למחוק את כל הנתונים של הקופה למחזור הנוכחי?')) return
+    if (!(await confirm({ message: 'למחוק את כל הנתונים של הקופה למחזור הנוכחי?' }))) return
     try {
       const sb = createClient()
       await sb.from('joint_pool_income').delete().eq('period_id', selectedPeriodId).eq('family_id', familyId)
@@ -108,11 +111,11 @@ export default function JointPage() {
           <PiggyBank size={18} style={{ color: 'oklch(0.68 0.18 295)' }} />
           <h1 style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em' }}>קופה משותפת</h1>
         </div>
-        <button onClick={handleResetPool} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: '1px solid oklch(0.25 0.01 250)', borderRadius: 8, padding: '7px 14px', color: 'oklch(0.55 0.01 250)', fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>
+        <button onClick={handleResetPool} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: '1px solid oklch(0.25 0.01 250)', borderRadius: 8, padding: '7px 14px', color: 'oklch(0.65 0.01 250)', fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>
           <Trash2 size={13} /> אפס קופה
         </button>
       </div>
-      <p style={{ color: 'oklch(0.55 0.01 250)', fontSize: 13, marginBottom: 20 }}>{selectedPeriod?.label ?? '...'}</p>
+      <p style={{ color: 'oklch(0.65 0.01 250)', fontSize: 13, marginBottom: 20 }}>{selectedPeriod?.label ?? '...'}</p>
 
       {periods && <PeriodSelector periods={periods} selectedId={selectedPeriodId} onChange={setSelectedPeriodId} />}
 
@@ -126,17 +129,17 @@ export default function JointPage() {
           <div style={{ display: 'flex', gap: 24 }}>
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: 18, fontWeight: 700, direction: 'ltr', color: 'oklch(0.70 0.18 145)' }}>{formatCurrency(totalIncome)}</div>
-              <div style={{ fontSize: 11, color: 'oklch(0.55 0.01 250)' }}>הכנסות</div>
+              <div style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)' }}>הכנסות</div>
             </div>
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontSize: 18, fontWeight: 700, direction: 'ltr', color: 'oklch(0.72 0.18 55)' }}>{formatCurrency(totalExpenses)}</div>
-              <div style={{ fontSize: 11, color: 'oklch(0.55 0.01 250)' }}>הוצאות</div>
+              <div style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)' }}>הוצאות</div>
             </div>
           </div>
         </div>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 16 }}>
+      <div className="grid-2" style={{ gap: 16, marginBottom: 16 }}>
         {/* Income */}
         <div style={card}>
           <div style={{ fontWeight: 600, marginBottom: 14, fontSize: 14 }}>הכנסות לקופה</div>
@@ -162,6 +165,7 @@ export default function JointPage() {
           <div style={{ fontWeight: 600, marginBottom: 14, fontSize: 14 }}>הוצאה משותפת</div>
           <form onSubmit={addExp} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             <select value={expCategory} onChange={e => setExpCategory(e.target.value as PoolCategory)}
+              aria-label="קטגוריית הוצאה"
               style={{ background: 'oklch(0.22 0.01 250)', border: '1px solid oklch(0.28 0.01 250)', borderRadius: 8, padding: '9px 12px', color: 'inherit', fontSize: 13 }}>
               {POOL_CATEGORIES.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
             </select>
@@ -183,14 +187,14 @@ export default function JointPage() {
           <div key={e.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 0', borderBottom: '1px solid oklch(0.20 0.01 250)', fontSize: 13 }}>
             <div>
               <span style={{ fontWeight: 500 }}>{POOL_CATEGORIES.find(c => c.key === e.category)?.label ?? e.category}</span>
-              {e.description && <span style={{ color: 'oklch(0.55 0.01 250)', marginRight: 8 }}>· {e.description}</span>}
+              {e.description && <span style={{ color: 'oklch(0.65 0.01 250)', marginRight: 8 }}>· {e.description}</span>}
             </div>
             <span style={{ direction: 'ltr', fontWeight: 600, color: 'oklch(0.72 0.18 55)' }}>{formatCurrency(e.amount)}</span>
           </div>
         )) : (
           <div style={{ textAlign: 'center', padding: '24px 0' }}>
             <Inbox size={32} style={{ color: 'oklch(0.30 0.01 250)', margin: '0 auto 8px' }} />
-            <div style={{ fontSize: 12, color: 'oklch(0.45 0.01 250)' }}>אין הוצאות עדיין</div>
+            <div style={{ fontSize: 12, color: 'oklch(0.65 0.01 250)' }}>אין הוצאות עדיין</div>
           </div>
         )}
       </div>

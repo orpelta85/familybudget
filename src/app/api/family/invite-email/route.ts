@@ -50,6 +50,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 })
     }
   } catch (err) {
+    console.error('Invite email error:', err)
     const msg = err instanceof Error ? err.message : 'unknown error'
     return NextResponse.json({ error: msg }, { status: 500 })
   }

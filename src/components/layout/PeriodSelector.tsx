@@ -15,6 +15,7 @@ export function PeriodSelector({ periods, selectedId, onChange }: Props) {
       <select
         value={selectedId ?? ''}
         onChange={e => onChange(Number(e.target.value))}
+        aria-label="בחר תקופה"
         style={{
           background: 'oklch(0.22 0.01 250)',
           border: '1px solid oklch(0.28 0.01 250)',

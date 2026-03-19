@@ -311,6 +311,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ ok: true, report_id: report.id, parsed: reportData })
   } catch (err: unknown) {
+    console.error('Pension upload error:', err)
     const message = err instanceof Error ? err.message : 'unknown error'
     return NextResponse.json({ error: message }, { status: 500 })
   }

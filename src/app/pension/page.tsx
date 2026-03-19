@@ -12,6 +12,7 @@ import {
   Users, Pencil, FileUp, Camera,
 } from 'lucide-react'
 import type { PensionReport, PensionProduct, PensionProductType } from '@/lib/types'
+import { TableSkeleton } from '@/components/ui/Skeleton'
 
 const S = {
   card: {
@@ -32,7 +33,7 @@ const S = {
   } as React.CSSProperties,
   label: {
     fontSize: 11,
-    color: 'oklch(0.55 0.01 250)',
+    color: 'oklch(0.65 0.01 250)',
     display: 'block',
     marginBottom: 4,
     fontWeight: 500,
@@ -184,6 +185,7 @@ export default function PensionPage() {
       setShowUpload(false)
       setUploadFile(null)
     } catch (err) {
+      console.error('Image extraction failed:', err)
       const msg = err instanceof Error ? err.message : 'שגיאה בקריאת התמונה'
       toast.error(msg)
     }
@@ -205,6 +207,7 @@ export default function PensionPage() {
         setShowUpload(false)
         setUploadFile(null)
       } catch (err) {
+        console.error('PDF upload failed:', err)
         const msg = err instanceof Error ? err.message : 'שגיאה בהעלאת הדוח'
         toast.error(msg)
       }
@@ -268,7 +271,7 @@ export default function PensionPage() {
   }
 
   if (loading || loadingReports) {
-    return <div className="loading-pulse" style={{ padding: 40, textAlign: 'center', color: 'oklch(0.55 0.01 250)' }}>טוען...</div>
+    return <TableSkeleton rows={6} />
   }
 
   return (
@@ -281,7 +284,7 @@ export default function PensionPage() {
             פנסיה והשקעות
           </h1>
           {report && (
-            <p style={{ color: 'oklch(0.55 0.01 250)', fontSize: 13, marginTop: 4 }}>
+            <p style={{ color: 'oklch(0.65 0.01 250)', fontSize: 13, marginTop: 4 }}>
               נכון ל-{formatDate(report.report_date)} | {report.advisor_name}
             </p>
           )}
@@ -319,7 +322,7 @@ export default function PensionPage() {
                 borderRadius: 999,
                 border: i === selectedReportIdx ? '1px solid oklch(0.65 0.18 250)' : '1px solid oklch(0.25 0.01 250)',
                 background: i === selectedReportIdx ? 'oklch(0.22 0.05 250)' : 'oklch(0.16 0.01 250)',
-                color: i === selectedReportIdx ? 'oklch(0.80 0.10 250)' : 'oklch(0.55 0.01 250)',
+                color: i === selectedReportIdx ? 'oklch(0.80 0.10 250)' : 'oklch(0.65 0.01 250)',
                 cursor: 'pointer',
                 fontSize: 12,
                 fontWeight: 500,
@@ -334,9 +337,9 @@ export default function PensionPage() {
       {!report ? (
         /* No reports yet — show empty state */
         <div style={{ ...S.card, textAlign: 'center', padding: 60 }}>
-          <FileText size={48} style={{ color: 'oklch(0.40 0.01 250)', marginBottom: 16 }} />
+          <FileText size={48} style={{ color: 'oklch(0.65 0.01 250)', marginBottom: 16 }} />
           <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>אין דוחות פנסיה</div>
-          <div style={{ fontSize: 14, color: 'oklch(0.55 0.01 250)', marginBottom: 20 }}>
+          <div style={{ fontSize: 14, color: 'oklch(0.65 0.01 250)', marginBottom: 20 }}>
             העלה את הדוח הראשון שלך מהסוכן הפנסיוני
           </div>
           <button
@@ -358,7 +361,7 @@ export default function PensionPage() {
       ) : (
         <>
           {/* KPIs Row */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12, marginBottom: 20 }}>
+          <div className="grid-kpi" style={{ marginBottom: 20 }}>
             {[
               { label: 'סך חיסכון', value: formatCurrency(report.total_savings || totalBalance), color: TYPE_COLORS.pension, icon: PiggyBank },
               { label: 'תשואה מתחילת שנה', value: `${report.ytd_return}%`, color: 'oklch(0.70 0.18 145)', icon: TrendingUp },
@@ -372,7 +375,7 @@ export default function PensionPage() {
                 <div key={kpi.label} style={{ ...S.card, padding: 16 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
                     <Icon size={14} style={{ color: kpi.color }} />
-                    <span style={{ fontSize: 11, color: 'oklch(0.55 0.01 250)', fontWeight: 500 }}>{kpi.label}</span>
+                    <span style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)', fontWeight: 500 }}>{kpi.label}</span>
                   </div>
                   <div style={{ fontSize: 20, fontWeight: 700, color: kpi.color, direction: 'ltr', textAlign: 'left' }}>
                     {kpi.value}
@@ -409,25 +412,25 @@ export default function PensionPage() {
                 </h2>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
                   <div style={{ background: 'oklch(0.14 0.01 250)', borderRadius: 8, padding: 14 }}>
-                    <div style={{ fontSize: 11, color: 'oklch(0.55 0.01 250)', marginBottom: 6 }}>צבירה צפויה בפרישה</div>
+                    <div style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)', marginBottom: 6 }}>צבירה צפויה בפרישה</div>
                     <div style={{ fontSize: 18, fontWeight: 700, direction: 'ltr', textAlign: 'left', color: 'oklch(0.65 0.18 250)' }}>
                       {formatCurrency(futureValue)}
                     </div>
                   </div>
                   <div style={{ background: 'oklch(0.14 0.01 250)', borderRadius: 8, padding: 14 }}>
-                    <div style={{ fontSize: 11, color: 'oklch(0.55 0.01 250)', marginBottom: 6 }}>קצבה חודשית צפויה</div>
+                    <div style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)', marginBottom: 6 }}>קצבה חודשית צפויה</div>
                     <div style={{ fontSize: 18, fontWeight: 700, direction: 'ltr', textAlign: 'left', color: 'oklch(0.70 0.18 145)' }}>
                       {formatCurrency(monthlyPension)}
                     </div>
                   </div>
                   <div style={{ background: 'oklch(0.14 0.01 250)', borderRadius: 8, padding: 14 }}>
-                    <div style={{ fontSize: 11, color: 'oklch(0.55 0.01 250)', marginBottom: 6 }}>יחס החלפה</div>
+                    <div style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)', marginBottom: 6 }}>יחס החלפה</div>
                     <div style={{ fontSize: 18, fontWeight: 700, direction: 'ltr', textAlign: 'left', color: ratioColor }}>
                       {currentSalary > 0 ? `${replacementRatio.toFixed(0)}%` : 'אין נתון'}
                     </div>
                   </div>
                 </div>
-                <div style={{ fontSize: 11, color: 'oklch(0.45 0.01 250)', marginTop: 12 }}>
+                <div style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)', marginTop: 12 }}>
                   * הנחות: תשואה ריאלית 4% שנתי, גיל פרישה 67, 35 שנה לפרישה
                 </div>
               </div>
@@ -451,11 +454,11 @@ export default function PensionPage() {
                   borderRadius: 8,
                   padding: 14,
                 }}>
-                  <div style={{ fontSize: 11, color: 'oklch(0.55 0.01 250)', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <div style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
                     <item.Icon size={12} />
                     {item.label}
                   </div>
-                  <div style={{ fontSize: 18, fontWeight: 700, direction: 'ltr', textAlign: 'left', color: item.value > 0 ? 'oklch(0.80 0.01 250)' : 'oklch(0.40 0.01 250)' }}>
+                  <div style={{ fontSize: 18, fontWeight: 700, direction: 'ltr', textAlign: 'left', color: item.value > 0 ? 'oklch(0.80 0.01 250)' : 'oklch(0.65 0.01 250)' }}>
                     {item.value > 0 ? formatCurrency(item.value) : 'אין כיסוי'}
                   </div>
                 </div>
@@ -470,7 +473,7 @@ export default function PensionPage() {
               מוצרי חיסכון פעילים
             </h2>
             {activeProducts.length === 0 && (
-              <div style={{ textAlign: 'center', padding: 20, color: 'oklch(0.50 0.01 250)', fontSize: 13 }}>אין מוצרים פעילים</div>
+              <div style={{ textAlign: 'center', padding: 20, color: 'oklch(0.65 0.01 250)', fontSize: 13 }}>אין מוצרים פעילים</div>
             )}
             {activeProducts.map(p => (
               <ProductCard
@@ -486,7 +489,7 @@ export default function PensionPage() {
           {/* Products — Inactive */}
           {inactiveProducts.length > 0 && (
             <div style={{ ...S.card, marginBottom: 16, opacity: 0.8 }}>
-              <div style={{ fontWeight: 600, marginBottom: 16, fontSize: 15, display: 'flex', alignItems: 'center', gap: 8, color: 'oklch(0.55 0.01 250)' }}>
+              <div style={{ fontWeight: 600, marginBottom: 16, fontSize: 15, display: 'flex', alignItems: 'center', gap: 8, color: 'oklch(0.65 0.01 250)' }}>
                 <AlertCircle size={16} />
                 מוצרים לא פעילים ({inactiveProducts.length})
               </div>
@@ -503,7 +506,7 @@ export default function PensionPage() {
           )}
 
           {/* Distribution Charts */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 16 }}>
+          <div className="grid-2" style={{ marginBottom: 16 }}>
             {/* By Product Type */}
             <div style={S.card}>
               <div style={{ fontWeight: 600, marginBottom: 14, fontSize: 14 }}>לפי סוג מוצר</div>
@@ -620,7 +623,7 @@ export default function PensionPage() {
                     borderRadius: 8,
                     border: uploadMode === mode ? '1px solid oklch(0.65 0.18 250)' : '1px solid oklch(0.25 0.01 250)',
                     background: uploadMode === mode ? 'oklch(0.22 0.05 250)' : 'oklch(0.18 0.01 250)',
-                    color: uploadMode === mode ? 'oklch(0.85 0.10 250)' : 'oklch(0.55 0.01 250)',
+                    color: uploadMode === mode ? 'oklch(0.85 0.10 250)' : 'oklch(0.65 0.01 250)',
                     cursor: 'pointer',
                     fontSize: 13,
                     fontWeight: 600,
@@ -652,7 +655,7 @@ export default function PensionPage() {
                     <>
                       <Check size={32} style={{ color: 'oklch(0.70 0.18 145)', marginBottom: 8 }} />
                       <div style={{ fontWeight: 600 }}>{uploadFile.name}</div>
-                      <div style={{ fontSize: 12, color: 'oklch(0.55 0.01 250)', marginTop: 4 }}>
+                      <div style={{ fontSize: 12, color: 'oklch(0.65 0.01 250)', marginTop: 4 }}>
                         {(uploadFile.size / 1024).toFixed(0)} KB
                       </div>
                     </>
@@ -660,7 +663,7 @@ export default function PensionPage() {
                     <>
                       <Camera size={32} style={{ color: 'oklch(0.70 0.18 145)', marginBottom: 8 }} />
                       <div style={{ fontWeight: 600 }}>לחץ לבחירת תמונה של הדוח</div>
-                      <div style={{ fontSize: 12, color: 'oklch(0.50 0.01 250)', marginTop: 4 }}>PNG, JPG — צילום מסך או תמונה מהטלפון</div>
+                      <div style={{ fontSize: 12, color: 'oklch(0.65 0.01 250)', marginTop: 4 }}>PNG, JPG — צילום מסך או תמונה מהטלפון</div>
                     </>
                   )}
                 </div>
@@ -671,7 +674,7 @@ export default function PensionPage() {
                   style={{ display: 'none' }}
                   onChange={e => setUploadFile(e.target.files?.[0] || null)}
                 />
-                <div style={{ fontSize: 12, color: 'oklch(0.50 0.01 250)', marginBottom: 16 }}>
+                <div style={{ fontSize: 12, color: 'oklch(0.65 0.01 250)', marginBottom: 16 }}>
                   * AI קורא את הנתונים מהתמונה אוטומטית. וודא שהתמונה חדה וכל הטקסט קריא.
                 </div>
                 {imageExtracting && (
@@ -699,15 +702,15 @@ export default function PensionPage() {
                     <>
                       <Check size={32} style={{ color: 'oklch(0.70 0.18 145)', marginBottom: 8 }} />
                       <div style={{ fontWeight: 600 }}>{uploadFile.name}</div>
-                      <div style={{ fontSize: 12, color: 'oklch(0.55 0.01 250)', marginTop: 4 }}>
+                      <div style={{ fontSize: 12, color: 'oklch(0.65 0.01 250)', marginTop: 4 }}>
                         {(uploadFile.size / 1024).toFixed(0)} KB
                       </div>
                     </>
                   ) : (
                     <>
-                      <Upload size={32} style={{ color: 'oklch(0.45 0.01 250)', marginBottom: 8 }} />
+                      <Upload size={32} style={{ color: 'oklch(0.65 0.01 250)', marginBottom: 8 }} />
                       <div style={{ fontWeight: 600 }}>לחץ לבחירת קובץ PDF</div>
-                      <div style={{ fontSize: 12, color: 'oklch(0.50 0.01 250)', marginTop: 4 }}>או גרור לכאן</div>
+                      <div style={{ fontSize: 12, color: 'oklch(0.65 0.01 250)', marginTop: 4 }}>או גרור לכאן</div>
                     </>
                   )}
                 </div>
@@ -718,7 +721,7 @@ export default function PensionPage() {
                   style={{ display: 'none' }}
                   onChange={e => setUploadFile(e.target.files?.[0] || null)}
                 />
-                <div style={{ fontSize: 12, color: 'oklch(0.50 0.01 250)', marginBottom: 16 }}>
+                <div style={{ fontSize: 12, color: 'oklch(0.65 0.01 250)', marginBottom: 16 }}>
                   * ניתוח אוטומטי של דוחות Surense. אם הקובץ מוגן בסיסמה, השתמש בהזנה ידנית.
                 </div>
               </div>
@@ -726,7 +729,7 @@ export default function PensionPage() {
               /* Manual Entry Form */
               <div>
                 {/* Report header fields */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 16 }}>
+                <div className="grid-2" style={{ gap: 12, marginBottom: 16 }}>
                   <div>
                     <label style={S.label}>תאריך דוח (DD/MM/YYYY)</label>
                     <input style={S.input} value={formDate} onChange={e => setFormDate(e.target.value)} placeholder="31/01/2026" />
@@ -781,12 +784,13 @@ export default function PensionPage() {
                       <span style={{ fontWeight: 600, fontSize: 13 }}>מוצר {idx + 1}</span>
                       {formProducts.length > 1 && (
                         <button onClick={() => setFormProducts(prev => prev.filter((_, i) => i !== idx))}
-                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'oklch(0.50 0.01 250)' }}>
+                          aria-label="הסר מוצר"
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'oklch(0.65 0.01 250)' }}>
                           <X size={16} />
                         </button>
                       )}
                     </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                    <div className="grid-2" style={{ gap: 10, marginBottom: 0 }}>
                       <div>
                         <label style={S.label}>סוג מוצר</label>
                         <select
@@ -930,13 +934,13 @@ function ProductCard({ product: p, totalBalance, expanded, onToggle }: {
           </div>
           <div>
             <div style={{ fontSize: 13, fontWeight: 600 }}>{p.product_name}</div>
-            <div style={{ fontSize: 11, color: 'oklch(0.50 0.01 250)', display: 'flex', gap: 8, marginTop: 2 }}>
+            <div style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)', display: 'flex', gap: 8, marginTop: 2 }}>
               <span>{p.company}</span>
               {p.account_number && <span>· {p.account_number}</span>}
               <span style={{
                 padding: '1px 6px', borderRadius: 999, fontSize: 10,
                 background: p.is_active ? 'oklch(0.20 0.06 145)' : 'oklch(0.20 0.01 250)',
-                color: p.is_active ? 'oklch(0.70 0.18 145)' : 'oklch(0.50 0.01 250)',
+                color: p.is_active ? 'oklch(0.70 0.18 145)' : 'oklch(0.65 0.01 250)',
               }}>
                 {p.is_active ? 'פעיל' : 'לא פעיל'}
               </span>
@@ -946,9 +950,9 @@ function ProductCard({ product: p, totalBalance, expanded, onToggle }: {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{ textAlign: 'left' }}>
             <div style={{ fontWeight: 700, fontSize: 16, direction: 'ltr', color }}>{formatCurrency(p.balance)}</div>
-            <div style={{ fontSize: 11, color: 'oklch(0.50 0.01 250)', direction: 'ltr' }}>{pct.toFixed(1)}% מהתיק</div>
+            <div style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)', direction: 'ltr' }}>{pct.toFixed(1)}% מהתיק</div>
           </div>
-          {expanded ? <ChevronUp size={16} style={{ color: 'oklch(0.50 0.01 250)' }} /> : <ChevronDown size={16} style={{ color: 'oklch(0.50 0.01 250)' }} />}
+          {expanded ? <ChevronUp size={16} style={{ color: 'oklch(0.65 0.01 250)' }} /> : <ChevronDown size={16} style={{ color: 'oklch(0.65 0.01 250)' }} />}
         </div>
       </div>
 
@@ -972,7 +976,7 @@ function ProductCard({ product: p, totalBalance, expanded, onToggle }: {
                   { label: 'פיצויים', value: p.monthly_severance },
                 ].filter(item => item.value > 0).map(item => (
                   <div key={item.label} style={{ background: 'oklch(0.18 0.01 250)', borderRadius: 6, padding: '8px 10px' }}>
-                    <div style={{ fontSize: 10, color: 'oklch(0.50 0.01 250)' }}>{item.label}</div>
+                    <div style={{ fontSize: 10, color: 'oklch(0.65 0.01 250)' }}>{item.label}</div>
                     <div style={{ fontSize: 14, fontWeight: 600, direction: 'ltr', textAlign: 'left' }}>{formatCurrency(item.value)}</div>
                   </div>
                 ))}
@@ -986,11 +990,11 @@ function ProductCard({ product: p, totalBalance, expanded, onToggle }: {
               <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, color: 'oklch(0.70 0.01 250)' }}>דמי ניהול</div>
               <div style={{ display: 'flex', gap: 16, fontSize: 13 }}>
                 <div>
-                  <span style={{ color: 'oklch(0.50 0.01 250)', marginLeft: 6 }}>מהפקדה:</span>
+                  <span style={{ color: 'oklch(0.65 0.01 250)', marginLeft: 6 }}>מהפקדה:</span>
                   <span style={{ fontWeight: 600 }}>{p.mgmt_fee_deposits}%</span>
                 </div>
                 <div>
-                  <span style={{ color: 'oklch(0.50 0.01 250)', marginLeft: 6 }}>מצבירה:</span>
+                  <span style={{ color: 'oklch(0.65 0.01 250)', marginLeft: 6 }}>מצבירה:</span>
                   <span style={{ fontWeight: 600 }}>{p.mgmt_fee_accumulation}%</span>
                 </div>
               </div>
@@ -1000,7 +1004,7 @@ function ProductCard({ product: p, totalBalance, expanded, onToggle }: {
           {/* Salary basis */}
           {p.salary_basis > 0 && (
             <div style={{ marginBottom: 14, fontSize: 13 }}>
-              <span style={{ color: 'oklch(0.50 0.01 250)', marginLeft: 6 }}>שכר בסיס:</span>
+              <span style={{ color: 'oklch(0.65 0.01 250)', marginLeft: 6 }}>שכר בסיס:</span>
               <span style={{ fontWeight: 600, direction: 'ltr' }}>{formatCurrency(p.salary_basis)}</span>
             </div>
           )}

@@ -50,8 +50,31 @@ export async function POST(req: NextRequest) {
   return NextResponse.json({ ok: true, family_name: family.name })
 }
 
+// Rate limit: max 5 lookups per IP per minute
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
+
 // GET: lookup family name by invite code (for display on signup page)
 export async function GET(req: NextRequest) {
+  const ip = req.headers.get('x-forwarded-for') ?? req.headers.get('x-real-ip') ?? 'unknown'
+  const now = Date.now()
+  const entry = rateLimitMap.get(ip)
+
+  if (entry && now < entry.resetAt) {
+    if (entry.count >= 5) {
+      return NextResponse.json({ error: 'too many requests' }, { status: 429 })
+    }
+    entry.count++
+  } else {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + 60_000 })
+  }
+
+  // Clean old entries every 100 requests
+  if (rateLimitMap.size > 1000) {
+    for (const [key, val] of rateLimitMap) {
+      if (now > val.resetAt) rateLimitMap.delete(key)
+    }
+  }
+
   const code = req.nextUrl.searchParams.get('code')
   if (!code) return NextResponse.json({ error: 'missing code' }, { status: 400 })
 

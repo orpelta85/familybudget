@@ -114,6 +114,7 @@ Rules:
 
     return NextResponse.json({ ok: true, data: parsed })
   } catch (err) {
+    console.error('Pension image extraction error:', err)
     const msg = err instanceof Error ? err.message : 'unknown error'
     return NextResponse.json({ error: msg }, { status: 500 })
   }

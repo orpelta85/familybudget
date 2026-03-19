@@ -63,6 +63,31 @@ export function useAllSharedExpenses(familyId: string | undefined) {
   })
 }
 
+export function usePaginatedSharedExpenses(
+  familyId: string | undefined,
+  page: number = 0,
+  limit: number = 50,
+) {
+  return useQuery<{ data: SharedExpense[]; total: number }>({
+    queryKey: ['shared_expenses_paginated', familyId, page, limit],
+    enabled: !!familyId,
+    queryFn: async () => {
+      const sb = createClient()
+      const from = page * limit
+      const to = from + limit - 1
+      const { data, error, count } = await sb
+        .from('shared_expenses')
+        .select('*', { count: 'exact' })
+        .eq('family_id', familyId!)
+        .order('period_id', { ascending: false })
+        .order('created_at', { ascending: false })
+        .range(from, to)
+      if (error) throw error
+      return { data: data ?? [], total: count ?? 0 }
+    },
+  })
+}
+
 export function useUpsertSharedExpense() {
   const qc = useQueryClient()
   return useMutation({

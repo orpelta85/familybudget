@@ -20,18 +20,19 @@ export function usePersonalExpenses(periodId: number | undefined, userId: string
   })
 }
 
-export function useBudgetCategories(userId: string | undefined) {
+export function useBudgetCategories(userId: string | undefined, year?: number) {
   return useQuery<BudgetCategory[]>({
-    queryKey: ['budget_categories', userId],
+    queryKey: ['budget_categories', userId, year],
     enabled: !!userId,
     queryFn: async () => {
       const sb = createClient()
-      const { data, error } = await sb
+      let query = sb
         .from('budget_categories')
         .select('*')
         .eq('user_id', userId!)
         .eq('is_active', true)
-        .order('sort_order')
+      if (year != null) query = query.eq('year', year)
+      const { data, error } = await query.order('sort_order')
       if (error) throw error
       return data
     },
@@ -115,6 +116,31 @@ export function useAddBudgetCategory() {
       return data as BudgetCategory
     },
     onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: ['budget_categories', vars.user_id] }),
+  })
+}
+
+export function usePaginatedPersonalExpenses(
+  userId: string | undefined,
+  page: number = 0,
+  limit: number = 50,
+) {
+  return useQuery<{ data: PersonalExpense[]; total: number }>({
+    queryKey: ['personal_expenses_paginated', userId, page, limit],
+    enabled: !!userId,
+    queryFn: async () => {
+      const sb = createClient()
+      const from = page * limit
+      const to = from + limit - 1
+      const { data, error, count } = await sb
+        .from('personal_expenses')
+        .select('*, budget_categories(*)', { count: 'exact' })
+        .eq('user_id', userId!)
+        .order('expense_date', { ascending: false })
+        .order('created_at', { ascending: false })
+        .range(from, to)
+      if (error) throw error
+      return { data: data ?? [], total: count ?? 0 }
+    },
   })
 }
 

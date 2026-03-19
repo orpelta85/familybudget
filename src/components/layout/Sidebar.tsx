@@ -75,7 +75,7 @@ export function Sidebar() {
           </span>
         </div>
         {family?.name && (
-          <div style={{ fontSize: 11, color: 'oklch(0.50 0.01 250)', letterSpacing: '0.02em' }}>
+          <div style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)', letterSpacing: '0.02em' }}>
             {family.name}
           </div>
         )}
@@ -95,7 +95,7 @@ export function Sidebar() {
                 padding: '9px 12px',
                 borderRadius: 8,
                 fontSize: 13, fontWeight: active ? 500 : 400,
-                color: active ? 'oklch(0.92 0.01 250)' : 'oklch(0.55 0.01 250)',
+                color: active ? 'oklch(0.92 0.01 250)' : 'oklch(0.65 0.01 250)',
                 background: active ? 'oklch(0.20 0.01 250)' : 'transparent',
                 textDecoration: 'none',
                 transition: 'all 0.15s',
@@ -126,7 +126,7 @@ export function Sidebar() {
             הזמן חבר משפחה
           </button>
         )}
-        <div style={{ fontSize: 11, color: 'oklch(0.40 0.01 250)', lineHeight: 1.5 }}>
+        <div style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)', lineHeight: 1.5 }}>
           מחזור: יום 11 – יום 10
         </div>
       </div>
@@ -145,7 +145,7 @@ export function Sidebar() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
             <h3 style={{ fontSize: 16, fontWeight: 700 }}>הזמן חבר משפחה</h3>
             <button onClick={() => setShowInvite(false)} aria-label="סגור"
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'oklch(0.55 0.01 250)', padding: 8 }}>
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'oklch(0.65 0.01 250)', padding: 8 }}>
               <X size={18} />
             </button>
           </div>
@@ -179,7 +179,7 @@ export function Sidebar() {
           {/* Divider */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
             <div style={{ flex: 1, height: 1, background: 'oklch(0.25 0.01 250)' }} />
-            <span style={{ fontSize: 11, color: 'oklch(0.45 0.01 250)' }}>או</span>
+            <span style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)' }}>או</span>
             <div style={{ flex: 1, height: 1, background: 'oklch(0.25 0.01 250)' }} />
           </div>
 

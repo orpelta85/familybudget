@@ -10,7 +10,14 @@ import { useEffect, useState } from 'react'
 import { PeriodSelector } from '@/components/layout/PeriodSelector'
 import { Wallet, TrendingUp, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts'
+import dynamic from 'next/dynamic'
+import { TableSkeleton, ChartSkeleton } from '@/components/ui/Skeleton'
+import { useConfirmDialog } from '@/components/ui/ConfirmDialog'
+
+const IncomeTrendChart = dynamic(() => import('@/components/dashboard/IncomeTrendChart').then(m => ({ default: m.IncomeTrendChart })), {
+  loading: () => <ChartSkeleton height={200} />,
+  ssr: false,
+})
 
 const CARD: React.CSSProperties = {
   background: 'oklch(0.16 0.01 250)',
@@ -37,6 +44,7 @@ export default function IncomePage() {
   const { data: income } = useIncome(selectedPeriodId, user?.id)
   const { data: allIncome } = useAllIncome(user?.id)
   const upsert = useUpsertIncome()
+  const confirm = useConfirmDialog()
 
   const [salary, setSalary] = useState('')
   const [bonus, setBonus] = useState('')
@@ -57,7 +65,7 @@ export default function IncomePage() {
     }
   }, [income, selectedPeriodId])
 
-  if (loading || !user) return <div className="loading-pulse" style={{ padding: 40, textAlign: 'center', color: 'oklch(0.55 0.01 250)' }}>טוען...</div>
+  if (loading || !user) return <TableSkeleton rows={4} />
 
   const total = (Number(salary) || 0) + (Number(bonus) || 0) + (Number(other) || 0)
 
@@ -80,7 +88,7 @@ export default function IncomePage() {
 
   async function handleResetIncome() {
     if (!user || !selectedPeriodId) return
-    if (!confirm('לאפס את ההכנסה של המחזור הנוכחי?')) return
+    if (!(await confirm({ message: 'לאפס את ההכנסה של המחזור הנוכחי?' }))) return
     try {
       await upsert.mutateAsync({
         period_id: selectedPeriodId,
@@ -123,7 +131,7 @@ export default function IncomePage() {
           <Wallet size={18} style={{ color: 'oklch(0.65 0.18 250)' }} />
           <h1 style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em' }}>הכנסה</h1>
         </div>
-        <button onClick={handleResetIncome} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: '1px solid oklch(0.25 0.01 250)', borderRadius: 8, padding: '7px 14px', color: 'oklch(0.55 0.01 250)', fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>
+        <button onClick={handleResetIncome} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: '1px solid oklch(0.25 0.01 250)', borderRadius: 8, padding: '7px 14px', color: 'oklch(0.65 0.01 250)', fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>
           <Trash2 size={13} /> אפס הכנסה
         </button>
       </div>
@@ -161,7 +169,7 @@ export default function IncomePage() {
                     direction: 'ltr', textAlign: 'right',
                   }}
                 />
-                <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'oklch(0.55 0.01 250)', fontSize: 13 }}>₪</span>
+                <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'oklch(0.65 0.01 250)', fontSize: 13 }}>₪</span>
               </div>
             </div>
           ))}
@@ -185,7 +193,7 @@ export default function IncomePage() {
           </div>
 
           {avgIncome > 0 && total > 0 && (
-            <div style={{ fontSize: 12, color: 'oklch(0.55 0.01 250)', marginBottom: 12, textAlign: 'center' }}>
+            <div style={{ fontSize: 12, color: 'oklch(0.65 0.01 250)', marginBottom: 12, textAlign: 'center' }}>
               ממוצע 3 חודשים: {formatCurrency(avgIncome)}
               {' '}
               <span style={{ color: total >= avgIncome ? 'oklch(0.70 0.18 145)' : 'oklch(0.62 0.22 27)' }}>
@@ -210,31 +218,12 @@ export default function IncomePage() {
             <TrendingUp size={14} style={{ color: 'oklch(0.65 0.18 250)' }} />
             מגמת הכנסה
           </div>
-          {trendData.length < 2
-            ? <div style={{ color: 'oklch(0.55 0.01 250)', fontSize: 13 }}>אין מספיק נתונים היסטוריים</div>
-            : (
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={trendData} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
-                  <XAxis dataKey="label" tick={{ fill: 'oklch(0.55 0.01 250)', fontSize: 11 }} axisLine={false} tickLine={false} />
-                  <YAxis hide />
-                  <Tooltip
-                    formatter={(v: unknown) => formatCurrency(Number(v))}
-                    contentStyle={{ background: 'oklch(0.16 0.01 250)', border: '1px solid oklch(0.28 0.01 250)', borderRadius: 8, fontSize: 12, color: 'oklch(0.85 0.01 250)' }}
-                  />
-                  <Bar dataKey="total" radius={[4, 4, 0, 0]}>
-                    {trendData.map((entry, i) => (
-                      <Cell key={i} fill={entry.isCurrent ? 'oklch(0.65 0.18 250)' : 'oklch(0.30 0.01 250)'} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            )
-          }
+          <IncomeTrendChart data={trendData} />
 
           {/* Last 6 periods summary */}
           {trendData.length > 0 && (
             <div style={{ marginTop: 16 }}>
-              <div style={{ fontSize: 12, color: 'oklch(0.50 0.01 250)', marginBottom: 8 }}>סיכום לפי מחזור</div>
+              <div style={{ fontSize: 12, color: 'oklch(0.65 0.01 250)', marginBottom: 8 }}>סיכום לפי מחזור</div>
               {[...trendData].reverse().map(d => (
                 <div key={d.label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, padding: '5px 0', borderBottom: '1px solid oklch(0.20 0.01 250)' }}>
                   <span style={{ color: d.isCurrent ? 'oklch(0.92 0.01 250)' : 'oklch(0.65 0.01 250)', fontWeight: d.isCurrent ? 600 : 400 }}>

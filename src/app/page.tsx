@@ -5,6 +5,7 @@ import { usePeriods, useCurrentPeriod } from '@/lib/queries/usePeriods'
 import { useIncome, useAllIncome } from '@/lib/queries/useIncome'
 import { usePersonalExpenses, useBudgetCategories, useAllPersonalExpenses } from '@/lib/queries/useExpenses'
 import { useSharedExpenses, useAllSharedExpenses } from '@/lib/queries/useShared'
+import { useSplitFraction } from '@/lib/queries/useProfile'
 import { useApartmentDeposits } from '@/lib/queries/useApartment'
 import { useSinkingFunds, useAllSinkingTransactions } from '@/lib/queries/useSinking'
 import { usePensionReports } from '@/lib/queries/usePension'
@@ -13,11 +14,18 @@ import { formatCurrency, periodLabel } from '@/lib/utils'
 import { useSharedPeriod } from '@/lib/context/PeriodContext'
 import { useFamilyContext } from '@/lib/context/FamilyContext'
 import { useFamilySummary } from '@/lib/queries/useFamily'
+import { APARTMENT_TARGET, APARTMENT_MONTHLY_DEPOSIT, APARTMENT_TOTAL_PERIODS } from '@/lib/constants'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useMemo } from 'react'
 import { PeriodSelector } from '@/components/layout/PeriodSelector'
 import { Wallet, Receipt, TrendingUp, PiggyBank, Home, AlertTriangle, CalendarDays, Users } from 'lucide-react'
-import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
+import dynamic from 'next/dynamic'
+import { DashboardSkeleton, ChartSkeleton } from '@/components/ui/Skeleton'
+
+const ExpenseDonut = dynamic(() => import('@/components/dashboard/ExpenseDonut').then(m => ({ default: m.ExpenseDonut })), {
+  loading: () => <ChartSkeleton height={150} />,
+  ssr: false,
+})
 
 const CARD: React.CSSProperties = {
   background: 'oklch(0.16 0.01 250)',
@@ -45,6 +53,7 @@ export default function Dashboard() {
   const currentPeriod = useCurrentPeriod()
   const { selectedPeriodId, setSelectedPeriodId } = useSharedPeriod()
   const { familyId } = useFamilyContext()
+  const splitFrac = useSplitFraction(user?.id)
   const [viewMode, setViewMode] = useState<'personal' | 'family'>('personal')
   const { data: familySummary } = useFamilySummary(selectedPeriodId, viewMode === 'family')
 
@@ -60,6 +69,11 @@ export default function Dashboard() {
     if (!userLoading && !setupLoading && user && hasSetup === false) router.push('/setup')
   }, [user, userLoading, hasSetup, setupLoading, router])
 
+  const selectedYear = useMemo(() => {
+    if (!periods || !selectedPeriodId) return undefined
+    return periods.find(p => p.id === selectedPeriodId)?.year_number
+  }, [periods, selectedPeriodId])
+
   const { data: income } = useIncome(selectedPeriodId, user?.id)
   const { data: allIncome } = useAllIncome(user?.id)
   const { data: expenses } = usePersonalExpenses(selectedPeriodId, user?.id)
@@ -67,7 +81,7 @@ export default function Dashboard() {
   const { data: allShared } = useAllSharedExpenses(familyId)
   const { data: deposits } = useApartmentDeposits(familyId)
   const { data: pensionReports } = usePensionReports(user?.id)
-  const { data: categories } = useBudgetCategories(user?.id)
+  const { data: categories } = useBudgetCategories(user?.id, selectedYear)
   const { data: allExpenses } = useAllPersonalExpenses(user?.id)
   const { data: funds } = useSinkingFunds(user?.id)
   const { data: allSinkingTx } = useAllSinkingTransactions(user?.id)
@@ -98,19 +112,17 @@ export default function Dashboard() {
   const yearAgoExpenses = useMemo(() => {
     if (!allExpenses || !yearAgoPeriodId) return 0
     const personal = allExpenses.filter(e => e.period_id === yearAgoPeriodId).reduce((s, e) => s + e.amount, 0)
-    const sharedYearAgo = (allShared ?? []).filter(e => e.period_id === yearAgoPeriodId).reduce((s, e) => s + (e.my_share ?? e.total_amount * 0.5), 0)
+    const sharedYearAgo = (allShared ?? []).filter(e => e.period_id === yearAgoPeriodId).reduce((s, e) => s + (e.my_share ?? e.total_amount * splitFrac), 0)
     return personal + sharedYearAgo
   }, [allExpenses, allShared, yearAgoPeriodId])
 
-  if (userLoading || setupLoading) return (
-    <div className="loading-pulse" style={{ padding: 40, color: 'oklch(0.55 0.01 250)', fontSize: 14 }}>טוען...</div>
-  )
+  if (userLoading || setupLoading) return <DashboardSkeleton />
   if (!user) return null
 
   // ── Core numbers ──────────────────────────────────────────────────────────
   const totalIncome = (income?.salary ?? 0) + (income?.bonus ?? 0) + (income?.other ?? 0)
   const totalPersonal = expenses?.reduce((s, e) => s + e.amount, 0) ?? 0
-  const totalShared = shared?.reduce((s, e) => s + (e.my_share ?? e.total_amount * 0.5), 0) ?? 0
+  const totalShared = shared?.reduce((s, e) => s + (e.my_share ?? e.total_amount * splitFrac), 0) ?? 0
   const totalExpenses = totalPersonal + totalShared
   const netFlow = totalIncome - totalExpenses
   const savingsPct = totalIncome > 0 ? Math.round((netFlow / totalIncome) * 100) : 0
@@ -145,7 +157,7 @@ export default function Dashboard() {
   }, {})
   if (totalShared > 0) expByType['shared'] = totalShared
   const donutData = Object.entries(expByType).map(([type, value]) => ({
-    name: TYPE_LABELS[type] ?? type, value, color: TYPE_COLORS[type] ?? 'oklch(0.50 0.01 250)',
+    name: TYPE_LABELS[type] ?? type, value, color: TYPE_COLORS[type] ?? 'oklch(0.65 0.01 250)',
   }))
 
   // ── Sinking balance ───────────────────────────────────────────────────────
@@ -157,8 +169,6 @@ export default function Dashboard() {
   const totalFundBalance = (funds ?? []).reduce((s, f) => s + getFundBalance(f.id), 0)
 
   // ── Apartment ─────────────────────────────────────────────────────────────
-  // TODO: make configurable from settings
-  const APARTMENT_TARGET = 3500 * 36
   const totalSaved = deposits?.reduce((s, d) => s + d.amount_deposited, 0) ?? 0
   const apartmentPct = Math.min((totalSaved / APARTMENT_TARGET) * 100, 100)
 
@@ -185,9 +195,8 @@ export default function Dashboard() {
     healthScores.push((underBudget / catsWithTarget.length) * 20)
   }
   // 3. Emergency fund (0-20 points): 3 months expenses = full
-  const monthlyExpenses = totalExpenses || 1
-  const emergencyMonths = totalFundBalance / monthlyExpenses
-  healthScores.push(Math.min(emergencyMonths / 3 * 20, 20))
+  const emergencyMonths = totalExpenses > 0 ? totalFundBalance / totalExpenses : 0
+  healthScores.push(totalExpenses > 0 ? Math.min(emergencyMonths / 3 * 20, 20) : 0)
   // 4. Pension saving (0-15 points): has pension = 15
   healthScores.push(pensionTotal > 0 ? 15 : 0)
   // 5. Apartment progress (0-15 points): proportional to target
@@ -223,7 +232,7 @@ export default function Dashboard() {
                   cursor: 'pointer',
                   border: 'none',
                   background: viewMode === opt.key ? 'oklch(0.22 0.05 250)' : 'transparent',
-                  color: viewMode === opt.key ? 'oklch(0.90 0.01 250)' : 'oklch(0.55 0.01 250)',
+                  color: viewMode === opt.key ? 'oklch(0.90 0.01 250)' : 'oklch(0.65 0.01 250)',
                   borderRight: opt.key === 'personal' ? '1px solid oklch(0.25 0.01 250)' : 'none',
                   ...(viewMode === opt.key ? { boxShadow: 'inset 0 0 0 1px oklch(0.45 0.15 250)' } : {}),
                 }}
@@ -270,7 +279,7 @@ export default function Dashboard() {
       )}
 
       {/* ── KPI cards ──────────────────────────────────────────────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(155px, 1fr))', gap: 12, marginBottom: 16 }}>
+      <div className="grid-kpi">
         {[
           { label: 'הכנסה נטו', value: dataLoading ? '—' : formatCurrency(totalIncome), color: 'oklch(0.65 0.18 250)', Icon: Wallet },
           { label: 'הוצאות החודש', value: dataLoading ? '—' : formatCurrency(totalExpenses), color: 'oklch(0.72 0.18 55)', Icon: Receipt },
@@ -287,7 +296,7 @@ export default function Dashboard() {
         ].map(kpi => (
           <div key={kpi.label} style={CARD}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-              <span style={{ fontSize: 11, color: 'oklch(0.55 0.01 250)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>{kpi.label}</span>
+              <span style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>{kpi.label}</span>
               <kpi.Icon size={14} style={{ color: kpi.color, opacity: 0.7 }} />
             </div>
             <div style={{ fontSize: 22, fontWeight: 700, color: kpi.color, direction: 'ltr', letterSpacing: '-0.02em' }}>{kpi.value}</div>
@@ -297,7 +306,7 @@ export default function Dashboard() {
       </div>
 
       {/* ── Forecast + Year-over-year ──────────────────────────────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14, marginBottom: 14 }}>
+      <div className="grid-2">
 
         {/* Forecast */}
         <div style={CARD}>
@@ -306,13 +315,13 @@ export default function Dashboard() {
             תחזית חודש נוכחי
           </h2>
           {dataLoading
-            ? <div style={{ color: 'oklch(0.55 0.01 250)', fontSize: 13 }}>בחר תקופה</div>
+            ? <div style={{ color: 'oklch(0.65 0.01 250)', fontSize: 13 }}>בחר תקופה</div>
             : (
               <div style={{ fontSize: 13 }}>
                 {[
                   { label: 'הכנסה ידועה', value: totalIncome, color: 'oklch(0.70 0.18 145)', sign: '+' },
-                  { label: 'הוצאות קבועות (יעד)', value: -fixedTargets, color: 'oklch(0.55 0.01 250)', sign: '-' },
-                  { label: 'משותפות (שהוזן)', value: -totalShared, color: 'oklch(0.55 0.01 250)', sign: '-' },
+                  { label: 'הוצאות קבועות (יעד)', value: -fixedTargets, color: 'oklch(0.65 0.01 250)', sign: '-' },
+                  { label: 'משותפות (שהוזן)', value: -totalShared, color: 'oklch(0.65 0.01 250)', sign: '-' },
                   { label: 'משתנות (יעד)', value: -variableTargets, color: 'oklch(0.72 0.18 55)', sign: '-' },
                   ...(sinkingTargets > 0 ? [{ label: 'קרנות צבירה (יעד חודשי)', value: -sinkingTargets, color: 'oklch(0.70 0.15 185)', sign: '-' }] : []),
                   ...(savingsTargets > 0 ? [{ label: 'חיסכון (יעד חודשי)', value: -savingsTargets, color: 'oklch(0.70 0.18 145)', sign: '-' }] : []),
@@ -334,7 +343,7 @@ export default function Dashboard() {
                   </span>
                 </div>
                 {variableRemaining > 0 && (
-                  <div style={{ fontSize: 11, color: 'oklch(0.55 0.01 250)', marginTop: 6, direction: 'ltr', textAlign: 'left' }}>
+                  <div style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)', marginTop: 6, direction: 'ltr', textAlign: 'left' }}>
                     יתרת תקציב משתנות: {formatCurrency(variableRemaining)}
                   </div>
                 )}
@@ -350,10 +359,10 @@ export default function Dashboard() {
             לעומת שנה שעברה
           </h2>
           {!yearAgoPeriodId
-            ? <div style={{ color: 'oklch(0.55 0.01 250)', fontSize: 13 }}>אין נתוני שנה שעברה (פחות מ-12 מחזורים)</div>
+            ? <div style={{ color: 'oklch(0.65 0.01 250)', fontSize: 13 }}>אין נתוני שנה שעברה (פחות מ-12 מחזורים)</div>
             : (
               <div style={{ fontSize: 13 }}>
-                <div style={{ fontSize: 11, color: 'oklch(0.50 0.01 250)', marginBottom: 12 }}>
+                <div style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)', marginBottom: 12 }}>
                   {yearAgoPeriod ? periodLabel(yearAgoPeriod.start_date) : ''} → {selectedPeriod ? periodLabel(selectedPeriod.start_date) : ''}
                 </div>
                 {[
@@ -389,7 +398,7 @@ export default function Dashboard() {
                         )}
                         <span style={{ fontWeight: 500 }}>{formatCurrency(row.current)}</span>
                         {row.prev !== null && (
-                          <span style={{ color: 'oklch(0.45 0.01 250)', fontSize: 11 }}>/ {formatCurrency(row.prev ?? 0)}</span>
+                          <span style={{ color: 'oklch(0.65 0.01 250)', fontSize: 11 }}>/ {formatCurrency(row.prev ?? 0)}</span>
                         )}
                       </div>
                     </div>
@@ -402,13 +411,13 @@ export default function Dashboard() {
       </div>
 
       {/* ── Budget utilization + Donut ─────────────────────────────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14, marginBottom: 14 }}>
+      <div className="grid-2">
 
         {/* Budget bars */}
         <div style={CARD}>
           <h2 style={{ fontWeight: 600, fontSize: 14, margin: 0, marginBottom: 14 }}>ניצול תקציב</h2>
           {!(categories?.length)
-            ? <div style={{ color: 'oklch(0.55 0.01 250)', fontSize: 13 }}>אין קטגוריות</div>
+            ? <div style={{ color: 'oklch(0.65 0.01 250)', fontSize: 13 }}>אין קטגוריות</div>
             : [...(categories ?? [])]
               .filter(c => c.monthly_target > 0)
               .sort((a, b) => ((spendByCat[b.id] ?? 0) / b.monthly_target) - ((spendByCat[a.id] ?? 0) / a.monthly_target))
@@ -427,7 +436,7 @@ export default function Dashboard() {
                       <span style={{ color: 'oklch(0.80 0.01 250)' }}>{cat.name}</span>
                       <div style={{ display: 'flex', gap: 6, alignItems: 'center', direction: 'ltr' }}>
                         {deviation !== null && (
-                          <span style={{ fontSize: 10, color: deviation > 15 ? 'oklch(0.62 0.22 27)' : deviation < -15 ? 'oklch(0.70 0.18 145)' : 'oklch(0.50 0.01 250)' }}>
+                          <span style={{ fontSize: 10, color: deviation > 15 ? 'oklch(0.62 0.22 27)' : deviation < -15 ? 'oklch(0.70 0.18 145)' : 'oklch(0.65 0.01 250)' }}>
                             {deviation > 0 ? `↑${deviation}%` : `↓${Math.abs(deviation)}%`}
                           </span>
                         )}
@@ -446,38 +455,12 @@ export default function Dashboard() {
         {/* Donut */}
         <div style={CARD}>
           <h2 style={{ fontWeight: 600, fontSize: 14, margin: 0, marginBottom: 14 }}>חלוקת הוצאות</h2>
-          {donutData.length === 0
-            ? <div style={{ color: 'oklch(0.55 0.01 250)', fontSize: 13 }}>אין נתונים</div>
-            : (
-              <>
-                <ResponsiveContainer width="100%" height={150}>
-                  <PieChart>
-                    <Pie data={donutData} cx="50%" cy="50%" innerRadius={42} outerRadius={68} dataKey="value" paddingAngle={2}>
-                      {donutData.map((entry, i) => <Cell key={i} fill={entry.color} strokeWidth={0} />)}
-                    </Pie>
-                    <Tooltip
-                      formatter={(v: unknown) => formatCurrency(Number(v))}
-                      contentStyle={{ background: 'oklch(0.16 0.01 250)', border: '1px solid oklch(0.28 0.01 250)', borderRadius: 8, fontSize: 12, color: 'oklch(0.85 0.01 250)' }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px 14px', marginTop: 4 }}>
-                  {donutData.map(d => (
-                    <div key={d.name} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12 }}>
-                      <div style={{ width: 7, height: 7, borderRadius: '50%', background: d.color, flexShrink: 0 }} />
-                      <span style={{ color: 'oklch(0.70 0.01 250)' }}>{d.name}</span>
-                      <span style={{ color: 'oklch(0.55 0.01 250)', direction: 'ltr' }}>{formatCurrency(d.value)}</span>
-                    </div>
-                  ))}
-                </div>
-              </>
-            )
-          }
+          <ExpenseDonut data={donutData} />
         </div>
       </div>
 
       {/* ── Sinking funds + Apartment ──────────────────────────────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14, marginBottom: 0 }}>
+      <div className="grid-2" style={{ marginBottom: 0 }}>
 
         {/* Sinking funds */}
         <div style={CARD}>
@@ -490,7 +473,7 @@ export default function Dashboard() {
             </div>
           </div>
           {!(funds?.length)
-            ? <div style={{ color: 'oklch(0.55 0.01 250)', fontSize: 13 }}>אין קרנות</div>
+            ? <div style={{ color: 'oklch(0.65 0.01 250)', fontSize: 13 }}>אין קרנות</div>
             : (funds ?? []).map(fund => {
               const balance = getFundBalance(fund.id)
               const annualTarget = fund.monthly_allocation * 12
@@ -504,7 +487,7 @@ export default function Dashboard() {
                     </span>
                   </div>
                   {balance < 0 && (
-                    <div style={{ fontSize: 10, color: 'oklch(0.45 0.01 250)', marginBottom: 2 }}>(הוצאה גדולה מהצבירה)</div>
+                    <div style={{ fontSize: 10, color: 'oklch(0.65 0.01 250)', marginBottom: 2 }}>(הוצאה גדולה מהצבירה)</div>
                   )}
                   <div style={{ height: 4, borderRadius: 2, background: 'oklch(0.22 0.01 250)', overflow: 'hidden' }}>
                     <div style={{ height: '100%', borderRadius: 2, width: `${Math.max(0, pct)}%`, background: 'oklch(0.70 0.15 185)', transition: 'width 0.4s ease' }} />
@@ -520,15 +503,15 @@ export default function Dashboard() {
           <h2 style={{ display: 'flex', alignItems: 'center', gap: 7, fontWeight: 600, fontSize: 14, margin: 0, marginBottom: 6 }}>
             <Home size={14} style={{ color: 'oklch(0.70 0.18 145)' }} /> יעד הדירה
           </h2>
-          <div style={{ fontSize: 11, color: 'oklch(0.50 0.01 250)', marginBottom: 16 }}>3,500 ₪ × 36 מחזורים = 126,000 ₪</div>
+          <div style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)', marginBottom: 16 }}>{formatCurrency(APARTMENT_MONTHLY_DEPOSIT)} × {APARTMENT_TOTAL_PERIODS} מחזורים = {formatCurrency(APARTMENT_TARGET)}</div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 14 }}>
             <span style={{ fontSize: 26, fontWeight: 700, direction: 'ltr', color: 'oklch(0.70 0.18 145)' }}>{formatCurrency(totalSaved)}</span>
-            <span style={{ fontSize: 12, color: 'oklch(0.55 0.01 250)' }}>מתוך {formatCurrency(APARTMENT_TARGET)}</span>
+            <span style={{ fontSize: 12, color: 'oklch(0.65 0.01 250)' }}>מתוך {formatCurrency(APARTMENT_TARGET)}</span>
           </div>
           <div style={{ height: 7, borderRadius: 4, background: 'oklch(0.22 0.01 250)', overflow: 'hidden', marginBottom: 8 }}>
             <div style={{ height: '100%', borderRadius: 4, width: `${apartmentPct}%`, background: 'linear-gradient(90deg, oklch(0.55 0.18 145), oklch(0.70 0.18 145))', transition: 'width 0.4s ease' }} />
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'oklch(0.55 0.01 250)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'oklch(0.65 0.01 250)' }}>
             <span>{apartmentPct.toFixed(1)}% מהיעד</span>
             <span style={{ direction: 'ltr' }}>{formatCurrency(APARTMENT_TARGET - totalSaved)} נותר</span>
           </div>
@@ -537,7 +520,7 @@ export default function Dashboard() {
 
       {/* ── Net Worth + Health Score ───────────────────────────────────────── */}
       {!dataLoading && totalIncome > 0 && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14, marginTop: 14 }}>
+        <div className="grid-2" style={{ marginTop: 14 }}>
           {/* Net Worth */}
           <div style={CARD}>
             <h2 style={{ display: 'flex', alignItems: 'center', gap: 7, fontWeight: 600, fontSize: 14, margin: 0, marginBottom: 14 }}>
@@ -549,18 +532,18 @@ export default function Dashboard() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12 }}>
               {pensionTotal > 0 && (
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: 'oklch(0.55 0.01 250)' }}>פנסיה והשקעות</span>
+                  <span style={{ color: 'oklch(0.65 0.01 250)' }}>פנסיה והשקעות</span>
                   <span style={{ direction: 'ltr', color: 'oklch(0.70 0.01 250)' }}>{formatCurrency(pensionTotal)}</span>
                 </div>
               )}
               {totalFundBalance !== 0 && (
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: 'oklch(0.55 0.01 250)' }}>קרנות צבירה</span>
+                  <span style={{ color: 'oklch(0.65 0.01 250)' }}>קרנות צבירה</span>
                   <span style={{ direction: 'ltr', color: 'oklch(0.70 0.01 250)' }}>{formatCurrency(totalFundBalance)}</span>
                 </div>
               )}
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ color: 'oklch(0.55 0.01 250)' }}>חיסכון לדירה</span>
+                <span style={{ color: 'oklch(0.65 0.01 250)' }}>חיסכון לדירה</span>
                 <span style={{ direction: 'ltr', color: 'oklch(0.70 0.01 250)' }}>{formatCurrency(totalSaved)}</span>
               </div>
             </div>
@@ -573,13 +556,13 @@ export default function Dashboard() {
             </h2>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 8 }}>
               <span style={{ fontSize: 36, fontWeight: 700, color: healthColor }}>{healthScore}</span>
-              <span style={{ fontSize: 14, color: 'oklch(0.55 0.01 250)' }}>/ 100</span>
+              <span style={{ fontSize: 14, color: 'oklch(0.65 0.01 250)' }}>/ 100</span>
               <span style={{ fontSize: 13, color: healthColor, fontWeight: 600 }}>{healthLabel}</span>
             </div>
             <div style={{ height: 6, borderRadius: 3, background: 'oklch(0.22 0.01 250)', overflow: 'hidden', marginBottom: 12 }}>
               <div style={{ height: '100%', borderRadius: 3, width: `${healthScore}%`, background: healthColor, transition: 'width 0.4s ease' }} />
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 11, color: 'oklch(0.50 0.01 250)' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontSize: 11, color: 'oklch(0.65 0.01 250)' }}>
               <span>חיסכון {savingsPct}% מההכנסה {savingsPct >= 20 ? '✓' : ''}</span>
               <span>קרנות: {emergencyMonths.toFixed(1)} חודשי הוצאות</span>
               <span>פנסיה: {pensionTotal > 0 ? '✓ פעילה' : '✗ אין נתונים'}</span>
@@ -615,7 +598,7 @@ function FamilyDashboard({
   dataLoading: boolean
 }) {
   if (!summary) {
-    return <div style={{ color: 'oklch(0.55 0.01 250)', fontSize: 14, padding: 20 }}>טוען נתוני משפחה...</div>
+    return <DashboardSkeleton />
   }
 
   const totalExpenses = summary.total_personal_expenses + summary.total_shared_expenses
@@ -625,7 +608,7 @@ function FamilyDashboard({
   return (
     <>
       {/* Family KPIs */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(155px, 1fr))', gap: 12, marginBottom: 16 }}>
+      <div className="grid-kpi">
         {[
           { label: 'הכנסה משפחתית', value: formatCurrency(summary.total_income), color: 'oklch(0.65 0.18 250)', Icon: Wallet },
           { label: 'הוצאות כוללות', value: formatCurrency(totalExpenses), color: 'oklch(0.72 0.18 55)', Icon: Receipt },
@@ -644,7 +627,7 @@ function FamilyDashboard({
         ].map(kpi => (
           <div key={kpi.label} style={CARD}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-              <span style={{ fontSize: 11, color: 'oklch(0.55 0.01 250)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>{kpi.label}</span>
+              <span style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)', textTransform: 'uppercase', letterSpacing: '0.03em' }}>{kpi.label}</span>
               <kpi.Icon size={14} style={{ color: kpi.color, opacity: 0.7 }} />
             </div>
             <div style={{ fontSize: 22, fontWeight: 700, color: kpi.color, direction: 'ltr', letterSpacing: '-0.02em' }}>{kpi.value}</div>
@@ -653,7 +636,7 @@ function FamilyDashboard({
       </div>
 
       {/* Per-member breakdown */}
-      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(summary.members.length, 3)}, 1fr)`, gap: 14, marginBottom: 16 }}>
+      <div className="grid-3" style={{ marginBottom: 16 }}>
         {summary.members.map(member => {
           const memberNet = member.income - member.personal_expenses
           return (
@@ -665,11 +648,11 @@ function FamilyDashboard({
               {member.show_details ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 13 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: 'oklch(0.55 0.01 250)' }}>הכנסה</span>
+                    <span style={{ color: 'oklch(0.65 0.01 250)' }}>הכנסה</span>
                     <span style={{ direction: 'ltr', fontWeight: 500, color: 'oklch(0.70 0.18 145)' }}>{formatCurrency(member.income)}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                    <span style={{ color: 'oklch(0.55 0.01 250)' }}>הוצאות אישיות</span>
+                    <span style={{ color: 'oklch(0.65 0.01 250)' }}>הוצאות אישיות</span>
                     <span style={{ direction: 'ltr', fontWeight: 500, color: 'oklch(0.72 0.18 55)' }}>{formatCurrency(member.personal_expenses)}</span>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid oklch(0.22 0.01 250)', paddingTop: 8 }}>
@@ -678,12 +661,12 @@ function FamilyDashboard({
                   </div>
                 </div>
               ) : (
-                <div style={{ fontSize: 13, color: 'oklch(0.50 0.01 250)' }}>
+                <div style={{ fontSize: 13, color: 'oklch(0.65 0.01 250)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
                     <span>הכנסה</span>
                     <span style={{ direction: 'ltr', fontWeight: 500, color: 'oklch(0.70 0.18 145)' }}>{formatCurrency(member.income)}</span>
                   </div>
-                  <div style={{ fontSize: 12, color: 'oklch(0.45 0.01 250)', fontStyle: 'italic' }}>פרטי הוצאות מוסתרים</div>
+                  <div style={{ fontSize: 12, color: 'oklch(0.65 0.01 250)', fontStyle: 'italic' }}>פרטי הוצאות מוסתרים</div>
                 </div>
               )}
             </div>
@@ -692,7 +675,7 @@ function FamilyDashboard({
       </div>
 
       {/* Shared expenses breakdown */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14, marginBottom: 14 }}>
+      <div className="grid-2">
         <div style={CARD}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontWeight: 600, fontSize: 14, marginBottom: 14 }}>
             <Receipt size={14} style={{ color: 'oklch(0.68 0.12 310)' }} /> הוצאות משותפות
@@ -704,7 +687,7 @@ function FamilyDashboard({
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12 }}>
               {(shared ?? []).map(s => (
                 <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ color: 'oklch(0.55 0.01 250)' }}>{s.category}</span>
+                  <span style={{ color: 'oklch(0.65 0.01 250)' }}>{s.category}</span>
                   <span style={{ direction: 'ltr', color: 'oklch(0.70 0.01 250)' }}>{formatCurrency(s.total_amount)}</span>
                 </div>
               ))}
@@ -717,15 +700,15 @@ function FamilyDashboard({
           <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontWeight: 600, marginBottom: 6, fontSize: 14 }}>
             <Home size={14} style={{ color: 'oklch(0.70 0.18 145)' }} /> יעד הדירה
           </div>
-          <div style={{ fontSize: 11, color: 'oklch(0.50 0.01 250)', marginBottom: 16 }}>3,500 &#8362; x 36 = 126,000 &#8362;</div>
+          <div style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)', marginBottom: 16 }}>{formatCurrency(APARTMENT_MONTHLY_DEPOSIT)} x {APARTMENT_TOTAL_PERIODS} = {formatCurrency(APARTMENT_TARGET)}</div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 14 }}>
             <span style={{ fontSize: 26, fontWeight: 700, direction: 'ltr', color: 'oklch(0.70 0.18 145)' }}>{formatCurrency(totalSaved)}</span>
-            <span style={{ fontSize: 12, color: 'oklch(0.55 0.01 250)' }}>מתוך {formatCurrency(APARTMENT_TARGET)}</span>
+            <span style={{ fontSize: 12, color: 'oklch(0.65 0.01 250)' }}>מתוך {formatCurrency(APARTMENT_TARGET)}</span>
           </div>
           <div style={{ height: 7, borderRadius: 4, background: 'oklch(0.22 0.01 250)', overflow: 'hidden', marginBottom: 8 }}>
             <div style={{ height: '100%', borderRadius: 4, width: `${apartmentPct}%`, background: 'linear-gradient(90deg, oklch(0.55 0.18 145), oklch(0.70 0.18 145))', transition: 'width 0.4s ease' }} />
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'oklch(0.55 0.01 250)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, color: 'oklch(0.65 0.01 250)' }}>
             <span>{apartmentPct.toFixed(1)}% מהיעד</span>
             <span style={{ direction: 'ltr' }}>{formatCurrency(APARTMENT_TARGET - totalSaved)} נותר</span>
           </div>
