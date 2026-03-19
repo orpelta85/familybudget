@@ -74,7 +74,7 @@ export default function Dashboard() {
   const { data: allShared } = useAllSharedExpenses(familyId)
   const { data: deposits } = useApartmentDeposits(familyId)
   const { data: pensionReports } = usePensionReports(user?.id)
-  const { data: categories } = useBudgetCategories(user?.id, selectedYear)
+  const { data: categories } = useBudgetCategories(user?.id)
   const { data: allExpenses } = useAllPersonalExpenses(user?.id)
   const { data: funds } = useSinkingFunds(user?.id)
   const { data: allSinkingTx } = useAllSinkingTransactions(user?.id)

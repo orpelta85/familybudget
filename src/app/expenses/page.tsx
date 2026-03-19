@@ -63,7 +63,7 @@ export default function ExpensesPage() {
 
   const { data: personalExp } = usePersonalExpenses(selectedPeriodId, user?.id)
   const { data: sharedExp }   = useSharedExpenses(selectedPeriodId, familyId)
-  const { data: categories }  = useBudgetCategories(user?.id, selectedYear)
+  const { data: categories }  = useBudgetCategories(user?.id)
   const { data: funds }       = useSinkingFunds(user?.id)
   const addExpense    = useAddExpense()
   const deleteExpense = useDeleteExpense()

@@ -47,7 +47,7 @@ export default function BudgetPage() {
   const selectedPeriod = useMemo(() => periods?.find(p => p.id === selectedPeriodId), [periods, selectedPeriodId])
   const selectedYear = selectedPeriod?.year_number ?? currentPeriod?.year_number
 
-  const { data: categories } = useBudgetCategories(user?.id, selectedYear)
+  const { data: categories } = useBudgetCategories(user?.id)
   const { data: expenses } = usePersonalExpenses(selectedPeriodId ?? currentPeriod?.id, user?.id)
   const { data: income } = useIncome(selectedPeriodId ?? currentPeriod?.id, user?.id)
 
