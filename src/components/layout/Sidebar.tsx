@@ -62,7 +62,7 @@ export function Sidebar() {
   }
 
   return (<>
-    <aside className="hidden md:flex md:flex-col w-[var(--sidebar-width)] fixed top-0 right-0 h-screen bg-[oklch(0.14_0.01_250)] border-s border-[oklch(0.22_0.01_250)] z-40">
+    <aside className="hidden md:flex md:flex-col w-[var(--sidebar-width)] fixed top-0 right-0 h-screen bg-[oklch(0.14_0.01_250)] border-l border-[oklch(0.22_0.01_250)] z-40">
       {/* Logo */}
       <div className="px-5 pt-5 pb-4 border-b border-[oklch(0.20_0.01_250)]">
         <div className="flex items-center gap-2 mb-1.5">
