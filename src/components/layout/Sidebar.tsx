@@ -58,31 +58,24 @@ export function Sidebar() {
   }
 
   return (<>
-    <aside style={{
-      width: 'var(--sidebar-width)',
-      position: 'fixed', top: 0, right: 0,
-      height: '100vh',
-      background: 'oklch(0.14 0.01 250)',
-      borderLeft: '1px solid oklch(0.22 0.01 250)',
-      zIndex: 40,
-    }} className="hidden md:flex md:flex-col">
+    <aside className="hidden md:flex md:flex-col w-[var(--sidebar-width)] fixed top-0 right-0 h-screen bg-[oklch(0.14_0.01_250)] border-l border-[oklch(0.22_0.01_250)] z-40">
       {/* Logo */}
-      <div style={{ padding: '20px 20px 16px', borderBottom: '1px solid oklch(0.20 0.01 250)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-          <img src="/favicon.svg" alt="" width={20} height={20} style={{ flexShrink: 0 }} />
-          <span style={{ fontSize: 13, fontWeight: 600, color: 'oklch(0.85 0.01 250)', letterSpacing: '-0.01em' }}>
+      <div className="px-5 pt-5 pb-4 border-b border-[oklch(0.20_0.01_250)]">
+        <div className="flex items-center gap-2 mb-1.5">
+          <img src="/favicon.svg" alt="" width={20} height={20} className="shrink-0" />
+          <span className="text-[13px] font-semibold text-[oklch(0.85_0.01_250)] tracking-tight">
             My Family Finance
           </span>
         </div>
         {family?.name && (
-          <div style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)', letterSpacing: '0.02em' }}>
+          <div className="text-[11px] text-[oklch(0.65_0.01_250)] tracking-wide">
             {family.name}
           </div>
         )}
       </div>
 
       {/* Nav */}
-      <nav style={{ flex: 1, padding: '8px 10px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 2 }}>
+      <nav className="flex-1 p-2 px-2.5 overflow-y-auto flex flex-col gap-0.5">
         {nav.map(item => {
           const active = pathname === item.href
           const Icon = item.icon
@@ -90,19 +83,14 @@ export function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
-              style={{
-                display: 'flex', alignItems: 'center', gap: 10,
-                padding: '9px 12px',
-                borderRadius: 8,
-                fontSize: 13, fontWeight: active ? 500 : 400,
-                color: active ? 'oklch(0.92 0.01 250)' : 'oklch(0.65 0.01 250)',
-                background: active ? 'oklch(0.20 0.01 250)' : 'transparent',
-                textDecoration: 'none',
-                transition: 'all 0.15s',
-                borderRight: active ? '2px solid oklch(0.65 0.18 250)' : '2px solid transparent',
-              }}
+              className={cn(
+                'flex items-center gap-2.5 py-2 px-3 rounded-lg text-[13px] no-underline transition-all duration-150 border-r-2',
+                active
+                  ? 'font-medium text-[oklch(0.92_0.01_250)] bg-[oklch(0.20_0.01_250)] border-r-[oklch(0.65_0.18_250)]'
+                  : 'font-normal text-[oklch(0.65_0.01_250)] bg-transparent border-r-transparent'
+              )}
             >
-              <Icon size={15} style={{ flexShrink: 0 }} />
+              <Icon size={15} className="shrink-0" />
               <span>{item.label}</span>
             </Link>
           )
@@ -110,23 +98,17 @@ export function Sidebar() {
       </nav>
 
       {/* Footer */}
-      <div style={{ padding: '12px 20px', borderTop: '1px solid oklch(0.20 0.01 250)', display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div className="px-5 py-3 border-t border-[oklch(0.20_0.01_250)] flex flex-col gap-2">
         {isAdmin && family && (
           <button
             onClick={() => setShowInvite(true)}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 6,
-              background: 'none', border: '1px solid oklch(0.25 0.01 250)',
-              borderRadius: 6, padding: '6px 10px',
-              color: 'oklch(0.60 0.18 250)', fontSize: 11, fontWeight: 500,
-              cursor: 'pointer',
-            }}
+            className="flex items-center gap-1.5 bg-transparent border border-[oklch(0.25_0.01_250)] rounded-md px-2.5 py-1.5 text-[oklch(0.60_0.18_250)] text-[11px] font-medium cursor-pointer"
           >
             <Users size={12} />
             הזמן חבר משפחה
           </button>
         )}
-        <div style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)', lineHeight: 1.5 }}>
+        <div className="text-[11px] text-[oklch(0.65_0.01_250)] leading-normal">
           מחזור: יום 11 – יום 10
         </div>
       </div>
@@ -134,84 +116,67 @@ export function Sidebar() {
 
     {/* Invite Modal */}
     {showInvite && (
-      <div style={{
-        position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 1000,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-      }}>
-        <div style={{
-          background: 'oklch(0.14 0.01 250)', borderRadius: 16, padding: 28,
-          width: 400, border: '1px solid oklch(0.25 0.01 250)',
-        }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-            <h3 style={{ fontSize: 16, fontWeight: 700 }}>הזמן חבר משפחה</h3>
+      <div className="fixed inset-0 bg-black/70 z-[1000] flex items-center justify-center">
+        <div className="bg-[oklch(0.14_0.01_250)] rounded-2xl p-7 w-[400px] border border-[oklch(0.25_0.01_250)]">
+          <div className="flex justify-between items-center mb-5">
+            <h3 className="text-base font-bold">הזמן חבר משפחה</h3>
             <button onClick={() => setShowInvite(false)} aria-label="סגור"
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'oklch(0.65 0.01 250)', padding: 8 }}>
+              className="bg-transparent border-none cursor-pointer text-[oklch(0.65_0.01_250)] p-2">
               <X size={18} />
             </button>
           </div>
 
           {/* Option 1: Copy Link */}
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Link2 size={14} style={{ color: 'oklch(0.65 0.18 250)' }} />
+          <div className="mb-5">
+            <div className="text-[13px] font-semibold mb-2 flex items-center gap-1.5">
+              <Link2 size={14} className="text-[oklch(0.65_0.18_250)]" />
               שתף לינק הזמנה
             </div>
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div className="flex gap-2">
               <input
                 readOnly
                 value={`${typeof window !== 'undefined' ? window.location.origin : ''}/login?invite=${family?.invite_code}`}
-                style={{
-                  flex: 1, background: 'oklch(0.22 0.01 250)', border: '1px solid oklch(0.28 0.01 250)',
-                  borderRadius: 8, padding: '8px 12px', color: 'oklch(0.70 0.01 250)', fontSize: 12,
-                  direction: 'ltr',
-                }}
+                className="flex-1 bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg py-2 px-3 text-[oklch(0.70_0.01_250)] text-xs"
+                dir="ltr"
               />
-              <button onClick={copyInviteLink} style={{
-                background: 'oklch(0.22 0.01 250)', border: '1px solid oklch(0.28 0.01 250)',
-                borderRadius: 8, padding: '8px 12px', cursor: 'pointer', color: 'oklch(0.70 0.01 250)',
-                display: 'flex', alignItems: 'center', gap: 4, fontSize: 12,
-              }}>
+              <button onClick={copyInviteLink}
+                className="bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg py-2 px-3 cursor-pointer text-[oklch(0.70_0.01_250)] flex items-center gap-1 text-xs">
                 <Copy size={13} /> העתק
               </button>
             </div>
           </div>
 
           {/* Divider */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-            <div style={{ flex: 1, height: 1, background: 'oklch(0.25 0.01 250)' }} />
-            <span style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)' }}>או</span>
-            <div style={{ flex: 1, height: 1, background: 'oklch(0.25 0.01 250)' }} />
+          <div className="flex items-center gap-3 mb-5">
+            <div className="flex-1 h-px bg-[oklch(0.25_0.01_250)]" />
+            <span className="text-[11px] text-[oklch(0.65_0.01_250)]">או</span>
+            <div className="flex-1 h-px bg-[oklch(0.25_0.01_250)]" />
           </div>
 
           {/* Option 2: Email Invite */}
           <div>
-            <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Mail size={14} style={{ color: 'oklch(0.70 0.18 145)' }} />
+            <div className="text-[13px] font-semibold mb-2 flex items-center gap-1.5">
+              <Mail size={14} className="text-[oklch(0.70_0.18_145)]" />
               שלח הזמנה במייל
             </div>
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div className="flex gap-2">
               <input
                 type="email"
                 value={inviteEmail}
                 onChange={e => setInviteEmail(e.target.value)}
                 placeholder="email@example.com"
-                style={{
-                  flex: 1, background: 'oklch(0.22 0.01 250)', border: '1px solid oklch(0.28 0.01 250)',
-                  borderRadius: 8, padding: '8px 12px', color: 'inherit', fontSize: 13,
-                  direction: 'ltr',
-                }}
+                className="flex-1 bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg py-2 px-3 text-inherit text-[13px]"
+                dir="ltr"
                 onKeyDown={e => { if (e.key === 'Enter') sendInviteEmail() }}
               />
               <button
                 onClick={sendInviteEmail}
                 disabled={!inviteEmail || sendingEmail}
-                style={{
-                  background: 'oklch(0.65 0.18 250)', border: 'none',
-                  borderRadius: 8, padding: '8px 16px', cursor: sendingEmail ? 'wait' : 'pointer',
-                  color: 'oklch(0.12 0.01 250)', fontWeight: 600, fontSize: 13,
-                  display: 'flex', alignItems: 'center', gap: 4,
-                  opacity: !inviteEmail || sendingEmail ? 0.5 : 1,
-                }}
+                className={cn(
+                  'bg-[oklch(0.65_0.18_250)] border-none rounded-lg py-2 px-4 text-[oklch(0.12_0.01_250)] font-semibold text-[13px] flex items-center gap-1',
+                  sendingEmail ? 'cursor-wait' : 'cursor-pointer',
+                  (!inviteEmail || sendingEmail) ? 'opacity-50' : 'opacity-100'
+                )}
               >
                 <Send size={13} /> שלח
               </button>

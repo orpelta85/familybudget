@@ -45,6 +45,31 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* ── Design token colors ─────────────────────────────────────────────── */
+  --color-bg-base: var(--bg-base);
+  --color-bg-card: var(--bg-card);
+  --color-bg-input: var(--bg-input);
+  --color-bg-hover: var(--bg-hover);
+  --color-bg-bar: var(--bg-bar);
+  --color-bg-divider: var(--bg-divider);
+  --color-border-default: var(--border-default);
+  --color-border-light: var(--border-light);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-text-body: var(--text-body);
+  --color-text-heading: var(--text-heading);
+  --color-accent-blue: var(--accent-blue);
+  --color-accent-green: var(--accent-green);
+  --color-accent-red: var(--accent-red);
+  --color-accent-orange: var(--accent-orange);
+  --color-accent-teal: var(--accent-teal);
+  --color-accent-purple: var(--accent-purple);
+  --color-accent-shared: var(--accent-shared);
+  --color-alert-bg: var(--alert-bg);
+  --color-alert-border: var(--alert-border);
+  --color-alert-text: var(--alert-text);
 }
 
 :root {
@@ -86,6 +111,31 @@
   --color-red: oklch(0.62 0.22 27);
   --color-teal: oklch(0.70 0.15 185);
   --color-purple: oklch(0.68 0.18 295);
+
+  /* ── Design tokens ─────────────────────────────────────────────────────── */
+  --bg-base: oklch(0.13 0.01 250);
+  --bg-card: oklch(0.16 0.01 250);
+  --bg-input: oklch(0.15 0.01 250);
+  --bg-hover: oklch(0.22 0.01 250);
+  --bg-bar: oklch(0.22 0.01 250);
+  --bg-divider: oklch(0.20 0.01 250);
+  --border-default: oklch(0.25 0.01 250);
+  --border-light: oklch(0.28 0.01 250);
+  --text-primary: oklch(0.93 0.01 250);
+  --text-secondary: oklch(0.65 0.01 250);
+  --text-muted: oklch(0.55 0.01 250);
+  --text-body: oklch(0.75 0.01 250);
+  --text-heading: oklch(0.80 0.01 250);
+  --accent-blue: oklch(0.65 0.18 250);
+  --accent-green: oklch(0.70 0.18 145);
+  --accent-red: oklch(0.62 0.22 27);
+  --accent-orange: oklch(0.72 0.18 55);
+  --accent-teal: oklch(0.70 0.15 185);
+  --accent-purple: oklch(0.68 0.18 295);
+  --accent-shared: oklch(0.68 0.12 310);
+  --alert-bg: oklch(0.17 0.06 30);
+  --alert-border: oklch(0.32 0.10 30);
+  --alert-text: oklch(0.85 0.05 55);
 }
 
 @layer base {
@@ -237,6 +287,130 @@
 ::-webkit-scrollbar-thumb { background: oklch(0.30 0.01 250); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: oklch(0.40 0.01 250); }
 html { scrollbar-color: oklch(0.30 0.01 250) oklch(0.14 0.01 250); scrollbar-width: thin; }
+
+/* ── Design token utility classes ─────────────────────────────────────────── */
+
+/* Standard card */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  padding: 20px;
+}
+
+/* Card header text */
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 600;
+  font-size: 14px;
+  margin: 0;
+}
+
+/* Buttons */
+.btn-primary {
+  background: var(--accent-blue);
+  color: var(--bg-base);
+  border: none;
+  border-radius: 8px;
+  padding: 8px 18px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: filter 0.15s ease;
+}
+.btn-primary:hover { filter: brightness(1.15); }
+
+.btn-secondary {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  padding: 8px 18px;
+  font-weight: 500;
+  font-size: 13px;
+  cursor: pointer;
+  transition: filter 0.15s ease;
+}
+.btn-secondary:hover { filter: brightness(1.15); }
+
+.btn-danger {
+  background: var(--accent-red);
+  color: var(--text-primary);
+  border: none;
+  border-radius: 8px;
+  padding: 8px 18px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: filter 0.15s ease;
+}
+.btn-danger:hover { filter: brightness(1.15); }
+
+/* Standard input/select */
+.input-field {
+  background: var(--bg-input);
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+.input-field:focus {
+  border-color: var(--accent-blue);
+}
+
+/* KPI stat card */
+.kpi-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  padding: 20px;
+}
+.kpi-card .kpi-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.kpi-card .kpi-value {
+  font-size: 22px;
+  font-weight: 700;
+  direction: ltr;
+  letter-spacing: -0.02em;
+}
+.kpi-card .kpi-sub {
+  font-size: 11px;
+  opacity: 0.7;
+  margin-top: 4px;
+}
+
+/* Progress bar (thin) */
+.bar-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--bg-bar);
+  overflow: hidden;
+}
+.bar-track-lg {
+  height: 7px;
+  border-radius: 4px;
+  background: var(--bg-bar);
+  overflow: hidden;
+}
+.bar-fill {
+  height: 100%;
+  border-radius: inherit;
+  transition: width 0.4s ease;
+}
+
+/* Row divider */
+.row-divider {
+  border-bottom: 1px solid var(--bg-divider);
+}
 
 /* Toast dark theme override */
 .cn-toast {

@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useRef, useEffect } from 'react'
+import { cn } from '@/lib/utils'
 import { LayoutDashboard, Receipt, Users, Home, Menu, Wallet, BarChart3, PiggyBank, Heart, Target } from 'lucide-react'
 
 const nav = [
@@ -39,13 +40,7 @@ export function BottomNav() {
   const isMoreActive = moreLinks.some(l => pathname === l.href)
 
   return (
-    <nav style={{
-      position: 'fixed', bottom: 0, right: 0, left: 0, height: 60,
-      background: 'oklch(0.14 0.01 250)',
-      borderTop: '1px solid oklch(0.22 0.01 250)',
-      alignItems: 'center',
-      zIndex: 40,
-    }} className="flex md:hidden">
+    <nav className="flex md:hidden fixed bottom-0 right-0 left-0 h-[60px] bg-[oklch(0.14_0.01_250)] border-t border-[oklch(0.22_0.01_250)] items-center z-40">
       {nav.map(item => {
         const active = pathname === item.href
         const Icon = item.icon
@@ -53,14 +48,10 @@ export function BottomNav() {
           <Link
             key={item.href}
             href={item.href}
-            style={{
-              flex: 1, display: 'flex', flexDirection: 'column',
-              alignItems: 'center', gap: 4, padding: '8px 0',
-              textDecoration: 'none',
-              color: active ? 'oklch(0.65 0.18 250)' : 'oklch(0.65 0.01 250)',
-              transition: 'color 0.15s',
-              fontSize: 10,
-            }}
+            className={cn(
+              'flex-1 flex flex-col items-center gap-1 py-2 no-underline transition-colors duration-150 text-[10px]',
+              active ? 'text-[oklch(0.65_0.18_250)]' : 'text-[oklch(0.65_0.01_250)]'
+            )}
           >
             <Icon size={18} />
             <span>{item.label}</span>
@@ -69,33 +60,20 @@ export function BottomNav() {
       })}
 
       {/* More button */}
-      <div ref={menuRef} style={{ flex: 1, position: 'relative' }}>
+      <div ref={menuRef} className="flex-1 relative">
         <button
           onClick={() => setShowMore(v => !v)}
-          style={{
-            width: '100%', display: 'flex', flexDirection: 'column',
-            alignItems: 'center', gap: 4, padding: '8px 0',
-            background: 'none', border: 'none', cursor: 'pointer',
-            color: isMoreActive ? 'oklch(0.65 0.18 250)' : 'oklch(0.65 0.01 250)',
-            transition: 'color 0.15s',
-            fontSize: 10,
-          }}
+          className={cn(
+            'w-full flex flex-col items-center gap-1 py-2 bg-transparent border-none cursor-pointer transition-colors duration-150 text-[10px]',
+            isMoreActive ? 'text-[oklch(0.65_0.18_250)]' : 'text-[oklch(0.65_0.01_250)]'
+          )}
         >
           <Menu size={18} />
           <span>עוד</span>
         </button>
 
         {showMore && (
-          <div style={{
-            position: 'absolute', bottom: 60, left: '50%', transform: 'translateX(-50%)',
-            background: 'oklch(0.18 0.01 250)',
-            border: '1px solid oklch(0.28 0.01 250)',
-            borderRadius: 12,
-            padding: 6,
-            minWidth: 160,
-            boxShadow: '0 -4px 20px oklch(0 0 0 / 0.4)',
-            zIndex: 50,
-          }}>
+          <div className="absolute bottom-[60px] left-1/2 -translate-x-1/2 bg-[oklch(0.18_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-xl p-1.5 min-w-[160px] shadow-[0_-4px_20px_oklch(0_0_0/0.4)] z-50">
             {moreLinks.map(item => {
               const active = pathname === item.href
               const Icon = item.icon
@@ -104,15 +82,12 @@ export function BottomNav() {
                   key={item.href}
                   href={item.href}
                   onClick={() => setShowMore(false)}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 10,
-                    padding: '10px 14px', borderRadius: 8,
-                    textDecoration: 'none',
-                    color: active ? 'oklch(0.65 0.18 250)' : 'oklch(0.82 0.01 250)',
-                    background: active ? 'oklch(0.22 0.02 250)' : 'transparent',
-                    fontSize: 13, fontWeight: active ? 600 : 400,
-                    transition: 'background 0.15s',
-                  }}
+                  className={cn(
+                    'flex items-center gap-2.5 py-2.5 px-3.5 rounded-lg no-underline text-[13px] transition-colors duration-150',
+                    active
+                      ? 'text-[oklch(0.65_0.18_250)] bg-[oklch(0.22_0.02_250)] font-semibold'
+                      : 'text-[oklch(0.82_0.01_250)] bg-transparent font-normal'
+                  )}
                 >
                   <Icon size={15} />
                   <span>{item.label}</span>

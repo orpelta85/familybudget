@@ -11,7 +11,7 @@ interface TrendEntry {
 
 export function IncomeTrendChart({ data }: { data: TrendEntry[] }) {
   if (data.length < 2) {
-    return <div style={{ color: 'oklch(0.65 0.01 250)', fontSize: 13 }}>אין מספיק נתונים היסטוריים</div>
+    return <div className="text-[oklch(0.65_0.01_250)] text-[13px]">אין מספיק נתונים היסטוריים</div>
   }
 
   return (

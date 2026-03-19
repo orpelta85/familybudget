@@ -14,32 +14,6 @@ import {
 import type { PensionReport, PensionProduct, PensionProductType } from '@/lib/types'
 import { TableSkeleton } from '@/components/ui/Skeleton'
 
-const S = {
-  card: {
-    background: 'oklch(0.16 0.01 250)',
-    border: '1px solid oklch(0.25 0.01 250)',
-    borderRadius: 12,
-    padding: 20,
-  } as React.CSSProperties,
-  input: {
-    background: 'oklch(0.22 0.01 250)',
-    border: '1px solid oklch(0.28 0.01 250)',
-    borderRadius: 8,
-    padding: '8px 12px',
-    color: 'inherit',
-    fontSize: 13,
-    outline: 'none',
-    width: '100%',
-  } as React.CSSProperties,
-  label: {
-    fontSize: 11,
-    color: 'oklch(0.65 0.01 250)',
-    display: 'block',
-    marginBottom: 4,
-    fontWeight: 500,
-  } as React.CSSProperties,
-}
-
 const TYPE_LABELS: Record<PensionProductType, string> = {
   pension: 'קרן פנסיה',
   hishtalmut: 'קרן השתלמות',
@@ -71,7 +45,7 @@ function formatDate(d: string) {
   return d
 }
 
-// ─── Empty product template for the manual form ───
+// --- Empty product template for the manual form ---
 function emptyProduct(num: number): ManualProduct {
   return {
     product_number: num,
@@ -130,7 +104,7 @@ export default function PensionPage() {
   const products = report?.pension_products ?? []
   const healthCoverages = report?.pension_health_coverages ?? []
 
-  // ─── Derived data ───
+  // --- Derived data ---
   const activeProducts = products.filter(p => p.is_active)
   const inactiveProducts = products.filter(p => !p.is_active)
   const savingsProducts = products.filter(p => p.product_type !== 'health_insurance')
@@ -277,33 +251,21 @@ export default function PensionPage() {
   return (
     <div>
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+      <div className="flex justify-between items-start mb-5">
         <div>
-          <h1 style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <TrendingUp size={22} style={{ color: 'oklch(0.65 0.18 250)' }} />
+          <h1 className="text-xl font-bold tracking-tight flex items-center gap-2">
+            <TrendingUp size={22} className="text-[oklch(0.65_0.18_250)]" />
             פנסיה והשקעות
           </h1>
           {report && (
-            <p style={{ color: 'oklch(0.65 0.01 250)', fontSize: 13, marginTop: 4 }}>
+            <p className="text-[oklch(0.65_0.01_250)] text-[13px] mt-1">
               נכון ל-{formatDate(report.report_date)} | {report.advisor_name}
             </p>
           )}
         </div>
         <button
           onClick={() => setShowUpload(true)}
-          style={{
-            background: 'oklch(0.65 0.18 250)',
-            color: 'oklch(0.12 0.01 250)',
-            border: 'none',
-            borderRadius: 8,
-            padding: '8px 16px',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 6,
-            fontSize: 13,
-            fontWeight: 600,
-          }}
+          className="bg-[oklch(0.65_0.18_250)] text-[oklch(0.12_0.01_250)] border-none rounded-lg py-2 px-4 cursor-pointer flex items-center gap-1.5 text-[13px] font-semibold"
         >
           <Upload size={14} />
           העלאת דוח
@@ -312,21 +274,16 @@ export default function PensionPage() {
 
       {/* Report selector if multiple reports */}
       {reports && reports.length > 1 && (
-        <div style={{ marginBottom: 16, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+        <div className="mb-4 flex gap-2 flex-wrap">
           {reports.map((r, i) => (
             <button
               key={r.id}
               onClick={() => setSelectedReportIdx(i)}
-              style={{
-                padding: '6px 14px',
-                borderRadius: 999,
-                border: i === selectedReportIdx ? '1px solid oklch(0.65 0.18 250)' : '1px solid oklch(0.25 0.01 250)',
-                background: i === selectedReportIdx ? 'oklch(0.22 0.05 250)' : 'oklch(0.16 0.01 250)',
-                color: i === selectedReportIdx ? 'oklch(0.80 0.10 250)' : 'oklch(0.65 0.01 250)',
-                cursor: 'pointer',
-                fontSize: 12,
-                fontWeight: 500,
-              }}
+              className={`py-1.5 px-3.5 rounded-full text-xs font-medium cursor-pointer border ${
+                i === selectedReportIdx
+                  ? 'border-[oklch(0.65_0.18_250)] bg-[oklch(0.22_0.05_250)] text-[oklch(0.80_0.10_250)]'
+                  : 'border-[oklch(0.25_0.01_250)] bg-[oklch(0.16_0.01_250)] text-[oklch(0.65_0.01_250)]'
+              }`}
             >
               {formatDate(r.report_date)}
             </button>
@@ -335,25 +292,16 @@ export default function PensionPage() {
       )}
 
       {!report ? (
-        /* No reports yet — show empty state */
-        <div style={{ ...S.card, textAlign: 'center', padding: 60 }}>
-          <FileText size={48} style={{ color: 'oklch(0.65 0.01 250)', marginBottom: 16 }} />
-          <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>אין דוחות פנסיה</div>
-          <div style={{ fontSize: 14, color: 'oklch(0.65 0.01 250)', marginBottom: 20 }}>
+        /* No reports yet -- show empty state */
+        <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl text-center p-[60px]">
+          <FileText size={48} className="text-[oklch(0.65_0.01_250)] mb-4" />
+          <div className="text-lg font-semibold mb-2">אין דוחות פנסיה</div>
+          <div className="text-sm text-[oklch(0.65_0.01_250)] mb-5">
             העלה את הדוח הראשון שלך מהסוכן הפנסיוני
           </div>
           <button
             onClick={() => setShowUpload(true)}
-            style={{
-              background: 'oklch(0.65 0.18 250)',
-              color: 'oklch(0.12 0.01 250)',
-              border: 'none',
-              borderRadius: 8,
-              padding: '10px 24px',
-              cursor: 'pointer',
-              fontSize: 14,
-              fontWeight: 600,
-            }}
+            className="bg-[oklch(0.65_0.18_250)] text-[oklch(0.12_0.01_250)] border-none rounded-lg py-2.5 px-6 cursor-pointer text-sm font-semibold"
           >
             העלאת דוח ראשון
           </button>
@@ -361,7 +309,7 @@ export default function PensionPage() {
       ) : (
         <>
           {/* KPIs Row */}
-          <div className="grid-kpi" style={{ marginBottom: 20 }}>
+          <div className="grid-kpi mb-5">
             {[
               { label: 'סך חיסכון', value: formatCurrency(report.total_savings || totalBalance), color: TYPE_COLORS.pension, icon: PiggyBank },
               { label: 'תשואה מתחילת שנה', value: `${report.ytd_return}%`, color: 'oklch(0.70 0.18 145)', icon: TrendingUp },
@@ -372,12 +320,12 @@ export default function PensionPage() {
             ].map(kpi => {
               const Icon = kpi.icon
               return (
-                <div key={kpi.label} style={{ ...S.card, padding: 16 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10 }}>
+                <div key={kpi.label} className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-4">
+                  <div className="flex items-center gap-1.5 mb-2.5">
                     <Icon size={14} style={{ color: kpi.color }} />
-                    <span style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)', fontWeight: 500 }}>{kpi.label}</span>
+                    <span className="text-[11px] text-[oklch(0.65_0.01_250)] font-medium">{kpi.label}</span>
                   </div>
-                  <div style={{ fontSize: 20, fontWeight: 700, color: kpi.color, direction: 'ltr', textAlign: 'left' }}>
+                  <div className="text-xl font-bold ltr text-left" style={{ color: kpi.color }}>
                     {kpi.value}
                   </div>
                 </div>
@@ -405,32 +353,32 @@ export default function PensionPage() {
                 : 'oklch(0.65 0.15 15)'
 
             return (
-              <div style={{ ...S.card, marginBottom: 16 }}>
-                <h2 style={{ fontWeight: 600, fontSize: 15, display: 'flex', alignItems: 'center', gap: 8, margin: 0, marginBottom: 14 }}>
-                  <Clock size={16} style={{ color: 'oklch(0.65 0.18 250)' }} />
+              <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5 mb-4">
+                <h2 className="font-semibold text-[15px] flex items-center gap-2 m-0 mb-3.5">
+                  <Clock size={16} className="text-[oklch(0.65_0.18_250)]" />
                   תחזית פרישה
                 </h2>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
-                  <div style={{ background: 'oklch(0.14 0.01 250)', borderRadius: 8, padding: 14 }}>
-                    <div style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)', marginBottom: 6 }}>צבירה צפויה בפרישה</div>
-                    <div style={{ fontSize: 18, fontWeight: 700, direction: 'ltr', textAlign: 'left', color: 'oklch(0.65 0.18 250)' }}>
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-3">
+                  <div className="bg-[oklch(0.14_0.01_250)] rounded-lg p-3.5">
+                    <div className="text-[11px] text-[oklch(0.65_0.01_250)] mb-1.5">צבירה צפויה בפרישה</div>
+                    <div className="text-lg font-bold ltr text-left text-[oklch(0.65_0.18_250)]">
                       {formatCurrency(futureValue)}
                     </div>
                   </div>
-                  <div style={{ background: 'oklch(0.14 0.01 250)', borderRadius: 8, padding: 14 }}>
-                    <div style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)', marginBottom: 6 }}>קצבה חודשית צפויה</div>
-                    <div style={{ fontSize: 18, fontWeight: 700, direction: 'ltr', textAlign: 'left', color: 'oklch(0.70 0.18 145)' }}>
+                  <div className="bg-[oklch(0.14_0.01_250)] rounded-lg p-3.5">
+                    <div className="text-[11px] text-[oklch(0.65_0.01_250)] mb-1.5">קצבה חודשית צפויה</div>
+                    <div className="text-lg font-bold ltr text-left text-[oklch(0.70_0.18_145)]">
                       {formatCurrency(monthlyPension)}
                     </div>
                   </div>
-                  <div style={{ background: 'oklch(0.14 0.01 250)', borderRadius: 8, padding: 14 }}>
-                    <div style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)', marginBottom: 6 }}>יחס החלפה</div>
-                    <div style={{ fontSize: 18, fontWeight: 700, direction: 'ltr', textAlign: 'left', color: ratioColor }}>
+                  <div className="bg-[oklch(0.14_0.01_250)] rounded-lg p-3.5">
+                    <div className="text-[11px] text-[oklch(0.65_0.01_250)] mb-1.5">יחס החלפה</div>
+                    <div className="text-lg font-bold ltr text-left" style={{ color: ratioColor }}>
                       {currentSalary > 0 ? `${replacementRatio.toFixed(0)}%` : 'אין נתון'}
                     </div>
                   </div>
                 </div>
-                <div style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)', marginTop: 12 }}>
+                <div className="text-[11px] text-[oklch(0.65_0.01_250)] mt-3">
                   * הנחות: תשואה ריאלית 4% שנתי, גיל פרישה 67, 35 שנה לפרישה
                 </div>
               </div>
@@ -438,27 +386,23 @@ export default function PensionPage() {
           })()}
 
           {/* Insurance Coverage Bar */}
-          <div style={{ ...S.card, marginBottom: 16 }}>
-            <h2 style={{ fontWeight: 600, fontSize: 15, display: 'flex', alignItems: 'center', gap: 8, margin: 0, marginBottom: 14 }}>
-              <Shield size={16} style={{ color: 'oklch(0.65 0.18 250)' }} />
+          <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5 mb-4">
+            <h2 className="font-semibold text-[15px] flex items-center gap-2 m-0 mb-3.5">
+              <Shield size={16} className="text-[oklch(0.65_0.18_250)]" />
               כיסויים ביטוחיים
             </h2>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-3">
               {[
                 { label: 'אובדן כושר עבודה', value: report.disability_coverage, Icon: Shield },
                 { label: 'קצבה לשאירים', value: report.survivors_pension, Icon: Users },
                 { label: 'כיסוי למוות', value: report.death_coverage, Icon: FileText },
               ].map(item => (
-                <div key={item.label} style={{
-                  background: 'oklch(0.14 0.01 250)',
-                  borderRadius: 8,
-                  padding: 14,
-                }}>
-                  <div style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
+                <div key={item.label} className="bg-[oklch(0.14_0.01_250)] rounded-lg p-3.5">
+                  <div className="text-[11px] text-[oklch(0.65_0.01_250)] mb-1.5 flex items-center gap-1">
                     <item.Icon size={12} />
                     {item.label}
                   </div>
-                  <div style={{ fontSize: 18, fontWeight: 700, direction: 'ltr', textAlign: 'left', color: item.value > 0 ? 'oklch(0.80 0.01 250)' : 'oklch(0.65 0.01 250)' }}>
+                  <div className={`text-lg font-bold ltr text-left ${item.value > 0 ? 'text-[oklch(0.80_0.01_250)]' : 'text-[oklch(0.65_0.01_250)]'}`}>
                     {item.value > 0 ? formatCurrency(item.value) : 'אין כיסוי'}
                   </div>
                 </div>
@@ -466,14 +410,14 @@ export default function PensionPage() {
             </div>
           </div>
 
-          {/* Products — Active */}
-          <div style={{ ...S.card, marginBottom: 16 }}>
-            <h2 style={{ fontWeight: 600, fontSize: 15, display: 'flex', alignItems: 'center', gap: 8, margin: 0, marginBottom: 16 }}>
-              <Wallet size={16} style={{ color: 'oklch(0.70 0.18 145)' }} />
+          {/* Products -- Active */}
+          <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5 mb-4">
+            <h2 className="font-semibold text-[15px] flex items-center gap-2 m-0 mb-4">
+              <Wallet size={16} className="text-[oklch(0.70_0.18_145)]" />
               מוצרי חיסכון פעילים
             </h2>
             {activeProducts.length === 0 && (
-              <div style={{ textAlign: 'center', padding: 20, color: 'oklch(0.65 0.01 250)', fontSize: 13 }}>אין מוצרים פעילים</div>
+              <div className="text-center p-5 text-[oklch(0.65_0.01_250)] text-[13px]">אין מוצרים פעילים</div>
             )}
             {activeProducts.map(p => (
               <ProductCard
@@ -486,10 +430,10 @@ export default function PensionPage() {
             ))}
           </div>
 
-          {/* Products — Inactive */}
+          {/* Products -- Inactive */}
           {inactiveProducts.length > 0 && (
-            <div style={{ ...S.card, marginBottom: 16, opacity: 0.8 }}>
-              <div style={{ fontWeight: 600, marginBottom: 16, fontSize: 15, display: 'flex', alignItems: 'center', gap: 8, color: 'oklch(0.65 0.01 250)' }}>
+            <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5 mb-4 opacity-80">
+              <div className="font-semibold mb-4 text-[15px] flex items-center gap-2 text-[oklch(0.65_0.01_250)]">
                 <AlertCircle size={16} />
                 מוצרים לא פעילים ({inactiveProducts.length})
               </div>
@@ -506,21 +450,21 @@ export default function PensionPage() {
           )}
 
           {/* Distribution Charts */}
-          <div className="grid-2" style={{ marginBottom: 16 }}>
+          <div className="grid-2 mb-4">
             {/* By Product Type */}
-            <div style={S.card}>
-              <div style={{ fontWeight: 600, marginBottom: 14, fontSize: 14 }}>לפי סוג מוצר</div>
+            <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5">
+              <div className="font-semibold mb-3.5 text-sm">לפי סוג מוצר</div>
               {Object.entries(typeDistribution).sort((a, b) => b[1] - a[1]).map(([type, amount]) => {
                 const pct = totalBalance > 0 ? (amount / totalBalance) * 100 : 0
                 const color = TYPE_COLORS[type as PensionProductType] || 'oklch(0.60 0.01 250)'
                 return (
-                  <div key={type} style={{ marginBottom: 10 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}>
+                  <div key={type} className="mb-2.5">
+                    <div className="flex justify-between text-xs mb-1">
                       <span>{TYPE_LABELS[type as PensionProductType] || type}</span>
-                      <span style={{ direction: 'ltr', color }}>{pct.toFixed(0)}% · {formatCurrency(amount)}</span>
+                      <span className="ltr" style={{ color }}>{pct.toFixed(0)}% · {formatCurrency(amount)}</span>
                     </div>
-                    <div style={{ height: 6, background: 'oklch(0.20 0.01 250)', borderRadius: 3 }}>
-                      <div style={{ height: '100%', width: `${pct}%`, background: color, borderRadius: 3, transition: 'width 0.5s ease' }} />
+                    <div className="h-1.5 bg-[oklch(0.20_0.01_250)] rounded-sm">
+                      <div className="h-full rounded-sm transition-[width] duration-500 ease-out" style={{ width: `${pct}%`, background: color }} />
                     </div>
                   </div>
                 )
@@ -528,20 +472,20 @@ export default function PensionPage() {
             </div>
 
             {/* By Company */}
-            <div style={S.card}>
-              <div style={{ fontWeight: 600, marginBottom: 14, fontSize: 14 }}>לפי יצרן</div>
+            <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5">
+              <div className="font-semibold mb-3.5 text-sm">לפי יצרן</div>
               {Object.entries(companyDistribution).sort((a, b) => b[1] - a[1]).map(([company, amount], i) => {
                 const pct = totalBalance > 0 ? (amount / totalBalance) * 100 : 0
                 const colors = ['oklch(0.65 0.18 250)', 'oklch(0.70 0.18 145)', 'oklch(0.72 0.18 55)', 'oklch(0.68 0.18 295)']
                 const color = colors[i % colors.length]
                 return (
-                  <div key={company} style={{ marginBottom: 10 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}>
+                  <div key={company} className="mb-2.5">
+                    <div className="flex justify-between text-xs mb-1">
                       <span>{company}</span>
-                      <span style={{ direction: 'ltr', color }}>{pct.toFixed(0)}% · {formatCurrency(amount)}</span>
+                      <span className="ltr" style={{ color }}>{pct.toFixed(0)}% · {formatCurrency(amount)}</span>
                     </div>
-                    <div style={{ height: 6, background: 'oklch(0.20 0.01 250)', borderRadius: 3 }}>
-                      <div style={{ height: '100%', width: `${pct}%`, background: color, borderRadius: 3, transition: 'width 0.5s ease' }} />
+                    <div className="h-1.5 bg-[oklch(0.20_0.01_250)] rounded-sm">
+                      <div className="h-full rounded-sm transition-[width] duration-500 ease-out" style={{ width: `${pct}%`, background: color }} />
                     </div>
                   </div>
                 )
@@ -551,26 +495,26 @@ export default function PensionPage() {
 
           {/* Health Insurance Coverages */}
           {healthCoverages.length > 0 && (
-            <div style={{ ...S.card, marginBottom: 16 }}>
-              <div style={{ fontWeight: 600, marginBottom: 14, fontSize: 15, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Heart size={16} style={{ color: 'oklch(0.65 0.15 15)' }} />
+            <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5 mb-4">
+              <div className="font-semibold mb-3.5 text-[15px] flex items-center gap-2">
+                <Heart size={16} className="text-[oklch(0.65_0.15_15)]" />
                 ביטוח בריאות — כיסויים
               </div>
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', fontSize: 12, borderCollapse: 'collapse' }}>
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs border-collapse">
                   <thead>
-                    <tr style={{ borderBottom: '1px solid oklch(0.25 0.01 250)' }}>
-                      <th style={{ textAlign: 'right', padding: 8, fontWeight: 600 }}>כיסוי</th>
-                      <th style={{ textAlign: 'left', padding: 8, fontWeight: 600 }}>מבוטח ראשי</th>
-                      <th style={{ textAlign: 'left', padding: 8, fontWeight: 600 }}>סה&quot;כ</th>
+                    <tr className="border-b border-[oklch(0.25_0.01_250)]">
+                      <th className="text-right p-2 font-semibold">כיסוי</th>
+                      <th className="text-left p-2 font-semibold">מבוטח ראשי</th>
+                      <th className="text-left p-2 font-semibold">סה&quot;כ</th>
                     </tr>
                   </thead>
                   <tbody>
                     {healthCoverages.map(h => (
-                      <tr key={h.id} style={{ borderBottom: '1px solid oklch(0.20 0.01 250)' }}>
-                        <td style={{ padding: 8 }}>{h.coverage_name}</td>
-                        <td style={{ padding: 8, direction: 'ltr', textAlign: 'left' }}>{formatCurrency(h.main_insured)}</td>
-                        <td style={{ padding: 8, direction: 'ltr', textAlign: 'left' }}>{formatCurrency(h.total)}</td>
+                      <tr key={h.id} className="border-b border-[oklch(0.20_0.01_250)]">
+                        <td className="p-2">{h.coverage_name}</td>
+                        <td className="p-2 ltr text-left">{formatCurrency(h.main_insured)}</td>
+                        <td className="p-2 ltr text-left">{formatCurrency(h.total)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -581,57 +525,32 @@ export default function PensionPage() {
         </>
       )}
 
-      {/* ═══ Upload / Manual Entry Modal ═══ */}
+      {/* === Upload / Manual Entry Modal === */}
       {showUpload && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(0,0,0,0.7)',
-          zIndex: 1000,
-          display: 'flex',
-          alignItems: 'flex-start',
-          justifyContent: 'center',
-          paddingTop: 40,
-          overflowY: 'auto',
-        }}>
-          <div style={{
-            background: 'oklch(0.14 0.01 250)',
-            borderRadius: 16,
-            padding: 28,
-            width: '100%',
-            maxWidth: 680,
-            maxHeight: 'calc(100vh - 80px)',
-            overflowY: 'auto',
-            border: '1px solid oklch(0.25 0.01 250)',
-          }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-              <h2 style={{ fontSize: 18, fontWeight: 700 }}>העלאת דוח פנסיוני</h2>
-              <button onClick={() => setShowUpload(false)} aria-label="סגור" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'oklch(0.60 0.01 250)', padding: 8, minWidth: 36, minHeight: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="fixed inset-0 bg-black/70 z-[1000] flex items-start justify-center pt-10 overflow-y-auto">
+          <div className="bg-[oklch(0.14_0.01_250)] rounded-2xl p-7 w-full max-w-[680px] max-h-[calc(100vh-80px)] overflow-y-auto border border-[oklch(0.25_0.01_250)]">
+            <div className="flex justify-between items-center mb-5">
+              <h2 className="text-lg font-bold">העלאת דוח פנסיוני</h2>
+              <button onClick={() => setShowUpload(false)} aria-label="סגור" className="bg-transparent border-none cursor-pointer text-[oklch(0.60_0.01_250)] p-2 min-w-9 min-h-9 flex items-center justify-center">
                 <X size={20} />
               </button>
             </div>
 
             {/* Mode Toggle */}
-            <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+            <div className="flex gap-2 mb-5">
               {(['image', 'manual', 'pdf'] as const).map(mode => (
                 <button
                   key={mode}
                   onClick={() => setUploadMode(mode)}
-                  style={{
-                    flex: 1,
-                    padding: '10px 16px',
-                    borderRadius: 8,
-                    border: uploadMode === mode ? '1px solid oklch(0.65 0.18 250)' : '1px solid oklch(0.25 0.01 250)',
-                    background: uploadMode === mode ? 'oklch(0.22 0.05 250)' : 'oklch(0.18 0.01 250)',
-                    color: uploadMode === mode ? 'oklch(0.85 0.10 250)' : 'oklch(0.65 0.01 250)',
-                    cursor: 'pointer',
-                    fontSize: 13,
-                    fontWeight: 600,
-                  }}
+                  className={`flex-1 py-2.5 px-4 rounded-lg text-[13px] font-semibold cursor-pointer border ${
+                    uploadMode === mode
+                      ? 'border-[oklch(0.65_0.18_250)] bg-[oklch(0.22_0.05_250)] text-[oklch(0.85_0.10_250)]'
+                      : 'border-[oklch(0.25_0.01_250)] bg-[oklch(0.18_0.01_250)] text-[oklch(0.65_0.01_250)]'
+                  }`}
                 >
-                  {mode === 'image' ? <><Camera size={14} style={{ marginLeft: 6 }} /> צילום/תמונה</>
-                    : mode === 'manual' ? <><Pencil size={14} style={{ marginLeft: 6 }} /> הזנה ידנית</>
-                    : <><FileUp size={14} style={{ marginLeft: 6 }} /> העלאת PDF</>}
+                  {mode === 'image' ? <><Camera size={14} className="ms-1.5 inline" /> צילום/תמונה</>
+                    : mode === 'manual' ? <><Pencil size={14} className="ms-1.5 inline" /> הזנה ידנית</>
+                    : <><FileUp size={14} className="ms-1.5 inline" /> העלאת PDF</>}
                 </button>
               ))}
             </div>
@@ -641,29 +560,23 @@ export default function PensionPage() {
               <div>
                 <div
                   onClick={() => fileRef.current?.click()}
-                  style={{
-                    border: '2px dashed oklch(0.30 0.05 145)',
-                    borderRadius: 12,
-                    padding: 40,
-                    textAlign: 'center',
-                    cursor: 'pointer',
-                    marginBottom: 16,
-                    background: uploadFile ? 'oklch(0.18 0.03 145)' : 'oklch(0.16 0.01 250)',
-                  }}
+                  className={`border-2 border-dashed border-[oklch(0.30_0.05_145)] rounded-xl p-10 text-center cursor-pointer mb-4 ${
+                    uploadFile ? 'bg-[oklch(0.18_0.03_145)]' : 'bg-[oklch(0.16_0.01_250)]'
+                  }`}
                 >
                   {uploadFile ? (
                     <>
-                      <Check size={32} style={{ color: 'oklch(0.70 0.18 145)', marginBottom: 8 }} />
-                      <div style={{ fontWeight: 600 }}>{uploadFile.name}</div>
-                      <div style={{ fontSize: 12, color: 'oklch(0.65 0.01 250)', marginTop: 4 }}>
+                      <Check size={32} className="text-[oklch(0.70_0.18_145)] mb-2" />
+                      <div className="font-semibold">{uploadFile.name}</div>
+                      <div className="text-xs text-[oklch(0.65_0.01_250)] mt-1">
                         {(uploadFile.size / 1024).toFixed(0)} KB
                       </div>
                     </>
                   ) : (
                     <>
-                      <Camera size={32} style={{ color: 'oklch(0.70 0.18 145)', marginBottom: 8 }} />
-                      <div style={{ fontWeight: 600 }}>לחץ לבחירת תמונה של הדוח</div>
-                      <div style={{ fontSize: 12, color: 'oklch(0.65 0.01 250)', marginTop: 4 }}>PNG, JPG — צילום מסך או תמונה מהטלפון</div>
+                      <Camera size={32} className="text-[oklch(0.70_0.18_145)] mb-2" />
+                      <div className="font-semibold">לחץ לבחירת תמונה של הדוח</div>
+                      <div className="text-xs text-[oklch(0.65_0.01_250)] mt-1">PNG, JPG — צילום מסך או תמונה מהטלפון</div>
                     </>
                   )}
                 </div>
@@ -671,15 +584,15 @@ export default function PensionPage() {
                   ref={fileRef}
                   type="file"
                   accept="image/*"
-                  style={{ display: 'none' }}
+                  className="hidden"
                   onChange={e => setUploadFile(e.target.files?.[0] || null)}
                 />
-                <div style={{ fontSize: 12, color: 'oklch(0.65 0.01 250)', marginBottom: 16 }}>
+                <div className="text-xs text-[oklch(0.65_0.01_250)] mb-4">
                   * AI קורא את הנתונים מהתמונה אוטומטית. וודא שהתמונה חדה וכל הטקסט קריא.
                 </div>
                 {imageExtracting && (
-                  <div style={{ textAlign: 'center', padding: 16, color: 'oklch(0.70 0.18 145)', fontSize: 14 }}>
-                    🔍 קורא את הדוח... נא להמתין
+                  <div className="text-center p-4 text-[oklch(0.70_0.18_145)] text-sm">
+                    קורא את הדוח... נא להמתין
                   </div>
                 )}
               </div>
@@ -688,29 +601,23 @@ export default function PensionPage() {
               <div>
                 <div
                   onClick={() => fileRef.current?.click()}
-                  style={{
-                    border: '2px dashed oklch(0.30 0.05 250)',
-                    borderRadius: 12,
-                    padding: 40,
-                    textAlign: 'center',
-                    cursor: 'pointer',
-                    marginBottom: 16,
-                    background: uploadFile ? 'oklch(0.18 0.03 145)' : 'oklch(0.16 0.01 250)',
-                  }}
+                  className={`border-2 border-dashed border-[oklch(0.30_0.05_250)] rounded-xl p-10 text-center cursor-pointer mb-4 ${
+                    uploadFile ? 'bg-[oklch(0.18_0.03_145)]' : 'bg-[oklch(0.16_0.01_250)]'
+                  }`}
                 >
                   {uploadFile ? (
                     <>
-                      <Check size={32} style={{ color: 'oklch(0.70 0.18 145)', marginBottom: 8 }} />
-                      <div style={{ fontWeight: 600 }}>{uploadFile.name}</div>
-                      <div style={{ fontSize: 12, color: 'oklch(0.65 0.01 250)', marginTop: 4 }}>
+                      <Check size={32} className="text-[oklch(0.70_0.18_145)] mb-2" />
+                      <div className="font-semibold">{uploadFile.name}</div>
+                      <div className="text-xs text-[oklch(0.65_0.01_250)] mt-1">
                         {(uploadFile.size / 1024).toFixed(0)} KB
                       </div>
                     </>
                   ) : (
                     <>
-                      <Upload size={32} style={{ color: 'oklch(0.65 0.01 250)', marginBottom: 8 }} />
-                      <div style={{ fontWeight: 600 }}>לחץ לבחירת קובץ PDF</div>
-                      <div style={{ fontSize: 12, color: 'oklch(0.65 0.01 250)', marginTop: 4 }}>או גרור לכאן</div>
+                      <Upload size={32} className="text-[oklch(0.65_0.01_250)] mb-2" />
+                      <div className="font-semibold">לחץ לבחירת קובץ PDF</div>
+                      <div className="text-xs text-[oklch(0.65_0.01_250)] mt-1">או גרור לכאן</div>
                     </>
                   )}
                 </div>
@@ -718,10 +625,10 @@ export default function PensionPage() {
                   ref={fileRef}
                   type="file"
                   accept=".pdf"
-                  style={{ display: 'none' }}
+                  className="hidden"
                   onChange={e => setUploadFile(e.target.files?.[0] || null)}
                 />
-                <div style={{ fontSize: 12, color: 'oklch(0.65 0.01 250)', marginBottom: 16 }}>
+                <div className="text-xs text-[oklch(0.65_0.01_250)] mb-4">
                   * ניתוח אוטומטי של דוחות Surense. אם הקובץ מוגן בסיסמה, השתמש בהזנה ידנית.
                 </div>
               </div>
@@ -729,72 +636,66 @@ export default function PensionPage() {
               /* Manual Entry Form */
               <div>
                 {/* Report header fields */}
-                <div className="grid-2" style={{ gap: 12, marginBottom: 16 }}>
+                <div className="grid-2 gap-3 mb-4">
                   <div>
-                    <label style={S.label}>תאריך דוח (DD/MM/YYYY)</label>
-                    <input style={S.input} value={formDate} onChange={e => setFormDate(e.target.value)} placeholder="31/01/2026" />
+                    <label className="text-[11px] text-[oklch(0.65_0.01_250)] block mb-1 font-medium">תאריך דוח (DD/MM/YYYY)</label>
+                    <input className="bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" value={formDate} onChange={e => setFormDate(e.target.value)} placeholder="31/01/2026" />
                   </div>
                   <div>
-                    <label style={S.label}>שם הסוכן</label>
-                    <input style={S.input} value={formAdvisor} onChange={e => setFormAdvisor(e.target.value)} />
+                    <label className="text-[11px] text-[oklch(0.65_0.01_250)] block mb-1 font-medium">שם הסוכן</label>
+                    <input className="bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" value={formAdvisor} onChange={e => setFormAdvisor(e.target.value)} />
                   </div>
                   <div>
-                    <label style={S.label}>סך חיסכון שצברת (₪)</label>
-                    <input style={S.input} type="number" value={formTotalSavings} onChange={e => setFormTotalSavings(e.target.value)} placeholder="451046" />
+                    <label className="text-[11px] text-[oklch(0.65_0.01_250)] block mb-1 font-medium">סך חיסכון שצברת (₪)</label>
+                    <input className="bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" type="number" value={formTotalSavings} onChange={e => setFormTotalSavings(e.target.value)} placeholder="451046" />
                   </div>
                   <div>
-                    <label style={S.label}>תשואה מתחילת שנה (%)</label>
-                    <input style={S.input} type="number" step="0.1" value={formYtdReturn} onChange={e => setFormYtdReturn(e.target.value)} placeholder="2.1" />
+                    <label className="text-[11px] text-[oklch(0.65_0.01_250)] block mb-1 font-medium">תשואה מתחילת שנה (%)</label>
+                    <input className="bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" type="number" step="0.1" value={formYtdReturn} onChange={e => setFormYtdReturn(e.target.value)} placeholder="2.1" />
                   </div>
                   <div>
-                    <label style={S.label}>סך הפקדות חודשיות (₪)</label>
-                    <input style={S.input} type="number" value={formMonthlyDeposits} onChange={e => setFormMonthlyDeposits(e.target.value)} placeholder="7050" />
+                    <label className="text-[11px] text-[oklch(0.65_0.01_250)] block mb-1 font-medium">סך הפקדות חודשיות (₪)</label>
+                    <input className="bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" type="number" value={formMonthlyDeposits} onChange={e => setFormMonthlyDeposits(e.target.value)} placeholder="7050" />
                   </div>
                   <div>
-                    <label style={S.label}>פרמיית ביטוח חודשית (₪)</label>
-                    <input style={S.input} type="number" value={formInsurancePremium} onChange={e => setFormInsurancePremium(e.target.value)} placeholder="258" />
+                    <label className="text-[11px] text-[oklch(0.65_0.01_250)] block mb-1 font-medium">פרמיית ביטוח חודשית (₪)</label>
+                    <input className="bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" type="number" value={formInsurancePremium} onChange={e => setFormInsurancePremium(e.target.value)} placeholder="258" />
                   </div>
                   <div>
-                    <label style={S.label}>קצבה חזויה (₪/חודש)</label>
-                    <input style={S.input} type="number" value={formEstimatedPension} onChange={e => setFormEstimatedPension(e.target.value)} placeholder="4098" />
+                    <label className="text-[11px] text-[oklch(0.65_0.01_250)] block mb-1 font-medium">קצבה חזויה (₪/חודש)</label>
+                    <input className="bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" type="number" value={formEstimatedPension} onChange={e => setFormEstimatedPension(e.target.value)} placeholder="4098" />
                   </div>
                   <div>
-                    <label style={S.label}>כיסוי אובדן כושר (₪)</label>
-                    <input style={S.input} type="number" value={formDisability} onChange={e => setFormDisability(e.target.value)} placeholder="16750" />
+                    <label className="text-[11px] text-[oklch(0.65_0.01_250)] block mb-1 font-medium">כיסוי אובדן כושר (₪)</label>
+                    <input className="bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" type="number" value={formDisability} onChange={e => setFormDisability(e.target.value)} placeholder="16750" />
                   </div>
-                  <div style={{ gridColumn: 'span 2' }}>
-                    <label style={S.label}>קצבה לשאירים (₪)</label>
-                    <input style={S.input} type="number" value={formSurvivors} onChange={e => setFormSurvivors(e.target.value)} placeholder="22334" />
+                  <div className="col-span-2">
+                    <label className="text-[11px] text-[oklch(0.65_0.01_250)] block mb-1 font-medium">קצבה לשאירים (₪)</label>
+                    <input className="bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" type="number" value={formSurvivors} onChange={e => setFormSurvivors(e.target.value)} placeholder="22334" />
                   </div>
                 </div>
 
                 {/* Products */}
-                <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 12, borderTop: '1px solid oklch(0.25 0.01 250)', paddingTop: 16 }}>
+                <div className="font-semibold text-sm mb-3 border-t border-[oklch(0.25_0.01_250)] pt-4">
                   מוצרים
                 </div>
                 {formProducts.map((p, idx) => (
-                  <div key={p.product_number} style={{
-                    background: 'oklch(0.18 0.01 250)',
-                    border: '1px solid oklch(0.22 0.01 250)',
-                    borderRadius: 10,
-                    padding: 16,
-                    marginBottom: 12,
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                      <span style={{ fontWeight: 600, fontSize: 13 }}>מוצר {idx + 1}</span>
+                  <div key={p.product_number} className="bg-[oklch(0.18_0.01_250)] border border-[oklch(0.22_0.01_250)] rounded-[10px] p-4 mb-3">
+                    <div className="flex justify-between items-center mb-3">
+                      <span className="font-semibold text-[13px]">מוצר {idx + 1}</span>
                       {formProducts.length > 1 && (
                         <button onClick={() => setFormProducts(prev => prev.filter((_, i) => i !== idx))}
                           aria-label="הסר מוצר"
-                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'oklch(0.65 0.01 250)' }}>
+                          className="bg-transparent border-none cursor-pointer text-[oklch(0.65_0.01_250)]">
                           <X size={16} />
                         </button>
                       )}
                     </div>
-                    <div className="grid-2" style={{ gap: 10, marginBottom: 0 }}>
+                    <div className="grid-2 gap-2.5">
                       <div>
-                        <label style={S.label}>סוג מוצר</label>
+                        <label className="text-[11px] text-[oklch(0.65_0.01_250)] block mb-1 font-medium">סוג מוצר</label>
                         <select
-                          style={{ ...S.input, cursor: 'pointer' }}
+                          className="bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full cursor-pointer"
                           value={p.product_type}
                           onChange={e => updateProduct(idx, 'product_type', e.target.value)}
                         >
@@ -806,51 +707,51 @@ export default function PensionPage() {
                         </select>
                       </div>
                       <div>
-                        <label style={S.label}>שם מוצר</label>
-                        <input style={S.input} value={p.product_name} onChange={e => updateProduct(idx, 'product_name', e.target.value)} placeholder="קרן פנסיה מקיפה" />
+                        <label className="text-[11px] text-[oklch(0.65_0.01_250)] block mb-1 font-medium">שם מוצר</label>
+                        <input className="bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" value={p.product_name} onChange={e => updateProduct(idx, 'product_name', e.target.value)} placeholder="קרן פנסיה מקיפה" />
                       </div>
                       <div>
-                        <label style={S.label}>חברה</label>
-                        <input style={S.input} value={p.company} onChange={e => updateProduct(idx, 'company', e.target.value)} placeholder="הראל" />
+                        <label className="text-[11px] text-[oklch(0.65_0.01_250)] block mb-1 font-medium">חברה</label>
+                        <input className="bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" value={p.company} onChange={e => updateProduct(idx, 'company', e.target.value)} placeholder="הראל" />
                       </div>
                       <div>
-                        <label style={S.label}>מספר חשבון</label>
-                        <input style={S.input} value={p.account_number} onChange={e => updateProduct(idx, 'account_number', e.target.value)} />
+                        <label className="text-[11px] text-[oklch(0.65_0.01_250)] block mb-1 font-medium">מספר חשבון</label>
+                        <input className="bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" value={p.account_number} onChange={e => updateProduct(idx, 'account_number', e.target.value)} />
                       </div>
                       <div>
-                        <label style={S.label}>צבירה (₪)</label>
-                        <input style={S.input} type="number" value={p.balance || ''} onChange={e => updateProduct(idx, 'balance', parseFloat(e.target.value) || 0)} />
+                        <label className="text-[11px] text-[oklch(0.65_0.01_250)] block mb-1 font-medium">צבירה (₪)</label>
+                        <input className="bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" type="number" value={p.balance || ''} onChange={e => updateProduct(idx, 'balance', parseFloat(e.target.value) || 0)} />
                       </div>
                       <div>
-                        <label style={S.label}>הפקדה חודשית כוללת (₪)</label>
-                        <input style={S.input} type="number" value={p.monthly_deposit || ''} onChange={e => updateProduct(idx, 'monthly_deposit', parseFloat(e.target.value) || 0)} />
+                        <label className="text-[11px] text-[oklch(0.65_0.01_250)] block mb-1 font-medium">הפקדה חודשית כוללת (₪)</label>
+                        <input className="bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" type="number" value={p.monthly_deposit || ''} onChange={e => updateProduct(idx, 'monthly_deposit', parseFloat(e.target.value) || 0)} />
                       </div>
                       <div>
-                        <label style={S.label}>ד&quot;נ הפקדה (%)</label>
-                        <input style={S.input} type="number" step="0.01" value={p.mgmt_fee_deposits || ''} onChange={e => updateProduct(idx, 'mgmt_fee_deposits', parseFloat(e.target.value) || 0)} />
+                        <label className="text-[11px] text-[oklch(0.65_0.01_250)] block mb-1 font-medium">ד&quot;נ הפקדה (%)</label>
+                        <input className="bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" type="number" step="0.01" value={p.mgmt_fee_deposits || ''} onChange={e => updateProduct(idx, 'mgmt_fee_deposits', parseFloat(e.target.value) || 0)} />
                       </div>
                       <div>
-                        <label style={S.label}>ד&quot;נ צבירה (%)</label>
-                        <input style={S.input} type="number" step="0.01" value={p.mgmt_fee_accumulation || ''} onChange={e => updateProduct(idx, 'mgmt_fee_accumulation', parseFloat(e.target.value) || 0)} />
+                        <label className="text-[11px] text-[oklch(0.65_0.01_250)] block mb-1 font-medium">ד&quot;נ צבירה (%)</label>
+                        <input className="bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" type="number" step="0.01" value={p.mgmt_fee_accumulation || ''} onChange={e => updateProduct(idx, 'mgmt_fee_accumulation', parseFloat(e.target.value) || 0)} />
                       </div>
                       <div>
-                        <label style={S.label}>הפקדת עובד (₪)</label>
-                        <input style={S.input} type="number" value={p.monthly_employee || ''} onChange={e => updateProduct(idx, 'monthly_employee', parseFloat(e.target.value) || 0)} />
+                        <label className="text-[11px] text-[oklch(0.65_0.01_250)] block mb-1 font-medium">הפקדת עובד (₪)</label>
+                        <input className="bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" type="number" value={p.monthly_employee || ''} onChange={e => updateProduct(idx, 'monthly_employee', parseFloat(e.target.value) || 0)} />
                       </div>
                       <div>
-                        <label style={S.label}>הפקדת מעסיק (₪)</label>
-                        <input style={S.input} type="number" value={p.monthly_employer || ''} onChange={e => updateProduct(idx, 'monthly_employer', parseFloat(e.target.value) || 0)} />
+                        <label className="text-[11px] text-[oklch(0.65_0.01_250)] block mb-1 font-medium">הפקדת מעסיק (₪)</label>
+                        <input className="bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" type="number" value={p.monthly_employer || ''} onChange={e => updateProduct(idx, 'monthly_employer', parseFloat(e.target.value) || 0)} />
                       </div>
                       <div>
-                        <label style={S.label}>פיצויים (₪)</label>
-                        <input style={S.input} type="number" value={p.monthly_severance || ''} onChange={e => updateProduct(idx, 'monthly_severance', parseFloat(e.target.value) || 0)} />
+                        <label className="text-[11px] text-[oklch(0.65_0.01_250)] block mb-1 font-medium">פיצויים (₪)</label>
+                        <input className="bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" type="number" value={p.monthly_severance || ''} onChange={e => updateProduct(idx, 'monthly_severance', parseFloat(e.target.value) || 0)} />
                       </div>
                       <div>
-                        <label style={S.label}>שכר בסיס (₪)</label>
-                        <input style={S.input} type="number" value={p.salary_basis || ''} onChange={e => updateProduct(idx, 'salary_basis', parseFloat(e.target.value) || 0)} />
+                        <label className="text-[11px] text-[oklch(0.65_0.01_250)] block mb-1 font-medium">שכר בסיס (₪)</label>
+                        <input className="bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" type="number" value={p.salary_basis || ''} onChange={e => updateProduct(idx, 'salary_basis', parseFloat(e.target.value) || 0)} />
                       </div>
-                      <div style={{ gridColumn: 'span 2', display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <label style={{ ...S.label, marginBottom: 0 }}>פעיל</label>
+                      <div className="col-span-2 flex items-center gap-2">
+                        <label className="text-[11px] text-[oklch(0.65_0.01_250)] font-medium">פעיל</label>
                         <input type="checkbox" checked={p.is_active} onChange={e => updateProduct(idx, 'is_active', e.target.checked)} />
                       </div>
                     </div>
@@ -858,17 +759,7 @@ export default function PensionPage() {
                 ))}
                 <button
                   onClick={() => setFormProducts(prev => [...prev, emptyProduct(prev.length + 1)])}
-                  style={{
-                    width: '100%',
-                    padding: 10,
-                    border: '1px dashed oklch(0.30 0.01 250)',
-                    borderRadius: 8,
-                    background: 'none',
-                    color: 'oklch(0.60 0.01 250)',
-                    cursor: 'pointer',
-                    fontSize: 13,
-                    marginBottom: 16,
-                  }}
+                  className="w-full p-2.5 border border-dashed border-[oklch(0.30_0.01_250)] rounded-lg bg-transparent text-[oklch(0.60_0.01_250)] cursor-pointer text-[13px] mb-4"
                 >
                   + הוסף מוצר
                 </button>
@@ -879,17 +770,11 @@ export default function PensionPage() {
             <button
               onClick={handleSubmitReport}
               disabled={uploadMutation.isPending}
-              style={{
-                width: '100%',
-                padding: '12px 24px',
-                borderRadius: 10,
-                border: 'none',
-                background: uploadMutation.isPending ? 'oklch(0.40 0.05 250)' : 'oklch(0.65 0.18 250)',
-                color: 'oklch(0.12 0.01 250)',
-                cursor: uploadMutation.isPending ? 'wait' : 'pointer',
-                fontSize: 15,
-                fontWeight: 700,
-              }}
+              className={`w-full py-3 px-6 rounded-[10px] border-none text-[oklch(0.12_0.01_250)] text-[15px] font-bold ${
+                uploadMutation.isPending
+                  ? 'bg-[oklch(0.40_0.05_250)] cursor-wait'
+                  : 'bg-[oklch(0.65_0.18_250)] cursor-pointer'
+              }`}
             >
               {imageExtracting ? 'קורא את הדוח...' : uploadMutation.isPending ? 'שומר...' : uploadMode === 'image' ? 'קרא ושמור דוח' : 'שמור דוח'}
             </button>
@@ -900,7 +785,7 @@ export default function PensionPage() {
   )
 }
 
-// ─── Product Card Component ───
+// --- Product Card Component ---
 function ProductCard({ product: p, totalBalance, expanded, onToggle }: {
   product: PensionProduct
   totalBalance: number
@@ -912,72 +797,65 @@ function ProductCard({ product: p, totalBalance, expanded, onToggle }: {
   const Icon = TYPE_ICONS[p.product_type] || Wallet
 
   return (
-    <div style={{ marginBottom: 12, background: 'oklch(0.14 0.01 250)', borderRadius: 10, overflow: 'hidden' }}>
+    <div className="mb-3 bg-[oklch(0.14_0.01_250)] rounded-[10px] overflow-hidden">
       {/* Header */}
       <div
         onClick={onToggle}
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          padding: '14px 16px',
-          cursor: 'pointer',
-        }}
+        className="flex justify-between items-center py-3.5 px-4 cursor-pointer"
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{
-            width: 34, height: 34, borderRadius: 8,
-            background: `${color}20`,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
+        <div className="flex items-center gap-2.5">
+          <div
+            className="w-[34px] h-[34px] rounded-lg flex items-center justify-center"
+            style={{ background: `${color}20` }}
+          >
             <Icon size={16} style={{ color }} />
           </div>
           <div>
-            <div style={{ fontSize: 13, fontWeight: 600 }}>{p.product_name}</div>
-            <div style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)', display: 'flex', gap: 8, marginTop: 2 }}>
+            <div className="text-[13px] font-semibold">{p.product_name}</div>
+            <div className="text-[11px] text-[oklch(0.65_0.01_250)] flex gap-2 mt-0.5">
               <span>{p.company}</span>
               {p.account_number && <span>· {p.account_number}</span>}
-              <span style={{
-                padding: '1px 6px', borderRadius: 999, fontSize: 10,
-                background: p.is_active ? 'oklch(0.20 0.06 145)' : 'oklch(0.20 0.01 250)',
-                color: p.is_active ? 'oklch(0.70 0.18 145)' : 'oklch(0.65 0.01 250)',
-              }}>
+              <span className={`py-px px-1.5 rounded-full text-[10px] ${
+                p.is_active
+                  ? 'bg-[oklch(0.20_0.06_145)] text-[oklch(0.70_0.18_145)]'
+                  : 'bg-[oklch(0.20_0.01_250)] text-[oklch(0.65_0.01_250)]'
+              }`}>
                 {p.is_active ? 'פעיל' : 'לא פעיל'}
               </span>
             </div>
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ textAlign: 'left' }}>
-            <div style={{ fontWeight: 700, fontSize: 16, direction: 'ltr', color }}>{formatCurrency(p.balance)}</div>
-            <div style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)', direction: 'ltr' }}>{pct.toFixed(1)}% מהתיק</div>
+        <div className="flex items-center gap-3">
+          <div className="text-left">
+            <div className="font-bold text-base ltr" style={{ color }}>{formatCurrency(p.balance)}</div>
+            <div className="text-[11px] text-[oklch(0.65_0.01_250)] ltr">{pct.toFixed(1)}% מהתיק</div>
           </div>
-          {expanded ? <ChevronUp size={16} style={{ color: 'oklch(0.65 0.01 250)' }} /> : <ChevronDown size={16} style={{ color: 'oklch(0.65 0.01 250)' }} />}
+          {expanded ? <ChevronUp size={16} className="text-[oklch(0.65_0.01_250)]" /> : <ChevronDown size={16} className="text-[oklch(0.65_0.01_250)]" />}
         </div>
       </div>
 
       {/* Progress bar */}
-      <div style={{ height: 3, background: 'oklch(0.20 0.01 250)' }}>
-        <div style={{ height: '100%', width: `${pct}%`, background: color, transition: 'width 0.5s ease' }} />
+      <div className="h-[3px] bg-[oklch(0.20_0.01_250)]">
+        <div className="h-full transition-[width] duration-500 ease-out" style={{ width: `${pct}%`, background: color }} />
       </div>
 
       {/* Expanded details */}
       {expanded && (
-        <div style={{ padding: '14px 16px', borderTop: '1px solid oklch(0.20 0.01 250)' }}>
+        <div className="py-3.5 px-4 border-t border-[oklch(0.20_0.01_250)]">
           {/* Monthly deposits breakdown */}
           {p.monthly_deposit > 0 && (
-            <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, color: 'oklch(0.70 0.01 250)' }}>הפקדות חודשיות</div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 8 }}>
+            <div className="mb-3.5">
+              <div className="text-xs font-semibold mb-2 text-[oklch(0.70_0.01_250)]">הפקדות חודשיות</div>
+              <div className="grid grid-cols-[repeat(auto-fit,minmax(120px,1fr))] gap-2">
                 {[
                   { label: 'סה"כ', value: p.monthly_deposit },
                   { label: 'עובד', value: p.monthly_employee },
                   { label: 'מעסיק', value: p.monthly_employer },
                   { label: 'פיצויים', value: p.monthly_severance },
                 ].filter(item => item.value > 0).map(item => (
-                  <div key={item.label} style={{ background: 'oklch(0.18 0.01 250)', borderRadius: 6, padding: '8px 10px' }}>
-                    <div style={{ fontSize: 10, color: 'oklch(0.65 0.01 250)' }}>{item.label}</div>
-                    <div style={{ fontSize: 14, fontWeight: 600, direction: 'ltr', textAlign: 'left' }}>{formatCurrency(item.value)}</div>
+                  <div key={item.label} className="bg-[oklch(0.18_0.01_250)] rounded-md py-2 px-2.5">
+                    <div className="text-[10px] text-[oklch(0.65_0.01_250)]">{item.label}</div>
+                    <div className="text-sm font-semibold ltr text-left">{formatCurrency(item.value)}</div>
                   </div>
                 ))}
               </div>
@@ -986,16 +864,16 @@ function ProductCard({ product: p, totalBalance, expanded, onToggle }: {
 
           {/* Management fees */}
           {(p.mgmt_fee_deposits > 0 || p.mgmt_fee_accumulation > 0) && (
-            <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, color: 'oklch(0.70 0.01 250)' }}>דמי ניהול</div>
-              <div style={{ display: 'flex', gap: 16, fontSize: 13 }}>
+            <div className="mb-3.5">
+              <div className="text-xs font-semibold mb-2 text-[oklch(0.70_0.01_250)]">דמי ניהול</div>
+              <div className="flex gap-4 text-[13px]">
                 <div>
-                  <span style={{ color: 'oklch(0.65 0.01 250)', marginLeft: 6 }}>מהפקדה:</span>
-                  <span style={{ fontWeight: 600 }}>{p.mgmt_fee_deposits}%</span>
+                  <span className="text-[oklch(0.65_0.01_250)] ms-1.5">מהפקדה:</span>
+                  <span className="font-semibold">{p.mgmt_fee_deposits}%</span>
                 </div>
                 <div>
-                  <span style={{ color: 'oklch(0.65 0.01 250)', marginLeft: 6 }}>מצבירה:</span>
-                  <span style={{ fontWeight: 600 }}>{p.mgmt_fee_accumulation}%</span>
+                  <span className="text-[oklch(0.65_0.01_250)] ms-1.5">מצבירה:</span>
+                  <span className="font-semibold">{p.mgmt_fee_accumulation}%</span>
                 </div>
               </div>
             </div>
@@ -1003,20 +881,20 @@ function ProductCard({ product: p, totalBalance, expanded, onToggle }: {
 
           {/* Salary basis */}
           {p.salary_basis > 0 && (
-            <div style={{ marginBottom: 14, fontSize: 13 }}>
-              <span style={{ color: 'oklch(0.65 0.01 250)', marginLeft: 6 }}>שכר בסיס:</span>
-              <span style={{ fontWeight: 600, direction: 'ltr' }}>{formatCurrency(p.salary_basis)}</span>
+            <div className="mb-3.5 text-[13px]">
+              <span className="text-[oklch(0.65_0.01_250)] ms-1.5">שכר בסיס:</span>
+              <span className="font-semibold ltr">{formatCurrency(p.salary_basis)}</span>
             </div>
           )}
 
           {/* Investment tracks */}
           {p.investment_tracks && p.investment_tracks.length > 0 && (
-            <div style={{ marginBottom: 14 }}>
-              <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, color: 'oklch(0.70 0.01 250)' }}>מסלולי השקעה</div>
+            <div className="mb-3.5">
+              <div className="text-xs font-semibold mb-2 text-[oklch(0.70_0.01_250)]">מסלולי השקעה</div>
               {p.investment_tracks.map((t, i) => (
-                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, padding: '4px 0' }}>
+                <div key={i} className="flex justify-between text-xs py-1">
                   <span>{t.name}</span>
-                  <span style={{ fontWeight: 600, color }}>{t.percentage}%</span>
+                  <span className="font-semibold" style={{ color }}>{t.percentage}%</span>
                 </div>
               ))}
             </div>
@@ -1025,28 +903,28 @@ function ProductCard({ product: p, totalBalance, expanded, onToggle }: {
           {/* Deposit history */}
           {p.deposit_history && p.deposit_history.length > 0 && (
             <div>
-              <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, color: 'oklch(0.70 0.01 250)' }}>היסטוריית הפקדות</div>
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', fontSize: 11, borderCollapse: 'collapse' }}>
+              <div className="text-xs font-semibold mb-2 text-[oklch(0.70_0.01_250)]">היסטוריית הפקדות</div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-[11px] border-collapse">
                   <thead>
-                    <tr style={{ borderBottom: '1px solid oklch(0.22 0.01 250)' }}>
-                      <th style={{ textAlign: 'right', padding: 6 }}>תאריך</th>
-                      <th style={{ textAlign: 'left', padding: 6 }}>שכר</th>
-                      <th style={{ textAlign: 'left', padding: 6 }}>מעסיק</th>
-                      <th style={{ textAlign: 'left', padding: 6 }}>עובד</th>
-                      <th style={{ textAlign: 'left', padding: 6 }}>פיצויים</th>
-                      <th style={{ textAlign: 'left', padding: 6, fontWeight: 700 }}>סה&quot;כ</th>
+                    <tr className="border-b border-[oklch(0.22_0.01_250)]">
+                      <th className="text-right p-1.5">תאריך</th>
+                      <th className="text-left p-1.5">שכר</th>
+                      <th className="text-left p-1.5">מעסיק</th>
+                      <th className="text-left p-1.5">עובד</th>
+                      <th className="text-left p-1.5">פיצויים</th>
+                      <th className="text-left p-1.5 font-bold">סה&quot;כ</th>
                     </tr>
                   </thead>
                   <tbody>
                     {p.deposit_history.map((d, i) => (
-                      <tr key={i} style={{ borderBottom: '1px solid oklch(0.18 0.01 250)' }}>
-                        <td style={{ padding: 6 }}>{d.date}</td>
-                        <td style={{ padding: 6, direction: 'ltr', textAlign: 'left' }}>{formatCurrency(d.salary)}</td>
-                        <td style={{ padding: 6, direction: 'ltr', textAlign: 'left' }}>{formatCurrency(d.employer)}</td>
-                        <td style={{ padding: 6, direction: 'ltr', textAlign: 'left' }}>{formatCurrency(d.employee)}</td>
-                        <td style={{ padding: 6, direction: 'ltr', textAlign: 'left' }}>{formatCurrency(d.severance)}</td>
-                        <td style={{ padding: 6, direction: 'ltr', textAlign: 'left', fontWeight: 600 }}>{formatCurrency(d.total)}</td>
+                      <tr key={i} className="border-b border-[oklch(0.18_0.01_250)]">
+                        <td className="p-1.5">{d.date}</td>
+                        <td className="p-1.5 ltr text-left">{formatCurrency(d.salary)}</td>
+                        <td className="p-1.5 ltr text-left">{formatCurrency(d.employer)}</td>
+                        <td className="p-1.5 ltr text-left">{formatCurrency(d.employee)}</td>
+                        <td className="p-1.5 ltr text-left">{formatCurrency(d.severance)}</td>
+                        <td className="p-1.5 ltr text-left font-semibold">{formatCurrency(d.total)}</td>
                       </tr>
                     ))}
                   </tbody>

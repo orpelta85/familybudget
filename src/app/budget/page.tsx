@@ -69,46 +69,44 @@ export default function BudgetPage() {
     setEditingId(null)
   }
 
-  const card: React.CSSProperties = { background: 'oklch(0.16 0.01 250)', border: '1px solid oklch(0.25 0.01 250)', borderRadius: 12, padding: 20 }
-
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-        <BarChart3 size={18} style={{ color: 'oklch(0.65 0.18 250)' }} />
-        <h1 style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em' }}>תקציב מתוכנן</h1>
+      <div className="flex items-center gap-2 mb-1.5">
+        <BarChart3 size={18} className="text-primary" />
+        <h1 className="text-xl font-bold tracking-tight">תקציב מתוכנן</h1>
       </div>
-      <p style={{ color: 'oklch(0.65 0.01 250)', fontSize: 13, marginBottom: 20 }}>
+      <p className="text-muted-foreground text-[13px] mb-5">
         {currentPeriod?.label ?? '...'}
       </p>
 
       {/* KPI Cards */}
-      <div className="grid-3" style={{ marginBottom: 24 }}>
-        <div style={card}>
-          <div style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.03em' }}>תקציב כולל</div>
-          <div style={{ fontSize: 28, fontWeight: 700, color: 'oklch(0.65 0.18 250)', direction: 'ltr', lineHeight: 1.1 }}>{formatCurrency(totalBudget)}</div>
+      <div className="grid-3 mb-6">
+        <div className="bg-card border border-border rounded-xl p-5">
+          <div className="text-[11px] text-muted-foreground mb-1.5 uppercase tracking-wide">תקציב כולל</div>
+          <div className="text-[28px] font-bold text-primary ltr leading-none">{formatCurrency(totalBudget)}</div>
           {totalIncome > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 10 }}>
-              <div style={{ flex: 1, height: 3, borderRadius: 2, background: 'oklch(0.22 0.01 250)', overflow: 'hidden' }}>
-                <div style={{ height: '100%', borderRadius: 2, width: `${Math.min(budgetToIncome, 100)}%`, background: ratioColor, transition: 'width 0.4s ease' }} />
+            <div className="flex items-center gap-1.5 mt-2.5">
+              <div className="flex-1 h-[3px] rounded-sm bg-secondary overflow-hidden">
+                <div className="h-full rounded-sm transition-[width] duration-400 ease-out" style={{ width: `${Math.min(budgetToIncome, 100)}%`, background: ratioColor }} />
               </div>
-              <span style={{ fontSize: 12, fontWeight: 600, color: ratioColor, whiteSpace: 'nowrap' }}>{budgetToIncome.toFixed(0)}% מההכנסה</span>
+              <span className="text-xs font-semibold whitespace-nowrap" style={{ color: ratioColor }}>{budgetToIncome.toFixed(0)}% מההכנסה</span>
             </div>
           )}
         </div>
-        <div style={card}>
-          <div style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.03em' }}>בוצע עד כה</div>
-          <div style={{ fontSize: 28, fontWeight: 700, color: 'oklch(0.72 0.18 55)', direction: 'ltr', lineHeight: 1.1 }}>{formatCurrency(totalSpent)}</div>
+        <div className="bg-card border border-border rounded-xl p-5">
+          <div className="text-[11px] text-muted-foreground mb-1.5 uppercase tracking-wide">בוצע עד כה</div>
+          <div className="text-[28px] font-bold text-[oklch(0.72_0.18_55)] ltr leading-none">{formatCurrency(totalSpent)}</div>
           {totalBudget > 0 && (
-            <div style={{ fontSize: 12, color: 'oklch(0.65 0.01 250)', marginTop: 10 }}>
+            <div className="text-xs text-muted-foreground mt-2.5">
               {((totalSpent / totalBudget) * 100).toFixed(0)}% מהתקציב
             </div>
           )}
         </div>
-        <div style={card}>
-          <div style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.03em' }}>נותר</div>
-          <div style={{ fontSize: 28, fontWeight: 700, color: totalRemaining >= 0 ? 'oklch(0.70 0.18 145)' : 'oklch(0.62 0.22 27)', direction: 'ltr', lineHeight: 1.1 }}>{formatCurrency(totalRemaining)}</div>
+        <div className="bg-card border border-border rounded-xl p-5">
+          <div className="text-[11px] text-muted-foreground mb-1.5 uppercase tracking-wide">נותר</div>
+          <div className={`text-[28px] font-bold ltr leading-none ${totalRemaining >= 0 ? 'text-[oklch(0.70_0.18_145)]' : 'text-[oklch(0.62_0.22_27)]'}`}>{formatCurrency(totalRemaining)}</div>
           {totalBudget > 0 && (
-            <div style={{ fontSize: 12, color: 'oklch(0.65 0.01 250)', marginTop: 10 }}>
+            <div className="text-xs text-muted-foreground mt-2.5">
               {((totalRemaining / totalBudget) * 100).toFixed(0)}% נותר
             </div>
           )}
@@ -118,9 +116,9 @@ export default function BudgetPage() {
       {/* Category Sections */}
       {!categories?.length
         ? (
-          <div style={{ ...card, textAlign: 'center', padding: 40 }}>
-            <Inbox size={36} style={{ color: 'oklch(0.30 0.01 250)', margin: '0 auto 10px' }} />
-            <div style={{ color: 'oklch(0.65 0.01 250)', fontSize: 14 }}>אין קטגוריות תקציב</div>
+          <div className="bg-card border border-border rounded-xl text-center p-10">
+            <Inbox size={36} className="text-[oklch(0.30_0.01_250)] mx-auto mb-2.5" />
+            <div className="text-muted-foreground text-sm">אין קטגוריות תקציב</div>
           </div>
         )
         : Object.entries(TYPE_LABELS).map(([type, meta]) => {
@@ -130,18 +128,18 @@ export default function BudgetPage() {
           const typeSpent = cats.reduce((s, c) => s + (spendByCat[c.id] ?? 0), 0)
 
           return (
-            <div key={type} className="card-transition" style={{ ...card, marginBottom: 16 }}>
+            <div key={type} className="card-transition bg-card border border-border rounded-xl p-5 mb-4">
               {/* Section Header */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, paddingBottom: 12, borderBottom: '1px solid oklch(0.22 0.01 250)' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <div style={{ width: 8, height: 8, borderRadius: '50%', background: meta.color }} />
-                  <span style={{ fontWeight: 700, fontSize: 14 }}>{meta.label}</span>
-                  <span style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)', background: 'oklch(0.20 0.01 250)', borderRadius: 4, padding: '1px 6px' }}>{cats.length}</span>
+              <div className="flex justify-between items-center mb-4 pb-3 border-b border-[oklch(0.22_0.01_250)]">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full" style={{ background: meta.color }} />
+                  <span className="font-bold text-sm">{meta.label}</span>
+                  <span className="text-[11px] text-muted-foreground bg-secondary rounded px-1.5 py-px">{cats.length}</span>
                 </div>
-                <div style={{ direction: 'ltr', fontSize: 13 }}>
-                  <span style={{ fontWeight: 700, color: 'oklch(0.80 0.01 250)' }}>{formatCurrency(typeSpent)}</span>
-                  <span style={{ color: 'oklch(0.65 0.01 250)', margin: '0 4px' }}>/</span>
-                  <span style={{ color: 'oklch(0.65 0.01 250)' }}>{formatCurrency(typeBudget)}</span>
+                <div className="ltr text-[13px]">
+                  <span className="font-bold text-[oklch(0.80_0.01_250)]">{formatCurrency(typeSpent)}</span>
+                  <span className="text-muted-foreground mx-1">/</span>
+                  <span className="text-muted-foreground">{formatCurrency(typeBudget)}</span>
                 </div>
               </div>
 
@@ -155,13 +153,13 @@ export default function BudgetPage() {
                 const spentColor = pct > 1 ? 'oklch(0.62 0.22 27)' : pct > 0.9 ? 'oklch(0.72 0.18 55)' : 'oklch(0.70 0.18 145)'
 
                 return (
-                  <div key={cat.id} style={{ marginBottom: 14 }}>
+                  <div key={cat.id} className="mb-3.5">
                     {/* Row 1: Name + Spent / Target */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 6 }}>
-                      <span style={{ fontWeight: 600, fontSize: 13, color: 'oklch(0.82 0.01 250)' }}>{cat.name}</span>
-                      <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, direction: 'ltr', fontSize: 13 }}>
-                        <span style={{ color: spentColor, fontWeight: 600 }}>{formatCurrency(spent)}</span>
-                        <span style={{ color: 'oklch(0.65 0.01 250)' }}>/</span>
+                    <div className="flex justify-between items-baseline mb-1.5">
+                      <span className="font-semibold text-[13px] text-[oklch(0.82_0.01_250)]">{cat.name}</span>
+                      <div className="flex items-baseline gap-1 ltr text-[13px]">
+                        <span className="font-semibold" style={{ color: spentColor }}>{formatCurrency(spent)}</span>
+                        <span className="text-muted-foreground">/</span>
                         {isEditing ? (
                           <input
                             autoFocus
@@ -170,15 +168,13 @@ export default function BudgetPage() {
                             onChange={e => setEditValue(e.target.value)}
                             onBlur={() => saveTarget(cat.id)}
                             onKeyDown={e => { if (e.key === 'Enter') saveTarget(cat.id); if (e.key === 'Escape') setEditingId(null) }}
-                            style={{ width: 80, background: 'oklch(0.20 0.01 250)', border: '1px solid oklch(0.45 0.18 250)', borderRadius: 6, padding: '2px 6px', color: 'inherit', fontSize: 13, textAlign: 'right' }}
+                            className="w-20 bg-[oklch(0.20_0.01_250)] border border-[oklch(0.45_0.18_250)] rounded-md px-1.5 py-0.5 text-inherit text-[13px] text-right"
                           />
                         ) : (
                           <span
                             onClick={() => { setEditingId(cat.id); setEditValue(String(cat.monthly_target)) }}
                             title="לחץ לעריכה"
-                            style={{ color: 'oklch(0.65 0.01 250)', cursor: 'pointer', borderBottom: '1px dashed oklch(0.38 0.01 250)', paddingBottom: 1, transition: 'color 0.15s' }}
-                            onMouseEnter={e => (e.currentTarget.style.color = 'oklch(0.75 0.01 250)')}
-                            onMouseLeave={e => (e.currentTarget.style.color = 'oklch(0.65 0.01 250)')}
+                            className="text-muted-foreground cursor-pointer border-b border-dashed border-[oklch(0.38_0.01_250)] pb-px transition-colors duration-150 hover:text-[oklch(0.75_0.01_250)]"
                           >
                             {formatCurrency(cat.monthly_target)}
                           </span>
@@ -186,11 +182,11 @@ export default function BudgetPage() {
                       </div>
                     </div>
                     {/* Row 2: Progress bar + percentage */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <div style={{ flex: 1, height: 5, borderRadius: 3, background: 'oklch(0.22 0.01 250)', overflow: 'hidden' }}>
-                        <div style={{ height: '100%', borderRadius: 3, width: `${Math.min(pct * 100, 100)}%`, background: barColor, transition: 'width 0.4s ease' }} />
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-[5px] rounded-sm bg-secondary overflow-hidden">
+                        <div className="h-full rounded-sm transition-[width] duration-400 ease-out" style={{ width: `${Math.min(pct * 100, 100)}%`, background: barColor }} />
                       </div>
-                      <span style={{ fontSize: 11, fontWeight: 500, color: barColor, minWidth: 32, textAlign: 'left', direction: 'ltr' }}>{pctDisplay > 200 ? '200%+' : `${pctDisplay}%`}</span>
+                      <span className="text-[11px] font-medium min-w-8 text-left ltr" style={{ color: barColor }}>{pctDisplay > 200 ? '200%+' : `${pctDisplay}%`}</span>
                     </div>
                   </div>
                 )

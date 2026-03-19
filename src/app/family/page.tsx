@@ -11,69 +11,6 @@ import {
 } from 'lucide-react'
 import { TableSkeleton } from '@/components/ui/Skeleton'
 
-const S = {
-  card: {
-    background: 'oklch(0.16 0.01 250)',
-    border: '1px solid oklch(0.25 0.01 250)',
-    borderRadius: 12,
-    padding: 20,
-  } as React.CSSProperties,
-  input: {
-    background: 'oklch(0.22 0.01 250)',
-    border: '1px solid oklch(0.28 0.01 250)',
-    borderRadius: 8,
-    padding: '8px 12px',
-    color: 'inherit',
-    fontSize: 13,
-    outline: 'none',
-    width: '100%',
-  } as React.CSSProperties,
-  label: {
-    fontSize: 11,
-    color: 'oklch(0.65 0.01 250)',
-    display: 'block',
-    marginBottom: 4,
-    fontWeight: 500,
-  } as React.CSSProperties,
-  badge: (color: string): React.CSSProperties => ({
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: 4,
-    padding: '2px 8px',
-    borderRadius: 6,
-    fontSize: 11,
-    fontWeight: 600,
-    background: `oklch(0.20 0.03 ${color})`,
-    color: `oklch(0.75 0.15 ${color})`,
-    border: `1px solid oklch(0.30 0.05 ${color})`,
-  }),
-  btn: {
-    background: 'oklch(0.65 0.18 250)',
-    border: 'none',
-    borderRadius: 8,
-    padding: '8px 16px',
-    cursor: 'pointer',
-    color: 'oklch(0.12 0.01 250)',
-    fontWeight: 600,
-    fontSize: 13,
-    display: 'flex',
-    alignItems: 'center',
-    gap: 6,
-  } as React.CSSProperties,
-  btnSecondary: {
-    background: 'oklch(0.22 0.01 250)',
-    border: '1px solid oklch(0.28 0.01 250)',
-    borderRadius: 8,
-    padding: '8px 12px',
-    cursor: 'pointer',
-    color: 'oklch(0.70 0.01 250)',
-    fontSize: 12,
-    display: 'flex',
-    alignItems: 'center',
-    gap: 4,
-  } as React.CSSProperties,
-}
-
 function formatDate(dateStr: string) {
   try {
     return new Date(dateStr).toLocaleDateString('he-IL', {
@@ -171,44 +108,44 @@ export default function FamilyPage() {
 
   if (!family) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '50vh' }}>
-        <div style={{ color: 'oklch(0.65 0.01 250)', fontSize: 14 }}>לא נמצאה משפחה</div>
+      <div className="flex justify-center items-center min-h-[50vh]">
+        <div className="text-[oklch(0.65_0.01_250)] text-sm">לא נמצאה משפחה</div>
       </div>
     )
   }
 
   return (
-    <div style={{ maxWidth: 680, margin: '0 auto' }}>
+    <div className="max-w-[680px] mx-auto">
       {/* Header */}
-      <div style={{ marginBottom: 28 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-          <Users size={20} style={{ color: 'oklch(0.65 0.18 250)' }} />
-          <h1 style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.02em', margin: 0 }}>
+      <div className="mb-7">
+        <div className="flex items-center gap-2.5 mb-1">
+          <Users size={20} className="text-[oklch(0.65_0.18_250)]" />
+          <h1 className="text-[22px] font-bold tracking-tight m-0">
             הגדרות משפחה
           </h1>
         </div>
-        <p style={{ fontSize: 13, color: 'oklch(0.65 0.01 250)', margin: 0 }}>
+        <p className="text-[13px] text-[oklch(0.65_0.01_250)] m-0">
           {family.name}
         </p>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div className="flex flex-col gap-4">
         {/* Family Info Card */}
-        <div style={S.card}>
-          <h2 style={{ fontSize: 14, fontWeight: 600, marginBottom: 16, margin: '0 0 16px' }}>
+        <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5">
+          <h2 className="text-sm font-semibold mb-4 mt-0">
             פרטי המשפחה
           </h2>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div className="flex flex-col gap-3.5">
             {/* Family Name */}
             <div>
-              <div style={S.label}>שם משפחה</div>
+              <div className="text-[11px] text-[oklch(0.65_0.01_250)] block mb-1 font-medium">שם משפחה</div>
               {editingName ? (
-                <div style={{ display: 'flex', gap: 8 }}>
+                <div className="flex gap-2">
                   <input
                     value={nameValue}
                     onChange={e => setNameValue(e.target.value)}
-                    style={{ ...S.input, width: 'auto', flex: 1 }}
+                    className="flex-1 bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-2 text-inherit text-[13px] outline-none"
                     autoFocus
                     onKeyDown={e => {
                       if (e.key === 'Enter' && nameValue.trim()) updateName.mutate(nameValue.trim())
@@ -218,26 +155,26 @@ export default function FamilyPage() {
                   <button
                     onClick={() => nameValue.trim() && updateName.mutate(nameValue.trim())}
                     disabled={updateName.isPending}
-                    style={{ ...S.btn, padding: '8px 12px' }}
+                    className="bg-[oklch(0.65_0.18_250)] border-none rounded-lg px-3 py-2 cursor-pointer text-[oklch(0.12_0.01_250)] font-semibold text-[13px] flex items-center gap-1.5"
                     aria-label="שמור"
                   >
                     <Check size={14} />
                   </button>
                   <button
                     onClick={() => setEditingName(false)}
-                    style={{ ...S.btnSecondary, padding: '8px' }}
+                    className="bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-2 py-2 cursor-pointer text-[oklch(0.70_0.01_250)] text-xs flex items-center gap-1"
                     aria-label="ביטול"
                   >
                     <X size={14} />
                   </button>
                 </div>
               ) : (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontSize: 14, fontWeight: 500 }}>{family.name}</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium">{family.name}</span>
                   {isAdmin && (
                     <button
                       onClick={() => { setNameValue(family.name); setEditingName(true) }}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'oklch(0.65 0.01 250)', padding: 4 }}
+                      className="bg-transparent border-none cursor-pointer text-[oklch(0.65_0.01_250)] p-1"
                       aria-label="ערוך שם"
                     >
                       <Pencil size={13} />
@@ -249,19 +186,16 @@ export default function FamilyPage() {
 
             {/* Invite Code */}
             <div>
-              <div style={S.label}>קוד הזמנה</div>
-              <span style={{
-                fontSize: 13, fontFamily: 'monospace', letterSpacing: '0.05em',
-                color: 'oklch(0.65 0.18 250)', direction: 'ltr', display: 'inline-block',
-              }}>
+              <div className="text-[11px] text-[oklch(0.65_0.01_250)] block mb-1 font-medium">קוד הזמנה</div>
+              <span className="text-[13px] font-mono tracking-[0.05em] text-[oklch(0.65_0.18_250)] ltr inline-block">
                 {family.invite_code}
               </span>
             </div>
 
             {/* Created Date */}
             <div>
-              <div style={S.label}>תאריך יצירה</div>
-              <span style={{ fontSize: 13, color: 'oklch(0.65 0.01 250)' }}>
+              <div className="text-[11px] text-[oklch(0.65_0.01_250)] block mb-1 font-medium">תאריך יצירה</div>
+              <span className="text-[13px] text-[oklch(0.65_0.01_250)]">
                 {formatDate(family.created_at)}
               </span>
             </div>
@@ -269,54 +203,51 @@ export default function FamilyPage() {
         </div>
 
         {/* Members List Card */}
-        <div style={S.card}>
-          <h2 style={{ fontSize: 14, fontWeight: 600, margin: '0 0 16px' }}>
+        <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5">
+          <h2 className="text-sm font-semibold mb-4 mt-0">
             חברי משפחה
           </h2>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div className="flex flex-col gap-2.5">
             {members.map(member => {
               const isMe = member.user_id === user?.id
               const isMemberAdmin = member.role === 'admin'
               return (
                 <div
                   key={member.id}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: 12,
-                    padding: '10px 12px',
-                    borderRadius: 8,
-                    background: isMe ? 'oklch(0.20 0.02 250)' : 'oklch(0.13 0.01 250)',
-                    border: isMe ? '1px solid oklch(0.30 0.04 250)' : '1px solid oklch(0.22 0.01 250)',
-                  }}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg ${
+                    isMe
+                      ? 'bg-[oklch(0.20_0.02_250)] border border-[oklch(0.30_0.04_250)]'
+                      : 'bg-[oklch(0.13_0.01_250)] border border-[oklch(0.22_0.01_250)]'
+                  }`}
                 >
                   {/* Avatar placeholder */}
-                  <div style={{
-                    width: 32, height: 32, borderRadius: '50%',
-                    background: isMemberAdmin ? 'oklch(0.25 0.06 145)' : 'oklch(0.25 0.04 250)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    flexShrink: 0,
-                  }}>
-                    <Users size={14} style={{
-                      color: isMemberAdmin ? 'oklch(0.70 0.15 145)' : 'oklch(0.65 0.12 250)',
-                    }} />
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+                    isMemberAdmin ? 'bg-[oklch(0.25_0.06_145)]' : 'bg-[oklch(0.25_0.04_250)]'
+                  }`}>
+                    <Users size={14} className={isMemberAdmin ? 'text-[oklch(0.70_0.15_145)]' : 'text-[oklch(0.65_0.12_250)]'} />
                   </div>
 
                   {/* Info */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ fontSize: 13, fontWeight: 500 }}>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[13px] font-medium">
                         {member.user_id.slice(0, 8)}...
                         {isMe && (
-                          <span style={{ color: 'oklch(0.65 0.01 250)', fontWeight: 400 }}> (את/ה)</span>
+                          <span className="text-[oklch(0.65_0.01_250)] font-normal"> (את/ה)</span>
                         )}
                       </span>
-                      <span style={isMemberAdmin ? S.badge('145') : S.badge('250')}>
+                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold border ${
+                        isMemberAdmin
+                          ? 'bg-[oklch(0.20_0.03_145)] text-[oklch(0.75_0.15_145)] border-[oklch(0.30_0.05_145)]'
+                          : 'bg-[oklch(0.20_0.03_250)] text-[oklch(0.75_0.15_250)] border-[oklch(0.30_0.05_250)]'
+                      }`}>
                         {isMemberAdmin ? (
                           <><Shield size={10} /> מנהל</>
                         ) : 'חבר'}
                       </span>
                     </div>
-                    <div style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)', marginTop: 2 }}>
+                    <div className="text-[11px] text-[oklch(0.65_0.01_250)] mt-0.5">
                       הצטרף/ה {formatDate(member.joined_at)}
                     </div>
                   </div>
@@ -325,29 +256,17 @@ export default function FamilyPage() {
                   {isAdmin && !isMemberAdmin && (
                     <>
                       {confirmDeleteId === member.id ? (
-                        <div style={{ display: 'flex', gap: 4 }}>
+                        <div className="flex gap-1">
                           <button
                             onClick={() => removeMember.mutate(member.id)}
                             disabled={removeMember.isPending}
-                            style={{
-                              background: 'oklch(0.25 0.08 25)',
-                              border: '1px solid oklch(0.35 0.10 25)',
-                              borderRadius: 6, padding: '4px 10px',
-                              color: 'oklch(0.75 0.15 25)', fontSize: 11, fontWeight: 600,
-                              cursor: 'pointer',
-                            }}
+                            className="bg-[oklch(0.25_0.08_25)] border border-[oklch(0.35_0.10_25)] rounded-md px-2.5 py-1 text-[oklch(0.75_0.15_25)] text-[11px] font-semibold cursor-pointer"
                           >
                             אישור
                           </button>
                           <button
                             onClick={() => setConfirmDeleteId(null)}
-                            style={{
-                              background: 'none',
-                              border: '1px solid oklch(0.25 0.01 250)',
-                              borderRadius: 6, padding: '4px 8px',
-                              color: 'oklch(0.65 0.01 250)', fontSize: 11,
-                              cursor: 'pointer',
-                            }}
+                            className="bg-transparent border border-[oklch(0.25_0.01_250)] rounded-md px-2 py-1 text-[oklch(0.65_0.01_250)] text-[11px] cursor-pointer"
                           >
                             ביטול
                           </button>
@@ -355,10 +274,7 @@ export default function FamilyPage() {
                       ) : (
                         <button
                           onClick={() => setConfirmDeleteId(member.id)}
-                          style={{
-                            background: 'none', border: 'none', cursor: 'pointer',
-                            color: 'oklch(0.65 0.01 250)', padding: 6,
-                          }}
+                          className="bg-transparent border-none cursor-pointer text-[oklch(0.65_0.01_250)] p-1.5"
                           aria-label="הסר חבר"
                         >
                           <X size={15} />
@@ -373,59 +289,55 @@ export default function FamilyPage() {
         </div>
 
         {/* Invite Section Card */}
-        <div style={S.card}>
-          <h2 style={{ fontSize: 14, fontWeight: 600, margin: '0 0 16px' }}>
+        <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5">
+          <h2 className="text-sm font-semibold mb-4 mt-0">
             הזמנת חברי משפחה
           </h2>
 
           {/* Copy Link */}
-          <div style={{ marginBottom: 20 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Link2 size={14} style={{ color: 'oklch(0.65 0.18 250)' }} />
+          <div className="mb-5">
+            <div className="text-[13px] font-semibold mb-2 flex items-center gap-1.5">
+              <Link2 size={14} className="text-[oklch(0.65_0.18_250)]" />
               שתף לינק הזמנה
             </div>
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div className="flex gap-2">
               <input
                 readOnly
                 value={`${typeof window !== 'undefined' ? window.location.origin : ''}/login?invite=${family.invite_code}`}
-                style={{ ...S.input, direction: 'ltr' as const, color: 'oklch(0.70 0.01 250)', fontSize: 12 }}
+                className="flex-1 bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-2 text-inherit text-xs outline-none ltr text-[oklch(0.70_0.01_250)]"
               />
-              <button onClick={copyInviteLink} style={S.btnSecondary}>
+              <button onClick={copyInviteLink} className="bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-2 cursor-pointer text-[oklch(0.70_0.01_250)] text-xs flex items-center gap-1">
                 <Copy size={13} /> העתק
               </button>
             </div>
           </div>
 
           {/* Divider */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-            <div style={{ flex: 1, height: 1, background: 'oklch(0.25 0.01 250)' }} />
-            <span style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)' }}>או</span>
-            <div style={{ flex: 1, height: 1, background: 'oklch(0.25 0.01 250)' }} />
+          <div className="flex items-center gap-3 mb-5">
+            <div className="flex-1 h-px bg-[oklch(0.25_0.01_250)]" />
+            <span className="text-[11px] text-[oklch(0.65_0.01_250)]">או</span>
+            <div className="flex-1 h-px bg-[oklch(0.25_0.01_250)]" />
           </div>
 
           {/* Email Invite */}
           <div>
-            <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Mail size={14} style={{ color: 'oklch(0.70 0.18 145)' }} />
+            <div className="text-[13px] font-semibold mb-2 flex items-center gap-1.5">
+              <Mail size={14} className="text-[oklch(0.70_0.18_145)]" />
               שלח הזמנה במייל
             </div>
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div className="flex gap-2">
               <input
                 type="email"
                 value={inviteEmail}
                 onChange={e => setInviteEmail(e.target.value)}
                 placeholder="email@example.com"
-                style={{ ...S.input, direction: 'ltr' as const }}
+                className="flex-1 bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-2 text-inherit text-[13px] outline-none ltr"
                 onKeyDown={e => { if (e.key === 'Enter') sendInviteEmail() }}
               />
               <button
                 onClick={sendInviteEmail}
                 disabled={!inviteEmail || sendingEmail}
-                style={{
-                  ...S.btn,
-                  opacity: !inviteEmail || sendingEmail ? 0.5 : 1,
-                  cursor: sendingEmail ? 'wait' : 'pointer',
-                }}
+                className={`bg-[oklch(0.65_0.18_250)] border-none rounded-lg px-4 py-2 font-semibold text-[13px] text-[oklch(0.12_0.01_250)] flex items-center gap-1.5 ${!inviteEmail || sendingEmail ? 'opacity-50' : 'opacity-100'} ${sendingEmail ? 'cursor-wait' : 'cursor-pointer'}`}
               >
                 <Send size={13} /> שלח
               </button>
@@ -434,22 +346,22 @@ export default function FamilyPage() {
         </div>
 
         {/* Privacy Setting Card */}
-        <div style={S.card}>
-          <h2 style={{ fontSize: 14, fontWeight: 600, margin: '0 0 16px' }}>
+        <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5">
+          <h2 className="text-sm font-semibold mb-4 mt-0">
             פרטיות
           </h2>
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, fontWeight: 500, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex-1">
+              <div className="text-[13px] font-medium mb-1 flex items-center gap-1.5">
                 {myMembership?.show_personal_to_family ? (
-                  <Eye size={14} style={{ color: 'oklch(0.70 0.15 145)' }} />
+                  <Eye size={14} className="text-[oklch(0.70_0.15_145)]" />
                 ) : (
-                  <EyeOff size={14} style={{ color: 'oklch(0.65 0.01 250)' }} />
+                  <EyeOff size={14} className="text-[oklch(0.65_0.01_250)]" />
                 )}
                 הצג הוצאות אישיות למשפחה
               </div>
-              <p style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)', margin: 0, lineHeight: 1.5 }}>
+              <p className="text-[11px] text-[oklch(0.65_0.01_250)] m-0 leading-relaxed">
                 כאשר מופעל, חברי המשפחה האחרים יוכלו לראות את ההוצאות האישיות שלך בדשבורד המשפחתי.
               </p>
             </div>
@@ -458,26 +370,18 @@ export default function FamilyPage() {
             <button
               onClick={() => togglePrivacy.mutate(!myMembership?.show_personal_to_family)}
               disabled={togglePrivacy.isPending}
-              style={{
-                width: 44, height: 24, borderRadius: 12, border: 'none',
-                background: myMembership?.show_personal_to_family
-                  ? 'oklch(0.55 0.18 145)'
-                  : 'oklch(0.25 0.01 250)',
-                cursor: 'pointer', position: 'relative', flexShrink: 0,
-                transition: 'background 0.2s',
-              }}
+              className={`w-11 h-6 rounded-xl border-none cursor-pointer relative shrink-0 transition-colors duration-200 ${
+                myMembership?.show_personal_to_family
+                  ? 'bg-[oklch(0.55_0.18_145)]'
+                  : 'bg-[oklch(0.25_0.01_250)]'
+              }`}
               aria-label="הצג הוצאות אישיות למשפחה"
               role="switch"
               aria-checked={myMembership?.show_personal_to_family ?? false}
             >
-              <div style={{
-                width: 18, height: 18, borderRadius: '50%',
-                background: 'oklch(0.92 0.01 250)',
-                position: 'absolute', top: 3,
-                right: myMembership?.show_personal_to_family ? 3 : 'auto',
-                left: myMembership?.show_personal_to_family ? 'auto' : 3,
-                transition: 'all 0.2s',
-              }} />
+              <div className={`w-[18px] h-[18px] rounded-full bg-[oklch(0.92_0.01_250)] absolute top-[3px] transition-all duration-200 ${
+                myMembership?.show_personal_to_family ? 'right-[3px] left-auto' : 'left-[3px] right-auto'
+              }`} />
             </button>
           </div>
         </div>

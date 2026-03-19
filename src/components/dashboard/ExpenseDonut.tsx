@@ -11,7 +11,7 @@ interface DonutEntry {
 
 export function ExpenseDonut({ data }: { data: DonutEntry[] }) {
   if (data.length === 0) {
-    return <div style={{ color: 'oklch(0.65 0.01 250)', fontSize: 13 }}>אין נתונים</div>
+    return <div className="text-[oklch(0.65_0.01_250)] text-[13px]">אין נתונים</div>
   }
 
   return (
@@ -27,12 +27,12 @@ export function ExpenseDonut({ data }: { data: DonutEntry[] }) {
           />
         </PieChart>
       </ResponsiveContainer>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px 14px', marginTop: 4 }}>
+      <div className="flex flex-wrap gap-x-3.5 gap-y-[5px] mt-1">
         {data.map(d => (
-          <div key={d.name} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12 }}>
-            <div style={{ width: 7, height: 7, borderRadius: '50%', background: d.color, flexShrink: 0 }} />
-            <span style={{ color: 'oklch(0.70 0.01 250)' }}>{d.name}</span>
-            <span style={{ color: 'oklch(0.65 0.01 250)', direction: 'ltr' }}>{formatCurrency(d.value)}</span>
+          <div key={d.name} className="flex items-center gap-[5px] text-xs">
+            <div className="w-[7px] h-[7px] rounded-full shrink-0" style={{ background: d.color }} />
+            <span className="text-[oklch(0.70_0.01_250)]">{d.name}</span>
+            <span className="text-[oklch(0.65_0.01_250)]" dir="ltr">{formatCurrency(d.value)}</span>
           </div>
         ))}
       </div>

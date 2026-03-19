@@ -35,12 +35,6 @@ export default function SetupPage() {
     }
   }
 
-  const card: React.CSSProperties = {
-    background: 'oklch(0.16 0.01 250)',
-    border: '1px solid oklch(0.25 0.01 250)',
-    borderRadius: 14, padding: 32,
-  }
-
   const items = [
     '21 קטגוריות תקציב (קבועות, משתנות, חיסכון)',
     '5 קרנות צבירה (חירום, חופשה, רכב, אלקטרוניקה, מתנות)',
@@ -48,19 +42,19 @@ export default function SetupPage() {
   ]
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, marginRight: 0 }}>
-      <div style={{ ...card, maxWidth: 440, width: '100%' }}>
-        <div style={{ marginBottom: 24 }}>
-          <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 8 }}>ברוך הבא ל-My Family Finance</h1>
-          <p style={{ color: 'oklch(0.60 0.01 250)', fontSize: 14, lineHeight: 1.6 }}>
+    <div className="min-h-screen flex items-center justify-center p-6 mr-0">
+      <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-[14px] p-8 max-w-[440px] w-full">
+        <div className="mb-6">
+          <h1 className="text-[22px] font-bold mb-2">ברוך הבא ל-My Family Finance</h1>
+          <p className="text-[oklch(0.60_0.01_250)] text-sm leading-relaxed">
             אתחל את החשבון שלך עם ברירות מחדל מוכנות. תוכל לשנות הכל אחר כך.
           </p>
         </div>
 
-        <div style={{ marginBottom: 28, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div className="mb-7 flex flex-col gap-2.5">
           {items.map(item => (
-            <div key={item} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 14, color: 'oklch(0.75 0.01 250)' }}>
-              <CheckCircle size={15} style={{ color: 'oklch(0.70 0.18 145)', flexShrink: 0 }} />
+            <div key={item} className="flex items-center gap-2.5 text-sm text-[oklch(0.75_0.01_250)]">
+              <CheckCircle size={15} className="text-[oklch(0.70_0.18_145)] shrink-0" />
               {item}
             </div>
           ))}
@@ -69,16 +63,10 @@ export default function SetupPage() {
         <button
           onClick={handleSetup}
           disabled={runSetup.isPending}
-          style={{
-            width: '100%', background: 'oklch(0.65 0.18 250)', border: 'none',
-            borderRadius: 9, padding: '13px 0', fontWeight: 600, fontSize: 15,
-            color: 'oklch(0.10 0.01 250)', cursor: runSetup.isPending ? 'not-allowed' : 'pointer',
-            opacity: runSetup.isPending ? 0.7 : 1,
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-          }}
+          className={`w-full bg-[oklch(0.65_0.18_250)] border-none rounded-[9px] py-[13px] font-semibold text-[15px] text-[oklch(0.10_0.01_250)] flex items-center justify-center gap-2 ${runSetup.isPending ? 'cursor-not-allowed opacity-70' : 'cursor-pointer opacity-100'}`}
         >
           {runSetup.isPending
-            ? <><Loader size={16} style={{ animation: 'spin 1s linear infinite' }} /> מאתחל...</>
+            ? <><Loader size={16} className="animate-spin" /> מאתחל...</>
             : 'אתחל חשבון'
           }
         </button>

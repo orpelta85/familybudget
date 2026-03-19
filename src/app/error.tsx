@@ -8,15 +8,15 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
   }, [error])
 
   return (
-    <div style={{ padding: 40, textAlign: 'center' }}>
-      <div style={{ fontSize: 32, marginBottom: 16 }}>⚠️</div>
-      <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>משהו השתבש</h2>
-      <p style={{ color: 'oklch(0.65 0.01 250)', fontSize: 14, marginBottom: 24 }}>
+    <div className="p-10 text-center">
+      <div className="text-[32px] mb-4">⚠️</div>
+      <h2 className="text-lg font-bold mb-2">משהו השתבש</h2>
+      <p className="text-[oklch(0.65_0.01_250)] text-sm mb-6">
         אירעה שגיאה בטעינת העמוד. נסה שוב.
       </p>
       <button
         onClick={reset}
-        style={{ background: 'oklch(0.65 0.18 250)', color: 'oklch(0.10 0.01 250)', border: 'none', borderRadius: 8, padding: '10px 24px', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}
+        className="bg-[oklch(0.65_0.18_250)] text-[oklch(0.10_0.01_250)] border-none rounded-lg px-6 py-2.5 font-semibold text-sm cursor-pointer"
       >
         נסה שוב
       </button>

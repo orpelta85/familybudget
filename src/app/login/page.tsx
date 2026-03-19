@@ -9,7 +9,7 @@ import { Skeleton } from '@/components/ui/Skeleton'
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div className="min-h-screen flex items-center justify-center">
         <Skeleton variant="card" width={360} height={320} />
       </div>
     }>
@@ -79,41 +79,40 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4"
-         style={{ marginRight: 0, maxWidth: '100vw' }}>
-      <div style={{ width: 380, background: 'oklch(0.16 0.01 250)', border: '1px solid oklch(0.25 0.01 250)', borderRadius: 12, padding: 32 }}>
-        <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 6 }}>My Family Finance</h1>
-        <p style={{ color: 'oklch(0.60 0.01 250)', fontSize: 14, marginBottom: 28 }}>
+    <div className="min-h-screen flex items-center justify-center p-4 mr-0 max-w-[100vw]">
+      <div className="w-[380px] bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-8">
+        <h1 className="text-[22px] font-bold mb-1.5">My Family Finance</h1>
+        <p className="text-[oklch(0.60_0.01_250)] text-sm mb-7">
           {inviteFamilyName
             ? `הצטרפות ל${inviteFamilyName}`
             : isSignup ? 'יצירת חשבון חדש' : 'התחברות לחשבון'}
         </p>
 
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div>
-            <label style={{ fontSize: 13, display: 'block', marginBottom: 6, color: 'oklch(0.75 0.01 250)' }}>אימייל</label>
+            <label className="text-[13px] block mb-1.5 text-[oklch(0.75_0.01_250)]">אימייל</label>
             <input
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
               required
-              style={{ width: '100%', background: 'oklch(0.22 0.01 250)', border: '1px solid oklch(0.28 0.01 250)', borderRadius: 8, padding: '10px 12px', color: 'inherit', fontSize: 14, direction: 'ltr' }}
+              className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-2.5 text-inherit text-sm ltr"
             />
           </div>
           <div>
-            <label style={{ fontSize: 13, display: 'block', marginBottom: 6, color: 'oklch(0.75 0.01 250)' }}>סיסמה</label>
+            <label className="text-[13px] block mb-1.5 text-[oklch(0.75_0.01_250)]">סיסמה</label>
             <input
               type="password"
               value={password}
               onChange={e => setPassword(e.target.value)}
               required
-              style={{ width: '100%', background: 'oklch(0.22 0.01 250)', border: '1px solid oklch(0.28 0.01 250)', borderRadius: 8, padding: '10px 12px', color: 'inherit', fontSize: 14, direction: 'ltr' }}
+              className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-2.5 text-inherit text-sm ltr"
             />
           </div>
           <button
             type="submit"
             disabled={loading}
-            style={{ width: '100%', background: 'oklch(0.65 0.18 250)', color: 'oklch(0.12 0.01 250)', border: 'none', borderRadius: 8, padding: '11px 0', fontWeight: 600, fontSize: 15, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1 }}
+            className={`w-full bg-[oklch(0.65_0.18_250)] text-[oklch(0.12_0.01_250)] border-none rounded-lg py-[11px] font-semibold text-[15px] ${loading ? 'cursor-not-allowed opacity-70' : 'cursor-pointer opacity-100'}`}
           >
             {loading ? '...' : isSignup ? 'הרשמה' : 'התחברות'}
           </button>
@@ -121,7 +120,7 @@ function LoginForm() {
 
         <button
           onClick={() => setIsSignup(!isSignup)}
-          style={{ marginTop: 20, width: '100%', background: 'none', border: 'none', color: 'oklch(0.65 0.18 250)', cursor: 'pointer', fontSize: 13 }}
+          className="mt-5 w-full bg-transparent border-none text-[oklch(0.65_0.18_250)] cursor-pointer text-[13px]"
         >
           {isSignup ? 'יש לי כבר חשבון — התחברות' : 'אין לי חשבון — הרשמה'}
         </button>
@@ -130,7 +129,7 @@ function LoginForm() {
           <button
             onClick={handleReset}
             disabled={loading || resetSent}
-            style={{ marginTop: 10, width: '100%', background: 'none', border: 'none', color: 'oklch(0.65 0.01 250)', cursor: resetSent ? 'default' : 'pointer', fontSize: 12 }}
+            className={`mt-2.5 w-full bg-transparent border-none text-[oklch(0.65_0.01_250)] text-xs ${resetSent ? 'cursor-default' : 'cursor-pointer'}`}
           >
             {resetSent ? '✓ מייל נשלח' : 'שכחתי סיסמה'}
           </button>

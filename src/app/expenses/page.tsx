@@ -38,27 +38,6 @@ const SHARED_CATEGORIES: { value: string; label: string }[] = [
   { value: 'misc', label: 'שונות' },
 ]
 
-const S = {
-  card: {
-    background: 'oklch(0.16 0.01 250)',
-    border: '1px solid oklch(0.25 0.01 250)',
-    borderRadius: 12,
-    padding: 20,
-  } as React.CSSProperties,
-  input: {
-    background: 'oklch(0.22 0.01 250)',
-    border: '1px solid oklch(0.28 0.01 250)',
-    borderRadius: 8,
-    padding: '8px 12px',
-    color: 'inherit',
-    fontSize: 13,
-    outline: 'none',
-  } as React.CSSProperties,
-  label: { fontSize: 11, color: 'oklch(0.65 0.01 250)', display: 'block', marginBottom: 4, fontWeight: 500 } as React.CSSProperties,
-  row: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid oklch(0.20 0.01 250)' } as React.CSSProperties,
-  iconBtn: { background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 8, minWidth: 36, minHeight: 36 } as React.CSSProperties,
-}
-
 export default function ExpensesPage() {
   const { user, loading } = useUser()
   const router = useRouter()
@@ -111,7 +90,7 @@ export default function ExpensesPage() {
   const [showImport, setShowImport] = useState(false)
   const [importing, setImporting] = useState(false)
 
-  if (loading || !user) return <div className="loading-pulse" style={{ padding: 40, textAlign: 'center', color: 'oklch(0.65 0.01 250)' }}>טוען...</div>
+  if (loading || !user) return <div className="loading-pulse p-10 text-center text-muted-foreground">טוען...</div>
 
   const selectedPeriod = periods?.find(p => p.id === selectedPeriodId)
   const totalPersonal  = (personalExp ?? []).reduce((s, e) => s + e.amount, 0)
@@ -342,25 +321,25 @@ export default function ExpensesPage() {
   return (
     <div>
       {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+      <div className="flex justify-between items-start mb-5">
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-            <Receipt size={18} style={{ color: 'oklch(0.72 0.18 55)' }} />
-            <h1 style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em' }}>הוצאות</h1>
+          <div className="flex items-center gap-2 mb-1">
+            <Receipt size={18} className="text-[oklch(0.72_0.18_55)]" />
+            <h1 className="text-xl font-bold tracking-tight">הוצאות</h1>
           </div>
-          <p style={{ color: 'oklch(0.65 0.01 250)', fontSize: 13 }}>{selectedPeriod?.label ?? '...'}</p>
+          <p className="text-muted-foreground text-[13px]">{selectedPeriod?.label ?? '...'}</p>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={handleResetExpenses} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: '1px solid oklch(0.25 0.01 250)', borderRadius: 8, padding: '7px 14px', color: 'oklch(0.65 0.01 250)', fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>
+        <div className="flex gap-2">
+          <button onClick={handleResetExpenses} className="flex items-center gap-1.5 bg-transparent border border-border rounded-lg px-3.5 py-[7px] text-muted-foreground text-xs font-medium cursor-pointer">
             <Trash2 size={13} /> אפס הוצאות
           </button>
-          <button onClick={downloadTemplate} style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'oklch(0.22 0.01 250)', border: '1px solid oklch(0.28 0.01 250)', borderRadius: 8, padding: '7px 11px', color: 'oklch(0.75 0.01 250)', fontSize: 12, cursor: 'pointer' }}>
+          <button onClick={downloadTemplate} className="flex items-center gap-1.5 bg-secondary border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[7px] text-[oklch(0.75_0.01_250)] text-xs cursor-pointer">
             <Download size={13} /> תבנית
           </button>
-          <button onClick={() => fileRef.current?.click()} className="btn-hover" style={{ display: 'flex', alignItems: 'center', gap: 5, background: 'oklch(0.65 0.18 250)', border: 'none', borderRadius: 8, padding: '7px 11px', color: 'oklch(0.12 0.01 250)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+          <button onClick={() => fileRef.current?.click()} className="btn-hover flex items-center gap-1.5 bg-primary border-none rounded-lg px-3 py-[7px] text-primary-foreground text-xs font-semibold cursor-pointer">
             <Upload size={13} /> Excel
           </button>
-          <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" style={{ display: 'none' }} onChange={handleExcelUpload} />
+          <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleExcelUpload} />
         </div>
       </div>
 
@@ -368,44 +347,42 @@ export default function ExpensesPage() {
 
       {/* ── Excel import preview ────────────────────────────────────────────── */}
       {showImport && (
-        <div style={{ ...S.card, marginBottom: 16, borderColor: 'oklch(0.65 0.18 250 / 0.4)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-              <FileSpreadsheet size={14} style={{ color: 'oklch(0.65 0.18 250)' }} />
-              <span style={{ fontWeight: 600, fontSize: 13 }}>{importRows.length} שורות מ-Excel</span>
+        <div className="bg-card border border-[oklch(0.65_0.18_250_/_0.4)] rounded-xl p-5 mb-4">
+          <div className="flex justify-between items-center mb-3">
+            <div className="flex items-center gap-2">
+              <FileSpreadsheet size={14} className="text-primary" />
+              <span className="font-semibold text-[13px]">{importRows.length} שורות מ-Excel</span>
             </div>
-            <button onClick={() => setShowImport(false)} aria-label="סגור ייבוא" style={{ ...S.iconBtn, color: 'oklch(0.65 0.01 250)' }}><X size={14} /></button>
+            <button onClick={() => setShowImport(false)} aria-label="סגור ייבוא" className="bg-transparent border-none cursor-pointer flex items-center justify-center p-2 min-w-9 min-h-9 text-muted-foreground"><X size={14} /></button>
           </div>
-          <div style={{ maxHeight: 320, overflowY: 'auto', marginBottom: 10 }}>
+          <div className="max-h-80 overflow-y-auto mb-2.5">
             {importRows.map((row, i) => {
               const isAutoMatched = row.categoryId && !row.categoryId.startsWith('__new__') && row.category
               const isNewCat = row.categoryId?.startsWith('__new__')
               return (
-                <div key={i} className="grid-import-row" style={{ padding: '5px 0', borderBottom: '1px solid oklch(0.20 0.01 250)' }}>
-                  <span style={{ fontSize: 12, color: 'oklch(0.80 0.01 250)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.description}</span>
-                  <span style={{ fontSize: 12, fontWeight: 600, direction: 'ltr', textAlign: 'right', color: 'oklch(0.72 0.18 55)' }}>{formatCurrency(row.amount)}</span>
+                <div key={i} className="grid-import-row py-1.5 border-b border-[oklch(0.20_0.01_250)]">
+                  <span className="text-xs text-[oklch(0.80_0.01_250)] overflow-hidden text-ellipsis whitespace-nowrap">{row.description}</span>
+                  <span className="text-xs font-semibold ltr text-right text-[oklch(0.72_0.18_55)]">{formatCurrency(row.amount)}</span>
                   {/* Toggle אישי/משותף */}
                   <button
                     onClick={() => setImportRows(p => p.map((r, j) => j === i ? { ...r, is_shared: !r.is_shared } : r))}
-                    style={{
-                      background: row.is_shared ? 'oklch(0.22 0.05 295)' : 'oklch(0.22 0.01 250)',
-                      border: row.is_shared ? '1px solid oklch(0.40 0.12 295)' : '1px solid oklch(0.28 0.01 250)',
-                      borderRadius: 6, padding: '2px 8px', fontSize: 10, fontWeight: 600,
-                      color: row.is_shared ? 'oklch(0.75 0.15 295)' : 'oklch(0.65 0.01 250)',
-                      cursor: 'pointer', whiteSpace: 'nowrap',
-                    }}
+                    className={`rounded-md px-2 py-0.5 text-[10px] font-semibold cursor-pointer whitespace-nowrap ${
+                      row.is_shared
+                        ? 'bg-[oklch(0.22_0.05_295)] border border-[oklch(0.40_0.12_295)] text-[oklch(0.75_0.15_295)]'
+                        : 'bg-secondary border border-[oklch(0.28_0.01_250)] text-muted-foreground'
+                    }`}
                   >
                     {row.is_shared ? 'משותף' : 'אישי'}
                   </button>
                   {/* קטגוריה */}
                   {isAutoMatched ? (
-                    <span style={{ fontSize: 11, color: 'oklch(0.70 0.18 150)', fontWeight: 500 }}>{row.category}</span>
+                    <span className="text-[11px] text-[oklch(0.70_0.18_150)] font-medium">{row.category}</span>
                   ) : isNewCat ? (
-                    <span style={{ fontSize: 11, color: 'oklch(0.72 0.18 55)', fontWeight: 500 }}>{row.category} (חדש)</span>
+                    <span className="text-[11px] text-[oklch(0.72_0.18_55)] font-medium">{row.category} (חדש)</span>
                   ) : (
                     <select value={row.categoryId} onChange={e => setImportRows(p => p.map((r, j) => j === i ? { ...r, categoryId: e.target.value } : r))}
                       aria-label="בחר קטגוריה"
-                      style={{ ...S.input, padding: '3px 6px', fontSize: 11 }}>
+                      className="bg-secondary border border-[oklch(0.28_0.01_250)] rounded-lg px-1.5 py-0.5 text-[11px] text-inherit outline-none">
                       <option value="">בחר...</option>
                       {categories?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
@@ -414,46 +391,46 @@ export default function ExpensesPage() {
               )
             })}
           </div>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={handleImportSave} disabled={importing} style={{ flex: 1, background: importing ? 'oklch(0.40 0.05 250)' : 'oklch(0.65 0.18 250)', border: 'none', borderRadius: 8, padding: '8px 0', color: 'oklch(0.12 0.01 250)', fontWeight: 600, cursor: importing ? 'wait' : 'pointer', fontSize: 12 }}>
+          <div className="flex gap-2">
+            <button onClick={handleImportSave} disabled={importing} className={`flex-1 border-none rounded-lg py-2 text-primary-foreground font-semibold text-xs ${importing ? 'bg-[oklch(0.40_0.05_250)] cursor-wait' : 'bg-primary cursor-pointer'}`}>
               {importing ? 'מייבא... נא להמתין' : `ייבא ${importRows.filter(r => (r.categoryId || r.category) && r.amount > 0).length}`}
             </button>
-            <button onClick={() => { setShowImport(false); setImportRows([]) }} style={{ ...S.input, padding: '8px 12px', cursor: 'pointer', fontSize: 12, width: 'auto' }}>ביטול</button>
+            <button onClick={() => { setShowImport(false); setImportRows([]) }} className="bg-secondary border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-2 text-inherit text-xs cursor-pointer outline-none">ביטול</button>
           </div>
         </div>
       )}
 
-      <div className="grid-2" style={{ alignItems: 'start' }}>
+      <div className="grid-2 items-start">
 
         {/* ── Add form ───────────────────────────────────────────────────────── */}
-        <div style={S.card}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 14 }}>
-            <Plus size={13} style={{ color: 'oklch(0.65 0.18 250)' }} />
-            <h2 style={{ fontWeight: 600, fontSize: 13, margin: 0 }}>הוספה ידנית</h2>
+        <div className="bg-card border border-border rounded-xl p-5">
+          <div className="flex items-center gap-2 mb-3.5">
+            <Plus size={13} className="text-primary" />
+            <h2 className="font-semibold text-[13px] m-0">הוספה ידנית</h2>
           </div>
 
           {/* Type toggle */}
-          <div style={{ display: 'flex', gap: 5, marginBottom: 12, background: 'oklch(0.20 0.01 250)', borderRadius: 9, padding: 3 }}>
+          <div className="flex gap-1.5 mb-3 bg-secondary rounded-[9px] p-[3px]">
             {(['personal', 'shared'] as ExpType[]).map(t => (
-              <button key={t} onClick={() => setExpType(t)} style={{
-                flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4,
-                background: expType === t ? (t === 'personal' ? 'oklch(0.65 0.18 250)' : 'oklch(0.55 0.12 310)') : 'transparent',
-                border: 'none', borderRadius: 7, padding: '6px 0',
-                color: expType === t ? 'oklch(0.12 0.01 250)' : 'oklch(0.65 0.01 250)',
-                fontSize: 12, fontWeight: expType === t ? 600 : 400, cursor: 'pointer',
-              }}>
+              <button key={t} onClick={() => setExpType(t)} className={`flex-1 flex items-center justify-center gap-1 border-none rounded-[7px] py-1.5 text-xs cursor-pointer ${
+                expType === t
+                  ? (t === 'personal'
+                    ? 'bg-primary text-primary-foreground font-semibold'
+                    : 'bg-[oklch(0.55_0.12_310)] text-primary-foreground font-semibold')
+                  : 'bg-transparent text-muted-foreground font-normal'
+              }`}>
                 {t === 'personal' ? <><User size={11} /> אישית</> : <><Users size={11} /> משותפת</>}
               </button>
             ))}
           </div>
 
-          <form onSubmit={handleAdd} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <form onSubmit={handleAdd} className="flex flex-col gap-2.5">
             {/* Category — identical for both types */}
             <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                <label htmlFor="expense-category" style={S.label}>קטגוריה</label>
+              <div className="flex justify-between items-center mb-1">
+                <label htmlFor="expense-category" className="text-[11px] text-muted-foreground block font-medium">קטגוריה</label>
                 <button type="button" onClick={() => setUseCustom(v => !v)}
-                  style={{ background: 'none', border: 'none', fontSize: 10, color: 'oklch(0.55 0.18 250)', cursor: 'pointer', padding: 0 }}>
+                  className="bg-transparent border-none text-[10px] text-[oklch(0.55_0.18_250)] cursor-pointer p-0">
                   {useCustomCat ? '← מרשימה' : '+ ידנית'}
                 </button>
               </div>
@@ -461,16 +438,16 @@ export default function ExpensesPage() {
                 <input id="expense-category" type="text" value={expType === 'shared' ? sharedLabel : customCat}
                   onChange={e => expType === 'shared' ? setSharedLabel(e.target.value) : setCustomCat(e.target.value)}
                   placeholder="שם קטגוריה חופשי..."
-                  style={{ ...S.input, width: '100%' }} />
+                  className="w-full bg-secondary border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-2 text-inherit text-[13px] outline-none" />
               ) : expType === 'shared' ? (
                 <select id="expense-category" value={sharedCategory} onChange={e => { setSharedCategory(e.target.value); setSharedLabel(SHARED_CATEGORIES.find(c => c.value === e.target.value)?.label ?? '') }}
-                  style={{ ...S.input, width: '100%' }}>
+                  className="w-full bg-secondary border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-2 text-inherit text-[13px] outline-none">
                   <option value="">בחר...</option>
                   {SHARED_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
                 </select>
               ) : (
                 <select id="expense-category" value={categoryId} onChange={e => setCategoryId(e.target.value)}
-                  style={{ ...S.input, width: '100%' }}>
+                  className="w-full bg-secondary border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-2 text-inherit text-[13px] outline-none">
                   <option value="">בחר...</option>
                   {categories?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
@@ -479,22 +456,20 @@ export default function ExpensesPage() {
 
             {/* Amount */}
             <div>
-              <label htmlFor="expense-amount" style={S.label}>סכום (₪){expType === 'shared' ? ` — כולל (חלקך ${splitPctLabel}%)` : ''}</label>
+              <label htmlFor="expense-amount" className="text-[11px] text-muted-foreground block mb-1 font-medium">סכום (₪){expType === 'shared' ? ` — כולל (חלקך ${splitPctLabel}%)` : ''}</label>
               <input id="expense-amount" type="number" value={amount} onChange={e => setAmount(e.target.value)}
                 placeholder="0" required min="0.01" step="0.01"
-                style={{ ...S.input, width: '100%', direction: 'ltr', textAlign: 'right' }} />
+                className="w-full bg-secondary border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-2 text-inherit text-[13px] outline-none ltr text-right" />
               {expType === 'shared' && Number(amount) > 0 && (
-                <div style={{ marginTop: 4, fontSize: 11, color: 'oklch(0.65 0.12 310)' }}>
+                <div className="mt-1 text-[11px] text-[oklch(0.65_0.12_310)]">
                   חלקך: {formatCurrency(Number(amount) * splitFrac)}
                 </div>
               )}
             </div>
 
-            <button type="submit" disabled={isPending} className="btn-hover" style={{
-              background: expType === 'personal' ? 'oklch(0.65 0.18 250)' : 'oklch(0.55 0.12 310)',
-              color: 'oklch(0.12 0.01 250)', border: 'none', borderRadius: 8,
-              padding: '9px 0', fontWeight: 600, fontSize: 13, cursor: 'pointer',
-            }}>
+            <button type="submit" disabled={isPending} className={`btn-hover border-none rounded-lg py-2.5 font-semibold text-[13px] cursor-pointer text-primary-foreground ${
+              expType === 'personal' ? 'bg-primary' : 'bg-[oklch(0.55_0.12_310)]'
+            }`}>
               {isPending ? '...' : '+ הוסף'}
             </button>
           </form>
@@ -503,76 +478,76 @@ export default function ExpensesPage() {
         {/* ── Lists ──────────────────────────────────────────────────────────── */}
         <div>
           {/* Totals summary */}
-          <div style={{ display: 'flex', gap: 12, marginBottom: 12, flexWrap: 'wrap' }}>
+          <div className="flex gap-3 mb-3 flex-wrap">
             {[
-              { label: 'אישי', value: totalPersonal, color: 'oklch(0.65 0.18 250)' },
-              { label: 'משותף (חלקי)', value: totalSharedMy, color: 'oklch(0.65 0.12 310)' },
-              { label: 'סה"כ', value: totalAll, color: 'oklch(0.72 0.18 55)' },
+              { label: 'אישי', value: totalPersonal, color: 'text-primary' },
+              { label: 'משותף (חלקי)', value: totalSharedMy, color: 'text-[oklch(0.65_0.12_310)]' },
+              { label: 'סה"כ', value: totalAll, color: 'text-[oklch(0.72_0.18_55)]' },
             ].filter(t => t.value > 0).map(t => (
-              <div key={t.label} className="card-transition" style={{ background: 'oklch(0.16 0.01 250)', border: '1px solid oklch(0.25 0.01 250)', borderRadius: 8, padding: '8px 14px' }}>
-                <div style={{ fontSize: 10, color: 'oklch(0.65 0.01 250)', marginBottom: 2 }}>{t.label}</div>
-                <div style={{ fontSize: 15, fontWeight: 700, color: t.color, direction: 'ltr' }}>{formatCurrency(t.value)}</div>
+              <div key={t.label} className="card-transition bg-card border border-border rounded-lg px-3.5 py-2">
+                <div className="text-[10px] text-muted-foreground mb-0.5">{t.label}</div>
+                <div className={`text-[15px] font-bold ltr ${t.color}`}>{formatCurrency(t.value)}</div>
               </div>
             ))}
           </div>
 
           {/* ── Sinking fund rows (locked, read-only) ────────────────────────── */}
           {(funds ?? []).length > 0 && (
-            <div style={{ ...S.card, marginBottom: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10, fontSize: 12, color: 'oklch(0.70 0.15 185)', fontWeight: 600 }}>
+            <div className="bg-card border border-border rounded-xl p-5 mb-3">
+              <div className="flex items-center gap-1.5 mb-2.5 text-xs text-[oklch(0.70_0.15_185)] font-semibold">
                 <Target size={12} /> קרנות שנתיות — הפרשה חודשית
-                <span style={{ fontWeight: 400, color: 'oklch(0.65 0.01 250)', marginRight: 4 }}>(נעולות — לשינוי עבור לעמוד הקרנות)</span>
+                <span className="font-normal text-muted-foreground mr-1">(נעולות — לשינוי עבור לעמוד הקרנות)</span>
               </div>
               {(funds ?? []).map(fund => (
-                <div key={fund.id} style={{ ...S.row, opacity: 0.85 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <Lock size={11} style={{ color: 'oklch(0.70 0.15 185)', flexShrink: 0 }} />
-                    <span style={{ fontSize: 13, color: 'oklch(0.80 0.01 250)' }}>{fund.name}</span>
+                <div key={fund.id} className="flex justify-between items-center py-2.5 border-b border-[oklch(0.20_0.01_250)] opacity-85">
+                  <div className="flex items-center gap-2">
+                    <Lock size={11} className="text-[oklch(0.70_0.15_185)] shrink-0" />
+                    <span className="text-[13px] text-[oklch(0.80_0.01_250)]">{fund.name}</span>
                   </div>
-                  <span style={{ fontSize: 13, fontWeight: 600, direction: 'ltr', color: 'oklch(0.70 0.15 185)' }}>
+                  <span className="text-[13px] font-semibold ltr text-[oklch(0.70_0.15_185)]">
                     {formatCurrency(fund.monthly_allocation)}
                   </span>
                 </div>
               ))}
-              <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: 8, marginTop: 4, fontSize: 12, color: 'oklch(0.60 0.01 250)' }}>
+              <div className="flex justify-between pt-2 mt-1 text-xs text-[oklch(0.60_0.01_250)]">
                 <span>סה&quot;כ קרנות חודשי</span>
-                <span style={{ direction: 'ltr', fontWeight: 600, color: 'oklch(0.70 0.15 185)' }}>{formatCurrency(totalSinking)}</span>
+                <span className="ltr font-semibold text-[oklch(0.70_0.15_185)]">{formatCurrency(totalSinking)}</span>
               </div>
             </div>
           )}
 
           {/* ── Personal + Shared side by side ──────────────────────────────── */}
-          <div className="grid-2" style={{ alignItems: 'start' }}>
+          <div className="grid-2 items-start">
 
           {/* ── Personal expenses ─────────────────────────────────────────────── */}
-          <div style={S.card}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600 }}>
-                <User size={12} style={{ color: 'oklch(0.65 0.18 250)' }} /> <h2 style={{ fontSize: 13, fontWeight: 600, margin: 0, display: 'inline' }}>הוצאות אישיות</h2>
+          <div className="bg-card border border-border rounded-xl p-5">
+            <div className="flex justify-between items-center mb-3">
+              <div className="flex items-center gap-1.5 text-[13px] font-semibold">
+                <User size={12} className="text-primary" /> <h2 className="text-[13px] font-semibold m-0 inline">הוצאות אישיות</h2>
               </div>
-              <span style={{ fontSize: 14, fontWeight: 700, direction: 'ltr', color: 'oklch(0.65 0.18 250)' }}>{formatCurrency(totalPersonal)}</span>
+              <span className="text-sm font-bold ltr text-primary">{formatCurrency(totalPersonal)}</span>
             </div>
             {!(personalExp?.length)
-              ? <div style={{ fontSize: 12, color: 'oklch(0.65 0.01 250)', textAlign: 'center', padding: '24px 0' }}><Inbox size={32} style={{ color: 'oklch(0.30 0.01 250)', margin: '0 auto 8px' }} />אין הוצאות אישיות</div>
+              ? <div className="text-xs text-muted-foreground text-center py-6"><Inbox size={32} className="text-[oklch(0.30_0.01_250)] mx-auto mb-2" />אין הוצאות אישיות</div>
               : personalExp.map(e => {
                 const itemId = personalItemId(e.category_id, e.description ?? '', e.id)
                 const locked = recurringPersonal.isLocked(itemId)
                 const catName = (e.budget_categories as BudgetCategory)?.name ?? 'כללי'
                 return (
-                  <div key={e.id} style={S.row}>
+                  <div key={e.id} className="flex justify-between items-center py-2.5 border-b border-[oklch(0.20_0.01_250)]">
                     <div>
-                      <div style={{ fontSize: 13, fontWeight: 500 }}>{e.description || catName}</div>
-                      {e.description && <div style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)' }}>{catName}</div>}
+                      <div className="text-[13px] font-medium">{e.description || catName}</div>
+                      {e.description && <div className="text-[11px] text-muted-foreground">{catName}</div>}
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ fontSize: 13, fontWeight: 600, direction: 'ltr' }}>{formatCurrency(e.amount)}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[13px] font-semibold ltr">{formatCurrency(e.amount)}</span>
                       <button onClick={() => toggleLockPersonal(e)}
                         title={locked ? 'בטל נעילה' : 'נעל לחודשים הבאים'}
                         aria-label={locked ? 'בטל נעילה' : 'נעל לחודשים הבאים'}
-                        style={{ ...S.iconBtn, color: locked ? 'oklch(0.70 0.15 185)' : 'oklch(0.35 0.01 250)' }}>
+                        className={`bg-transparent border-none cursor-pointer flex items-center justify-center p-2 min-w-9 min-h-9 ${locked ? 'text-[oklch(0.70_0.15_185)]' : 'text-[oklch(0.35_0.01_250)]'}`}>
                         {locked ? <Lock size={12} /> : <Unlock size={12} />}
                       </button>
-                      <button onClick={() => handleDeletePersonal(e)} aria-label="מחק הוצאה" style={{ ...S.iconBtn, color: 'oklch(0.65 0.01 250)' }}>
+                      <button onClick={() => handleDeletePersonal(e)} aria-label="מחק הוצאה" className="bg-transparent border-none cursor-pointer flex items-center justify-center p-2 min-w-9 min-h-9 text-muted-foreground">
                         <X size={13} />
                       </button>
                     </div>
@@ -583,39 +558,39 @@ export default function ExpensesPage() {
           </div>
 
           {/* ── Shared expenses ────────────────────────────────────────────────── */}
-          <div style={S.card}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600 }}>
-                <Users size={12} style={{ color: 'oklch(0.65 0.12 310)' }} /> <h2 style={{ fontSize: 13, fontWeight: 600, margin: 0, display: 'inline' }}>הוצאות משותפות</h2>
+          <div className="bg-card border border-border rounded-xl p-5">
+            <div className="flex justify-between items-center mb-3">
+              <div className="flex items-center gap-1.5 text-[13px] font-semibold">
+                <Users size={12} className="text-[oklch(0.65_0.12_310)]" /> <h2 className="text-[13px] font-semibold m-0 inline">הוצאות משותפות</h2>
               </div>
-              <span style={{ fontSize: 14, fontWeight: 700, direction: 'ltr', color: 'oklch(0.65 0.12 310)' }}>{formatCurrency(totalSharedMy)}</span>
+              <span className="text-sm font-bold ltr text-[oklch(0.65_0.12_310)]">{formatCurrency(totalSharedMy)}</span>
             </div>
-            <div style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)', marginBottom: 10 }}>
+            <div className="text-[11px] text-muted-foreground mb-2.5">
               הסכום שמוצג הוא חלקך ({splitPctLabel}%) — ניתן לנעול הוצאות קבועות
             </div>
             {!(sharedExp?.length)
-              ? <div style={{ fontSize: 12, color: 'oklch(0.65 0.01 250)', textAlign: 'center', padding: '24px 0' }}><Inbox size={32} style={{ color: 'oklch(0.30 0.01 250)', margin: '0 auto 8px' }} />אין הוצאות משותפות</div>
+              ? <div className="text-xs text-muted-foreground text-center py-6"><Inbox size={32} className="text-[oklch(0.30_0.01_250)] mx-auto mb-2" />אין הוצאות משותפות</div>
               : sharedExp.map(e => {
                 const myAmt = e.my_share ?? e.total_amount * splitFrac
                 const locked = recurringShared.isLocked(e.category)
                 const label = e.notes || e.category
                 return (
-                  <div key={e.id} style={S.row}>
+                  <div key={e.id} className="flex justify-between items-center py-2.5 border-b border-[oklch(0.20_0.01_250)]">
                     <div>
-                      <div style={{ fontSize: 13, fontWeight: 500 }}>{label}</div>
-                      <div style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)', direction: 'ltr', marginTop: 1 }}>
+                      <div className="text-[13px] font-medium">{label}</div>
+                      <div className="text-[11px] text-muted-foreground ltr mt-px">
                         סה&quot;כ {formatCurrency(e.total_amount)} · חלקי {formatCurrency(myAmt)}
                       </div>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ fontSize: 13, fontWeight: 600, direction: 'ltr', color: 'oklch(0.65 0.12 310)' }}>{formatCurrency(myAmt)}</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[13px] font-semibold ltr text-[oklch(0.65_0.12_310)]">{formatCurrency(myAmt)}</span>
                       <button onClick={() => toggleLockShared(e)}
                         title={locked ? 'בטל נעילה' : 'נעל לחודשים הבאים'}
                         aria-label={locked ? 'בטל נעילה' : 'נעל לחודשים הבאים'}
-                        style={{ ...S.iconBtn, color: locked ? 'oklch(0.70 0.15 185)' : 'oklch(0.35 0.01 250)' }}>
+                        className={`bg-transparent border-none cursor-pointer flex items-center justify-center p-2 min-w-9 min-h-9 ${locked ? 'text-[oklch(0.70_0.15_185)]' : 'text-[oklch(0.35_0.01_250)]'}`}>
                         {locked ? <Lock size={12} /> : <Unlock size={12} />}
                       </button>
-                      <button onClick={() => handleDeleteShared(e.id)} aria-label="מחק הוצאה" style={{ ...S.iconBtn, color: 'oklch(0.65 0.01 250)' }}>
+                      <button onClick={() => handleDeleteShared(e.id)} aria-label="מחק הוצאה" className="bg-transparent border-none cursor-pointer flex items-center justify-center p-2 min-w-9 min-h-9 text-muted-foreground">
                         <X size={13} />
                       </button>
                     </div>

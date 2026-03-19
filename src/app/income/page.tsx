@@ -19,13 +19,6 @@ const IncomeTrendChart = dynamic(() => import('@/components/dashboard/IncomeTren
   ssr: false,
 })
 
-const CARD: React.CSSProperties = {
-  background: 'oklch(0.16 0.01 250)',
-  border: '1px solid oklch(0.25 0.01 250)',
-  borderRadius: 12,
-  padding: 20,
-}
-
 export default function IncomePage() {
   const { user, loading } = useUser()
   const router = useRouter()
@@ -126,77 +119,72 @@ export default function IncomePage() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Wallet size={18} style={{ color: 'oklch(0.65 0.18 250)' }} />
-          <h1 style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em' }}>הכנסה</h1>
+      <div className="flex justify-between items-start mb-1.5">
+        <div className="flex items-center gap-2">
+          <Wallet size={18} className="text-[oklch(0.65_0.18_250)]" />
+          <h1 className="text-xl font-bold tracking-tight">הכנסה</h1>
         </div>
-        <button onClick={handleResetIncome} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: '1px solid oklch(0.25 0.01 250)', borderRadius: 8, padding: '7px 14px', color: 'oklch(0.65 0.01 250)', fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>
+        <button onClick={handleResetIncome} className="flex items-center gap-1.5 bg-transparent border border-[oklch(0.25_0.01_250)] rounded-lg px-3.5 py-[7px] text-[oklch(0.65_0.01_250)] text-xs font-medium cursor-pointer">
           <Trash2 size={13} /> אפס הכנסה
         </button>
       </div>
-      <p style={{ color: 'oklch(0.60 0.01 250)', fontSize: 14, marginBottom: 20 }}>
+      <p className="text-[oklch(0.60_0.01_250)] text-sm mb-5">
         {selectedPeriod ? periodLabel(selectedPeriod.start_date) : '...'}
       </p>
 
       {periods && <PeriodSelector periods={periods} selectedId={selectedPeriodId} onChange={setSelectedPeriodId} />}
 
-      <div className="grid-2" style={{ alignItems: 'start' }}>
+      <div className="grid-2 items-start">
 
         {/* Input form */}
-        <div style={CARD}>
-          <div style={{ marginBottom: 18, fontWeight: 600, fontSize: 14 }}>הזנת הכנסה למחזור</div>
+        <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5">
+          <div className="mb-[18px] font-semibold text-sm">הזנת הכנסה למחזור</div>
 
           {[
             { label: 'משכורת נטו', val: salary, set: setSalary, placeholder: '0' },
             { label: 'בונוס', val: bonus, set: setBonus, placeholder: '0' },
             { label: 'הכנסה אחרת', val: other, set: setOther, placeholder: '0' },
           ].map(field => (
-            <div key={field.label} style={{ marginBottom: 14 }}>
-              <label style={{ fontSize: 13, display: 'block', marginBottom: 5, color: 'oklch(0.75 0.01 250)' }}>
+            <div key={field.label} className="mb-3.5">
+              <label className="text-[13px] block mb-[5px] text-[oklch(0.75_0.01_250)]">
                 {field.label}
               </label>
-              <div style={{ position: 'relative' }}>
+              <div className="relative">
                 <input
                   type="number"
                   value={field.val}
                   onChange={e => field.set(e.target.value)}
                   placeholder={field.placeholder}
-                  style={{
-                    width: '100%', background: 'oklch(0.22 0.01 250)',
-                    border: '1px solid oklch(0.28 0.01 250)', borderRadius: 8,
-                    padding: '10px 40px 10px 12px', color: 'inherit', fontSize: 15,
-                    direction: 'ltr', textAlign: 'right',
-                  }}
+                  className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg py-2.5 pe-10 ps-3 text-inherit text-[15px] ltr text-right"
                 />
-                <span style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'oklch(0.65 0.01 250)', fontSize: 13 }}>₪</span>
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[oklch(0.65_0.01_250)] text-[13px]">₪</span>
               </div>
             </div>
           ))}
 
-          <div style={{ marginBottom: 14 }}>
-            <label style={{ fontSize: 13, display: 'block', marginBottom: 5, color: 'oklch(0.75 0.01 250)' }}>הערות</label>
+          <div className="mb-3.5">
+            <label className="text-[13px] block mb-[5px] text-[oklch(0.75_0.01_250)]">הערות</label>
             <input
               type="text"
               value={notes}
               onChange={e => setNotes(e.target.value)}
               placeholder="הערה אופציונלית..."
-              style={{ width: '100%', background: 'oklch(0.22 0.01 250)', border: '1px solid oklch(0.28 0.01 250)', borderRadius: 8, padding: '10px 12px', color: 'inherit', fontSize: 14 }}
+              className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg py-2.5 px-3 text-inherit text-sm"
             />
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 0', borderTop: '1px solid oklch(0.22 0.01 250)' }}>
-            <span style={{ fontWeight: 600 }}>סה&quot;כ הכנסה</span>
-            <span style={{ fontSize: 22, fontWeight: 700, direction: 'ltr', color: 'oklch(0.65 0.18 250)' }}>
+          <div className="flex justify-between items-center py-3.5 border-t border-[oklch(0.22_0.01_250)]">
+            <span className="font-semibold">סה&quot;כ הכנסה</span>
+            <span className="text-[22px] font-bold ltr text-[oklch(0.65_0.18_250)]">
               {formatCurrency(total)}
             </span>
           </div>
 
           {avgIncome > 0 && total > 0 && (
-            <div style={{ fontSize: 12, color: 'oklch(0.65 0.01 250)', marginBottom: 12, textAlign: 'center' }}>
+            <div className="text-xs text-[oklch(0.65_0.01_250)] mb-3 text-center">
               ממוצע 3 חודשים: {formatCurrency(avgIncome)}
               {' '}
-              <span style={{ color: total >= avgIncome ? 'oklch(0.70 0.18 145)' : 'oklch(0.62 0.22 27)' }}>
+              <span className={total >= avgIncome ? 'text-[oklch(0.70_0.18_145)]' : 'text-[oklch(0.62_0.22_27)]'}>
                 ({total >= avgIncome ? '↑' : '↓'}{Math.abs(Math.round(((total - avgIncome) / avgIncome) * 100))}%)
               </span>
             </div>
@@ -205,31 +193,30 @@ export default function IncomePage() {
           <button
             onClick={handleSave}
             disabled={upsert.isPending}
-            className="btn-hover"
-            style={{ width: '100%', background: 'oklch(0.65 0.18 250)', color: 'oklch(0.12 0.01 250)', border: 'none', borderRadius: 8, padding: '12px 0', fontWeight: 600, fontSize: 15, cursor: 'pointer', opacity: upsert.isPending ? 0.7 : 1 }}
+            className={`btn-hover w-full bg-[oklch(0.65_0.18_250)] text-[oklch(0.12_0.01_250)] border-none rounded-lg py-3 font-semibold text-[15px] cursor-pointer ${upsert.isPending ? 'opacity-70' : 'opacity-100'}`}
           >
             {upsert.isPending ? 'שומר...' : 'שמור הכנסה'}
           </button>
         </div>
 
         {/* Trend chart */}
-        <div style={CARD}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontWeight: 600, fontSize: 14, marginBottom: 16 }}>
-            <TrendingUp size={14} style={{ color: 'oklch(0.65 0.18 250)' }} />
+        <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5">
+          <div className="flex items-center gap-[7px] font-semibold text-sm mb-4">
+            <TrendingUp size={14} className="text-[oklch(0.65_0.18_250)]" />
             מגמת הכנסה
           </div>
           <IncomeTrendChart data={trendData} />
 
           {/* Last 6 periods summary */}
           {trendData.length > 0 && (
-            <div style={{ marginTop: 16 }}>
-              <div style={{ fontSize: 12, color: 'oklch(0.65 0.01 250)', marginBottom: 8 }}>סיכום לפי מחזור</div>
+            <div className="mt-4">
+              <div className="text-xs text-[oklch(0.65_0.01_250)] mb-2">סיכום לפי מחזור</div>
               {[...trendData].reverse().map(d => (
-                <div key={d.label} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, padding: '5px 0', borderBottom: '1px solid oklch(0.20 0.01 250)' }}>
-                  <span style={{ color: d.isCurrent ? 'oklch(0.92 0.01 250)' : 'oklch(0.65 0.01 250)', fontWeight: d.isCurrent ? 600 : 400 }}>
+                <div key={d.label} className="flex justify-between text-xs py-[5px] border-b border-[oklch(0.20_0.01_250)]">
+                  <span className={`${d.isCurrent ? 'text-[oklch(0.92_0.01_250)] font-semibold' : 'text-[oklch(0.65_0.01_250)] font-normal'}`}>
                     {d.label}{d.isCurrent ? ' ✦' : ''}
                   </span>
-                  <span style={{ direction: 'ltr', fontWeight: d.isCurrent ? 600 : 400 }}>{formatCurrency(d.total)}</span>
+                  <span className={`ltr ${d.isCurrent ? 'font-semibold' : 'font-normal'}`}>{formatCurrency(d.total)}</span>
                 </div>
               ))}
             </div>

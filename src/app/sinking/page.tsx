@@ -29,20 +29,6 @@ function isFundShared(userId: string, fundId: number): boolean {
 
 type FundForm = { name: string; totalAnnual: string; isShared: boolean }
 
-const modalBase: React.CSSProperties = {
-  position: 'fixed', inset: 0, background: 'oklch(0 0 0 / 0.6)',
-  display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50,
-}
-const modalCard: React.CSSProperties = {
-  background: 'oklch(0.18 0.01 250)', border: '1px solid oklch(0.28 0.01 250)',
-  borderRadius: 14, padding: 28, width: 360,
-}
-const inputBase: React.CSSProperties = {
-  width: '100%', background: 'oklch(0.22 0.01 250)',
-  border: '1px solid oklch(0.28 0.01 250)', borderRadius: 8,
-  padding: '9px 12px', color: 'inherit', fontSize: 14,
-}
-
 export default function SinkingPage() {
   const { user, loading } = useUser()
   const router = useRouter()
@@ -168,27 +154,26 @@ export default function SinkingPage() {
   return (
     <div>
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Target size={18} style={{ color: 'oklch(0.70 0.15 185)' }} />
-          <h1 style={{ fontSize: 20, fontWeight: 700, letterSpacing: '-0.02em' }}>קרנות שנתיות</h1>
+      <div className="flex justify-between items-start mb-1.5">
+        <div className="flex items-center gap-2">
+          <Target size={18} className="text-[oklch(0.70_0.15_185)]" />
+          <h1 className="text-xl font-bold tracking-tight">קרנות שנתיות</h1>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={handleResetBalances} style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'none', border: '1px solid oklch(0.25 0.01 250)', borderRadius: 8, padding: '7px 14px', color: 'oklch(0.65 0.01 250)', fontSize: 12, fontWeight: 500, cursor: 'pointer' }}>
+        <div className="flex gap-2">
+          <button onClick={handleResetBalances} className="flex items-center gap-1.5 bg-transparent border border-[oklch(0.25_0.01_250)] rounded-lg px-3.5 py-[7px] text-[oklch(0.65_0.01_250)] text-xs font-medium cursor-pointer">
             <Trash2 size={13} /> אפס יתרות
           </button>
           <button
             onClick={() => setNewFund({ name: '', totalAnnual: '', isShared: false })}
-            className="btn-hover"
-            style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'oklch(0.20 0.04 185)', border: '1px solid oklch(0.32 0.08 185)', borderRadius: 8, padding: '7px 14px', color: 'oklch(0.70 0.15 185)', fontSize: 13, fontWeight: 500, cursor: 'pointer' }}
+            className="btn-hover flex items-center gap-1.5 bg-[oklch(0.20_0.04_185)] border border-[oklch(0.32_0.08_185)] rounded-lg px-3.5 py-[7px] text-[oklch(0.70_0.15_185)] text-[13px] font-medium cursor-pointer"
           >
             <Plus size={13} /> קרן חדשה
           </button>
         </div>
       </div>
-      <p style={{ color: 'oklch(0.65 0.01 250)', fontSize: 13, marginBottom: 20 }}>
-        סה&quot;כ הפרשה חודשית: <span style={{ direction: 'ltr', display: 'inline-block', fontWeight: 600, color: 'oklch(0.70 0.15 185)' }}>{formatCurrency(totalMonthly)}</span>
-        <span style={{ marginRight: 8, color: 'oklch(0.65 0.01 250)', fontSize: 12 }}>
+      <p className="text-[oklch(0.65_0.01_250)] text-[13px] mb-5">
+        סה&quot;כ הפרשה חודשית: <span className="ltr inline-block font-semibold text-[oklch(0.70_0.15_185)]">{formatCurrency(totalMonthly)}</span>
+        <span className="mr-2 text-[oklch(0.65_0.01_250)] text-xs">
           (יעד שנתי: {formatCurrency(totalMonthly * 12)})
         </span>
       </p>
@@ -196,13 +181,13 @@ export default function SinkingPage() {
       {/* ── Fund list ─────────────────────────────────────────────────────────── */}
       {!funds?.length
         ? (
-          <div style={{ background: 'oklch(0.16 0.01 250)', border: '1px solid oklch(0.25 0.01 250)', borderRadius: 12, padding: 40, textAlign: 'center' }}>
-            <Inbox size={36} style={{ color: 'oklch(0.30 0.01 250)', margin: '0 auto 10px' }} />
-            <div style={{ color: 'oklch(0.65 0.01 250)', fontSize: 14 }}>אין קרנות -- לחץ &quot;קרן חדשה&quot; להתחיל</div>
+          <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-10 text-center">
+            <Inbox size={36} className="text-[oklch(0.30_0.01_250)] mx-auto mb-2.5" />
+            <div className="text-[oklch(0.65_0.01_250)] text-sm">אין קרנות -- לחץ &quot;קרן חדשה&quot; להתחיל</div>
           </div>
         )
         : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div className="flex flex-col gap-2.5">
             {funds.map(fund => {
               const shared = isFundShared(user.id, fund.id)
               const totalAnnual = shared ? fund.monthly_allocation * 12 * 2 : fund.monthly_allocation * 12
@@ -210,59 +195,57 @@ export default function SinkingPage() {
               const pct = totalAnnual > 0 ? Math.min((balance / totalAnnual) * 100, 100) : 0
 
               return (
-                <div key={fund.id} className="card-hover card-transition" style={{ background: 'oklch(0.16 0.01 250)', border: '1px solid oklch(0.25 0.01 250)', borderRadius: 12, padding: '14px 18px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div key={fund.id} className="card-hover card-transition bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl px-[18px] py-3.5">
+                  <div className="flex items-center gap-2.5">
                     {/* Name + type */}
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ fontWeight: 600, fontSize: 14 }}>{fund.name}</span>
-                        <span style={{
-                          display: 'inline-flex', alignItems: 'center', gap: 3,
-                          background: shared ? 'oklch(0.20 0.04 250)' : 'oklch(0.20 0.04 185)',
-                          border: `1px solid ${shared ? 'oklch(0.32 0.08 250)' : 'oklch(0.32 0.08 185)'}`,
-                          borderRadius: 20, padding: '2px 8px', fontSize: 11,
-                          color: shared ? 'oklch(0.65 0.15 250)' : 'oklch(0.65 0.15 185)',
-                        }}>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-sm">{fund.name}</span>
+                        <span className={`inline-flex items-center gap-[3px] rounded-[20px] px-2 py-0.5 text-[11px] ${
+                          shared
+                            ? 'bg-[oklch(0.20_0.04_250)] border border-[oklch(0.32_0.08_250)] text-[oklch(0.65_0.15_250)]'
+                            : 'bg-[oklch(0.20_0.04_185)] border border-[oklch(0.32_0.08_185)] text-[oklch(0.65_0.15_185)]'
+                        }`}>
                           {shared ? <Users size={10} /> : <User size={10} />}
                           {shared ? 'משותף' : 'אישי'}
                         </span>
                       </div>
                       {/* Progress bar */}
                       {balance > 0 && (
-                        <div style={{ marginTop: 6, height: 4, borderRadius: 2, background: 'oklch(0.22 0.01 250)', overflow: 'hidden', maxWidth: 240 }}>
-                          <div style={{ height: '100%', borderRadius: 2, width: `${Math.max(0, pct)}%`, background: 'oklch(0.70 0.15 185)', transition: 'width 0.4s ease' }} />
+                        <div className="mt-1.5 h-1 rounded-sm bg-[oklch(0.22_0.01_250)] overflow-hidden max-w-[240px]">
+                          <div className="h-full rounded-sm bg-[oklch(0.70_0.15_185)] transition-[width] duration-[400ms] ease-out" style={{ width: `${Math.max(0, pct)}%` }} />
                         </div>
                       )}
                     </div>
 
                     {/* Amounts */}
-                    <div style={{ textAlign: 'left', direction: 'ltr', flexShrink: 0 }}>
-                      <div style={{ fontSize: 16, fontWeight: 700, color: 'oklch(0.88 0.01 250)' }}>{formatCurrency(fund.monthly_allocation)}<span style={{ fontSize: 11, fontWeight: 400, color: 'oklch(0.65 0.01 250)', marginRight: 3 }}>/חודש</span></div>
-                      <div style={{ fontSize: 12, color: 'oklch(0.65 0.01 250)' }}>
+                    <div className="text-left ltr shrink-0">
+                      <div className="text-base font-bold text-[oklch(0.88_0.01_250)]">{formatCurrency(fund.monthly_allocation)}<span className="text-[11px] font-normal text-[oklch(0.65_0.01_250)] mr-[3px]">/חודש</span></div>
+                      <div className="text-xs text-[oklch(0.65_0.01_250)]">
                         יעד שנתי: {formatCurrency(totalAnnual)}
-                        {shared && <span style={{ marginRight: 4, color: 'oklch(0.65 0.01 250)' }}>(חלקי: {formatCurrency(fund.monthly_allocation * 12)})</span>}
+                        {shared && <span className="mr-1 text-[oklch(0.65_0.01_250)]">(חלקי: {formatCurrency(fund.monthly_allocation * 12)})</span>}
                       </div>
                     </div>
 
                     {/* Actions */}
-                    <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                    <div className="flex gap-1.5 shrink-0">
                       <button
                         onClick={() => { setTxModal({ fundId: fund.id, fundName: fund.name, type: 'use' }); setTxAmount('') }}
-                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, background: 'oklch(0.20 0.02 55)', border: '1px solid oklch(0.28 0.06 55)', borderRadius: 7, padding: '8px 10px', minHeight: 36, color: 'oklch(0.72 0.18 55)', fontSize: 12, cursor: 'pointer' }}
+                        className="flex items-center justify-center gap-1 bg-[oklch(0.20_0.02_55)] border border-[oklch(0.28_0.06_55)] rounded-[7px] px-2.5 py-2 min-h-9 text-[oklch(0.72_0.18_55)] text-xs cursor-pointer"
                       >
                         <X size={11} /> הוצאה
                       </button>
                       <button
                         onClick={() => openEdit(fund)}
                         aria-label="ערוך קרן"
-                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'oklch(0.20 0.01 250)', border: '1px solid oklch(0.28 0.01 250)', borderRadius: 7, padding: 8, minWidth: 36, minHeight: 36, color: 'oklch(0.65 0.01 250)', fontSize: 12, cursor: 'pointer' }}
+                        className="flex items-center justify-center bg-[oklch(0.20_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-[7px] p-2 min-w-9 min-h-9 text-[oklch(0.65_0.01_250)] text-xs cursor-pointer"
                       >
                         <Pencil size={12} />
                       </button>
                       <button
                         onClick={() => handleDeleteFund(fund.id, fund.name)}
                         aria-label="מחק קרן"
-                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'oklch(0.18 0.03 15)', border: '1px solid oklch(0.28 0.06 15)', borderRadius: 7, padding: 8, minWidth: 36, minHeight: 36, color: 'oklch(0.60 0.18 15)', fontSize: 12, cursor: 'pointer' }}
+                        className="flex items-center justify-center bg-[oklch(0.18_0.03_15)] border border-[oklch(0.28_0.06_15)] rounded-[7px] p-2 min-w-9 min-h-9 text-[oklch(0.60_0.18_15)] text-xs cursor-pointer"
                       >
                         <Trash2 size={12} />
                       </button>
@@ -274,16 +257,16 @@ export default function SinkingPage() {
                     const currentMonth = new Date().getMonth() + 1
                     const expectedPct = (currentMonth / 12) * 100
                     const trackStatus = pct >= expectedPct
-                      ? { text: 'בזמן ✓', color: 'oklch(0.70 0.18 145)' }
+                      ? { text: 'בזמן ✓', color: 'text-[oklch(0.70_0.18_145)]' }
                       : pct >= expectedPct * 0.8
-                        ? { text: 'קצת מאחור', color: 'oklch(0.72 0.18 55)' }
-                        : { text: 'מאחור', color: 'oklch(0.62 0.22 27)' }
+                        ? { text: 'קצת מאחור', color: 'text-[oklch(0.72_0.18_55)]' }
+                        : { text: 'מאחור', color: 'text-[oklch(0.62_0.22_27)]' }
                     return (
-                      <div style={{ marginTop: 8, fontSize: 12, color: 'oklch(0.65 0.01 250)', display: 'flex', justifyContent: 'space-between', paddingTop: 8, borderTop: '1px solid oklch(0.20 0.01 250)' }}>
-                        <span>צבור: <span style={{ color: balance > 0 ? 'oklch(0.70 0.15 185)' : 'oklch(0.62 0.22 27)', fontWeight: 600, direction: 'ltr', display: 'inline-block' }}>{formatCurrency(balance)}</span>{balance < 0 && <span style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)', marginRight: 4 }}>(הוצאה גדולה מהצבירה)</span>}</span>
-                        <span style={{ direction: 'ltr', display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div className="mt-2 text-xs text-[oklch(0.65_0.01_250)] flex justify-between pt-2 border-t border-[oklch(0.20_0.01_250)]">
+                        <span>צבור: <span className={`${balance > 0 ? 'text-[oklch(0.70_0.15_185)]' : 'text-[oklch(0.62_0.22_27)]'} font-semibold ltr inline-block`}>{formatCurrency(balance)}</span>{balance < 0 && <span className="text-[11px] text-[oklch(0.65_0.01_250)] mr-1">(הוצאה גדולה מהצבירה)</span>}</span>
+                        <span className="ltr flex items-center gap-2">
                           {pct.toFixed(0)}% מהיעד השנתי
-                          <span style={{ fontSize: 11, fontWeight: 500, color: trackStatus.color }}>{trackStatus.text}</span>
+                          <span className={`text-[11px] font-medium ${trackStatus.color}`}>{trackStatus.text}</span>
                         </span>
                       </div>
                     )
@@ -297,14 +280,14 @@ export default function SinkingPage() {
 
       {/* ── Add Fund Modal ────────────────────────────────────────────────────── */}
       {newFund && (
-        <div style={modalBase}>
-          <div style={modalCard}>
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-[oklch(0.18_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-[14px] p-7 w-[360px]">
             <ModalHeader title="קרן שנתית חדשה" onClose={() => setNewFund(null)} />
             <FundFormFields form={newFund} onChange={setNewFund} />
             <button
               onClick={handleAddFund}
               disabled={addFund.isPending || !newFund.name.trim() || Number(newFund.totalAnnual) < 0}
-              style={primaryBtn(addFund.isPending || !newFund.name.trim() || Number(newFund.totalAnnual) < 0)}
+              className={`w-full bg-[oklch(0.70_0.15_185)] border-none rounded-lg py-[11px] font-semibold text-sm text-[oklch(0.10_0.01_250)] ${addFund.isPending || !newFund.name.trim() || Number(newFund.totalAnnual) < 0 ? 'cursor-not-allowed opacity-50' : 'cursor-pointer opacity-100'}`}
             >
               {addFund.isPending ? '...' : 'הוסף קרן'}
             </button>
@@ -314,14 +297,14 @@ export default function SinkingPage() {
 
       {/* ── Edit Fund Modal ───────────────────────────────────────────────────── */}
       {editFund && (
-        <div style={modalBase}>
-          <div style={modalCard}>
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-[oklch(0.18_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-[14px] p-7 w-[360px]">
             <ModalHeader title="עריכת קרן" onClose={() => setEditFund(null)} />
             <FundFormFields form={editFund} onChange={f => setEditFund(prev => prev && { ...prev, ...f })} />
             <button
               onClick={handleEditFund}
               disabled={updateFund.isPending || !editFund.name.trim() || Number(editFund.totalAnnual) < 0}
-              style={primaryBtn(updateFund.isPending || !editFund.name.trim() || Number(editFund.totalAnnual) < 0)}
+              className={`w-full bg-[oklch(0.70_0.15_185)] border-none rounded-lg py-[11px] font-semibold text-sm text-[oklch(0.10_0.01_250)] ${updateFund.isPending || !editFund.name.trim() || Number(editFund.totalAnnual) < 0 ? 'cursor-not-allowed opacity-50' : 'cursor-pointer opacity-100'}`}
             >
               {updateFund.isPending ? '...' : 'שמור'}
             </button>
@@ -331,46 +314,46 @@ export default function SinkingPage() {
 
       {/* ── Log Transaction Modal ─────────────────────────────────────────────── */}
       {txModal && (
-        <div style={modalBase}>
-          <div style={modalCard}>
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-[oklch(0.18_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-[14px] p-7 w-[360px]">
             <ModalHeader title={`${txModal.fundName} — הוצאה`} onClose={() => setTxModal(null)} />
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div className="flex flex-col gap-3">
               <div>
-                <label style={labelStyle}>מחזור</label>
+                <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">מחזור</label>
                 <select value={txPeriodId ?? ''} onChange={e => setTxPeriodId(Number(e.target.value))}
                   aria-label="מחזור"
-                  style={inputBase}>
+                  className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-sm">
                   {periods?.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
                 </select>
               </div>
               <div>
-                <label style={labelStyle}>סכום (₪)</label>
+                <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">סכום (₪)</label>
                 <input type="number" value={txAmount} onChange={e => setTxAmount(e.target.value)}
                   placeholder="0" min="0" autoFocus
-                  style={{ ...inputBase, direction: 'ltr', textAlign: 'right', fontSize: 16 }} />
+                  className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-right" />
               </div>
               <div>
-                <label style={labelStyle}>תיאור (אופציונלי)</label>
+                <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">תיאור (אופציונלי)</label>
                 <input type="text" value={txDesc} onChange={e => setTxDesc(e.target.value)}
                   placeholder="לדוגמה: כרטיסי טיסה, מוצר..."
-                  style={inputBase} />
+                  className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-sm" />
               </div>
-              <div style={{ display: 'flex', gap: 8 }}>
+              <div className="flex gap-2">
                 <button
                   onClick={() => { setTxModal({ ...txModal, type: 'use' }) }}
-                  style={{ flex: 1, background: txModal.type === 'use' ? 'oklch(0.72 0.18 55)' : 'oklch(0.22 0.01 250)', border: `1px solid ${txModal.type === 'use' ? 'oklch(0.72 0.18 55)' : 'oklch(0.28 0.01 250)'}`, borderRadius: 8, padding: '8px 0', color: txModal.type === 'use' ? 'oklch(0.10 0.01 250)' : 'oklch(0.70 0.01 250)', fontSize: 13, cursor: 'pointer', fontWeight: txModal.type === 'use' ? 600 : 400 }}
+                  className={`flex-1 rounded-lg py-2 text-[13px] cursor-pointer ${txModal.type === 'use' ? 'bg-[oklch(0.72_0.18_55)] border border-[oklch(0.72_0.18_55)] text-[oklch(0.10_0.01_250)] font-semibold' : 'bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] text-[oklch(0.70_0.01_250)] font-normal'}`}
                 >
                   הוצאה
                 </button>
                 <button
                   onClick={() => { setTxModal({ ...txModal, type: 'add' }) }}
-                  style={{ flex: 1, background: txModal.type === 'add' ? 'oklch(0.70 0.15 185)' : 'oklch(0.22 0.01 250)', border: `1px solid ${txModal.type === 'add' ? 'oklch(0.70 0.15 185)' : 'oklch(0.28 0.01 250)'}`, borderRadius: 8, padding: '8px 0', color: txModal.type === 'add' ? 'oklch(0.10 0.01 250)' : 'oklch(0.70 0.01 250)', fontSize: 13, cursor: 'pointer', fontWeight: txModal.type === 'add' ? 600 : 400 }}
+                  className={`flex-1 rounded-lg py-2 text-[13px] cursor-pointer ${txModal.type === 'add' ? 'bg-[oklch(0.70_0.15_185)] border border-[oklch(0.70_0.15_185)] text-[oklch(0.10_0.01_250)] font-semibold' : 'bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] text-[oklch(0.70_0.01_250)] font-normal'}`}
                 >
                   הפקדה
                 </button>
               </div>
               <button onClick={handleTxn} disabled={addTxn.isPending || !txAmount}
-                style={primaryBtn(addTxn.isPending || !txAmount)}>
+                className={`w-full bg-[oklch(0.70_0.15_185)] border-none rounded-lg py-[11px] font-semibold text-sm text-[oklch(0.10_0.01_250)] ${addTxn.isPending || !txAmount ? 'cursor-not-allowed opacity-50' : 'cursor-pointer opacity-100'}`}>
                 {addTxn.isPending ? '...' : 'רשום'}
               </button>
             </div>
@@ -385,9 +368,9 @@ export default function SinkingPage() {
 
 function ModalHeader({ title, onClose }: { title: string; onClose: () => void }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-      <span style={{ fontWeight: 600, fontSize: 15 }}>{title}</span>
-      <button onClick={onClose} aria-label="סגור" style={{ background: 'none', border: 'none', color: 'oklch(0.65 0.01 250)', cursor: 'pointer', padding: 8, minWidth: 36, minHeight: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={18} /></button>
+    <div className="flex justify-between items-center mb-5">
+      <span className="font-semibold text-[15px]">{title}</span>
+      <button onClick={onClose} aria-label="סגור" className="bg-transparent border-none text-[oklch(0.65_0.01_250)] cursor-pointer p-2 min-w-9 min-h-9 flex items-center justify-center"><X size={18} /></button>
     </div>
   )
 }
@@ -397,49 +380,48 @@ function FundFormFields({ form, onChange }: { form: FundForm; onChange: (f: Fund
   const monthly = total > 0 ? (form.isShared ? Math.round(total / 12 / 2) : Math.round(total / 12)) : 0
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 14, marginBottom: 16 }}>
+    <div className="flex flex-col gap-3.5 mb-4">
       <div>
-        <label style={labelStyle}>שם הקרן</label>
+        <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">שם הקרן</label>
         <input type="text" autoFocus value={form.name}
           onChange={e => onChange({ ...form, name: e.target.value })}
           placeholder="למשל: טיולים, חתונה, רכב..."
-          style={inputBase} />
+          className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-sm" />
       </div>
       <div>
-        <label style={labelStyle}>יעד שנתי כולל (₪) — כמה תוציאו על זה בשנה?</label>
+        <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">יעד שנתי כולל (₪) — כמה תוציאו על זה בשנה?</label>
         <input type="text" inputMode="numeric" value={form.totalAnnual}
           onChange={e => onChange({ ...form, totalAnnual: e.target.value.replace(/[^\d]/g, '') })}
           placeholder="0"
-          style={{ ...inputBase, direction: 'ltr', textAlign: 'right', fontSize: 16 }} />
+          className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-right" />
       </div>
       {/* Personal / Shared toggle */}
       <div>
-        <label style={labelStyle}>סוג</label>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">סוג</label>
+        <div className="flex gap-2">
           {([false, true] as const).map(shared => (
             <button key={String(shared)} type="button"
               onClick={() => onChange({ ...form, isShared: shared })}
-              style={{
-                flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                background: form.isShared === shared ? (shared ? 'oklch(0.24 0.06 250)' : 'oklch(0.24 0.06 185)') : 'oklch(0.20 0.01 250)',
-                border: `1px solid ${form.isShared === shared ? (shared ? 'oklch(0.40 0.10 250)' : 'oklch(0.40 0.10 185)') : 'oklch(0.28 0.01 250)'}`,
-                borderRadius: 8, padding: '9px 0',
-                color: form.isShared === shared ? (shared ? 'oklch(0.75 0.15 250)' : 'oklch(0.75 0.15 185)') : 'oklch(0.65 0.01 250)',
-                fontSize: 13, cursor: 'pointer', fontWeight: form.isShared === shared ? 600 : 400,
-              }}>
+              className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg py-[9px] text-[13px] cursor-pointer ${
+                form.isShared === shared
+                  ? shared
+                    ? 'bg-[oklch(0.24_0.06_250)] border border-[oklch(0.40_0.10_250)] text-[oklch(0.75_0.15_250)] font-semibold'
+                    : 'bg-[oklch(0.24_0.06_185)] border border-[oklch(0.40_0.10_185)] text-[oklch(0.75_0.15_185)] font-semibold'
+                  : 'bg-[oklch(0.20_0.01_250)] border border-[oklch(0.28_0.01_250)] text-[oklch(0.65_0.01_250)] font-normal'
+              }`}>
               {shared ? <><Users size={13} /> משותף</> : <><User size={13} /> אישי</>}
             </button>
           ))}
         </div>
       </div>
       {monthly > 0 && (
-        <div style={{ background: 'oklch(0.20 0.02 185)', borderRadius: 8, padding: '10px 14px', fontSize: 13, color: 'oklch(0.70 0.15 185)' }}>
-          <div style={{ direction: 'ltr', textAlign: 'left' }}>
+        <div className="bg-[oklch(0.20_0.02_185)] rounded-lg px-3.5 py-2.5 text-[13px] text-[oklch(0.70_0.15_185)]">
+          <div className="ltr text-left">
             חלקך: <strong>{formatCurrency(monthly)}</strong> לחודש
-            {form.isShared && <span style={{ color: 'oklch(0.65 0.01 250)', marginRight: 6 }}>({formatCurrency(monthly * 12)} לשנה)</span>}
+            {form.isShared && <span className="text-[oklch(0.65_0.01_250)] mr-1.5">({formatCurrency(monthly * 12)} לשנה)</span>}
           </div>
           {form.isShared && (
-            <div style={{ fontSize: 11, color: 'oklch(0.65 0.01 250)', marginTop: 3, direction: 'ltr', textAlign: 'left' }}>
+            <div className="text-[11px] text-[oklch(0.65_0.01_250)] mt-[3px] ltr text-left">
               יעד כולל: {formatCurrency(Number(form.totalAnnual))} ÷ 2 ÷ 12
             </div>
           )}
@@ -447,16 +429,4 @@ function FundFormFields({ form, onChange }: { form: FundForm; onChange: (f: Fund
       )}
     </div>
   )
-}
-
-const labelStyle: React.CSSProperties = {
-  fontSize: 12, color: 'oklch(0.60 0.01 250)', display: 'block', marginBottom: 5,
-}
-
-function primaryBtn(disabled: boolean): React.CSSProperties {
-  return {
-    width: '100%', background: 'oklch(0.70 0.15 185)', border: 'none', borderRadius: 8,
-    padding: '11px 0', fontWeight: 600, fontSize: 14, color: 'oklch(0.10 0.01 250)',
-    cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.5 : 1,
-  }
 }
