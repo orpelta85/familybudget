@@ -171,7 +171,7 @@ export default function ForecastPage() {
       // Credit card charge day
       if (day === creditCardDay && creditCardCharge > 0) {
         runningBalance -= creditCardCharge
-        events.push({ type: 'credit_card', description: 'חיוב כרטיס אשראי', amount: -creditCardCharge, icon: 'credit', source: 'auto' })
+        events.push({ type: 'credit_card', description: 'חיוב אשראי (ממוצע)', amount: -creditCardCharge, icon: 'credit', source: 'auto' })
       }
 
       // Subscription charges on their billing days
