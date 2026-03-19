@@ -395,19 +395,15 @@ export default function ExpensesPage() {
                   >
                     {row.is_shared ? 'משותף' : 'אישי'}
                   </button>
-                  {/* קטגוריה */}
-                  {isAutoMatched ? (
-                    <span className="text-[11px] text-[oklch(0.70_0.18_150)] font-medium">{row.category}</span>
-                  ) : isNewCat ? (
-                    <span className="text-[11px] text-[oklch(0.72_0.18_55)] font-medium">{row.category} (חדש)</span>
-                  ) : (
-                    <select value={row.categoryId} onChange={e => setImportRows(p => p.map((r, j) => j === i ? { ...r, categoryId: e.target.value } : r))}
-                      aria-label="בחר קטגוריה"
-                      className="bg-secondary border border-[oklch(0.28_0.01_250)] rounded-lg px-1.5 py-0.5 text-[11px] text-inherit outline-none">
-                      <option value="">בחר...</option>
-                      {categories?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                    </select>
-                  )}
+                  {/* קטגוריה — always editable dropdown */}
+                  <select value={row.categoryId?.startsWith('__new__') ? '' : row.categoryId} onChange={e => setImportRows(p => p.map((r, j) => j === i ? { ...r, categoryId: e.target.value, category: e.target.selectedOptions[0]?.text || r.category } : r))}
+                    aria-label="בחר קטגוריה"
+                    className={`bg-secondary border rounded-lg px-1.5 py-0.5 text-[11px] text-inherit outline-none ${
+                      isAutoMatched ? 'border-[oklch(0.40_0.12_150)]' : isNewCat ? 'border-[oklch(0.40_0.12_55)]' : 'border-[oklch(0.28_0.01_250)]'
+                    }`}>
+                    <option value="">{isNewCat ? `${row.category} (חדש)` : 'בחר...'}</option>
+                    {categories?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
                 </div>
               )
             })}
