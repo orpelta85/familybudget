@@ -403,10 +403,10 @@ export default function PensionPage() {
 
             return (
               <div style={{ ...S.card, marginBottom: 16 }}>
-                <div style={{ fontWeight: 600, marginBottom: 14, fontSize: 15, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <h2 style={{ fontWeight: 600, fontSize: 15, display: 'flex', alignItems: 'center', gap: 8, margin: 0, marginBottom: 14 }}>
                   <Clock size={16} style={{ color: 'oklch(0.65 0.18 250)' }} />
                   תחזית פרישה
-                </div>
+                </h2>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 12 }}>
                   <div style={{ background: 'oklch(0.14 0.01 250)', borderRadius: 8, padding: 14 }}>
                     <div style={{ fontSize: 11, color: 'oklch(0.55 0.01 250)', marginBottom: 6 }}>צבירה צפויה בפרישה</div>
@@ -436,10 +436,10 @@ export default function PensionPage() {
 
           {/* Insurance Coverage Bar */}
           <div style={{ ...S.card, marginBottom: 16 }}>
-            <div style={{ fontWeight: 600, marginBottom: 14, fontSize: 15, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <h2 style={{ fontWeight: 600, fontSize: 15, display: 'flex', alignItems: 'center', gap: 8, margin: 0, marginBottom: 14 }}>
               <Shield size={16} style={{ color: 'oklch(0.65 0.18 250)' }} />
               כיסויים ביטוחיים
-            </div>
+            </h2>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12 }}>
               {[
                 { label: 'אובדן כושר עבודה', value: report.disability_coverage, Icon: Shield },
@@ -465,10 +465,10 @@ export default function PensionPage() {
 
           {/* Products — Active */}
           <div style={{ ...S.card, marginBottom: 16 }}>
-            <div style={{ fontWeight: 600, marginBottom: 16, fontSize: 15, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <h2 style={{ fontWeight: 600, fontSize: 15, display: 'flex', alignItems: 'center', gap: 8, margin: 0, marginBottom: 16 }}>
               <Wallet size={16} style={{ color: 'oklch(0.70 0.18 145)' }} />
               מוצרי חיסכון פעילים
-            </div>
+            </h2>
             {activeProducts.length === 0 && (
               <div style={{ textAlign: 'center', padding: 20, color: 'oklch(0.50 0.01 250)', fontSize: 13 }}>אין מוצרים פעילים</div>
             )}

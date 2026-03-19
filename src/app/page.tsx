@@ -157,6 +157,7 @@ export default function Dashboard() {
   const totalFundBalance = (funds ?? []).reduce((s, f) => s + getFundBalance(f.id), 0)
 
   // ── Apartment ─────────────────────────────────────────────────────────────
+  // TODO: make configurable from settings
   const APARTMENT_TARGET = 3500 * 36
   const totalSaved = deposits?.reduce((s, d) => s + d.amount_deposited, 0) ?? 0
   const apartmentPct = Math.min((totalSaved / APARTMENT_TARGET) * 100, 100)
@@ -300,10 +301,10 @@ export default function Dashboard() {
 
         {/* Forecast */}
         <div style={CARD}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontWeight: 600, fontSize: 14, marginBottom: 16 }}>
+          <h2 style={{ display: 'flex', alignItems: 'center', gap: 7, fontWeight: 600, fontSize: 14, margin: 0, marginBottom: 16 }}>
             <CalendarDays size={14} style={{ color: 'oklch(0.65 0.18 250)' }} />
             תחזית חודש נוכחי
-          </div>
+          </h2>
           {dataLoading
             ? <div style={{ color: 'oklch(0.55 0.01 250)', fontSize: 13 }}>בחר תקופה</div>
             : (
@@ -344,10 +345,10 @@ export default function Dashboard() {
 
         {/* Year-over-year */}
         <div style={CARD}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontWeight: 600, fontSize: 14, marginBottom: 16 }}>
+          <h2 style={{ display: 'flex', alignItems: 'center', gap: 7, fontWeight: 600, fontSize: 14, margin: 0, marginBottom: 16 }}>
             <TrendingUp size={14} style={{ color: 'oklch(0.70 0.15 185)' }} />
             לעומת שנה שעברה
-          </div>
+          </h2>
           {!yearAgoPeriodId
             ? <div style={{ color: 'oklch(0.55 0.01 250)', fontSize: 13 }}>אין נתוני שנה שעברה (פחות מ-12 מחזורים)</div>
             : (
@@ -405,7 +406,7 @@ export default function Dashboard() {
 
         {/* Budget bars */}
         <div style={CARD}>
-          <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 14 }}>ניצול תקציב</div>
+          <h2 style={{ fontWeight: 600, fontSize: 14, margin: 0, marginBottom: 14 }}>ניצול תקציב</h2>
           {!(categories?.length)
             ? <div style={{ color: 'oklch(0.55 0.01 250)', fontSize: 13 }}>אין קטגוריות</div>
             : [...(categories ?? [])]
@@ -444,7 +445,7 @@ export default function Dashboard() {
 
         {/* Donut */}
         <div style={CARD}>
-          <div style={{ fontWeight: 600, fontSize: 14, marginBottom: 14 }}>חלוקת הוצאות</div>
+          <h2 style={{ fontWeight: 600, fontSize: 14, margin: 0, marginBottom: 14 }}>חלוקת הוצאות</h2>
           {donutData.length === 0
             ? <div style={{ color: 'oklch(0.55 0.01 250)', fontSize: 13 }}>אין נתונים</div>
             : (
@@ -481,9 +482,9 @@ export default function Dashboard() {
         {/* Sinking funds */}
         <div style={CARD}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontWeight: 600, fontSize: 14 }}>
+            <h2 style={{ display: 'flex', alignItems: 'center', gap: 7, fontWeight: 600, fontSize: 14, margin: 0 }}>
               <PiggyBank size={14} style={{ color: 'oklch(0.70 0.15 185)' }} /> קרנות צבירה
-            </div>
+            </h2>
             <div style={{ fontSize: 13, fontWeight: 700, color: 'oklch(0.70 0.15 185)', direction: 'ltr' }}>
               {formatCurrency(totalFundBalance)}
             </div>
@@ -502,6 +503,9 @@ export default function Dashboard() {
                       {formatCurrency(balance)}
                     </span>
                   </div>
+                  {balance < 0 && (
+                    <div style={{ fontSize: 10, color: 'oklch(0.45 0.01 250)', marginBottom: 2 }}>(הוצאה גדולה מהצבירה)</div>
+                  )}
                   <div style={{ height: 4, borderRadius: 2, background: 'oklch(0.22 0.01 250)', overflow: 'hidden' }}>
                     <div style={{ height: '100%', borderRadius: 2, width: `${Math.max(0, pct)}%`, background: 'oklch(0.70 0.15 185)', transition: 'width 0.4s ease' }} />
                   </div>
@@ -513,9 +517,9 @@ export default function Dashboard() {
 
         {/* Apartment */}
         <div style={CARD}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontWeight: 600, marginBottom: 6, fontSize: 14 }}>
+          <h2 style={{ display: 'flex', alignItems: 'center', gap: 7, fontWeight: 600, fontSize: 14, margin: 0, marginBottom: 6 }}>
             <Home size={14} style={{ color: 'oklch(0.70 0.18 145)' }} /> יעד הדירה
-          </div>
+          </h2>
           <div style={{ fontSize: 11, color: 'oklch(0.50 0.01 250)', marginBottom: 16 }}>3,500 ₪ × 36 מחזורים = 126,000 ₪</div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 14 }}>
             <span style={{ fontSize: 26, fontWeight: 700, direction: 'ltr', color: 'oklch(0.70 0.18 145)' }}>{formatCurrency(totalSaved)}</span>
@@ -536,9 +540,9 @@ export default function Dashboard() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14, marginTop: 14 }}>
           {/* Net Worth */}
           <div style={CARD}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontWeight: 600, fontSize: 14, marginBottom: 14 }}>
+            <h2 style={{ display: 'flex', alignItems: 'center', gap: 7, fontWeight: 600, fontSize: 14, margin: 0, marginBottom: 14 }}>
               <Wallet size={14} style={{ color: 'oklch(0.68 0.18 295)' }} /> שווי נקי
-            </div>
+            </h2>
             <div style={{ fontSize: 28, fontWeight: 700, direction: 'ltr', textAlign: 'left', color: netWorth >= 0 ? 'oklch(0.68 0.18 295)' : 'oklch(0.62 0.22 27)', marginBottom: 14 }}>
               {formatCurrency(netWorth)}
             </div>
@@ -564,9 +568,9 @@ export default function Dashboard() {
 
           {/* Health Score */}
           <div style={CARD}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 7, fontWeight: 600, fontSize: 14, marginBottom: 14 }}>
+            <h2 style={{ display: 'flex', alignItems: 'center', gap: 7, fontWeight: 600, fontSize: 14, margin: 0, marginBottom: 14 }}>
               <TrendingUp size={14} style={{ color: healthColor }} /> בריאות פיננסית
-            </div>
+            </h2>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 8 }}>
               <span style={{ fontSize: 36, fontWeight: 700, color: healthColor }}>{healthScore}</span>
               <span style={{ fontSize: 14, color: 'oklch(0.55 0.01 250)' }}>/ 100</span>

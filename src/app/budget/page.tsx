@@ -189,7 +189,7 @@ export default function BudgetPage() {
                       <div style={{ flex: 1, height: 5, borderRadius: 3, background: 'oklch(0.22 0.01 250)', overflow: 'hidden' }}>
                         <div style={{ height: '100%', borderRadius: 3, width: `${Math.min(pct * 100, 100)}%`, background: barColor, transition: 'width 0.4s ease' }} />
                       </div>
-                      <span style={{ fontSize: 11, fontWeight: 500, color: barColor, minWidth: 32, textAlign: 'left', direction: 'ltr' }}>{pctDisplay}%</span>
+                      <span style={{ fontSize: 11, fontWeight: 500, color: barColor, minWidth: 32, textAlign: 'left', direction: 'ltr' }}>{pctDisplay > 200 ? '200%+' : `${pctDisplay}%`}</span>
                     </div>
                   </div>
                 )

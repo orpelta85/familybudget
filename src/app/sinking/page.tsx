@@ -275,7 +275,7 @@ export default function SinkingPage() {
                         : { text: 'מאחור', color: 'oklch(0.62 0.22 27)' }
                     return (
                       <div style={{ marginTop: 8, fontSize: 12, color: 'oklch(0.55 0.01 250)', display: 'flex', justifyContent: 'space-between', paddingTop: 8, borderTop: '1px solid oklch(0.20 0.01 250)' }}>
-                        <span>צבור: <span style={{ color: balance > 0 ? 'oklch(0.70 0.15 185)' : 'oklch(0.62 0.22 27)', fontWeight: 600, direction: 'ltr', display: 'inline-block' }}>{formatCurrency(balance)}</span></span>
+                        <span>צבור: <span style={{ color: balance > 0 ? 'oklch(0.70 0.15 185)' : 'oklch(0.62 0.22 27)', fontWeight: 600, direction: 'ltr', display: 'inline-block' }}>{formatCurrency(balance)}</span>{balance < 0 && <span style={{ fontSize: 11, color: 'oklch(0.45 0.01 250)', marginRight: 4 }}>(הוצאה גדולה מהצבירה)</span>}</span>
                         <span style={{ direction: 'ltr', display: 'flex', alignItems: 'center', gap: 8 }}>
                           {pct.toFixed(0)}% מהיעד השנתי
                           <span style={{ fontSize: 11, fontWeight: 500, color: trackStatus.color }}>{trackStatus.text}</span>

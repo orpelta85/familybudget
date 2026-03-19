@@ -22,6 +22,20 @@ import type { BudgetCategory, SharedCategory } from '@/lib/types'
 
 type ExpType = 'personal' | 'shared'
 
+const SHARED_CATEGORIES: { value: string; label: string }[] = [
+  { value: 'rent', label: 'שכירות' },
+  { value: 'property_tax', label: 'ארנונה' },
+  { value: 'electricity', label: 'חשמל' },
+  { value: 'water_gas', label: 'מים+גז' },
+  { value: 'building_committee', label: 'ועד בית' },
+  { value: 'internet', label: 'אינטרנט' },
+  { value: 'home_insurance', label: 'ביטוח דירה' },
+  { value: 'netflix', label: 'נטפליקס' },
+  { value: 'spotify', label: 'ספוטיפיי' },
+  { value: 'groceries', label: 'מכולת' },
+  { value: 'misc', label: 'שונות' },
+]
+
 const S = {
   card: {
     background: 'oklch(0.16 0.01 250)',
@@ -79,6 +93,7 @@ export default function ExpensesPage() {
   const [customCat, setCustomCat]     = useState('')       // free-text fallback
   const [useCustomCat, setUseCustom]  = useState(false)   // toggle dropdown vs text
   const [sharedLabel, setSharedLabel] = useState('')
+  const [sharedCategory, setSharedCategory] = useState('')
   const [amount, setAmount]           = useState('')
 
   // Excel import
@@ -97,13 +112,13 @@ export default function ExpensesPage() {
   // ── Add expense ─────────────────────────────────────────────────────────────
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault()
-    if (!user || !selectedPeriodId || !amount) return
+    if (!user || !selectedPeriodId) return
+    if (!amount || Number(amount) <= 0) { toast.error('הזן סכום'); return }
     const amt = Number(amount)
-    if (!amt || amt <= 0) return
     try {
       if (expType === 'personal') {
         const catId = useCustomCat ? null : (categoryId ? Number(categoryId) : null)
-        if (!catId && !customCat.trim()) { toast.error('הזן קטגוריה'); return }
+        if (!catId && !customCat.trim()) { toast.error('בחר קטגוריה'); return }
         // If custom category, use the first matching category or skip (store as description)
         const resolvedCatId = catId ?? categories?.[0]?.id ?? 1
         await addExpense.mutateAsync({
@@ -114,11 +129,15 @@ export default function ExpensesPage() {
           expense_date: new Date().toISOString().split('T')[0],
         })
       } else {
-        const label = sharedLabel.trim() || 'הוצאה משותפת'
         if (!familyId) { toast.error('לא משויך למשפחה'); return }
-        await upsertShared.mutateAsync({ period_id: selectedPeriodId, category: 'misc' as SharedCategory, total_amount: amt, notes: label, family_id: familyId })
+        const resolvedCategory = useCustomCat ? 'misc' : (sharedCategory || '')
+        if (!resolvedCategory) { toast.error('בחר קטגוריה'); return }
+        const label = useCustomCat
+          ? (sharedLabel.trim() || 'הוצאה משותפת')
+          : (sharedLabel.trim() || SHARED_CATEGORIES.find(c => c.value === sharedCategory)?.label || 'הוצאה משותפת')
+        await upsertShared.mutateAsync({ period_id: selectedPeriodId, category: resolvedCategory as SharedCategory, total_amount: amt, notes: label, family_id: familyId })
       }
-      setAmount(''); setSharedLabel(''); setCustomCat(''); setCategoryId('')
+      setAmount(''); setSharedLabel(''); setCustomCat(''); setCategoryId(''); setSharedCategory('')
       toast.success('הוצאה נוספה')
     } catch { toast.error('שגיאה בהוספה') }
   }
@@ -286,8 +305,7 @@ export default function ExpensesPage() {
       recurringShared.unlock(exp.category)
       toast.success(`בוטל נעילה: ${label}`)
     } else {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      recurringShared.lock({ category: exp.category as any, label, amount: exp.total_amount })
+      recurringShared.lock({ category: exp.category, label, amount: exp.total_amount })
       toast.success(`נעול: ${label}`)
     }
   }
@@ -390,13 +408,13 @@ export default function ExpensesPage() {
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: 16, alignItems: 'start' }}>
+      <div className="grid-2" style={{ alignItems: 'start' }}>
 
         {/* ── Add form ───────────────────────────────────────────────────────── */}
         <div style={S.card}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 14 }}>
             <Plus size={13} style={{ color: 'oklch(0.65 0.18 250)' }} />
-            <span style={{ fontWeight: 600, fontSize: 13 }}>הוספה ידנית</span>
+            <h2 style={{ fontWeight: 600, fontSize: 13, margin: 0 }}>הוספה ידנית</h2>
           </div>
 
           {/* Type toggle */}
@@ -418,19 +436,25 @@ export default function ExpensesPage() {
             {/* Category — identical for both types */}
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                <label style={S.label}>קטגוריה</label>
+                <label htmlFor="expense-category" style={S.label}>קטגוריה</label>
                 <button type="button" onClick={() => setUseCustom(v => !v)}
                   style={{ background: 'none', border: 'none', fontSize: 10, color: 'oklch(0.55 0.18 250)', cursor: 'pointer', padding: 0 }}>
                   {useCustomCat ? '← מרשימה' : '+ ידנית'}
                 </button>
               </div>
               {useCustomCat ? (
-                <input type="text" value={expType === 'shared' ? sharedLabel : customCat}
+                <input id="expense-category" type="text" value={expType === 'shared' ? sharedLabel : customCat}
                   onChange={e => expType === 'shared' ? setSharedLabel(e.target.value) : setCustomCat(e.target.value)}
                   placeholder="שם קטגוריה חופשי..."
                   style={{ ...S.input, width: '100%' }} />
+              ) : expType === 'shared' ? (
+                <select id="expense-category" value={sharedCategory} onChange={e => { setSharedCategory(e.target.value); setSharedLabel(SHARED_CATEGORIES.find(c => c.value === e.target.value)?.label ?? '') }}
+                  style={{ ...S.input, width: '100%' }}>
+                  <option value="">בחר...</option>
+                  {SHARED_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                </select>
               ) : (
-                <select value={categoryId} onChange={e => { setCategoryId(e.target.value); if (expType === 'shared') setSharedLabel(categories?.find(c => c.id === Number(e.target.value))?.name ?? '') }}
+                <select id="expense-category" value={categoryId} onChange={e => setCategoryId(e.target.value)}
                   style={{ ...S.input, width: '100%' }}>
                   <option value="">בחר...</option>
                   {categories?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -440,8 +464,8 @@ export default function ExpensesPage() {
 
             {/* Amount */}
             <div>
-              <label style={S.label}>סכום (₪){expType === 'shared' ? ' — כולל (חלקך 50%)' : ''}</label>
-              <input type="number" value={amount} onChange={e => setAmount(e.target.value)}
+              <label htmlFor="expense-amount" style={S.label}>סכום (₪){expType === 'shared' ? ' — כולל (חלקך 50%)' : ''}</label>
+              <input id="expense-amount" type="number" value={amount} onChange={e => setAmount(e.target.value)}
                 placeholder="0" required min="0.01" step="0.01"
                 style={{ ...S.input, width: '100%', direction: 'ltr', textAlign: 'right' }} />
               {expType === 'shared' && Number(amount) > 0 && (
@@ -509,7 +533,7 @@ export default function ExpensesPage() {
           <div style={S.card}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600 }}>
-                <User size={12} style={{ color: 'oklch(0.65 0.18 250)' }} /> הוצאות אישיות
+                <User size={12} style={{ color: 'oklch(0.65 0.18 250)' }} /> <h2 style={{ fontSize: 13, fontWeight: 600, margin: 0, display: 'inline' }}>הוצאות אישיות</h2>
               </div>
               <span style={{ fontSize: 14, fontWeight: 700, direction: 'ltr', color: 'oklch(0.65 0.18 250)' }}>{formatCurrency(totalPersonal)}</span>
             </div>
@@ -546,7 +570,7 @@ export default function ExpensesPage() {
           <div style={S.card}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600 }}>
-                <Users size={12} style={{ color: 'oklch(0.65 0.12 310)' }} /> הוצאות משותפות
+                <Users size={12} style={{ color: 'oklch(0.65 0.12 310)' }} /> <h2 style={{ fontSize: 13, fontWeight: 600, margin: 0, display: 'inline' }}>הוצאות משותפות</h2>
               </div>
               <span style={{ fontSize: 14, fontWeight: 700, direction: 'ltr', color: 'oklch(0.65 0.12 310)' }}>{formatCurrency(totalSharedMy)}</span>
             </div>
