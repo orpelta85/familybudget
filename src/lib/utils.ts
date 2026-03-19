@@ -6,11 +6,11 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('he-IL', {
-    style: 'currency',
-    currency: 'ILS',
+  const formatted = new Intl.NumberFormat('he-IL', {
     maximumFractionDigits: 0,
-  }).format(amount)
+  }).format(Math.abs(amount))
+  const sign = amount < 0 ? '-' : ''
+  return `${sign}${formatted} ₪`
 }
 
 export function formatPercent(value: number): string {
