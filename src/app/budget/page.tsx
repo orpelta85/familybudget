@@ -35,6 +35,30 @@ const SHARED_TO_FIXED: Record<string, string> = {
   spotify: 'מנויים',
 }
 
+// Notes-based mapping for shared expenses stored as 'misc'
+// Maps note substrings to fixed budget category names
+const NOTES_TO_FIXED: [RegExp, string][] = [
+  [/שכירות/i, 'שכירות'],
+  [/ארנונה/i, 'ארנונה'],
+  [/חשמל/i, 'חשמל'],
+  [/אינטרגז|מים|גז/i, 'מים+גז'],
+  [/ועד בית/i, 'ועד בית'],
+  [/מנורה|ביטוח|הכשרה/i, 'ביטוחים'],
+  [/הלוואת רכב/i, 'הלוואת רכב'],
+  [/נטפליקס|ספוטיפיי|ALLDEBRID/i, 'מנויים'],
+]
+
+function resolveSharedToFixed(category: string, notes?: string): string | null {
+  const mapped = SHARED_TO_FIXED[category]
+  if (mapped) return mapped
+  if (notes) {
+    for (const [pattern, name] of NOTES_TO_FIXED) {
+      if (pattern.test(notes)) return name
+    }
+  }
+  return null
+}
+
 // Variable category grouping
 interface CategoryGroup {
   key: string
@@ -96,7 +120,7 @@ export default function BudgetPage() {
 
   // Shared expenses: map to fixed categories by name, accumulate my_share
   const sharedSpendByCatName = (sharedExpenses ?? []).reduce<Record<string, number>>((acc, se) => {
-    const fixedName = SHARED_TO_FIXED[se.category]
+    const fixedName = resolveSharedToFixed(se.category, se.notes)
     if (fixedName) {
       acc[fixedName] = (acc[fixedName] ?? 0) + se.my_share
     }
@@ -105,7 +129,7 @@ export default function BudgetPage() {
 
   // Unmatched shared expenses (category not mapped to a fixed budget category)
   const unmatchedSharedTotal = (sharedExpenses ?? []).reduce((sum, se) => {
-    return SHARED_TO_FIXED[se.category] ? sum : sum + se.my_share
+    return resolveSharedToFixed(se.category, se.notes) ? sum : sum + se.my_share
   }, 0)
 
   // Combined spend for fixed categories: personal + shared
@@ -153,7 +177,7 @@ export default function BudgetPage() {
     <div>
       <div className="flex items-center gap-2 mb-1.5">
         <BarChart3 size={18} className="text-primary" />
-        <h1 className="text-xl font-bold tracking-tight">תקציב חודשי</h1>
+        <h1 className="text-xl font-bold tracking-tight">תקציב משפחתי</h1>
       </div>
       <p className="text-muted-foreground text-[13px] mb-5">
         {selectedPeriod?.label ?? currentPeriod?.label ?? '...'}

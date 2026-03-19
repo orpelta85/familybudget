@@ -14,7 +14,7 @@ import { toast } from 'sonner'
 const nav = [
   { href: '/',          label: 'דשבורד',          icon: LayoutDashboard },
   { href: '/income',    label: 'הכנסה',            icon: Wallet },
-  { href: '/budget',    label: 'תקציב מתוכנן',     icon: ListChecks },
+  { href: '/budget',    label: 'תקציב משפחתי',     icon: ListChecks },
   { href: '/expenses',  label: 'הוצאות',           icon: Receipt },
   { href: '/joint',     label: 'קופה משותפת',      icon: PiggyBank },
   { href: '/sinking',   label: 'קרנות צבירה',      icon: Target },
