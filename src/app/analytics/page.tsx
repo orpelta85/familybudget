@@ -3,7 +3,7 @@
 import { useUser } from '@/lib/queries/useUser'
 import { usePeriods } from '@/lib/queries/usePeriods'
 import { useAllIncome } from '@/lib/queries/useIncome'
-import { useAllPersonalExpenses } from '@/lib/queries/useExpenses'
+import { useAllPersonalExpenses, useBudgetCategories } from '@/lib/queries/useExpenses'
 import { useAllSharedExpenses } from '@/lib/queries/useShared'
 import { useApartmentDeposits } from '@/lib/queries/useApartment'
 import { useSplitFraction } from '@/lib/queries/useProfile'
@@ -11,7 +11,7 @@ import { formatCurrency } from '@/lib/utils'
 import { useFamilyContext } from '@/lib/context/FamilyContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { BarChart3 } from 'lucide-react'
+import { BarChart3, Download, FileText } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import { ChartSkeleton } from '@/components/ui/Skeleton'
 
@@ -53,12 +53,63 @@ export default function AnalyticsPage() {
   const { data: allPersonal } = useAllPersonalExpenses(user?.id)
   const { data: allShared } = useAllSharedExpenses(familyId)
   const { data: deposits } = useApartmentDeposits(familyId)
+  const { data: categories } = useBudgetCategories(user?.id)
 
   const [selectedYearIdx, setSelectedYearIdx] = useState(0)
 
   useEffect(() => {
     if (!loading && !user) router.push('/login')
   }, [user, loading, router])
+
+  async function handleDownloadReport() {
+    try {
+      const XLSX = await import('xlsx')
+      const wb = XLSX.utils.book_new()
+
+      // Summary sheet
+      const summaryRows = [
+        ['דוח שנתי', yearDef.label],
+        [],
+        ['סה"כ הכנסות', yearIncome],
+        ['סה"כ הוצאות', yearExpenses],
+        ['תזרים נקי', yearNet],
+        ['% חיסכון', `${avgSavingsPct.toFixed(1)}%`],
+        ['חיסכון לדירה', yearSaved],
+        ['חודשים פעילים', activeMonths],
+      ]
+      const summaryWs = XLSX.utils.aoa_to_sheet(summaryRows)
+      summaryWs['!cols'] = [{ wch: 20 }, { wch: 18 }]
+      XLSX.utils.book_append_sheet(wb, summaryWs, 'סיכום')
+
+      // Monthly detail sheet
+      const monthHeaders = ['מחזור', 'הכנסות', 'הוצאות אישי', 'הוצאות משותף', 'סה"כ הוצאות', 'תזרים', 'דירה']
+      const monthRows = chartData.map(d => [d.name, d.income, d.personal, d.shared, d.expenses, d.net, d.saved])
+      monthRows.push(['סה"כ', yearIncome, '', '', yearExpenses, yearNet, yearSaved])
+      const monthWs = XLSX.utils.aoa_to_sheet([monthHeaders, ...monthRows])
+      monthWs['!cols'] = monthHeaders.map(() => ({ wch: 16 }))
+      XLSX.utils.book_append_sheet(wb, monthWs, 'פירוט חודשי')
+
+      // Category breakdown sheet
+      const filteredPersonal = (allPersonal ?? []).filter(e => new Set(yearDef.periods).has(e.period_id))
+      const catMap: Record<string, number> = {}
+      for (const e of filteredPersonal) {
+        const name = categories?.find(c => c.id === e.category_id)?.name ?? 'אחר'
+        catMap[name] = (catMap[name] ?? 0) + e.amount
+      }
+      const catRows = Object.entries(catMap).sort((a, b) => b[1] - a[1]).map(([name, amount]) => [name, amount, yearIncome > 0 ? `${((amount / yearIncome) * 100).toFixed(1)}%` : ''])
+      const catWs = XLSX.utils.aoa_to_sheet([['קטגוריה', 'סכום', '% מהכנסה'], ...catRows])
+      catWs['!cols'] = [{ wch: 22 }, { wch: 14 }, { wch: 12 }]
+      XLSX.utils.book_append_sheet(wb, catWs, 'קטגוריות')
+
+      const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' })
+      const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a'); a.href = url; a.download = `דוח_שנתי_${yearDef.label}.xlsx`; a.click()
+      URL.revokeObjectURL(url)
+    } catch {
+      // fallback: do nothing
+    }
+  }
 
   if (loading || !user) return null
 
@@ -105,9 +156,14 @@ export default function AnalyticsPage() {
 
   return (
     <div>
-      <div className="flex items-center gap-2 mb-1.5">
-        <BarChart3 size={18} className="text-[oklch(0.65_0.18_250)]" />
-        <h1 className="text-xl font-bold tracking-tight">ניתוח שנתי</h1>
+      <div className="flex justify-between items-start mb-1.5">
+        <div className="flex items-center gap-2">
+          <BarChart3 size={18} className="text-[oklch(0.65_0.18_250)]" />
+          <h1 className="text-xl font-bold tracking-tight">ניתוח שנתי</h1>
+        </div>
+        <button onClick={handleDownloadReport} className="flex items-center gap-1.5 bg-[oklch(0.20_0.04_250)] border border-[oklch(0.32_0.08_250)] rounded-lg px-3.5 py-[7px] text-[oklch(0.65_0.18_250)] text-[13px] font-medium cursor-pointer">
+          <FileText size={13} /> הורד דוח שנתי
+        </button>
       </div>
       <p className="text-[oklch(0.65_0.01_250)] text-[13px] mb-5">
         סיכום הכנסות, הוצאות וחיסכון לאורך השנה
@@ -164,6 +220,54 @@ export default function AnalyticsPage() {
         <div className="font-semibold text-sm mb-4">תזרים נקי לאורך השנה</div>
         <NetFlowChart data={chartData} />
       </div>
+
+      {/* Money Flow (Sankey-style) */}
+      {yearIncome > 0 && (() => {
+        // Build category breakdown for selected period
+        const filteredPersonal = (allPersonal ?? []).filter(e => periodIds.has(e.period_id))
+        const filteredShared = (allShared ?? []).filter(e => periodIds.has(e.period_id))
+        const catMap: Record<string, number> = {}
+        for (const e of filteredPersonal) {
+          const name = categories?.find(c => c.id === e.category_id)?.name ?? 'אחר'
+          catMap[name] = (catMap[name] ?? 0) + e.amount
+        }
+        const sharedTotal = filteredShared.reduce((s, e) => s + (e.my_share ?? e.total_amount * splitFrac), 0)
+        if (sharedTotal > 0) catMap['משותפות'] = sharedTotal
+        const sorted = Object.entries(catMap).sort((a, b) => b[1] - a[1]).slice(0, 10)
+        const maxCat = sorted[0]?.[1] ?? 1
+
+        return (
+          <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5 mb-4">
+            <div className="font-semibold text-sm mb-4">זרימת כסף — הכנסה → קטגוריות</div>
+            <div className="flex flex-col gap-2">
+              {sorted.map(([name, amount]) => {
+                const pct = (amount / yearIncome) * 100
+                const width = Math.max(2, (amount / maxCat) * 100)
+                return (
+                  <div key={name} className="flex items-center gap-3">
+                    <span className="text-[12px] text-[oklch(0.70_0.01_250)] w-24 text-right truncate shrink-0">{name}</span>
+                    <div className="flex-1 h-5 rounded-sm bg-[oklch(0.20_0.01_250)] overflow-hidden">
+                      <div className="h-full rounded-sm bg-[oklch(0.50_0.18_250)] transition-[width] duration-500" style={{ width: `${width}%` }} />
+                    </div>
+                    <span className="text-[11px] text-[oklch(0.65_0.01_250)] w-16 ltr text-right shrink-0">{formatCurrency(amount)}</span>
+                    <span className="text-[10px] text-[oklch(0.55_0.01_250)] w-10 text-left shrink-0">{pct.toFixed(1)}%</span>
+                  </div>
+                )
+              })}
+            </div>
+            {yearNet > 0 && (
+              <div className="flex items-center gap-3 mt-3 pt-3 border-t border-[oklch(0.22_0.01_250)]">
+                <span className="text-[12px] text-[oklch(0.70_0.18_145)] w-24 text-right shrink-0 font-semibold">חיסכון</span>
+                <div className="flex-1 h-5 rounded-sm bg-[oklch(0.20_0.01_250)] overflow-hidden">
+                  <div className="h-full rounded-sm bg-[oklch(0.50_0.18_145)] transition-[width] duration-500" style={{ width: `${Math.max(2, (yearNet / maxCat) * 100)}%` }} />
+                </div>
+                <span className="text-[11px] text-[oklch(0.70_0.18_145)] w-16 ltr text-right shrink-0 font-semibold">{formatCurrency(yearNet)}</span>
+                <span className="text-[10px] text-[oklch(0.55_0.01_250)] w-10 text-left shrink-0">{((yearNet / yearIncome) * 100).toFixed(1)}%</span>
+              </div>
+            )}
+          </div>
+        )
+      })()}
 
       {/* Monthly breakdown table */}
       <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5">

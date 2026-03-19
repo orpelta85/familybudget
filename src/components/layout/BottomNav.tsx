@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useRef, useEffect } from 'react'
 import { cn } from '@/lib/utils'
-import { LayoutDashboard, Receipt, Users, Home, Menu, Wallet, BarChart3, PiggyBank, Heart, Target } from 'lucide-react'
+import { LayoutDashboard, Receipt, Users, Home, Menu, Wallet, BarChart3, PiggyBank, Heart, Target, TrendingUp, CreditCard, Sparkles, CalendarDays } from 'lucide-react'
 
 const nav = [
   { href: '/',          label: 'דשבורד',  icon: LayoutDashboard },
@@ -18,8 +18,12 @@ const moreLinks = [
   { href: '/budget',   label: 'תקציב',        icon: BarChart3 },
   { href: '/joint',    label: 'קופה משותפת',   icon: Users },
   { href: '/sinking',  label: 'קרנות צבירה',  icon: Target },
-  { href: '/pension',  label: 'פנסיה',        icon: PiggyBank },
-  { href: '/family',   label: 'משפחה',        icon: Heart },
+  { href: '/pension',       label: 'פנסיה',        icon: PiggyBank },
+  { href: '/net-worth',     label: 'שווי נקי',    icon: TrendingUp },
+  { href: '/subscriptions',label: 'מנויים',      icon: CreditCard },
+  { href: '/forecast',     label: 'תחזית',       icon: CalendarDays },
+  { href: '/advisor',      label: 'יועץ',        icon: Sparkles },
+  { href: '/family',       label: 'משפחה',        icon: Heart },
 ]
 
 export function BottomNav() {
