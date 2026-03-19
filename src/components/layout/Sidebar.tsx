@@ -62,7 +62,7 @@ export function Sidebar() {
   }
 
   return (<>
-    <aside className="hidden md:flex md:flex-col w-[var(--sidebar-width)] fixed top-0 end-0 h-screen bg-[oklch(0.14_0.01_250)] border-s border-[oklch(0.22_0.01_250)] z-40">
+    <aside className="hidden md:flex md:flex-col w-[var(--sidebar-width)] fixed top-0 right-0 h-screen bg-[oklch(0.14_0.01_250)] border-s border-[oklch(0.22_0.01_250)] z-40">
       {/* Logo */}
       <div className="px-5 pt-5 pb-4 border-b border-[oklch(0.20_0.01_250)]">
         <div className="flex items-center gap-2 mb-1.5">
@@ -88,10 +88,10 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                'flex items-center gap-2.5 py-2 px-3 rounded-lg text-[13px] no-underline transition-all duration-150 border-e-2',
+                'flex items-center gap-2.5 py-2 px-3 rounded-lg text-[13px] no-underline transition-all duration-150 border-r-2',
                 active
-                  ? 'font-medium text-[oklch(0.92_0.01_250)] bg-[oklch(0.20_0.01_250)] border-e-[oklch(0.65_0.18_250)]'
-                  : 'font-normal text-[oklch(0.65_0.01_250)] bg-transparent border-e-transparent'
+                  ? 'font-medium text-[oklch(0.92_0.01_250)] bg-[oklch(0.20_0.01_250)] border-r-[oklch(0.65_0.18_250)]'
+                  : 'font-normal text-[oklch(0.65_0.01_250)] bg-transparent border-r-transparent'
               )}
             >
               <Icon size={15} className="shrink-0" />
