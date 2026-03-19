@@ -396,12 +396,21 @@ export default function ExpensesPage() {
                     {row.is_shared ? 'משותף' : 'אישי'}
                   </button>
                   {/* קטגוריה — always editable dropdown */}
-                  <select value={row.categoryId?.startsWith('__new__') ? '' : row.categoryId} onChange={e => setImportRows(p => p.map((r, j) => j === i ? { ...r, categoryId: e.target.value, category: e.target.selectedOptions[0]?.text || r.category } : r))}
+                  <select
+                    value={row.categoryId?.startsWith('__new__') ? '__new__' : (row.categoryId || '')}
+                    onChange={e => {
+                      const val = e.target.value
+                      const text = e.target.selectedOptions[0]?.text || ''
+                      setImportRows(p => p.map((r, j) => j === i ? { ...r, categoryId: val === '__new__' ? `__new__${r.category}` : val, category: val === '__new__' ? r.category : text } : r))
+                    }}
                     aria-label="בחר קטגוריה"
-                    className={`bg-secondary border rounded-lg px-1.5 py-0.5 text-[11px] text-inherit outline-none ${
-                      isAutoMatched ? 'border-[oklch(0.40_0.12_150)]' : isNewCat ? 'border-[oklch(0.40_0.12_55)]' : 'border-[oklch(0.28_0.01_250)]'
+                    className={`min-w-[120px] bg-[oklch(0.20_0.01_250)] border-2 rounded-lg px-2 py-1 text-[12px] text-inherit outline-none cursor-pointer appearance-auto ${
+                      isAutoMatched ? 'border-[oklch(0.50_0.15_150)] text-[oklch(0.80_0.10_150)]'
+                      : isNewCat ? 'border-[oklch(0.50_0.15_55)] text-[oklch(0.80_0.10_55)]'
+                      : 'border-[oklch(0.40_0.01_250)] text-[oklch(0.65_0.01_250)]'
                     }`}>
-                    <option value="">{isNewCat ? `${row.category} (חדש)` : 'בחר...'}</option>
+                    {isNewCat && <option value="__new__">{row.category} (חדש)</option>}
+                    {!isNewCat && !row.categoryId && <option value="">— בחר קטגוריה —</option>}
                     {categories?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                   </select>
                 </div>
