@@ -148,7 +148,7 @@ export default function JointPage() {
             <div key={f.label} className="mb-3">
               <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">{f.label}</label>
               <input type="number" value={f.val} onChange={e => f.set(e.target.value)} placeholder="0"
-                className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-[15px] ltr text-end" />
+                className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-[15px] ltr text-left" />
             </div>
           ))}
           <button onClick={saveIncome} disabled={upsertIncome.isPending}
@@ -167,7 +167,7 @@ export default function JointPage() {
               {POOL_CATEGORIES.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
             </select>
             <input type="number" value={expAmount} onChange={e => setExpAmount(e.target.value)} placeholder="סכום (₪)" required min="0"
-              className="bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-[15px] ltr text-end" />
+              className="bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-[15px] ltr text-left" />
             <input type="text" value={expDesc} onChange={e => setExpDesc(e.target.value)} placeholder="תיאור (אופציונלי)"
               className="bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-[13px]" />
             <button type="submit" className="btn-hover bg-[oklch(0.72_0.18_55)] border-none rounded-lg py-2.5 font-semibold text-[13px] text-[oklch(0.10_0.01_250)] cursor-pointer">
@@ -184,7 +184,7 @@ export default function JointPage() {
           <div key={e.id} className="flex justify-between py-[9px] border-b border-[oklch(0.20_0.01_250)] text-[13px]">
             <div>
               <span className="font-medium">{POOL_CATEGORIES.find(c => c.key === e.category)?.label ?? e.category}</span>
-              {e.description && <span className="text-[oklch(0.65_0.01_250)] ms-2">· {e.description}</span>}
+              {e.description && <span className="text-[oklch(0.65_0.01_250)] ml-2">· {e.description}</span>}
             </div>
             <span className="ltr font-semibold text-[oklch(0.72_0.18_55)]">{formatCurrency(e.amount)}</span>
           </div>

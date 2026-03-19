@@ -94,7 +94,7 @@ export default function ApartmentPage() {
               {formatCurrency(totalSaved)}
             </div>
           </div>
-          <div className="text-start">
+          <div className="text-left">
             <div className="text-[13px] text-[oklch(0.65_0.10_145)] mb-1.5">יעד סופי</div>
             <div className="text-[22px] font-bold ltr text-[oklch(0.75_0.08_145)]">{formatCurrency(TOTAL_GOAL)}</div>
           </div>
@@ -143,7 +143,7 @@ export default function ApartmentPage() {
           <div className="mb-4">
             <label className="text-xs block mb-[5px] text-[oklch(0.60_0.01_250)]">סכום (₪)</label>
             <input type="number" value={amount} onChange={e => setAmount(e.target.value)}
-              className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-[15px] ltr text-end" />
+              className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-[15px] ltr text-left" />
           </div>
           <button onClick={handleDeposit} disabled={upsert.isPending}
             className="w-full bg-[oklch(0.70_0.18_145)] border-none rounded-lg py-[11px] font-semibold text-sm text-[oklch(0.10_0.02_145)] cursor-pointer">

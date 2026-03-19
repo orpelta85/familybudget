@@ -42,7 +42,7 @@ export default function SetupPage() {
   ]
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 me-0">
+    <div className="min-h-screen flex items-center justify-center p-6 ml-0">
       <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-[14px] p-8 max-w-[440px] w-full">
         <div className="mb-6">
           <h1 className="text-[22px] font-bold mb-2">ברוך הבא ל-My Family Finance</h1>

@@ -166,7 +166,7 @@ export default function SinkingPage() {
       </div>
       <p className="text-[oklch(0.65_0.01_250)] text-[13px] mb-5">
         סה&quot;כ הפרשה חודשית: <span className="ltr inline-block font-semibold text-[oklch(0.70_0.15_185)]">{formatCurrency(totalMonthly)}</span>
-        <span className="ms-2 text-[oklch(0.65_0.01_250)] text-xs">
+        <span className="ml-2 text-[oklch(0.65_0.01_250)] text-xs">
           (יעד שנתי: {formatCurrency((funds ?? []).reduce((s, f) => s + (f.yearly_target || f.monthly_allocation * 12), 0))})
         </span>
       </p>
@@ -213,11 +213,11 @@ export default function SinkingPage() {
                     </div>
 
                     {/* Amounts */}
-                    <div className="text-start ltr shrink-0">
-                      <div className="text-base font-bold text-[oklch(0.88_0.01_250)]">{formatCurrency(fund.monthly_allocation)}<span className="text-[11px] font-normal text-[oklch(0.65_0.01_250)] ms-[3px]">/חודש</span></div>
+                    <div className="text-left ltr shrink-0">
+                      <div className="text-base font-bold text-[oklch(0.88_0.01_250)]">{formatCurrency(fund.monthly_allocation)}<span className="text-[11px] font-normal text-[oklch(0.65_0.01_250)] ml-[3px]">/חודש</span></div>
                       <div className="text-xs text-[oklch(0.65_0.01_250)]">
                         יעד שנתי: {formatCurrency(totalAnnual)}
-                        {shared && <span className="ms-1 text-[oklch(0.65_0.01_250)]">(חלקי: {formatCurrency(fund.monthly_allocation * 12)})</span>}
+                        {shared && <span className="ml-1 text-[oklch(0.65_0.01_250)]">(חלקי: {formatCurrency(fund.monthly_allocation * 12)})</span>}
                       </div>
                     </div>
 
@@ -262,7 +262,7 @@ export default function SinkingPage() {
                         : { text: 'מאחור', color: 'text-[oklch(0.62_0.22_27)]' }
                     return (
                       <div className="mt-2 text-xs text-[oklch(0.65_0.01_250)] flex justify-between pt-2 border-t border-[oklch(0.20_0.01_250)]">
-                        <span>צבור: <span className={`${balanceColor} font-semibold ltr inline-block`}>{formatCurrency(balance)}</span>{balance < 0 && <span className="text-[11px] text-[oklch(0.65_0.01_250)] ms-1">(הוצאה גדולה מהצבירה)</span>}</span>
+                        <span>צבור: <span className={`${balanceColor} font-semibold ltr inline-block`}>{formatCurrency(balance)}</span>{balance < 0 && <span className="text-[11px] text-[oklch(0.65_0.01_250)] ml-1">(הוצאה גדולה מהצבירה)</span>}</span>
                         <span className="ltr flex items-center gap-2">
                           {pct.toFixed(0)}% מהיעד השנתי
                           <span className={`text-[11px] font-medium ${trackStatus.color}`}>{trackStatus.text}</span>
@@ -329,7 +329,7 @@ export default function SinkingPage() {
                 <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">סכום (₪)</label>
                 <input type="number" value={txAmount} onChange={e => setTxAmount(e.target.value)}
                   placeholder="0" min="0" autoFocus
-                  className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-end" />
+                  className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left" />
               </div>
               <div>
                 <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">תיאור (אופציונלי)</label>
@@ -392,7 +392,7 @@ function FundFormFields({ form, onChange, splitFrac }: { form: FundForm; onChang
         <input type="text" inputMode="numeric" value={form.totalAnnual}
           onChange={e => onChange({ ...form, totalAnnual: e.target.value.replace(/[^\d]/g, '') })}
           placeholder="0"
-          className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-end" />
+          className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left" />
       </div>
       {/* Personal / Shared toggle */}
       <div>
@@ -415,12 +415,12 @@ function FundFormFields({ form, onChange, splitFrac }: { form: FundForm; onChang
       </div>
       {monthly > 0 && (
         <div className="bg-[oklch(0.20_0.02_185)] rounded-lg px-3.5 py-2.5 text-[13px] text-[oklch(0.70_0.15_185)]">
-          <div className="ltr text-start">
+          <div className="ltr text-left">
             חלקך: <strong>{formatCurrency(monthly)}</strong> לחודש
-            {form.isShared && <span className="text-[oklch(0.65_0.01_250)] ms-1.5">({formatCurrency(monthly * 12)} לשנה)</span>}
+            {form.isShared && <span className="text-[oklch(0.65_0.01_250)] ml-1.5">({formatCurrency(monthly * 12)} לשנה)</span>}
           </div>
           {form.isShared && (
-            <div className="text-[11px] text-[oklch(0.65_0.01_250)] mt-[3px] ltr text-start">
+            <div className="text-[11px] text-[oklch(0.65_0.01_250)] mt-[3px] ltr text-left">
               יעד כולל: {formatCurrency(Number(form.totalAnnual))} × {Math.round(splitFrac * 100)}% ÷ 12
             </div>
           )}

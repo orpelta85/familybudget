@@ -2,12 +2,14 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import {
   LayoutDashboard, Wallet, BarChart3, Receipt,
-  Users, PiggyBank, Target, TrendingUp, Link2, ListChecks, Mail, Copy, X, Send, Settings, CreditCard, Sparkles, CalendarDays
+  Users, PiggyBank, Target, TrendingUp, Link2, ListChecks, Mail, Copy, X, Send, Settings, CreditCard, Sparkles, CalendarDays, Calculator, Bell
 } from 'lucide-react'
+import { useAlerts, useUnreadAlertCount, useMarkAlertRead } from '@/lib/queries/useAlerts'
+import { useUser } from '@/lib/queries/useUser'
 import { useFamilyContext } from '@/lib/context/FamilyContext'
 import { toast } from 'sonner'
 
@@ -21,6 +23,7 @@ const nav = [
   { href: '/goals',     label: 'יעדים',             icon: Target },
   { href: '/kids',      label: 'ילדים',             icon: Users },
   { href: '/pension',   label: 'פנסיה',            icon: PiggyBank },
+  { href: '/debts',           label: 'מחשבון חובות',     icon: Calculator },
   { href: '/net-worth',      label: 'שווי נקי',         icon: TrendingUp },
   { href: '/subscriptions', label: 'מנויים',           icon: CreditCard },
   { href: '/forecast',      label: 'תחזית תזרים',     icon: CalendarDays },
@@ -32,9 +35,25 @@ const nav = [
 export function Sidebar() {
   const pathname = usePathname()
   const { family, isAdmin } = useFamilyContext()
+  const { user } = useUser()
+  const { data: alerts } = useAlerts(user?.id)
+  const { data: unreadCount } = useUnreadAlertCount(user?.id)
+  const markRead = useMarkAlertRead()
   const [showInvite, setShowInvite] = useState(false)
+  const [showAlerts, setShowAlerts] = useState(false)
   const [inviteEmail, setInviteEmail] = useState('')
   const [sendingEmail, setSendingEmail] = useState(false)
+  const alertRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (alertRef.current && !alertRef.current.contains(e.target as Node)) {
+        setShowAlerts(false)
+      }
+    }
+    if (showAlerts) document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [showAlerts])
 
   function copyInviteLink() {
     if (!family) return
@@ -64,13 +83,68 @@ export function Sidebar() {
 
   return (<>
     <aside className="hidden md:flex md:flex-col w-[var(--sidebar-width)] fixed top-0 right-0 h-screen bg-[oklch(0.14_0.01_250)] border-l border-[oklch(0.22_0.01_250)] z-40">
-      {/* Logo */}
+      {/* Logo + Bell */}
       <div className="px-5 pt-5 pb-4 border-b border-[oklch(0.20_0.01_250)]">
         <div className="flex items-center gap-2 mb-1.5">
           <img src="/favicon.svg" alt="" width={28} height={28} className="shrink-0" />
-          <span className="text-[13px] font-semibold text-[oklch(0.85_0.01_250)] tracking-tight">
+          <span className="text-[13px] font-semibold text-[oklch(0.85_0.01_250)] tracking-tight flex-1">
             My Family Finance
           </span>
+          {/* Alert bell */}
+          <div ref={alertRef} className="relative">
+            <button
+              onClick={() => setShowAlerts(v => !v)}
+              aria-label="התראות"
+              className="relative bg-transparent border-none cursor-pointer text-[oklch(0.65_0.01_250)] p-1.5 rounded-lg hover:bg-[oklch(0.20_0.01_250)] transition-colors"
+            >
+              <Bell size={16} />
+              {(unreadCount ?? 0) > 0 && (
+                <span className="absolute -top-0.5 -left-0.5 min-w-[16px] h-4 rounded-full bg-[oklch(0.62_0.22_27)] text-[10px] font-bold text-white flex items-center justify-center px-1">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
+            {showAlerts && (
+              <div className="absolute top-full left-0 mt-2 bg-[oklch(0.18_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-xl p-2 min-w-[280px] max-h-[360px] overflow-y-auto shadow-[0_4px_20px_oklch(0_0_0/0.5)] z-50">
+                <div className="text-[11px] font-semibold text-[oklch(0.65_0.01_250)] px-2 py-1.5 mb-1">התראות</div>
+                {!(alerts?.length) ? (
+                  <div className="text-[12px] text-[oklch(0.50_0.01_250)] text-center py-4">אין התראות</div>
+                ) : (
+                  alerts.map(alert => {
+                    const borderColor =
+                      alert.severity === 'danger' ? 'border-r-[oklch(0.62_0.22_27)]'
+                      : alert.severity === 'warning' ? 'border-r-[oklch(0.72_0.18_55)]'
+                      : alert.severity === 'success' ? 'border-r-[oklch(0.70_0.18_145)]'
+                      : 'border-r-[oklch(0.65_0.18_250)]'
+                    return (
+                      <div
+                        key={alert.id}
+                        className={`px-3 py-2.5 rounded-lg mb-1 border-r-2 ${borderColor} ${
+                          alert.is_read ? 'opacity-50' : 'bg-[oklch(0.15_0.01_250)]'
+                        }`}
+                      >
+                        <div className="flex justify-between items-start gap-2">
+                          <div>
+                            <div className="text-[12px] font-semibold">{alert.title}</div>
+                            <div className="text-[11px] text-[oklch(0.65_0.01_250)] mt-0.5 leading-relaxed">{alert.message}</div>
+                          </div>
+                          {!alert.is_read && user && (
+                            <button
+                              onClick={() => markRead.mutate({ id: alert.id, user_id: user.id })}
+                              aria-label="סמן כנקרא"
+                              className="bg-transparent border-none cursor-pointer text-[oklch(0.50_0.01_250)] p-0.5 shrink-0"
+                            >
+                              <X size={12} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })
+                )}
+              </div>
+            )}
+          </div>
         </div>
         {family?.name && (
           <div className="text-[11px] text-[oklch(0.65_0.01_250)] tracking-wide">
