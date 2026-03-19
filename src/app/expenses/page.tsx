@@ -2,7 +2,7 @@
 
 import { useUser } from '@/lib/queries/useUser'
 import { usePeriods, useCurrentPeriod } from '@/lib/queries/usePeriods'
-import { usePersonalExpenses, useBudgetCategories, useAddExpense, useDeleteExpense, useAddBudgetCategory } from '@/lib/queries/useExpenses'
+import { usePersonalExpenses, useBudgetCategories, useAddExpense, useDeleteExpense, useAddBudgetCategory, useCategoryRules, useSaveCategoryRule, findMatchingRule } from '@/lib/queries/useExpenses'
 import { useSharedExpenses, useUpsertSharedExpense, useDeleteSharedExpense } from '@/lib/queries/useShared'
 import { useSinkingFunds, useAddSinkingTransaction } from '@/lib/queries/useSinking'
 import { useSplitFraction } from '@/lib/queries/useProfile'
@@ -71,6 +71,8 @@ export default function ExpensesPage() {
   const deleteShared  = useDeleteSharedExpense()
   const addSinkingTx  = useAddSinkingTransaction()
   const addCategory   = useAddBudgetCategory()
+  const { data: categoryRules } = useCategoryRules(user?.id)
+  const saveCategoryRule = useSaveCategoryRule()
   const recurringPersonal = useRecurringPersonal(user?.id)
   const recurringShared   = useRecurringShared(user?.id)
   const queryClient = useQueryClient()
@@ -150,17 +152,26 @@ export default function ExpensesPage() {
     try {
       const r = await parseExpenseExcel(file)
       const cats = categories ?? []
+      const rules = categoryRules ?? []
+      let autoMatched = 0
       const mapped = r.map(row => {
         // Auto-match category name from Excel to existing budget categories
         let categoryId = ''
         if (row.category) {
           const catName = row.category.trim()
-          // Try exact match first, then case-insensitive, then includes
           const match = cats.find(c => c.name === catName)
             || cats.find(c => c.name.trim().toLowerCase() === catName.toLowerCase())
             || cats.find(c => c.name.includes(catName) || catName.includes(c.name))
           if (match) categoryId = String(match.id)
-          else categoryId = `__new__${catName}` // marker for auto-create
+          else categoryId = `__new__${catName}`
+        }
+        // If no category from Excel — try auto-categorize by merchant name rules
+        if (!categoryId && row.description && rules.length > 0) {
+          const rule = findMatchingRule(row.description, rules)
+          if (rule) {
+            categoryId = String(rule.category_id)
+            autoMatched++
+          }
         }
         return { ...row, categoryId }
       })
@@ -171,6 +182,7 @@ export default function ExpensesPage() {
       let msg = `נטענו ${r.length} שורות`
       if (sharedCount > 0) msg += ` · ${sharedCount} משותפות`
       if (matched > 0) msg += ` · ${matched} קטגוריות זוהו`
+      if (autoMatched > 0) msg += ` · ${autoMatched} זוהו אוטומטית`
       if (newCats > 0) msg += ` · ${newCats} קטגוריות חדשות ייווצרו`
       toast.success(msg)
     } catch { toast.error('שגיאה בקריאת הקובץ') }
@@ -255,6 +267,15 @@ export default function ExpensesPage() {
                 amount: -r.amount, description: r.description, transaction_date: today,
               })
             }
+          }
+          // Save category rule for future auto-categorization
+          if (r.description && resolvedCatId && !isNaN(resolvedCatId)) {
+            saveCategoryRule.mutate({
+              user_id: user.id,
+              merchant_pattern: r.description.trim(),
+              category_id: resolvedCatId,
+              fund_name: r.fund_name || undefined,
+            })
           }
           imported++
         } catch {

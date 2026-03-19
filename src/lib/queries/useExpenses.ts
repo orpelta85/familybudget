@@ -144,6 +144,66 @@ export function usePaginatedPersonalExpenses(
   })
 }
 
+// ── Category Rules (auto-categorization) ──────────────────────────────────
+
+interface CategoryRule {
+  id: number
+  user_id: string
+  merchant_pattern: string
+  category_id: number
+  fund_name: string | null
+}
+
+export function useCategoryRules(userId: string | undefined) {
+  return useQuery<CategoryRule[]>({
+    queryKey: ['category_rules', userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const sb = createClient()
+      const { data, error } = await sb
+        .from('category_rules')
+        .select('*')
+        .eq('user_id', userId!)
+      if (error) throw error
+      return data
+    },
+  })
+}
+
+export function useSaveCategoryRule() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (rule: { user_id: string; merchant_pattern: string; category_id: number; fund_name?: string }) => {
+      const sb = createClient()
+      const { error } = await sb
+        .from('category_rules')
+        .upsert(rule, { onConflict: 'user_id,merchant_pattern' })
+      if (error) throw error
+    },
+    onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: ['category_rules', vars.user_id] }),
+  })
+}
+
+/** Fuzzy match: checks if merchant name contains the pattern (case-insensitive, ignores extra spaces) */
+export function findMatchingRule(merchantName: string, rules: CategoryRule[]): CategoryRule | undefined {
+  const normalized = merchantName.trim().toLowerCase().replace(/\s+/g, ' ')
+  // Try exact match first
+  const exact = rules.find(r => normalized === r.merchant_pattern.trim().toLowerCase())
+  if (exact) return exact
+  // Try substring match — pattern inside merchant name
+  const partial = rules.find(r => {
+    const pattern = r.merchant_pattern.trim().toLowerCase()
+    return pattern.length >= 3 && normalized.includes(pattern)
+  })
+  if (partial) return partial
+  // Try merchant inside pattern (if merchant is shorter)
+  const reverse = rules.find(r => {
+    const pattern = r.merchant_pattern.trim().toLowerCase()
+    return normalized.length >= 3 && pattern.includes(normalized)
+  })
+  return reverse
+}
+
 export function useDeleteExpense() {
   const qc = useQueryClient()
   return useMutation({
