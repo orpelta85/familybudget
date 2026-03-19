@@ -281,6 +281,16 @@
   100% { background-position: -200% 0; }
 }
 
+/* Hide number input spinners (ugly white arrows on dark theme) */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
 /* Dark scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: oklch(0.14 0.01 250); }
