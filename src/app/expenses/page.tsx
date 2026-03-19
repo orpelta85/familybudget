@@ -323,17 +323,38 @@ export default function ExpensesPage() {
 
   async function handleResetExpenses() {
     if (!user || !selectedPeriodId) return
+    const hasPersonal = (personalExp ?? []).length > 0
     const hasShared = (sharedExp ?? []).length > 0
-    const msg = hasShared
-      ? 'למחוק את כל ההוצאות האישיות של המחזור הנוכחי?\n(הוצאות משותפות לא יימחקו — יש למחוק אותן בנפרד)'
-      : 'למחוק את כל ההוצאות האישיות של המחזור הנוכחי?'
-    if (!(await confirm({ message: msg }))) return
+    if (!hasPersonal && !hasShared) { toast.info('אין הוצאות למחיקה'); return }
+
+    // Build options based on what exists
+    let resetTarget: 'personal' | 'shared' | 'both' = 'personal'
+    if (hasPersonal && hasShared) {
+      const msg = 'מה ברצונך למחוק?\n\n• "אישי" — רק הוצאות אישיות\n• "משותף" — רק הוצאות משותפות\n• "הכל" — אישיות + משותפות'
+      const result = prompt(msg, 'הכל')
+      if (!result) return
+      const trimmed = result.trim()
+      if (trimmed === 'אישי' || trimmed.toLowerCase() === 'personal') resetTarget = 'personal'
+      else if (trimmed === 'משותף' || trimmed.toLowerCase() === 'shared') resetTarget = 'shared'
+      else resetTarget = 'both'
+    } else if (hasShared && !hasPersonal) {
+      resetTarget = 'shared'
+    }
+
+    const labels = { personal: 'אישיות', shared: 'משותפות', both: 'אישיות + משותפות' }
+    if (!(await confirm({ message: `למחוק את כל ההוצאות ה${labels[resetTarget]} של המחזור הנוכחי?` }))) return
+
     try {
       const sb = createClient()
-      await sb.from('personal_expenses').delete().eq('period_id', selectedPeriodId).eq('user_id', user.id)
-      queryClient.invalidateQueries({ queryKey: ['personal_expenses', selectedPeriodId, user.id] })
-      toast.success('ההוצאות האישיות אופסו')
-      if (hasShared) toast.info('הוצאות משותפות לא נמחקו — ניתן למחוק כל אחת בנפרד')
+      if (resetTarget === 'personal' || resetTarget === 'both') {
+        await sb.from('personal_expenses').delete().eq('period_id', selectedPeriodId).eq('user_id', user.id)
+        queryClient.invalidateQueries({ queryKey: ['personal_expenses', selectedPeriodId, user.id] })
+      }
+      if ((resetTarget === 'shared' || resetTarget === 'both') && familyId) {
+        await sb.from('shared_expenses').delete().eq('period_id', selectedPeriodId).eq('family_id', familyId)
+        queryClient.invalidateQueries({ queryKey: ['shared_expenses', selectedPeriodId] })
+      }
+      toast.success(`ההוצאות ה${labels[resetTarget]} אופסו`)
     } catch { toast.error('שגיאה באיפוס') }
   }
 

@@ -14,19 +14,6 @@ import { useConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { Target, Plus, X, Pencil, Users, User, Trash2, Inbox } from 'lucide-react'
 import { TableSkeleton } from '@/components/ui/Skeleton'
 
-// ── Fund type (personal / shared) stored in localStorage ─────────────────────
-function getFundMeta(userId: string): Record<string, boolean> {
-  try { return JSON.parse(localStorage.getItem(`fund_shared_${userId}`) ?? '{}') } catch { return {} }
-}
-function setFundShared(userId: string, fundId: number, isShared: boolean) {
-  const meta = getFundMeta(userId)
-  meta[fundId] = isShared
-  localStorage.setItem(`fund_shared_${userId}`, JSON.stringify(meta))
-}
-function isFundShared(userId: string, fundId: number): boolean {
-  return getFundMeta(userId)[fundId] ?? false
-}
-
 type FundForm = { name: string; totalAnnual: string; isShared: boolean }
 
 export default function SinkingPage() {
@@ -52,9 +39,6 @@ export default function SinkingPage() {
   const [txAmount, setTxAmount] = useState('')
   const [txDesc, setTxDesc] = useState('')
   const [txPeriodId, setTxPeriodId] = useState<number | undefined>()
-
-  // Force re-render when localStorage changes
-  const [, forceUpdate] = useState(0)
 
   useEffect(() => {
     if (!loading && !user) router.push('/login')
@@ -104,13 +88,16 @@ export default function SinkingPage() {
     if (!newFund || !user) return
     const total = Number(newFund.totalAnnual)
     if (!newFund.name.trim() || total < 0) return
+    // monthly_allocation = user's share per month
     const monthly = newFund.isShared ? Math.round(total / 12 * splitFrac) : Math.round(total / 12)
     try {
-      const created = await addFund.mutateAsync({ name: newFund.name.trim(), monthly_allocation: monthly, user_id: user.id })
-      if (created?.id) {
-        setFundShared(user.id, created.id, newFund.isShared)
-        forceUpdate(n => n + 1)
-      }
+      await addFund.mutateAsync({
+        name: newFund.name.trim(),
+        monthly_allocation: monthly,
+        user_id: user.id,
+        yearly_target: total,
+        is_shared: newFund.isShared,
+      })
       toast.success('קרן נוספה')
       setNewFund(null)
     } catch { toast.error('שגיאה בהוספה') }
@@ -120,10 +107,15 @@ export default function SinkingPage() {
     if (!editFund || !user) return
     const total = Number(editFund.totalAnnual)
     if (total < 0) return
+    // monthly_allocation = user's share per month
     const monthly = editFund.isShared ? Math.round(total / 12 * splitFrac) : Math.round(total / 12)
-    await updateFund.mutateAsync({ id: editFund.id, name: editFund.name, monthly_allocation: monthly })
-    setFundShared(user.id, editFund.id, editFund.isShared)
-    forceUpdate(n => n + 1)
+    await updateFund.mutateAsync({
+      id: editFund.id,
+      name: editFund.name,
+      monthly_allocation: monthly,
+      yearly_target: total,
+      is_shared: editFund.isShared,
+    })
     toast.success('קרן עודכנה')
     setEditFund(null)
   }
@@ -140,13 +132,14 @@ export default function SinkingPage() {
     } catch { toast.error('שגיאה') }
   }
 
-  function openEdit(fund: { id: number; name: string; monthly_allocation: number }) {
-    if (!user) return
-    const shared = isFundShared(user.id, fund.id)
-    const totalAnnual = shared
-      ? Math.round(fund.monthly_allocation * 12 / splitFrac)   // reconstruct total from user's share
-      : fund.monthly_allocation * 12
-    setEditFund({ id: fund.id, name: fund.name, totalAnnual: String(totalAnnual), isShared: shared })
+  function openEdit(fund: { id: number; name: string; monthly_allocation: number; yearly_target: number; is_shared: boolean }) {
+    // Use yearly_target directly from DB — no reconstruction needed
+    setEditFund({
+      id: fund.id,
+      name: fund.name,
+      totalAnnual: String(fund.yearly_target || fund.monthly_allocation * 12),
+      isShared: fund.is_shared,
+    })
   }
 
   const totalMonthly = (funds ?? []).reduce((s, f) => s + f.monthly_allocation, 0)
@@ -174,11 +167,11 @@ export default function SinkingPage() {
       <p className="text-[oklch(0.65_0.01_250)] text-[13px] mb-5">
         סה&quot;כ הפרשה חודשית: <span className="ltr inline-block font-semibold text-[oklch(0.70_0.15_185)]">{formatCurrency(totalMonthly)}</span>
         <span className="mr-2 text-[oklch(0.65_0.01_250)] text-xs">
-          (יעד שנתי: {formatCurrency(totalMonthly * 12)})
+          (יעד שנתי: {formatCurrency((funds ?? []).reduce((s, f) => s + (f.yearly_target || f.monthly_allocation * 12), 0))})
         </span>
       </p>
 
-      {/* ── Fund list ─────────────────────────────────────────────────────────── */}
+      {/* Fund list */}
       {!funds?.length
         ? (
           <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-10 text-center">
@@ -189,8 +182,9 @@ export default function SinkingPage() {
         : (
           <div className="flex flex-col gap-2.5">
             {funds.map(fund => {
-              const shared = isFundShared(user.id, fund.id)
-              const totalAnnual = shared ? Math.round(fund.monthly_allocation * 12 / splitFrac) : fund.monthly_allocation * 12
+              const shared = fund.is_shared
+              // Use yearly_target from DB directly — the source of truth
+              const totalAnnual = fund.yearly_target || fund.monthly_allocation * 12
               const balance = getFundBalance(fund.id)
               const pct = totalAnnual > 0 ? Math.min((balance / totalAnnual) * 100, 100) : 0
 
@@ -252,8 +246,13 @@ export default function SinkingPage() {
                     </div>
                   </div>
 
-                  {/* Balance row if any transactions */}
+                  {/* Balance row — BUG 2 FIX: inverted colors */}
+                  {/* Sinking fund = savings. Green = money available (good). Red = overspent (bad). */}
                   {balance !== 0 && (() => {
+                    const remaining = totalAnnual - balance
+                    // For sinking funds: balance > 0 means saved money still available = GREEN
+                    // balance < 0 means overspent = RED
+                    const balanceColor = balance > 0 ? 'text-[oklch(0.70_0.18_145)]' : 'text-[oklch(0.62_0.22_27)]'
                     const currentMonth = new Date().getMonth() + 1
                     const expectedPct = (currentMonth / 12) * 100
                     const trackStatus = pct >= expectedPct
@@ -263,7 +262,7 @@ export default function SinkingPage() {
                         : { text: 'מאחור', color: 'text-[oklch(0.62_0.22_27)]' }
                     return (
                       <div className="mt-2 text-xs text-[oklch(0.65_0.01_250)] flex justify-between pt-2 border-t border-[oklch(0.20_0.01_250)]">
-                        <span>צבור: <span className={`${balance > 0 ? 'text-[oklch(0.70_0.15_185)]' : 'text-[oklch(0.62_0.22_27)]'} font-semibold ltr inline-block`}>{formatCurrency(balance)}</span>{balance < 0 && <span className="text-[11px] text-[oklch(0.65_0.01_250)] mr-1">(הוצאה גדולה מהצבירה)</span>}</span>
+                        <span>צבור: <span className={`${balanceColor} font-semibold ltr inline-block`}>{formatCurrency(balance)}</span>{balance < 0 && <span className="text-[11px] text-[oklch(0.65_0.01_250)] mr-1">(הוצאה גדולה מהצבירה)</span>}</span>
                         <span className="ltr flex items-center gap-2">
                           {pct.toFixed(0)}% מהיעד השנתי
                           <span className={`text-[11px] font-medium ${trackStatus.color}`}>{trackStatus.text}</span>
@@ -278,7 +277,7 @@ export default function SinkingPage() {
         )
       }
 
-      {/* ── Add Fund Modal ────────────────────────────────────────────────────── */}
+      {/* Add Fund Modal */}
       {newFund && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <div className="bg-[oklch(0.18_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-[14px] p-7 w-[360px]">
@@ -295,7 +294,7 @@ export default function SinkingPage() {
         </div>
       )}
 
-      {/* ── Edit Fund Modal ───────────────────────────────────────────────────── */}
+      {/* Edit Fund Modal */}
       {editFund && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <div className="bg-[oklch(0.18_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-[14px] p-7 w-[360px]">
@@ -312,7 +311,7 @@ export default function SinkingPage() {
         </div>
       )}
 
-      {/* ── Log Transaction Modal ─────────────────────────────────────────────── */}
+      {/* Log Transaction Modal */}
       {txModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <div className="bg-[oklch(0.18_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-[14px] p-7 w-[360px]">
@@ -364,7 +363,7 @@ export default function SinkingPage() {
   )
 }
 
-// ── Shared sub-components ─────────────────────────────────────────────────────
+// Shared sub-components
 
 function ModalHeader({ title, onClose }: { title: string; onClose: () => void }) {
   return (

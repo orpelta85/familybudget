@@ -69,6 +69,8 @@ export interface SinkingFund {
   user_id: string
   name: string
   monthly_allocation: number
+  yearly_target: number
+  is_shared: boolean
   icon?: string
   color?: string
   is_active: boolean

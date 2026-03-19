@@ -47,9 +47,12 @@ export function useAllSinkingTransactions(userId: string | undefined) {
 export function useUpdateSinkingFund() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ id, monthly_allocation, name }: { id: number; monthly_allocation: number; name: string }) => {
+    mutationFn: async ({ id, monthly_allocation, name, yearly_target, is_shared }: { id: number; monthly_allocation: number; name: string; yearly_target?: number; is_shared?: boolean }) => {
       const sb = createClient()
-      const { error } = await sb.from('sinking_funds').update({ monthly_allocation, name }).eq('id', id)
+      const update: Record<string, unknown> = { monthly_allocation, name }
+      if (yearly_target !== undefined) update.yearly_target = yearly_target
+      if (is_shared !== undefined) update.is_shared = is_shared
+      const { error } = await sb.from('sinking_funds').update(update).eq('id', id)
       if (error) throw error
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['sinking_funds'] }),
@@ -59,11 +62,11 @@ export function useUpdateSinkingFund() {
 export function useAddSinkingFund() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ name, monthly_allocation, user_id }: { name: string; monthly_allocation: number; user_id: string }) => {
+    mutationFn: async ({ name, monthly_allocation, user_id, yearly_target, is_shared }: { name: string; monthly_allocation: number; user_id: string; yearly_target?: number; is_shared?: boolean }) => {
       const sb = createClient()
       const { data, error } = await sb
         .from('sinking_funds')
-        .insert({ name, monthly_allocation, user_id, is_active: true })
+        .insert({ name, monthly_allocation, user_id, is_active: true, yearly_target: yearly_target ?? monthly_allocation * 12, is_shared: is_shared ?? false })
         .select().single()
       if (error) throw error
       return data

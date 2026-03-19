@@ -5,6 +5,7 @@ import { useBudgetCategories, usePersonalExpenses, useUpdateCategoryTarget } fro
 import { usePeriods, useCurrentPeriod } from '@/lib/queries/usePeriods'
 import { useIncome } from '@/lib/queries/useIncome'
 import { formatCurrency } from '@/lib/utils'
+import { useSharedPeriod } from '@/lib/context/PeriodContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useMemo } from 'react'
 import { BarChart3, Inbox } from 'lucide-react'
@@ -31,14 +32,14 @@ export default function BudgetPage() {
   const currentPeriod = useCurrentPeriod()
   const { data: periods } = usePeriods()
   const updateTarget = useUpdateCategoryTarget()
+  const { selectedPeriodId, setSelectedPeriodId } = useSharedPeriod()
 
-  const [selectedPeriodId, setSelectedPeriodId] = useState<number | undefined>()
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editValue, setEditValue] = useState('')
 
   useEffect(() => {
     if (currentPeriod && !selectedPeriodId) setSelectedPeriodId(currentPeriod.id)
-  }, [currentPeriod, selectedPeriodId])
+  }, [currentPeriod, selectedPeriodId, setSelectedPeriodId])
 
   useEffect(() => {
     if (!loading && !user) router.push('/login')
