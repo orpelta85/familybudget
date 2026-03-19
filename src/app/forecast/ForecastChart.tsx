@@ -30,6 +30,7 @@ export default function ForecastChart({ forecast, payday }: Props) {
     .map(d => d.i)
 
   return (
+    <div dir="ltr">
     <ResponsiveContainer width="100%" height={280}>
       <AreaChart data={data}>
         <defs>
@@ -51,6 +52,7 @@ export default function ForecastChart({ forecast, payday }: Props) {
           interval={6}
         />
         <YAxis
+          orientation="right"
           tick={{ fill: 'oklch(0.55 0.01 250)', fontSize: 11 }}
           axisLine={false}
           tickLine={false}
@@ -94,5 +96,6 @@ export default function ForecastChart({ forecast, payday }: Props) {
         />
       </AreaChart>
     </ResponsiveContainer>
+    </div>
   )
 }

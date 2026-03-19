@@ -90,7 +90,7 @@ export default function ForecastPage() {
     if (!allExpenses?.length) return 0
     const byPeriod: Record<number, number> = {}
     for (const e of allExpenses) {
-      byPeriod[e.period_id] = (byPeriod[e.period_id] || 0) + e.amount
+      byPeriod[e.period_id] = (byPeriod[e.period_id] || 0) + Number(e.amount)
     }
     const periodTotals = Object.values(byPeriod)
     const last3 = periodTotals.slice(-3)
