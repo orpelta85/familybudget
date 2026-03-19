@@ -30,9 +30,9 @@ export default function ForecastChart({ forecast, payday }: Props) {
     .map(d => d.i)
 
   return (
-    <div dir="ltr">
+    <div dir="ltr" style={{ width: '100%' }}>
     <ResponsiveContainer width="100%" height={280}>
-      <AreaChart data={data}>
+      <AreaChart data={data} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
         <defs>
           <linearGradient id="balanceGreen" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="oklch(0.70 0.18 145)" stopOpacity={0.3} />
@@ -52,7 +52,7 @@ export default function ForecastChart({ forecast, payday }: Props) {
           interval={6}
         />
         <YAxis
-          orientation="right"
+          orientation="left"
           tick={{ fill: 'oklch(0.55 0.01 250)', fontSize: 11 }}
           axisLine={false}
           tickLine={false}
