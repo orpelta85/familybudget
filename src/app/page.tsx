@@ -6,7 +6,7 @@ import { useIncome, useAllIncome } from '@/lib/queries/useIncome'
 import { usePersonalExpenses, useBudgetCategories, useAllPersonalExpenses } from '@/lib/queries/useExpenses'
 import { useSharedExpenses, useAllSharedExpenses } from '@/lib/queries/useShared'
 import { useSplitFraction } from '@/lib/queries/useProfile'
-import { useApartmentDeposits } from '@/lib/queries/useApartment'
+import { useSavingsGoals, useAllGoalDeposits } from '@/lib/queries/useGoals'
 import { useSinkingFunds, useAllSinkingTransactions } from '@/lib/queries/useSinking'
 import { usePensionReports } from '@/lib/queries/usePension'
 import { useHasSetup } from '@/lib/queries/useSetup'
@@ -14,11 +14,11 @@ import { formatCurrency, periodLabel } from '@/lib/utils'
 import { useSharedPeriod } from '@/lib/context/PeriodContext'
 import { useFamilyContext } from '@/lib/context/FamilyContext'
 import { useFamilySummary } from '@/lib/queries/useFamily'
-import { APARTMENT_TARGET, APARTMENT_MONTHLY_DEPOSIT, APARTMENT_TOTAL_PERIODS } from '@/lib/constants'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useMemo } from 'react'
 import { PeriodSelector } from '@/components/layout/PeriodSelector'
-import { Wallet, Receipt, TrendingUp, PiggyBank, Home, AlertTriangle, CalendarDays, Users } from 'lucide-react'
+import { Wallet, Receipt, TrendingUp, PiggyBank, Target, AlertTriangle, CalendarDays, Users } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import { DashboardSkeleton, ChartSkeleton } from '@/components/ui/Skeleton'
 
@@ -72,7 +72,9 @@ export default function Dashboard() {
   const { data: expenses } = usePersonalExpenses(selectedPeriodId, user?.id)
   const { data: shared } = useSharedExpenses(selectedPeriodId, familyId)
   const { data: allShared } = useAllSharedExpenses(familyId)
-  const { data: deposits } = useApartmentDeposits(familyId)
+  const { data: savingsGoals } = useSavingsGoals(user?.id, familyId)
+  const goalIds = useMemo(() => (savingsGoals ?? []).map(g => g.id), [savingsGoals])
+  const { data: goalDeposits } = useAllGoalDeposits(goalIds)
   const { data: pensionReports } = usePensionReports(user?.id)
   const { data: categories } = useBudgetCategories(user?.id)
   const { data: allExpenses } = useAllPersonalExpenses(user?.id)
@@ -161,9 +163,12 @@ export default function Dashboard() {
   }
   const totalFundBalance = (funds ?? []).reduce((s, f) => s + getFundBalance(f.id), 0)
 
-  // ── Apartment ─────────────────────────────────────────────────────────────
-  const totalSaved = deposits?.reduce((s, d) => s + d.amount_deposited, 0) ?? 0
-  const apartmentPct = Math.min((totalSaved / APARTMENT_TARGET) * 100, 100)
+  // ── Goals ────────────────────────────────────────────────────────────────
+  function getGoalSaved(goalId: number) {
+    return (goalDeposits ?? []).filter(d => d.goal_id === goalId).reduce((s, d) => s + d.amount_deposited, 0)
+  }
+  const totalGoalsSaved = (savingsGoals ?? []).reduce((s, g) => s + getGoalSaved(g.id), 0)
+  const totalGoalsTarget = (savingsGoals ?? []).reduce((s, g) => s + g.target_amount, 0)
 
   // ── Alerts ────────────────────────────────────────────────────────────────
   const selectedPeriod = periods?.find(p => p.id === selectedPeriodId)
@@ -175,7 +180,7 @@ export default function Dashboard() {
 
   // ── Net Worth ─────────────────────────────────────────────────────────────
   const pensionTotal = pensionReports?.[0]?.total_savings ?? 0
-  const netWorth = totalFundBalance + totalSaved + pensionTotal
+  const netWorth = totalFundBalance + totalGoalsSaved + pensionTotal
 
   // ── Financial Health Score (0-100) ─────────────────────────────────────────
   const healthScores: number[] = []
@@ -188,7 +193,7 @@ export default function Dashboard() {
   const emergencyMonths = totalExpenses > 0 ? totalFundBalance / totalExpenses : 0
   healthScores.push(totalExpenses > 0 ? Math.min(emergencyMonths / 3 * 20, 20) : 0)
   healthScores.push(pensionTotal > 0 ? 15 : 0)
-  healthScores.push((totalSaved / APARTMENT_TARGET) * 15)
+  healthScores.push(totalGoalsTarget > 0 ? Math.min((totalGoalsSaved / totalGoalsTarget) * 15, 15) : 0)
 
   const healthScore = Math.round(healthScores.reduce((s, v) => s + v, 0))
   const healthColor = healthScore >= 75 ? 'var(--accent-green)' : healthScore >= 50 ? 'var(--accent-orange)' : 'var(--accent-red)'
@@ -234,10 +239,8 @@ export default function Dashboard() {
           summary={familySummary}
           totalSharedFromPersonal={totalShared}
           shared={shared}
-          deposits={deposits}
-          APARTMENT_TARGET={APARTMENT_TARGET}
-          totalSaved={totalSaved}
-          apartmentPct={apartmentPct}
+          savingsGoals={savingsGoals}
+          goalDeposits={goalDeposits}
           dataLoading={dataLoading}
         />
       )}
@@ -458,23 +461,33 @@ export default function Dashboard() {
           }
         </div>
 
-        {/* Apartment */}
+        {/* Goals */}
         <div className="card">
-          <h2 className="card-header mb-1.5">
-            <Home size={14} className="text-accent-green" /> יעד הדירה
-          </h2>
-          <div className="text-[11px] text-text-secondary mb-4">{formatCurrency(APARTMENT_MONTHLY_DEPOSIT)} × {APARTMENT_TOTAL_PERIODS} מחזורים = {formatCurrency(APARTMENT_TARGET)}</div>
-          <div className="flex justify-between items-baseline mb-3.5">
-            <span className="text-[26px] font-bold ltr text-accent-green">{formatCurrency(totalSaved)}</span>
-            <span className="text-xs text-text-secondary">מתוך {formatCurrency(APARTMENT_TARGET)}</span>
-          </div>
-          <div className="bar-track-lg mb-2">
-            <div className="bar-fill rounded-[4px]" style={{ width: `${apartmentPct}%`, background: 'linear-gradient(90deg, oklch(0.55 0.18 145), oklch(0.70 0.18 145))' }} />
-          </div>
-          <div className="flex justify-between text-xs text-text-secondary">
-            <span>{apartmentPct.toFixed(1)}% מהיעד</span>
-            <span className="ltr">{formatCurrency(APARTMENT_TARGET - totalSaved)} נותר</span>
-          </div>
+          <Link href="/goals" className="no-underline text-inherit">
+            <h2 className="card-header mb-3.5">
+              <Target size={14} className="text-accent-green" /> יעדי חיסכון
+            </h2>
+          </Link>
+          {!(savingsGoals?.length)
+            ? <div className="text-text-secondary text-[13px]">אין יעדים</div>
+            : (savingsGoals ?? []).map(goal => {
+              const saved = getGoalSaved(goal.id)
+              const pct = goal.target_amount > 0 ? Math.min((saved / goal.target_amount) * 100, 100) : 0
+              return (
+                <div key={goal.id} className="mb-[11px]">
+                  <div className="flex justify-between text-xs mb-[3px]">
+                    <span className="text-text-heading">{goal.icon} {goal.name}</span>
+                    <span className="ltr font-semibold" style={{ color: goal.color }}>
+                      {formatCurrency(saved)} / {formatCurrency(goal.target_amount)}
+                    </span>
+                  </div>
+                  <div className="bar-track">
+                    <div className="bar-fill" style={{ width: `${pct}%`, background: goal.color }} />
+                  </div>
+                </div>
+              )
+            })
+          }
         </div>
       </div>
 
@@ -503,8 +516,8 @@ export default function Dashboard() {
                 </div>
               )}
               <div className="flex justify-between">
-                <span className="text-text-secondary">חיסכון לדירה</span>
-                <span className="ltr text-text-body">{formatCurrency(totalSaved)}</span>
+                <span className="text-text-secondary">יעדי חיסכון</span>
+                <span className="ltr text-text-body">{formatCurrency(totalGoalsSaved)}</span>
               </div>
             </div>
           </div>
@@ -526,7 +539,7 @@ export default function Dashboard() {
               <span>חיסכון {savingsPct}% מההכנסה {savingsPct >= 20 ? '✓' : ''}</span>
               <span>קרנות: {emergencyMonths.toFixed(1)} חודשי הוצאות</span>
               <span>פנסיה: {pensionTotal > 0 ? '✓ פעילה' : '✗ אין נתונים'}</span>
-              <span>דירה: {apartmentPct.toFixed(0)}% מהיעד</span>
+              <span>יעדים: {totalGoalsTarget > 0 ? ((totalGoalsSaved / totalGoalsTarget) * 100).toFixed(0) : 0}%</span>
             </div>
           </div>
         </div>
@@ -542,19 +555,15 @@ function FamilyDashboard({
   summary,
   totalSharedFromPersonal,
   shared,
-  deposits,
-  APARTMENT_TARGET,
-  totalSaved,
-  apartmentPct,
+  savingsGoals,
+  goalDeposits,
   dataLoading,
 }: {
   summary: import('@/lib/queries/useFamily').FamilySummary | undefined
   totalSharedFromPersonal: number
   shared: import('@/lib/types').SharedExpense[] | undefined
-  deposits: import('@/lib/types').ApartmentDeposit[] | undefined
-  APARTMENT_TARGET: number
-  totalSaved: number
-  apartmentPct: number
+  savingsGoals: import('@/lib/types').SavingsGoal[] | undefined
+  goalDeposits: import('@/lib/types').GoalDeposit[] | undefined
   dataLoading: boolean
 }) {
   if (!summary) {
@@ -655,23 +664,33 @@ function FamilyDashboard({
           )}
         </div>
 
-        {/* Apartment */}
+        {/* Goals */}
         <div className="card">
-          <div className="card-header mb-1.5">
-            <Home size={14} className="text-accent-green" /> יעד הדירה
-          </div>
-          <div className="text-[11px] text-text-secondary mb-4">{formatCurrency(APARTMENT_MONTHLY_DEPOSIT)} x {APARTMENT_TOTAL_PERIODS} = {formatCurrency(APARTMENT_TARGET)}</div>
-          <div className="flex justify-between items-baseline mb-3.5">
-            <span className="text-[26px] font-bold ltr text-accent-green">{formatCurrency(totalSaved)}</span>
-            <span className="text-xs text-text-secondary">מתוך {formatCurrency(APARTMENT_TARGET)}</span>
-          </div>
-          <div className="bar-track-lg mb-2">
-            <div className="bar-fill rounded-[4px]" style={{ width: `${apartmentPct}%`, background: 'linear-gradient(90deg, oklch(0.55 0.18 145), oklch(0.70 0.18 145))' }} />
-          </div>
-          <div className="flex justify-between text-xs text-text-secondary">
-            <span>{apartmentPct.toFixed(1)}% מהיעד</span>
-            <span className="ltr">{formatCurrency(APARTMENT_TARGET - totalSaved)} נותר</span>
-          </div>
+          <Link href="/goals" className="no-underline text-inherit">
+            <div className="card-header mb-3.5">
+              <Target size={14} className="text-accent-green" /> יעדי חיסכון
+            </div>
+          </Link>
+          {!(savingsGoals?.length)
+            ? <div className="text-text-secondary text-[13px]">אין יעדים</div>
+            : (savingsGoals ?? []).map(goal => {
+              const saved = (goalDeposits ?? []).filter(d => d.goal_id === goal.id).reduce((s, d) => s + d.amount_deposited, 0)
+              const pct = goal.target_amount > 0 ? Math.min((saved / goal.target_amount) * 100, 100) : 0
+              return (
+                <div key={goal.id} className="mb-[11px]">
+                  <div className="flex justify-between text-xs mb-[3px]">
+                    <span className="text-text-heading">{goal.icon} {goal.name}</span>
+                    <span className="ltr font-semibold" style={{ color: goal.color }}>
+                      {formatCurrency(saved)} / {formatCurrency(goal.target_amount)}
+                    </span>
+                  </div>
+                  <div className="bar-track">
+                    <div className="bar-fill" style={{ width: `${pct}%`, background: goal.color }} />
+                  </div>
+                </div>
+              )
+            })
+          }
         </div>
       </div>
     </>

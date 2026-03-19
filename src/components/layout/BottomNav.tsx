@@ -9,7 +9,7 @@ import { LayoutDashboard, Receipt, Users, Home, Menu, Wallet, BarChart3, PiggyBa
 const nav = [
   { href: '/',          label: 'דשבורד',  icon: LayoutDashboard },
   { href: '/expenses',  label: 'הוצאות',  icon: Receipt },
-  { href: '/apartment', label: 'דירה',    icon: Home },
+  { href: '/goals',     label: 'יעדים',   icon: Target },
   { href: '/analytics', label: 'שנתי',    icon: BarChart3 },
 ]
 

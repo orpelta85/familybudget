@@ -93,6 +93,66 @@ export interface ApartmentDeposit {
   notes?: string
 }
 
+// Savings Goals
+export interface SavingsGoal {
+  id: number
+  user_id: string
+  family_id?: string
+  name: string
+  target_amount: number
+  monthly_deposit: number
+  total_periods: number
+  is_shared: boolean
+  icon: string
+  color: string
+  is_active: boolean
+  created_at: string
+}
+
+export interface GoalDeposit {
+  id: number
+  goal_id: number
+  period_id: number
+  amount_deposited: number
+  deposit_date: string
+  notes?: string
+  created_at: string
+}
+
+// Kids
+export interface Kid {
+  id: number
+  user_id: string
+  family_id?: string
+  name: string
+  birth_date?: string
+  is_active: boolean
+  created_at: string
+}
+
+export interface KidExpense {
+  id: number
+  kid_id: number
+  user_id: string
+  category: string
+  amount: number
+  description?: string
+  expense_date: string
+  period_id: number
+  created_at: string
+}
+
+export interface KidActivity {
+  id: number
+  kid_id: number
+  name: string
+  monthly_cost: number
+  equipment_cost: number
+  transport_cost: number
+  is_active: boolean
+  created_at: string
+}
+
 export interface JointPoolIncome {
   id: number
   family_id: string
