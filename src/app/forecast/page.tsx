@@ -5,7 +5,11 @@ import { useAllIncome } from '@/lib/queries/useIncome'
 import { useSubscriptions } from '@/lib/queries/useSubscriptions'
 import { useSinkingFunds } from '@/lib/queries/useSinking'
 import { useAllPersonalExpenses } from '@/lib/queries/useExpenses'
-import { useForecastSettings, useUpsertForecastSettings } from '@/lib/queries/useForecast'
+import {
+  useForecastSettings, useUpsertForecastSettings,
+  useForecastEvents, useUpsertForecastEvent, useDeleteForecastEvent,
+  type ForecastEventRow,
+} from '@/lib/queries/useForecast'
 import { useFamilyContext } from '@/lib/context/FamilyContext'
 import { useAllSharedExpenses } from '@/lib/queries/useShared'
 import { useSplitFraction } from '@/lib/queries/useProfile'
@@ -13,9 +17,11 @@ import { formatCurrency } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
+import { useConfirmDialog } from '@/components/ui/ConfirmDialog'
 import {
   CalendarDays, AlertTriangle, TrendingUp, Settings, ChevronDown, ChevronUp,
   CreditCard, Wallet, ArrowDownCircle, ArrowUpCircle, Repeat,
+  Plus, Trash2, Pencil, X, Check, Inbox,
 } from 'lucide-react'
 import { TableSkeleton } from '@/components/ui/Skeleton'
 import dynamic from 'next/dynamic'
@@ -34,11 +40,21 @@ export interface ForecastDay {
 }
 
 export interface ForecastEvent {
-  type: 'salary' | 'credit_card' | 'subscription' | 'sinking_fund'
+  type: 'salary' | 'credit_card' | 'subscription' | 'sinking_fund' | 'manual'
   description: string
   amount: number
-  icon: 'salary' | 'credit' | 'subscription' | 'sinking'
+  icon: 'salary' | 'credit' | 'subscription' | 'sinking' | 'manual'
+  source: 'auto' | 'manual'
 }
+
+type EventForm = {
+  name: string
+  amount: string
+  day_of_month: string
+  type: 'income' | 'expense'
+}
+
+const emptyEventForm: EventForm = { name: '', amount: '', day_of_month: '1', type: 'expense' }
 
 export default function ForecastPage() {
   const { user, loading } = useUser()
@@ -52,6 +68,10 @@ export default function ForecastPage() {
   const splitFrac = useSplitFraction(user?.id)
   const { data: settings } = useForecastSettings(user?.id)
   const upsertSettings = useUpsertForecastSettings()
+  const { data: manualEvents } = useForecastEvents(user?.id)
+  const upsertEvent = useUpsertForecastEvent()
+  const deleteEvent = useDeleteForecastEvent()
+  const confirm = useConfirmDialog()
 
   const [showSettings, setShowSettings] = useState(false)
   const [settingsForm, setSettingsForm] = useState({
@@ -60,12 +80,13 @@ export default function ForecastPage() {
     credit_card_day: '2',
   })
   const [viewMode, setViewMode] = useState<'personal' | 'family'>('personal')
+  const [eventForm, setEventForm] = useState<EventForm | null>(null)
+  const [editingEventId, setEditingEventId] = useState<number | null>(null)
 
   useEffect(() => {
     if (!loading && !user) router.push('/login')
   }, [user, loading, router])
 
-  // Sync settings form when data loads
   useEffect(() => {
     if (settings) {
       setSettingsForm({
@@ -76,10 +97,9 @@ export default function ForecastPage() {
     }
   }, [settings])
 
-  // Compute average monthly expenses from last 3 months of personal_expenses
+  // Compute average monthly expenses from last 3 months
   const avgMonthlyExpenses = useMemo(() => {
     if (!allExpenses?.length) return 0
-    // Group by period_id and take the last 3
     const byPeriod: Record<number, number> = {}
     for (const e of allExpenses) {
       byPeriod[e.period_id] = (byPeriod[e.period_id] || 0) + e.amount
@@ -102,6 +122,11 @@ export default function ForecastPage() {
     const avg = last3.reduce((s, v) => s + v, 0) / last3.length
     return avg * splitFrac
   }, [allShared, splitFrac])
+
+  // Active manual events
+  const activeManualEvents = useMemo(() => {
+    return (manualEvents ?? []).filter(e => e.is_active)
+  }, [manualEvents])
 
   const forecast = useMemo(() => {
     const currentBalance = settings?.current_balance ?? 0
@@ -138,40 +163,51 @@ export default function ForecastPage() {
       const events: ForecastEvent[] = []
 
       // Income on payday
-      if (day === payday) {
+      if (day === payday && monthlyIncome > 0) {
         runningBalance += monthlyIncome
-        if (monthlyIncome > 0) {
-          events.push({ type: 'salary', description: 'משכורת', amount: monthlyIncome, icon: 'salary' })
-        }
+        events.push({ type: 'salary', description: 'משכורת', amount: monthlyIncome, icon: 'salary', source: 'auto' })
       }
 
-      // Credit card charge day — sum of average non-recurring expenses
-      if (day === creditCardDay) {
+      // Credit card charge day
+      if (day === creditCardDay && creditCardCharge > 0) {
         runningBalance -= creditCardCharge
-        if (creditCardCharge > 0) {
-          events.push({ type: 'credit_card', description: 'חיוב כרטיס אשראי', amount: -creditCardCharge, icon: 'credit' })
-        }
+        events.push({ type: 'credit_card', description: 'חיוב כרטיס אשראי', amount: -creditCardCharge, icon: 'credit', source: 'auto' })
       }
 
       // Subscription charges on their billing days
       for (const sub of activeSubs) {
         if (day === sub.billing_day) {
           runningBalance -= sub.amount
-          events.push({ type: 'subscription', description: sub.name, amount: -sub.amount, icon: 'subscription' })
+          events.push({ type: 'subscription', description: sub.name, amount: -sub.amount, icon: 'subscription', source: 'auto' })
         }
       }
 
       // Sinking fund allocation on the 1st
       if (day === 1 && fundTotal > 0) {
         runningBalance -= fundTotal
-        events.push({ type: 'sinking_fund', description: 'הקצאת קרנות', amount: -fundTotal, icon: 'sinking' })
+        events.push({ type: 'sinking_fund', description: 'הקצאת קרנות', amount: -fundTotal, icon: 'sinking', source: 'auto' })
+      }
+
+      // Manual recurring events
+      for (const me of activeManualEvents) {
+        if (day === me.day_of_month) {
+          const amt = me.type === 'income' ? Number(me.amount) : -Number(me.amount)
+          runningBalance += amt
+          events.push({
+            type: 'manual',
+            description: me.name,
+            amount: amt,
+            icon: 'manual',
+            source: 'manual',
+          })
+        }
       }
 
       days.push({ date: dateStr, label, balance: runningBalance, events })
     }
 
     return days
-  }, [allIncome, subs, funds, avgMonthlyExpenses, avgSharedMonthly, settings, viewMode])
+  }, [allIncome, subs, funds, avgMonthlyExpenses, avgSharedMonthly, settings, viewMode, activeManualEvents])
 
   if (loading || !user) return <TableSkeleton rows={5} />
 
@@ -179,7 +215,7 @@ export default function ForecastPage() {
   const maxDay = forecast.length > 0 ? forecast.reduce((max, d) => d.balance > max.balance ? d : max, forecast[0]) : null
   const lowDays = forecast.filter(d => d.balance < 0)
 
-  // All events flattened and sorted
+  // All events flattened and sorted chronologically
   const upcomingEvents = forecast
     .filter(d => d.events.length > 0)
     .flatMap(d => d.events.map(ev => ({ ...ev, date: d.date, label: d.label, balanceAfter: d.balance })))
@@ -198,6 +234,47 @@ export default function ForecastPage() {
     } catch { toast.error('שגיאה בשמירה') }
   }
 
+  async function handleSaveEvent() {
+    if (!user || !eventForm) return
+    const amount = Number(eventForm.amount)
+    if (!eventForm.name.trim() || amount <= 0) {
+      toast.error('מלא שם וסכום')
+      return
+    }
+    try {
+      await upsertEvent.mutateAsync({
+        id: editingEventId ?? undefined,
+        user_id: user.id,
+        name: eventForm.name.trim(),
+        amount,
+        day_of_month: Number(eventForm.day_of_month),
+        type: eventForm.type,
+      })
+      toast.success(editingEventId ? 'עודכן' : 'נוסף')
+      setEventForm(null)
+      setEditingEventId(null)
+    } catch { toast.error('שגיאה') }
+  }
+
+  async function handleDeleteEvent(ev: ForecastEventRow) {
+    if (!user) return
+    if (!(await confirm({ message: `למחוק את "${ev.name}"?` }))) return
+    try {
+      await deleteEvent.mutateAsync({ id: ev.id, user_id: user.id })
+      toast.success('נמחק')
+    } catch { toast.error('שגיאה') }
+  }
+
+  function startEditEvent(ev: ForecastEventRow) {
+    setEditingEventId(ev.id)
+    setEventForm({
+      name: ev.name,
+      amount: String(ev.amount),
+      day_of_month: String(ev.day_of_month),
+      type: ev.type as 'income' | 'expense',
+    })
+  }
+
   const dayOptions = Array.from({ length: 28 }, (_, i) => i + 1)
 
   return (
@@ -208,7 +285,6 @@ export default function ForecastPage() {
           <h1 className="text-xl font-bold tracking-tight">תחזית תזרים</h1>
         </div>
         <div className="flex items-center gap-2">
-          {/* Personal/Family toggle */}
           {familyId && (
             <div className="flex border border-[oklch(0.25_0.01_250)] rounded-lg overflow-hidden">
               {([
@@ -287,6 +363,139 @@ export default function ForecastPage() {
         </div>
       )}
 
+      {/* Manual recurring events section */}
+      <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5 mb-5">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Repeat size={14} className="text-[oklch(0.65_0.18_250)]" />
+            <h2 className="font-semibold text-sm">אירועים חוזרים</h2>
+          </div>
+          {!eventForm && (
+            <button
+              onClick={() => { setEventForm({ ...emptyEventForm }); setEditingEventId(null) }}
+              className="flex items-center gap-1.5 bg-transparent border border-[oklch(0.25_0.01_250)] rounded-lg px-3 py-1.5 text-[oklch(0.65_0.01_250)] text-xs cursor-pointer"
+            >
+              <Plus size={12} /> הוסף אירוע
+            </button>
+          )}
+        </div>
+
+        {/* Event list */}
+        {(manualEvents ?? []).length === 0 && !eventForm ? (
+          <div className="text-xs text-[oklch(0.65_0.01_250)] text-center py-6">
+            <Inbox size={24} className="text-[oklch(0.30_0.01_250)] mx-auto mb-2" />
+            <div>אין אירועים חוזרים</div>
+            <div className="mt-1 text-[oklch(0.50_0.01_250)]">הוסף אירועים כמו שכירות, ביטוח, הפרשות</div>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-0">
+            {(manualEvents ?? []).map(ev => (
+              <div key={ev.id} className="flex items-center justify-between py-2.5 border-b border-[oklch(0.20_0.01_250)] last:border-b-0">
+                <div className="flex items-center gap-3">
+                  {ev.type === 'income' ? (
+                    <ArrowDownCircle size={14} className="text-[oklch(0.70_0.18_145)]" />
+                  ) : (
+                    <ArrowUpCircle size={14} className="text-[oklch(0.62_0.22_27)]" />
+                  )}
+                  <div>
+                    <div className="text-[13px] font-medium">{ev.name}</div>
+                    <div className="text-[11px] text-[oklch(0.50_0.01_250)]">
+                      יום {ev.day_of_month} בחודש
+                      {!ev.is_active && <span className="text-[oklch(0.55_0.15_55)] mr-2">מושבת</span>}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className={`text-[13px] font-semibold ltr ${ev.type === 'income' ? 'text-[oklch(0.70_0.18_145)]' : 'text-[oklch(0.62_0.22_27)]'}`}>
+                    {ev.type === 'income' ? '+' : '-'}{formatCurrency(Number(ev.amount))}
+                  </span>
+                  <button onClick={() => startEditEvent(ev)} aria-label="ערוך" className="bg-transparent border-none cursor-pointer p-1.5 text-[oklch(0.45_0.01_250)]"><Pencil size={11} /></button>
+                  <button onClick={() => handleDeleteEvent(ev)} aria-label="מחק" className="bg-transparent border-none cursor-pointer p-1.5 text-[oklch(0.45_0.01_250)]"><Trash2 size={11} /></button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Inline add/edit form */}
+        {eventForm && (
+          <div className="mt-4 pt-4 border-t border-[oklch(0.22_0.01_250)]">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-3">
+              <div>
+                <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">שם</label>
+                <input
+                  type="text"
+                  value={eventForm.name}
+                  onChange={e => setEventForm(prev => prev && { ...prev, name: e.target.value })}
+                  placeholder='לדוגמה: "שכירות"'
+                  autoFocus
+                  className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">סכום (₪)</label>
+                <input
+                  type="number"
+                  value={eventForm.amount}
+                  onChange={e => setEventForm(prev => prev && { ...prev, amount: e.target.value })}
+                  placeholder="0"
+                  className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-sm ltr text-left"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">יום בחודש</label>
+                <select
+                  value={eventForm.day_of_month}
+                  onChange={e => setEventForm(prev => prev && { ...prev, day_of_month: e.target.value })}
+                  className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-sm"
+                >
+                  {dayOptions.map(d => <option key={d} value={d}>{d}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">סוג</label>
+                <div className="flex border border-[oklch(0.25_0.01_250)] rounded-lg overflow-hidden h-[38px]">
+                  {([
+                    { key: 'expense' as const, label: 'הוצאה' },
+                    { key: 'income' as const, label: 'הכנסה' },
+                  ]).map(opt => (
+                    <button
+                      key={opt.key}
+                      onClick={() => setEventForm(prev => prev && { ...prev, type: opt.key })}
+                      className={`flex-1 px-3 text-[13px] font-medium cursor-pointer border-none ${
+                        eventForm.type === opt.key
+                          ? opt.key === 'income'
+                            ? 'bg-[oklch(0.22_0.02_145)] text-[oklch(0.70_0.18_145)]'
+                            : 'bg-[oklch(0.22_0.02_27)] text-[oklch(0.62_0.22_27)]'
+                          : 'bg-transparent text-[oklch(0.65_0.01_250)]'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={handleSaveEvent}
+                disabled={upsertEvent.isPending}
+                className={`flex items-center gap-1.5 bg-[oklch(0.70_0.15_185)] border-none rounded-lg px-4 py-2 font-semibold text-sm text-[oklch(0.10_0.01_250)] ${upsertEvent.isPending ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+              >
+                <Check size={13} />
+                {editingEventId ? 'עדכן' : 'הוסף'}
+              </button>
+              <button
+                onClick={() => { setEventForm(null); setEditingEventId(null) }}
+                className="flex items-center gap-1.5 bg-transparent border border-[oklch(0.25_0.01_250)] rounded-lg px-4 py-2 text-[oklch(0.65_0.01_250)] text-sm cursor-pointer"
+              >
+                <X size={13} /> ביטול
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* No settings warning */}
       {!settings && (
         <div className="bg-[oklch(0.18_0.04_55)] border border-[oklch(0.28_0.08_55)] rounded-xl px-5 py-3.5 mb-5 flex items-center gap-3">
@@ -346,17 +555,21 @@ export default function ForecastPage() {
         <ForecastChart forecast={forecast} payday={settings?.payday ?? 10} creditCardDay={settings?.credit_card_day ?? 2} />
       </div>
 
-      {/* Event list */}
+      {/* Event list — all events chronological */}
       <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5">
         <h2 className="font-semibold text-sm mb-4">אירועים צפויים</h2>
         {upcomingEvents.length === 0 ? (
-          <div className="text-xs text-[oklch(0.65_0.01_250)] text-center py-6">אין אירועים צפויים</div>
+          <div className="text-xs text-[oklch(0.65_0.01_250)] text-center py-6">
+            <Inbox size={24} className="text-[oklch(0.30_0.01_250)] mx-auto mb-2" />
+            אין אירועים צפויים — הוסף נתוני הכנסה, מנויים או אירועים חוזרים
+          </div>
         ) : (
           <div className="flex flex-col gap-0">
-            {upcomingEvents.slice(0, 20).map((ev, i) => {
+            {upcomingEvents.slice(0, 30).map((ev, i) => {
               const EventIcon = ev.icon === 'salary' ? ArrowDownCircle
                 : ev.icon === 'credit' ? CreditCard
                 : ev.icon === 'subscription' ? Repeat
+                : ev.icon === 'manual' ? (ev.amount > 0 ? ArrowDownCircle : ArrowUpCircle)
                 : Wallet
               const isPositive = ev.amount > 0
               return (
@@ -364,7 +577,16 @@ export default function ForecastPage() {
                   <div className="flex items-center gap-3">
                     <EventIcon size={14} className={isPositive ? 'text-[oklch(0.70_0.18_145)]' : 'text-[oklch(0.62_0.22_27)]'} />
                     <div>
-                      <div className="text-[13px] font-medium">{ev.description}</div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[13px] font-medium">{ev.description}</span>
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-medium ${
+                          ev.source === 'manual'
+                            ? 'bg-[oklch(0.25_0.02_180)] text-[oklch(0.70_0.15_180)]'
+                            : 'bg-[oklch(0.25_0.02_250)] text-[oklch(0.70_0.18_250)]'
+                        }`}>
+                          {ev.source === 'manual' ? 'ידני' : 'אוטומטי'}
+                        </span>
+                      </div>
                       <div className="text-[11px] text-[oklch(0.50_0.01_250)]">{ev.label}</div>
                     </div>
                   </div>

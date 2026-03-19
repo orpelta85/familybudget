@@ -148,6 +148,31 @@ export default function NetWorthPage() {
   const netWorth = totalAssets - totalLiabilities
   const liquidTotal = assets.filter(e => e.liquidity === 'liquid').reduce((s, e) => s + e.amount, 0)
 
+  // Returns summary
+  const returnsSummary = useMemo(() => {
+    const assetsWithReturn = assets.filter(a => {
+      const r = getReturnForEntry(a)
+      return r.annual !== null && r.annual !== 0
+    })
+    if (assetsWithReturn.length === 0) return null
+
+    let weightedSum = 0
+    let totalWeight = 0
+    for (const a of assetsWithReturn) {
+      const r = getReturnForEntry(a)
+      if (r.annual !== null) {
+        weightedSum += a.amount * r.annual
+        totalWeight += a.amount
+      }
+    }
+    const weightedAvgPct = totalWeight > 0 ? weightedSum / totalWeight : 0
+    const annualReturn = weightedSum / 100
+    const monthlyReturn = annualReturn / 12
+
+    return { monthlyReturn, annualReturn, weightedAvgPct }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [assets, pensionReturnMap])
+
   // Group assets by liquidity
   const assetsByLiquidity = useMemo(() => {
     const groups: Record<LiquidityType, NetWorthEntry[]> = {
@@ -169,15 +194,12 @@ export default function NetWorthPage() {
     })).filter(d => d.value > 0)
   }, [assetsByLiquidity])
 
-  if (loading || !user) return <TableSkeleton rows={5} />
-
   function getLabelForCategory(cat: string, type: string) {
     const list = type === 'asset' ? ASSET_CATEGORIES : LIABILITY_CATEGORIES
     return list.find(c => c.value === cat)?.label ?? cat
   }
 
   function getReturnForEntry(entry: NetWorthEntry): { annual: number | null; cumulative: number | null; source: 'pension' | 'manual' } {
-    // For pension-sourced entries, use the pension report ytd_return
     if (entry.source === 'pension' && entry.source_ref_id && pensionReturnMap[entry.source_ref_id]) {
       return {
         annual: pensionReturnMap[entry.source_ref_id].ytd,
@@ -185,13 +207,14 @@ export default function NetWorthPage() {
         source: 'pension',
       }
     }
-    // For manual entries, use return_pct field
     return {
       annual: entry.return_pct,
       cumulative: entry.cumulative_return_pct,
       source: 'manual',
     }
   }
+
+  if (loading || !user) return <TableSkeleton rows={5} />
 
   async function handleAdd() {
     if (!newEntry || !user) return
@@ -336,6 +359,36 @@ export default function NetWorthPage() {
           </div>
         ))}
       </div>
+
+      {/* Returns summary */}
+      {returnsSummary && (
+        <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5 mb-6">
+          <div className="flex items-center gap-2 mb-3">
+            <TrendingUp size={14} className="text-[oklch(0.65_0.18_250)]" />
+            <span className="font-bold text-sm">סיכום תשואות</span>
+          </div>
+          <div className="grid grid-cols-3 gap-4">
+            <div>
+              <div className="text-[11px] text-[oklch(0.65_0.01_250)] mb-1 tracking-wide">תשואה חודשית</div>
+              <div className={`text-xl font-bold ltr ${returnsSummary.monthlyReturn >= 0 ? 'text-[oklch(0.70_0.18_145)]' : 'text-[oklch(0.62_0.22_27)]'}`}>
+                {returnsSummary.monthlyReturn >= 0 ? '+' : ''}{formatCurrency(returnsSummary.monthlyReturn)}
+              </div>
+            </div>
+            <div>
+              <div className="text-[11px] text-[oklch(0.65_0.01_250)] mb-1 tracking-wide">תשואה שנתית</div>
+              <div className={`text-xl font-bold ltr ${returnsSummary.annualReturn >= 0 ? 'text-[oklch(0.70_0.18_145)]' : 'text-[oklch(0.62_0.22_27)]'}`}>
+                {returnsSummary.annualReturn >= 0 ? '+' : ''}{formatCurrency(returnsSummary.annualReturn)}
+              </div>
+            </div>
+            <div>
+              <div className="text-[11px] text-[oklch(0.65_0.01_250)] mb-1 tracking-wide">תשואה ממוצעת משוקללת</div>
+              <div className={`text-xl font-bold ltr ${returnsSummary.weightedAvgPct >= 0 ? 'text-[oklch(0.70_0.18_145)]' : 'text-[oklch(0.62_0.22_27)]'}`}>
+                {returnsSummary.weightedAvgPct >= 0 ? '+' : ''}{returnsSummary.weightedAvgPct.toFixed(1)}%
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Assets grouped by liquidity */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">

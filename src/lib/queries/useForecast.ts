@@ -48,3 +48,84 @@ export function useUpsertForecastSettings() {
     onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: ['forecast_settings', vars.user_id] }),
   })
 }
+
+// --- Forecast Events (manual recurring) ---
+
+export interface ForecastEventRow {
+  id: number
+  user_id: string
+  name: string
+  amount: number
+  day_of_month: number
+  type: 'income' | 'expense'
+  is_active: boolean
+  created_at: string
+}
+
+export function useForecastEvents(userId: string | undefined) {
+  return useQuery<ForecastEventRow[]>({
+    queryKey: ['forecast_events', userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const sb = createClient()
+      const { data, error } = await sb
+        .from('forecast_events')
+        .select('*')
+        .eq('user_id', userId!)
+        .order('day_of_month')
+      if (error) throw error
+      return data
+    },
+  })
+}
+
+export function useUpsertForecastEvent() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (event: {
+      id?: number
+      user_id: string
+      name: string
+      amount: number
+      day_of_month: number
+      type: 'income' | 'expense'
+      is_active?: boolean
+    }) => {
+      const sb = createClient()
+      if (event.id) {
+        const { error } = await sb.from('forecast_events').update({
+          name: event.name,
+          amount: event.amount,
+          day_of_month: event.day_of_month,
+          type: event.type,
+          is_active: event.is_active ?? true,
+        }).eq('id', event.id)
+        if (error) throw error
+      } else {
+        const { error } = await sb.from('forecast_events').insert({
+          user_id: event.user_id,
+          name: event.name,
+          amount: event.amount,
+          day_of_month: event.day_of_month,
+          type: event.type,
+          is_active: event.is_active ?? true,
+        })
+        if (error) throw error
+      }
+    },
+    onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: ['forecast_events', vars.user_id] }),
+  })
+}
+
+export function useDeleteForecastEvent() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, user_id }: { id: number; user_id: string }) => {
+      const sb = createClient()
+      const { error } = await sb.from('forecast_events').delete().eq('id', id)
+      if (error) throw error
+      return user_id
+    },
+    onSuccess: (user_id) => qc.invalidateQueries({ queryKey: ['forecast_events', user_id] }),
+  })
+}
