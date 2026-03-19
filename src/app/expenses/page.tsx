@@ -2,9 +2,9 @@
 
 import { useUser } from '@/lib/queries/useUser'
 import { usePeriods, useCurrentPeriod } from '@/lib/queries/usePeriods'
-import { usePersonalExpenses, useBudgetCategories, useAddExpense, useDeleteExpense, useAddBudgetCategory, useCategoryRules, useSaveCategoryRule, findMatchingRule } from '@/lib/queries/useExpenses'
-import { useSharedExpenses, useUpsertSharedExpense, useDeleteSharedExpense } from '@/lib/queries/useShared'
-import { useSinkingFunds, useAddSinkingTransaction } from '@/lib/queries/useSinking'
+import { usePersonalExpenses, useBudgetCategories, useAddExpense, useDeleteExpense, useUpdateExpense, useAddBudgetCategory, useCategoryRules, useSaveCategoryRule, findMatchingRule } from '@/lib/queries/useExpenses'
+import { useSharedExpenses, useUpsertSharedExpense, useDeleteSharedExpense, useUpdateSharedExpense } from '@/lib/queries/useShared'
+import { useSinkingFunds, useAddSinkingTransaction, useAddSinkingFund } from '@/lib/queries/useSinking'
 import { useSplitFraction } from '@/lib/queries/useProfile'
 import { formatCurrency } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
@@ -17,7 +17,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState, useRef, useMemo } from 'react'
 import { PeriodSelector } from '@/components/layout/PeriodSelector'
 import { toast } from 'sonner'
-import { Receipt, Upload, Download, Plus, X, FileSpreadsheet, User, Users, Lock, Unlock, Target, Trash2, Inbox } from 'lucide-react'
+import { Receipt, Upload, Download, Plus, X, FileSpreadsheet, User, Users, Lock, Unlock, Target, Trash2, Inbox, Pencil, Check } from 'lucide-react'
 import type { RawExpenseRow } from '@/lib/excel-import'
 import type { BudgetCategory, SharedCategory } from '@/lib/types'
 import { useConfirmDialog } from '@/components/ui/ConfirmDialog'
@@ -69,7 +69,10 @@ export default function ExpensesPage() {
   const deleteExpense = useDeleteExpense()
   const upsertShared  = useUpsertSharedExpense()
   const deleteShared  = useDeleteSharedExpense()
+  const updateExpense = useUpdateExpense()
+  const updateShared  = useUpdateSharedExpense()
   const addSinkingTx  = useAddSinkingTransaction()
+  const addFund       = useAddSinkingFund()
   const addCategory   = useAddBudgetCategory()
   const { data: categoryRules } = useCategoryRules(user?.id)
   const saveCategoryRule = useSaveCategoryRule()
@@ -86,6 +89,10 @@ export default function ExpensesPage() {
   const [sharedLabel, setSharedLabel] = useState('')
   const [sharedCategory, setSharedCategory] = useState('')
   const [amount, setAmount]           = useState('')
+
+  // Edit expense state
+  const [editingPersonal, setEditingPersonal] = useState<{ id: number; categoryId: string; amount: string; description: string } | null>(null)
+  const [editingShared, setEditingShared] = useState<{ id: number; category: string; totalAmount: string; notes: string } | null>(null)
 
   // Excel import
   const [importRows, setImportRows] = useState<(RawExpenseRow & { categoryId: string })[]>([])
@@ -175,18 +182,53 @@ export default function ExpensesPage() {
         }
         return { ...row, categoryId }
       })
+      // Flag new funds: if fund_name doesn't match existing fund names, prefix with __new_fund__
+      const existingFundNames = (funds ?? []).map(f => f.name)
+      mapped.forEach(row => {
+        if (row.fund_name && !existingFundNames.includes(row.fund_name)) {
+          row.fund_name = `__new_fund__${row.fund_name}`
+        }
+      })
       setImportRows(mapped); setShowImport(true)
       const sharedCount = mapped.filter(r => r.is_shared).length
       const matched = mapped.filter(r => r.categoryId && !r.categoryId.startsWith('__new__')).length
       const newCats = new Set(mapped.filter(r => r.categoryId.startsWith('__new__')).map(r => r.category)).size
+      const newFunds = new Set(mapped.filter(r => r.fund_name?.startsWith('__new_fund__')).map(r => r.fund_name!.replace('__new_fund__', ''))).size
       let msg = `נטענו ${r.length} שורות`
       if (sharedCount > 0) msg += ` · ${sharedCount} משותפות`
       if (matched > 0) msg += ` · ${matched} קטגוריות זוהו`
       if (autoMatched > 0) msg += ` · ${autoMatched} זוהו אוטומטית`
       if (newCats > 0) msg += ` · ${newCats} קטגוריות חדשות ייווצרו`
+      if (newFunds > 0) msg += ` · ${newFunds} קרנות חדשות ייווצרו`
       toast.success(msg)
     } catch { toast.error('שגיאה בקריאת הקובץ') }
     e.target.value = ''
+  }
+
+  async function handleExportExcel() {
+    if (!personalExp && !sharedExp) { toast.info('אין הוצאות לייצוא'); return }
+    try {
+      const XLSX = await import('xlsx')
+      const rows: Record<string, string | number>[] = []
+      for (const e of personalExp ?? []) {
+        const catName = (e.budget_categories as BudgetCategory)?.name ?? 'כללי'
+        rows.push({ 'תאריך': e.expense_date ?? '', 'תיאור': e.description ?? '', 'סכום': e.amount, 'קטגוריה': catName, 'סוג': 'אישי' })
+      }
+      for (const e of sharedExp ?? []) {
+        const label = e.notes || SHARED_CATEGORIES.find(c => c.value === e.category)?.label || e.category
+        rows.push({ 'תאריך': '', 'תיאור': label, 'סכום': e.total_amount, 'קטגוריה': e.category, 'סוג': 'משותף' })
+      }
+      const ws = XLSX.utils.json_to_sheet(rows)
+      ws['!cols'] = [{ wch: 14 }, { wch: 28 }, { wch: 12 }, { wch: 22 }, { wch: 12 }]
+      const wb = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(wb, ws, 'הוצאות')
+      const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' })
+      const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a'); a.href = url; a.download = `הוצאות_${selectedPeriod?.label ?? 'export'}.xlsx`; a.click()
+      URL.revokeObjectURL(url)
+      toast.success('הקובץ הורד')
+    } catch { toast.error('שגיאה בייצוא') }
   }
 
   async function downloadTemplate() {
@@ -230,6 +272,21 @@ export default function ExpensesPage() {
         }
       }
 
+      // Auto-create new sinking funds from Excel
+      const newFundNames = [...new Set(valid.filter(r => r.fund_name?.startsWith('__new_fund__')).map(r => r.fund_name!.replace('__new_fund__', '')))]
+      const createdFundMap: Record<string, number> = {}
+      for (const fundName of newFundNames) {
+        try {
+          const created = await addFund.mutateAsync({
+            name: fundName, monthly_allocation: 0, user_id: user.id, yearly_target: 0, is_shared: false,
+          })
+          if (created?.id) createdFundMap[fundName] = created.id
+        } catch {
+          const existing = (funds ?? []).find(f => f.name === fundName)
+          if (existing) createdFundMap[fundName] = existing.id
+        }
+      }
+
       // Save expenses one by one (not Promise.all — avoids one failure killing all)
       let imported = 0
       let failed = 0
@@ -242,7 +299,6 @@ export default function ExpensesPage() {
             resolvedCatId = Number(r.categoryId)
           }
           if (!resolvedCatId || isNaN(resolvedCatId)) {
-            // Last resort — use first category
             resolvedCatId = categories?.[0]?.id ?? 1
           }
 
@@ -258,12 +314,14 @@ export default function ExpensesPage() {
               description: r.description, expense_date: today,
             })
           }
-          // Fund deduction
-          if (r.fund_name) {
-            const fund = (funds ?? []).find(f => f.name === r.fund_name)
-            if (fund) {
+          // Fund deduction — resolve new fund names
+          const rawFundName = r.fund_name?.startsWith('__new_fund__') ? r.fund_name.replace('__new_fund__', '') : r.fund_name
+          if (rawFundName) {
+            const fund = (funds ?? []).find(f => f.name === rawFundName)
+            const fundId = fund?.id ?? createdFundMap[rawFundName]
+            if (fundId) {
               await sb.from('sinking_fund_transactions').insert({
-                fund_id: fund.id, period_id: selectedPeriodId,
+                fund_id: fundId, period_id: selectedPeriodId,
                 amount: -r.amount, description: r.description, transaction_date: today,
               })
             }
@@ -274,7 +332,7 @@ export default function ExpensesPage() {
               user_id: user.id,
               merchant_pattern: r.description.trim(),
               category_id: resolvedCatId,
-              fund_name: r.fund_name || undefined,
+              fund_name: rawFundName || undefined,
             })
           }
           imported++
@@ -286,10 +344,13 @@ export default function ExpensesPage() {
       queryClient.invalidateQueries({ queryKey: ['personal_expenses'] })
       queryClient.invalidateQueries({ queryKey: ['shared_expenses'] })
       queryClient.invalidateQueries({ queryKey: ['all_sinking_transactions'] })
+      if (newFundNames.length) queryClient.invalidateQueries({ queryKey: ['sinking_funds'] })
 
       const newCount = newCatNames.length
+      const newFundCount = newFundNames.length
       let msg = `יובאו ${imported} הוצאות`
       if (newCount) msg += ` · ${newCount} קטגוריות חדשות`
+      if (newFundCount) msg += ` · ${newFundCount} קרנות חדשות`
       if (failed) msg += ` · ${failed} נכשלו`
       toast.success(msg)
       setShowImport(false); setImportRows([])
@@ -375,8 +436,11 @@ export default function ExpensesPage() {
           <button onClick={handleResetExpenses} className="flex items-center gap-1.5 bg-transparent border border-border rounded-lg px-3.5 py-[7px] text-muted-foreground text-xs font-medium cursor-pointer">
             <Trash2 size={13} /> אפס הוצאות
           </button>
+          <button onClick={handleExportExcel} className="flex items-center gap-1.5 bg-secondary border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[7px] text-[oklch(0.75_0.01_250)] text-xs cursor-pointer">
+            <Download size={13} /> הורד לאקסל
+          </button>
           <button onClick={downloadTemplate} className="flex items-center gap-1.5 bg-secondary border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[7px] text-[oklch(0.75_0.01_250)] text-xs cursor-pointer">
-            <Download size={13} /> תבנית
+            <FileSpreadsheet size={13} /> תבנית
           </button>
           <button onClick={() => fileRef.current?.click()} className="btn-hover flex items-center gap-1.5 bg-primary border-none rounded-lg px-3 py-[7px] text-primary-foreground text-xs font-semibold cursor-pointer">
             <Upload size={13} /> Excel
@@ -446,13 +510,27 @@ export default function ExpensesPage() {
                   </div>
                   {/* קרן — optional fund dropdown */}
                   <select
-                    value={row.fund_name || ''}
-                    onChange={e => setImportRows(p => p.map((r, j) => j === i ? { ...r, fund_name: e.target.value || undefined } : r))}
+                    value={row.fund_name?.startsWith('__new_fund__') ? '__new_fund__' : (row.fund_name || '')}
+                    onChange={e => {
+                      const val = e.target.value
+                      if (val === '__manual_fund__') {
+                        const name = prompt('שם קרן חדשה:')
+                        if (name?.trim()) {
+                          setImportRows(p => p.map((r, j) => j === i ? { ...r, fund_name: `__new_fund__${name.trim()}` } : r))
+                        }
+                      } else {
+                        setImportRows(p => p.map((r, j) => j === i ? { ...r, fund_name: val === '__new_fund__' ? r.fund_name : (val || undefined) } : r))
+                      }
+                    }}
                     aria-label="בחר קרן"
-                    className="min-w-[90px] bg-[oklch(0.20_0.01_250)] border border-[oklch(0.30_0.01_250)] rounded-lg px-1.5 py-1 text-[11px] text-inherit outline-none cursor-pointer appearance-auto"
+                    className={`min-w-[90px] bg-[oklch(0.20_0.01_250)] border rounded-lg px-1.5 py-1 text-[11px] text-inherit outline-none cursor-pointer appearance-auto ${
+                      row.fund_name?.startsWith('__new_fund__') ? 'border-[oklch(0.50_0.15_185)] text-[oklch(0.80_0.10_185)]' : 'border-[oklch(0.30_0.01_250)]'
+                    }`}
                   >
+                    {row.fund_name?.startsWith('__new_fund__') && <option value="__new_fund__">{row.fund_name.replace('__new_fund__', '')} (חדש)</option>}
                     <option value="">ללא קרן</option>
                     {funds?.map(f => <option key={f.id} value={f.name}>{f.name}</option>)}
+                    <option value="__manual_fund__">+ קרן חדשה...</option>
                   </select>
                 </div>
               )
@@ -600,21 +678,51 @@ export default function ExpensesPage() {
                 const itemId = personalItemId(e.category_id, e.description ?? '', e.id)
                 const locked = recurringPersonal.isLocked(itemId)
                 const catName = (e.budget_categories as BudgetCategory)?.name ?? 'כללי'
+                const isEditing = editingPersonal?.id === e.id
+
+                if (isEditing) {
+                  return (
+                    <div key={e.id} className="py-2.5 border-b border-[oklch(0.20_0.01_250)] flex flex-col gap-1.5">
+                      <input type="text" value={editingPersonal.description} onChange={ev => setEditingPersonal(prev => prev && { ...prev, description: ev.target.value })} placeholder="תיאור" className="w-full bg-secondary border border-[oklch(0.28_0.01_250)] rounded-md px-2 py-1 text-[12px] text-inherit" />
+                      <div className="flex gap-1.5">
+                        <select value={editingPersonal.categoryId} onChange={ev => setEditingPersonal(prev => prev && { ...prev, categoryId: ev.target.value })} className="flex-1 bg-secondary border border-[oklch(0.28_0.01_250)] rounded-md px-2 py-1 text-[12px] text-inherit">
+                          {categories?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                        </select>
+                        <input type="number" value={editingPersonal.amount} onChange={ev => setEditingPersonal(prev => prev && { ...prev, amount: ev.target.value })} className="w-20 bg-secondary border border-[oklch(0.28_0.01_250)] rounded-md px-2 py-1 text-[12px] text-inherit ltr text-right" />
+                      </div>
+                      <div className="flex gap-1">
+                        <button onClick={async () => {
+                          if (!editingPersonal || !user || !selectedPeriodId) return
+                          await updateExpense.mutateAsync({ id: editingPersonal.id, period_id: selectedPeriodId, user_id: user.id, category_id: Number(editingPersonal.categoryId), amount: Number(editingPersonal.amount), description: editingPersonal.description })
+                          toast.success('הוצאה עודכנה')
+                          setEditingPersonal(null)
+                        }} className="flex items-center gap-1 bg-primary text-primary-foreground border-none rounded-md px-2 py-1 text-[11px] font-semibold cursor-pointer"><Check size={11} /> שמור</button>
+                        <button onClick={() => setEditingPersonal(null)} className="bg-transparent border border-[oklch(0.28_0.01_250)] text-muted-foreground rounded-md px-2 py-1 text-[11px] cursor-pointer">ביטול</button>
+                      </div>
+                    </div>
+                  )
+                }
+
                 return (
                   <div key={e.id} className="flex justify-between items-center py-2.5 border-b border-[oklch(0.20_0.01_250)]">
                     <div>
                       <div className="text-[13px] font-medium">{e.description || catName}</div>
                       {e.description && <div className="text-[11px] text-muted-foreground">{catName}</div>}
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5">
                       <span className="text-[13px] font-semibold ltr">{formatCurrency(e.amount)}</span>
+                      <button onClick={() => setEditingPersonal({ id: e.id, categoryId: String(e.category_id), amount: String(e.amount), description: e.description ?? '' })}
+                        aria-label="ערוך הוצאה"
+                        className="bg-transparent border-none cursor-pointer flex items-center justify-center p-1.5 min-w-7 min-h-7 text-[oklch(0.45_0.01_250)] hover:text-[oklch(0.70_0.01_250)]">
+                        <Pencil size={11} />
+                      </button>
                       <button onClick={() => toggleLockPersonal(e)}
                         title={locked ? 'בטל נעילה' : 'נעל לחודשים הבאים'}
                         aria-label={locked ? 'בטל נעילה' : 'נעל לחודשים הבאים'}
-                        className={`bg-transparent border-none cursor-pointer flex items-center justify-center p-2 min-w-9 min-h-9 ${locked ? 'text-[oklch(0.70_0.15_185)]' : 'text-[oklch(0.35_0.01_250)]'}`}>
+                        className={`bg-transparent border-none cursor-pointer flex items-center justify-center p-1.5 min-w-7 min-h-7 ${locked ? 'text-[oklch(0.70_0.15_185)]' : 'text-[oklch(0.35_0.01_250)]'}`}>
                         {locked ? <Lock size={12} /> : <Unlock size={12} />}
                       </button>
-                      <button onClick={() => handleDeletePersonal(e)} aria-label="מחק הוצאה" className="bg-transparent border-none cursor-pointer flex items-center justify-center p-2 min-w-9 min-h-9 text-muted-foreground">
+                      <button onClick={() => handleDeletePersonal(e)} aria-label="מחק הוצאה" className="bg-transparent border-none cursor-pointer flex items-center justify-center p-1.5 min-w-7 min-h-7 text-muted-foreground">
                         <X size={13} />
                       </button>
                     </div>
@@ -641,6 +749,31 @@ export default function ExpensesPage() {
                 const myAmt = e.my_share ?? e.total_amount * splitFrac
                 const locked = recurringShared.isLocked(e.category)
                 const label = e.notes || e.category
+                const isEditing = editingShared?.id === e.id
+
+                if (isEditing) {
+                  return (
+                    <div key={e.id} className="py-2.5 border-b border-[oklch(0.20_0.01_250)] flex flex-col gap-1.5">
+                      <input type="text" value={editingShared.notes} onChange={ev => setEditingShared(prev => prev && { ...prev, notes: ev.target.value })} placeholder="תיאור" className="w-full bg-secondary border border-[oklch(0.28_0.01_250)] rounded-md px-2 py-1 text-[12px] text-inherit" />
+                      <div className="flex gap-1.5">
+                        <select value={editingShared.category} onChange={ev => setEditingShared(prev => prev && { ...prev, category: ev.target.value })} className="flex-1 bg-secondary border border-[oklch(0.28_0.01_250)] rounded-md px-2 py-1 text-[12px] text-inherit">
+                          {SHARED_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                        </select>
+                        <input type="number" value={editingShared.totalAmount} onChange={ev => setEditingShared(prev => prev && { ...prev, totalAmount: ev.target.value })} className="w-20 bg-secondary border border-[oklch(0.28_0.01_250)] rounded-md px-2 py-1 text-[12px] text-inherit ltr text-right" placeholder="סכום כולל" />
+                      </div>
+                      <div className="flex gap-1">
+                        <button onClick={async () => {
+                          if (!editingShared || !selectedPeriodId) return
+                          await updateShared.mutateAsync({ id: editingShared.id, period_id: selectedPeriodId, category: editingShared.category, total_amount: Number(editingShared.totalAmount), notes: editingShared.notes })
+                          toast.success('הוצאה עודכנה')
+                          setEditingShared(null)
+                        }} className="flex items-center gap-1 bg-[oklch(0.55_0.12_310)] text-primary-foreground border-none rounded-md px-2 py-1 text-[11px] font-semibold cursor-pointer"><Check size={11} /> שמור</button>
+                        <button onClick={() => setEditingShared(null)} className="bg-transparent border border-[oklch(0.28_0.01_250)] text-muted-foreground rounded-md px-2 py-1 text-[11px] cursor-pointer">ביטול</button>
+                      </div>
+                    </div>
+                  )
+                }
+
                 return (
                   <div key={e.id} className="flex justify-between items-center py-2.5 border-b border-[oklch(0.20_0.01_250)]">
                     <div>
@@ -649,15 +782,20 @@ export default function ExpensesPage() {
                         סה&quot;כ {formatCurrency(e.total_amount)} · חלקי {formatCurrency(myAmt)}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5">
                       <span className="text-[13px] font-semibold ltr text-[oklch(0.65_0.12_310)]">{formatCurrency(myAmt)}</span>
+                      <button onClick={() => setEditingShared({ id: e.id, category: e.category, totalAmount: String(e.total_amount), notes: e.notes ?? '' })}
+                        aria-label="ערוך הוצאה"
+                        className="bg-transparent border-none cursor-pointer flex items-center justify-center p-1.5 min-w-7 min-h-7 text-[oklch(0.45_0.01_250)] hover:text-[oklch(0.70_0.01_250)]">
+                        <Pencil size={11} />
+                      </button>
                       <button onClick={() => toggleLockShared(e)}
                         title={locked ? 'בטל נעילה' : 'נעל לחודשים הבאים'}
                         aria-label={locked ? 'בטל נעילה' : 'נעל לחודשים הבאים'}
-                        className={`bg-transparent border-none cursor-pointer flex items-center justify-center p-2 min-w-9 min-h-9 ${locked ? 'text-[oklch(0.70_0.15_185)]' : 'text-[oklch(0.35_0.01_250)]'}`}>
+                        className={`bg-transparent border-none cursor-pointer flex items-center justify-center p-1.5 min-w-7 min-h-7 ${locked ? 'text-[oklch(0.70_0.15_185)]' : 'text-[oklch(0.35_0.01_250)]'}`}>
                         {locked ? <Lock size={12} /> : <Unlock size={12} />}
                       </button>
-                      <button onClick={() => handleDeleteShared(e.id)} aria-label="מחק הוצאה" className="bg-transparent border-none cursor-pointer flex items-center justify-center p-2 min-w-9 min-h-9 text-muted-foreground">
+                      <button onClick={() => handleDeleteShared(e.id)} aria-label="מחק הוצאה" className="bg-transparent border-none cursor-pointer flex items-center justify-center p-1.5 min-w-7 min-h-7 text-muted-foreground">
                         <X size={13} />
                       </button>
                     </div>

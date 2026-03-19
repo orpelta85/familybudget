@@ -203,6 +203,21 @@ export function findMatchingRule(merchantName: string, rules: CategoryRule[]): C
   return reverse
 }
 
+export function useUpdateExpense() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, period_id, user_id, category_id, amount, description }: { id: number; period_id: number; user_id: string; category_id: number; amount: number; description?: string }) => {
+      const sb = createClient()
+      const { error } = await sb.from('personal_expenses').update({ category_id, amount, description }).eq('id', id)
+      if (error) throw error
+      return { period_id, user_id }
+    },
+    onSuccess: ({ period_id, user_id }) => {
+      qc.invalidateQueries({ queryKey: ['personal_expenses', period_id, user_id] })
+    },
+  })
+}
+
 export function useDeleteExpense() {
   const qc = useQueryClient()
   return useMutation({

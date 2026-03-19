@@ -70,14 +70,14 @@ export async function parseExpenseExcel(file: File): Promise<RawExpenseRow[]> {
 
         if (!rows.length) { resolve([]); return }
 
-        // זיהוי עמודות (ישראכרט / ויזה / מאסטרקארד)
+        // זיהוי עמודות — תומך בפורמטים של ישראכרט, ויזה, מאסטרקארד, לאומי, פועלים, כאל, מקס
         const firstRow = rows[0]
         const keys = Object.keys(firstRow)
 
-        const dateKey   = keys.find(k => /תאריך|date/i.test(k)) ?? keys[0]
-        const descKey   = keys.find(k => /עסק|שם|תיאור|description|merchant/i.test(k)) ?? keys[1]
-        const amountKey = keys.find(k => /סכום|חיוב|amount|sum/i.test(k)) ?? keys[2]
-        const catKey    = keys.find(k => /קטגוריה|category|סוג הוצאה|קטגורי/i.test(k))
+        const dateKey   = keys.find(k => /תאריך.?עסקה|תאריך.?חיוב|תאריך|date/i.test(k)) ?? keys[0]
+        const descKey   = keys.find(k => /שם.?בית.?עסק|שם.?עסק|עסק|בית.?עסק|שם|תיאור|פירוט|description|merchant/i.test(k)) ?? keys[1]
+        const amountKey = keys.find(k => /סכום.?חיוב|סכום.?עסקה|סכום|חיוב|amount|sum|סה.?כ/i.test(k)) ?? keys[2]
+        const catKey    = keys.find(k => /קטגוריה|category|סוג.?הוצאה|ענף|קטגורי/i.test(k))
         const typeKey   = keys.find(k => /אישי|משותף|סוג|type|personal|shared/i.test(k)) ?? keys[4]
         const fundKey   = keys.find(k => /קרן|fund/i.test(k)) ?? keys[5]
 

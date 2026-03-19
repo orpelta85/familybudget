@@ -88,6 +88,19 @@ export function usePaginatedSharedExpenses(
   })
 }
 
+export function useUpdateSharedExpense() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, period_id, category, total_amount, notes }: { id: number; period_id: number; category: string; total_amount: number; notes?: string }) => {
+      const sb = createClient()
+      const { error } = await sb.from('shared_expenses').update({ category, total_amount, notes }).eq('id', id)
+      if (error) throw error
+      return period_id
+    },
+    onSuccess: (period_id) => qc.invalidateQueries({ queryKey: ['shared_expenses', period_id] }),
+  })
+}
+
 export function useUpsertSharedExpense() {
   const qc = useQueryClient()
   return useMutation({
