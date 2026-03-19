@@ -2,17 +2,12 @@
 
 import { useUser } from '@/lib/queries/useUser'
 import { useAllIncome } from '@/lib/queries/useIncome'
-import { useSubscriptions } from '@/lib/queries/useSubscriptions'
-import { useSinkingFunds } from '@/lib/queries/useSinking'
 import { useAllPersonalExpenses } from '@/lib/queries/useExpenses'
 import {
   useForecastSettings, useUpsertForecastSettings,
   useForecastEvents, useUpsertForecastEvent, useDeleteForecastEvent,
-  type ForecastEventRow,
+  type ForecastEventRow, type AmountMode,
 } from '@/lib/queries/useForecast'
-import { useFamilyContext } from '@/lib/context/FamilyContext'
-import { useAllSharedExpenses } from '@/lib/queries/useShared'
-import { useSplitFraction } from '@/lib/queries/useProfile'
 import { formatCurrency } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
@@ -20,7 +15,7 @@ import { toast } from 'sonner'
 import { useConfirmDialog } from '@/components/ui/ConfirmDialog'
 import {
   CalendarDays, AlertTriangle, TrendingUp, Settings, ChevronDown, ChevronUp,
-  CreditCard, Wallet, ArrowDownCircle, ArrowUpCircle, Repeat,
+  ArrowDownCircle, ArrowUpCircle, Repeat,
   Plus, Trash2, Pencil, X, Check, Inbox,
 } from 'lucide-react'
 import { TableSkeleton } from '@/components/ui/Skeleton'
@@ -40,10 +35,10 @@ export interface ForecastDay {
 }
 
 export interface ForecastEvent {
-  type: 'salary' | 'credit_card' | 'subscription' | 'sinking_fund' | 'manual'
+  type: 'salary' | 'manual'
   description: string
   amount: number
-  icon: 'salary' | 'credit' | 'subscription' | 'sinking' | 'manual'
+  icon: 'salary' | 'manual'
   source: 'auto' | 'manual'
 }
 
@@ -52,20 +47,16 @@ type EventForm = {
   amount: string
   day_of_month: string
   type: 'income' | 'expense'
+  amount_mode: AmountMode
 }
 
-const emptyEventForm: EventForm = { name: '', amount: '', day_of_month: '1', type: 'expense' }
+const emptyEventForm: EventForm = { name: '', amount: '', day_of_month: '1', type: 'expense', amount_mode: 'fixed' }
 
 export default function ForecastPage() {
   const { user, loading } = useUser()
   const router = useRouter()
-  const { familyId } = useFamilyContext()
   const { data: allIncome } = useAllIncome(user?.id)
-  const { data: subs } = useSubscriptions(user?.id)
-  const { data: funds } = useSinkingFunds(user?.id)
   const { data: allExpenses } = useAllPersonalExpenses(user?.id)
-  const { data: allShared } = useAllSharedExpenses(familyId)
-  const splitFrac = useSplitFraction(user?.id)
   const { data: settings } = useForecastSettings(user?.id)
   const upsertSettings = useUpsertForecastSettings()
   const { data: manualEvents } = useForecastEvents(user?.id)
@@ -77,9 +68,7 @@ export default function ForecastPage() {
   const [settingsForm, setSettingsForm] = useState({
     current_balance: '',
     payday: '10',
-    credit_card_day: '2',
   })
-  const [viewMode, setViewMode] = useState<'personal' | 'family'>('personal')
   const [eventForm, setEventForm] = useState<EventForm | null>(null)
   const [editingEventId, setEditingEventId] = useState<number | null>(null)
 
@@ -92,12 +81,11 @@ export default function ForecastPage() {
       setSettingsForm({
         current_balance: String(settings.current_balance),
         payday: String(settings.payday),
-        credit_card_day: String(settings.credit_card_day),
       })
     }
   }, [settings])
 
-  // Compute average monthly expenses from last 3 months
+  // Compute average monthly personal expenses from last 3 months
   const avgMonthlyExpenses = useMemo(() => {
     if (!allExpenses?.length) return 0
     const byPeriod: Record<number, number> = {}
@@ -109,20 +97,6 @@ export default function ForecastPage() {
     return last3.length > 0 ? last3.reduce((s, v) => s + v, 0) / last3.length : 0
   }, [allExpenses])
 
-  // Average monthly shared expenses
-  const avgSharedMonthly = useMemo(() => {
-    if (!allShared?.length) return 0
-    const byPeriod: Record<number, number> = {}
-    for (const e of allShared) {
-      byPeriod[e.period_id] = (byPeriod[e.period_id] || 0) + e.total_amount
-    }
-    const periodTotals = Object.values(byPeriod)
-    const last3 = periodTotals.slice(-3)
-    if (last3.length === 0) return 0
-    const avg = last3.reduce((s, v) => s + v, 0) / last3.length
-    return avg * splitFrac
-  }, [allShared, splitFrac])
-
   // Active manual events
   const activeManualEvents = useMemo(() => {
     return (manualEvents ?? []).filter(e => e.is_active)
@@ -131,22 +105,10 @@ export default function ForecastPage() {
   const forecast = useMemo(() => {
     const currentBalance = settings?.current_balance ?? 0
     const payday = settings?.payday ?? 10
-    const creditCardDay = settings?.credit_card_day ?? 2
 
     // Estimate monthly income from latest data
     const latestIncome = allIncome?.length ? allIncome[allIncome.length - 1] : null
     const monthlyIncome = latestIncome ? latestIncome.salary + latestIncome.bonus + latestIncome.other : 0
-
-    // Monthly recurring from subscriptions
-    const activeSubs = (subs ?? []).filter(s => s.is_active)
-
-    // Monthly sinking fund allocations
-    const fundTotal = (funds ?? []).reduce((s, f) => s + f.monthly_allocation, 0)
-
-    // Non-subscription expenses (charged on credit card day)
-    const creditCardCharge = viewMode === 'family'
-      ? avgMonthlyExpenses + avgSharedMonthly
-      : avgMonthlyExpenses
 
     // Build 90-day forecast
     const today = new Date()
@@ -168,30 +130,11 @@ export default function ForecastPage() {
         events.push({ type: 'salary', description: 'משכורת', amount: monthlyIncome, icon: 'salary', source: 'auto' })
       }
 
-      // Credit card charge day
-      if (day === creditCardDay && creditCardCharge > 0) {
-        runningBalance -= creditCardCharge
-        events.push({ type: 'credit_card', description: 'חיוב אשראי (ממוצע)', amount: -creditCardCharge, icon: 'credit', source: 'auto' })
-      }
-
-      // Subscription charges on their billing days
-      for (const sub of activeSubs) {
-        if (day === sub.billing_day) {
-          runningBalance -= sub.amount
-          events.push({ type: 'subscription', description: sub.name, amount: -sub.amount, icon: 'subscription', source: 'auto' })
-        }
-      }
-
-      // Sinking fund allocation on the 1st
-      if (day === 1 && fundTotal > 0) {
-        runningBalance -= fundTotal
-        events.push({ type: 'sinking_fund', description: 'הקצאת קרנות', amount: -fundTotal, icon: 'sinking', source: 'auto' })
-      }
-
       // Manual recurring events
       for (const me of activeManualEvents) {
         if (day === me.day_of_month) {
-          const amt = me.type === 'income' ? Number(me.amount) : -Number(me.amount)
+          const resolvedAmount = me.amount_mode === 'average' ? avgMonthlyExpenses : Number(me.amount)
+          const amt = me.type === 'income' ? resolvedAmount : -resolvedAmount
           runningBalance += amt
           events.push({
             type: 'manual',
@@ -207,7 +150,7 @@ export default function ForecastPage() {
     }
 
     return days
-  }, [allIncome, subs, funds, avgMonthlyExpenses, avgSharedMonthly, settings, viewMode, activeManualEvents])
+  }, [allIncome, avgMonthlyExpenses, settings, activeManualEvents])
 
   if (loading || !user) return <TableSkeleton rows={5} />
 
@@ -227,7 +170,6 @@ export default function ForecastPage() {
         user_id: user.id,
         current_balance: Number(settingsForm.current_balance) || 0,
         payday: Number(settingsForm.payday) || 10,
-        credit_card_day: Number(settingsForm.credit_card_day) || 2,
       })
       toast.success('ההגדרות נשמרו')
       setShowSettings(false)
@@ -236,8 +178,9 @@ export default function ForecastPage() {
 
   async function handleSaveEvent() {
     if (!user || !eventForm) return
-    const amount = Number(eventForm.amount)
-    if (!eventForm.name.trim() || amount <= 0) {
+    const isAverage = eventForm.amount_mode === 'average'
+    const amount = isAverage ? avgMonthlyExpenses : Number(eventForm.amount)
+    if (!eventForm.name.trim() || (!isAverage && amount <= 0)) {
       toast.error('מלא שם וסכום')
       return
     }
@@ -246,9 +189,10 @@ export default function ForecastPage() {
         id: editingEventId ?? undefined,
         user_id: user.id,
         name: eventForm.name.trim(),
-        amount,
+        amount: isAverage ? 0 : amount,
         day_of_month: Number(eventForm.day_of_month),
         type: eventForm.type,
+        amount_mode: eventForm.amount_mode,
       })
       toast.success(editingEventId ? 'עודכן' : 'נוסף')
       setEventForm(null)
@@ -272,6 +216,7 @@ export default function ForecastPage() {
       amount: String(ev.amount),
       day_of_month: String(ev.day_of_month),
       type: ev.type as 'income' | 'expense',
+      amount_mode: ev.amount_mode ?? 'fixed',
     })
   }
 
@@ -284,36 +229,14 @@ export default function ForecastPage() {
           <CalendarDays size={18} className="text-[oklch(0.65_0.18_250)]" />
           <h1 className="text-xl font-bold tracking-tight">תחזית תזרים</h1>
         </div>
-        <div className="flex items-center gap-2">
-          {familyId && (
-            <div className="flex border border-[oklch(0.25_0.01_250)] rounded-lg overflow-hidden">
-              {([
-                { key: 'personal' as const, label: 'אישי' },
-                { key: 'family' as const, label: 'משפחתי' },
-              ]).map(opt => (
-                <button
-                  key={opt.key}
-                  onClick={() => setViewMode(opt.key)}
-                  className={`px-4 py-1.5 text-[13px] font-medium cursor-pointer border-none ${
-                    viewMode === opt.key
-                      ? 'bg-[oklch(0.22_0.01_250)] text-[oklch(0.92_0.01_250)] shadow-[inset_0_0_0_1px_oklch(0.65_0.18_250)]'
-                      : 'bg-transparent text-[oklch(0.65_0.01_250)]'
-                  } ${opt.key === 'personal' ? 'border-l border-l-[oklch(0.25_0.01_250)]' : ''}`}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          )}
-          <button
-            onClick={() => setShowSettings(!showSettings)}
-            className="flex items-center gap-1.5 bg-[oklch(0.20_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-2 text-[oklch(0.65_0.01_250)] text-xs font-medium cursor-pointer"
-          >
-            <Settings size={13} />
-            הגדרות
-            {showSettings ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
-          </button>
-        </div>
+        <button
+          onClick={() => setShowSettings(!showSettings)}
+          className="flex items-center gap-1.5 bg-[oklch(0.20_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-2 text-[oklch(0.65_0.01_250)] text-xs font-medium cursor-pointer"
+        >
+          <Settings size={13} />
+          הגדרות
+          {showSettings ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+        </button>
       </div>
       <p className="text-[oklch(0.65_0.01_250)] text-[13px] mb-5">צפי יתרה ל-90 הימים הקרובים</p>
 
@@ -321,7 +244,7 @@ export default function ForecastPage() {
       {showSettings && (
         <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5 mb-5">
           <h2 className="font-semibold text-sm mb-4">הגדרות תחזית</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
               <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">יתרת עו&quot;ש נוכחית (₪)</label>
               <input
@@ -337,16 +260,6 @@ export default function ForecastPage() {
               <select
                 value={settingsForm.payday}
                 onChange={e => setSettingsForm(prev => ({ ...prev, payday: e.target.value }))}
-                className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-sm"
-              >
-                {dayOptions.map(d => <option key={d} value={d}>{d}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">יום חיוב אשראי</label>
-              <select
-                value={settingsForm.credit_card_day}
-                onChange={e => setSettingsForm(prev => ({ ...prev, credit_card_day: e.target.value }))}
                 className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-sm"
               >
                 {dayOptions.map(d => <option key={d} value={d}>{d}</option>)}
@@ -385,7 +298,7 @@ export default function ForecastPage() {
           <div className="text-xs text-[oklch(0.65_0.01_250)] text-center py-6">
             <Inbox size={24} className="text-[oklch(0.30_0.01_250)] mx-auto mb-2" />
             <div>אין אירועים חוזרים</div>
-            <div className="mt-1 text-[oklch(0.50_0.01_250)]">הוסף אירועים כמו שכירות, ביטוח, הפרשות</div>
+            <div className="mt-1 text-[oklch(0.50_0.01_250)]">הוסף אירועים כמו שכירות, ביטוח, חיוב אשראי</div>
           </div>
         ) : (
           <div className="flex flex-col gap-0">
@@ -401,13 +314,19 @@ export default function ForecastPage() {
                     <div className="text-[13px] font-medium">{ev.name}</div>
                     <div className="text-[11px] text-[oklch(0.50_0.01_250)]">
                       יום {ev.day_of_month} בחודש
+                      {ev.amount_mode === 'average' && (
+                        <span className="text-[oklch(0.65_0.15_250)] mr-2">ממוצע 3 חודשים</span>
+                      )}
                       {!ev.is_active && <span className="text-[oklch(0.55_0.15_55)] mr-2">מושבת</span>}
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className={`text-[13px] font-semibold ltr ${ev.type === 'income' ? 'text-[oklch(0.70_0.18_145)]' : 'text-[oklch(0.62_0.22_27)]'}`}>
-                    {ev.type === 'income' ? '+' : '-'}{formatCurrency(Number(ev.amount))}
+                    {ev.amount_mode === 'average'
+                      ? `~${formatCurrency(avgMonthlyExpenses)}`
+                      : `${ev.type === 'income' ? '+' : '-'}${formatCurrency(Number(ev.amount))}`
+                    }
                   </span>
                   <button onClick={() => startEditEvent(ev)} aria-label="ערוך" className="bg-transparent border-none cursor-pointer p-1.5 text-[oklch(0.45_0.01_250)]"><Pencil size={11} /></button>
                   <button onClick={() => handleDeleteEvent(ev)} aria-label="מחק" className="bg-transparent border-none cursor-pointer p-1.5 text-[oklch(0.45_0.01_250)]"><Trash2 size={11} /></button>
@@ -420,37 +339,17 @@ export default function ForecastPage() {
         {/* Inline add/edit form */}
         {eventForm && (
           <div className="mt-4 pt-4 border-t border-[oklch(0.22_0.01_250)]">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
               <div>
                 <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">שם</label>
                 <input
                   type="text"
                   value={eventForm.name}
                   onChange={e => setEventForm(prev => prev && { ...prev, name: e.target.value })}
-                  placeholder='לדוגמה: "שכירות"'
+                  placeholder='לדוגמה: "שכירות" / "חיוב אשראי"'
                   autoFocus
                   className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-sm"
                 />
-              </div>
-              <div>
-                <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">סכום (₪)</label>
-                <input
-                  type="number"
-                  value={eventForm.amount}
-                  onChange={e => setEventForm(prev => prev && { ...prev, amount: e.target.value })}
-                  placeholder="0"
-                  className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-sm ltr text-left"
-                />
-              </div>
-              <div>
-                <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">יום בחודש</label>
-                <select
-                  value={eventForm.day_of_month}
-                  onChange={e => setEventForm(prev => prev && { ...prev, day_of_month: e.target.value })}
-                  className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-sm"
-                >
-                  {dayOptions.map(d => <option key={d} value={d}>{d}</option>)}
-                </select>
               </div>
               <div>
                 <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">סוג</label>
@@ -474,6 +373,58 @@ export default function ForecastPage() {
                     </button>
                   ))}
                 </div>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+              <div>
+                <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">אופן חישוב</label>
+                <div className="flex border border-[oklch(0.25_0.01_250)] rounded-lg overflow-hidden h-[38px]">
+                  {([
+                    { key: 'fixed' as const, label: 'סכום קבוע' },
+                    { key: 'average' as const, label: 'ממוצע 3 חודשים' },
+                  ]).map(opt => (
+                    <button
+                      key={opt.key}
+                      onClick={() => setEventForm(prev => prev && { ...prev, amount_mode: opt.key })}
+                      className={`flex-1 px-3 text-[13px] font-medium cursor-pointer border-none ${
+                        eventForm.amount_mode === opt.key
+                          ? 'bg-[oklch(0.22_0.02_250)] text-[oklch(0.70_0.18_250)]'
+                          : 'bg-transparent text-[oklch(0.65_0.01_250)]'
+                      }`}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              {eventForm.amount_mode === 'fixed' ? (
+                <div>
+                  <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">סכום (₪)</label>
+                  <input
+                    type="number"
+                    value={eventForm.amount}
+                    onChange={e => setEventForm(prev => prev && { ...prev, amount: e.target.value })}
+                    placeholder="0"
+                    className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-sm ltr text-left"
+                  />
+                </div>
+              ) : (
+                <div>
+                  <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">סכום (חישוב אוטומטי)</label>
+                  <div className="w-full bg-[oklch(0.19_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-lg px-3 py-[9px] text-[oklch(0.55_0.01_250)] text-sm ltr text-left">
+                    ~{formatCurrency(avgMonthlyExpenses)}
+                  </div>
+                </div>
+              )}
+              <div>
+                <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">יום בחודש</label>
+                <select
+                  value={eventForm.day_of_month}
+                  onChange={e => setEventForm(prev => prev && { ...prev, day_of_month: e.target.value })}
+                  className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-sm"
+                >
+                  {dayOptions.map(d => <option key={d} value={d}>{d}</option>)}
+                </select>
               </div>
             </div>
             <div className="flex gap-2">
@@ -552,7 +503,7 @@ export default function ForecastPage() {
           <TrendingUp size={14} className="text-[oklch(0.65_0.18_250)]" />
           <span className="font-semibold text-sm">גרף יתרה צפויה — 90 ימים</span>
         </div>
-        <ForecastChart forecast={forecast} payday={settings?.payday ?? 10} creditCardDay={settings?.credit_card_day ?? 2} />
+        <ForecastChart forecast={forecast} payday={settings?.payday ?? 10} />
       </div>
 
       {/* Event list — all events chronological */}
@@ -561,32 +512,20 @@ export default function ForecastPage() {
         {upcomingEvents.length === 0 ? (
           <div className="text-xs text-[oklch(0.65_0.01_250)] text-center py-6">
             <Inbox size={24} className="text-[oklch(0.30_0.01_250)] mx-auto mb-2" />
-            אין אירועים צפויים — הוסף נתוני הכנסה, מנויים או אירועים חוזרים
+            אין אירועים צפויים — הוסף נתוני הכנסה או אירועים חוזרים
           </div>
         ) : (
           <div className="flex flex-col gap-0">
             {upcomingEvents.slice(0, 30).map((ev, i) => {
               const EventIcon = ev.icon === 'salary' ? ArrowDownCircle
-                : ev.icon === 'credit' ? CreditCard
-                : ev.icon === 'subscription' ? Repeat
-                : ev.icon === 'manual' ? (ev.amount > 0 ? ArrowDownCircle : ArrowUpCircle)
-                : Wallet
+                : ev.amount > 0 ? ArrowDownCircle : ArrowUpCircle
               const isPositive = ev.amount > 0
               return (
                 <div key={i} className="flex items-center justify-between py-2.5 border-b border-[oklch(0.20_0.01_250)] last:border-b-0">
                   <div className="flex items-center gap-3">
                     <EventIcon size={14} className={isPositive ? 'text-[oklch(0.70_0.18_145)]' : 'text-[oklch(0.62_0.22_27)]'} />
                     <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[13px] font-medium">{ev.description}</span>
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-medium ${
-                          ev.source === 'manual'
-                            ? 'bg-[oklch(0.25_0.02_180)] text-[oklch(0.70_0.15_180)]'
-                            : 'bg-[oklch(0.25_0.02_250)] text-[oklch(0.70_0.18_250)]'
-                        }`}>
-                          {ev.source === 'manual' ? 'ידני' : 'אוטומטי'}
-                        </span>
-                      </div>
+                      <div className="text-[13px] font-medium">{ev.description}</div>
                       <div className="text-[11px] text-[oklch(0.50_0.01_250)]">{ev.label}</div>
                     </div>
                   </div>

@@ -34,13 +34,13 @@ export function useUpsertForecastSettings() {
       user_id: string
       current_balance: number
       payday: number
-      credit_card_day: number
     }) => {
       const sb = createClient()
       const { error } = await sb
         .from('forecast_settings')
         .upsert({
           ...settings,
+          credit_card_day: 2, // keep column happy but unused
           updated_at: new Date().toISOString(),
         }, { onConflict: 'user_id' })
       if (error) throw error
@@ -51,6 +51,8 @@ export function useUpsertForecastSettings() {
 
 // --- Forecast Events (manual recurring) ---
 
+export type AmountMode = 'fixed' | 'average'
+
 export interface ForecastEventRow {
   id: number
   user_id: string
@@ -58,6 +60,7 @@ export interface ForecastEventRow {
   amount: number
   day_of_month: number
   type: 'income' | 'expense'
+  amount_mode: AmountMode
   is_active: boolean
   created_at: string
 }
@@ -74,7 +77,11 @@ export function useForecastEvents(userId: string | undefined) {
         .eq('user_id', userId!)
         .order('day_of_month')
       if (error) throw error
-      return data
+      // Default amount_mode for old rows that don't have it
+      return (data ?? []).map(row => ({
+        ...row,
+        amount_mode: (row as Record<string, unknown>).amount_mode ?? 'fixed',
+      })) as ForecastEventRow[]
     },
   })
 }
@@ -89,6 +96,7 @@ export function useUpsertForecastEvent() {
       amount: number
       day_of_month: number
       type: 'income' | 'expense'
+      amount_mode?: AmountMode
       is_active?: boolean
     }) => {
       const sb = createClient()
@@ -98,6 +106,7 @@ export function useUpsertForecastEvent() {
           amount: event.amount,
           day_of_month: event.day_of_month,
           type: event.type,
+          amount_mode: event.amount_mode ?? 'fixed',
           is_active: event.is_active ?? true,
         }).eq('id', event.id)
         if (error) throw error
@@ -108,6 +117,7 @@ export function useUpsertForecastEvent() {
           amount: event.amount,
           day_of_month: event.day_of_month,
           type: event.type,
+          amount_mode: event.amount_mode ?? 'fixed',
           is_active: event.is_active ?? true,
         })
         if (error) throw error

@@ -10,10 +10,9 @@ import type { ForecastDay } from './page'
 interface Props {
   forecast: ForecastDay[]
   payday: number
-  creditCardDay: number
 }
 
-export default function ForecastChart({ forecast, payday, creditCardDay }: Props) {
+export default function ForecastChart({ forecast, payday }: Props) {
   if (forecast.length === 0) {
     return <div className="text-[oklch(0.65_0.01_250)] text-[13px] text-center py-8">אין נתונים להצגה</div>
   }
@@ -24,15 +23,10 @@ export default function ForecastChart({ forecast, payday, creditCardDay }: Props
     isNegative: d.balance < 0,
   }))
 
-  // Find payday and credit card day indices for reference lines
+  // Find payday indices for reference lines
   const paydays = forecast
     .map((d, i) => ({ i, day: new Date(d.date).getDate() }))
     .filter(d => d.day === payday)
-    .map(d => d.i)
-
-  const ccDays = forecast
-    .map((d, i) => ({ i, day: new Date(d.date).getDate() }))
-    .filter(d => d.day === creditCardDay)
     .map(d => d.i)
 
   return (
@@ -86,18 +80,6 @@ export default function ForecastChart({ forecast, payday, creditCardDay }: Props
             strokeDasharray="2 4"
             strokeOpacity={0.5}
             label={{ value: 'M', fill: 'oklch(0.70 0.18 145)', fontSize: 9, position: 'top' }}
-          />
-        ))}
-
-        {/* Credit card day markers */}
-        {ccDays.map(idx => (
-          <ReferenceLine
-            key={`cc-${idx}`}
-            x={data[idx]?.date}
-            stroke="oklch(0.62 0.22 27)"
-            strokeDasharray="2 4"
-            strokeOpacity={0.5}
-            label={{ value: 'CC', fill: 'oklch(0.62 0.22 27)', fontSize: 9, position: 'top' }}
           />
         ))}
 
