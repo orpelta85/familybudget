@@ -2,14 +2,15 @@
 
 import { useUser } from '@/lib/queries/useUser'
 import { useBudgetCategories, usePersonalExpenses, useUpdateCategoryTarget } from '@/lib/queries/useExpenses'
-import { useCurrentPeriod } from '@/lib/queries/usePeriods'
+import { usePeriods, useCurrentPeriod } from '@/lib/queries/usePeriods'
 import { useIncome } from '@/lib/queries/useIncome'
 import { formatCurrency } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { BarChart3, Inbox } from 'lucide-react'
 import { toast } from 'sonner'
 import { TableSkeleton } from '@/components/ui/Skeleton'
+import { PeriodSelector } from '@/components/layout/PeriodSelector'
 
 const TYPE_LABELS: Record<string, { label: string; color: string }> = {
   fixed:    { label: 'קבועות',       color: 'oklch(0.65 0.18 250)' },
@@ -28,18 +29,27 @@ export default function BudgetPage() {
   const { user, loading } = useUser()
   const router = useRouter()
   const currentPeriod = useCurrentPeriod()
+  const { data: periods } = usePeriods()
   const updateTarget = useUpdateCategoryTarget()
 
+  const [selectedPeriodId, setSelectedPeriodId] = useState<number | undefined>()
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editValue, setEditValue] = useState('')
+
+  useEffect(() => {
+    if (currentPeriod && !selectedPeriodId) setSelectedPeriodId(currentPeriod.id)
+  }, [currentPeriod, selectedPeriodId])
 
   useEffect(() => {
     if (!loading && !user) router.push('/login')
   }, [user, loading, router])
 
-  const { data: categories } = useBudgetCategories(user?.id, currentPeriod?.year_number)
-  const { data: expenses } = usePersonalExpenses(currentPeriod?.id, user?.id)
-  const { data: income } = useIncome(currentPeriod?.id, user?.id)
+  const selectedPeriod = useMemo(() => periods?.find(p => p.id === selectedPeriodId), [periods, selectedPeriodId])
+  const selectedYear = selectedPeriod?.year_number ?? currentPeriod?.year_number
+
+  const { data: categories } = useBudgetCategories(user?.id, selectedYear)
+  const { data: expenses } = usePersonalExpenses(selectedPeriodId ?? currentPeriod?.id, user?.id)
+  const { data: income } = useIncome(selectedPeriodId ?? currentPeriod?.id, user?.id)
 
   if (loading || !user) return <TableSkeleton rows={8} />
 
@@ -76,8 +86,10 @@ export default function BudgetPage() {
         <h1 className="text-xl font-bold tracking-tight">תקציב מתוכנן</h1>
       </div>
       <p className="text-muted-foreground text-[13px] mb-5">
-        {currentPeriod?.label ?? '...'}
+        {selectedPeriod?.label ?? currentPeriod?.label ?? '...'}
       </p>
+
+      {periods && <PeriodSelector periods={periods} selectedId={selectedPeriodId} onChange={setSelectedPeriodId} />}
 
       {/* KPI Cards */}
       <div className="grid-3 mb-6">
