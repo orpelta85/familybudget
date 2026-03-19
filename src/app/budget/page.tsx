@@ -181,7 +181,7 @@ export default function BudgetPage() {
                             onChange={e => setEditValue(e.target.value)}
                             onBlur={() => saveTarget(cat.id)}
                             onKeyDown={e => { if (e.key === 'Enter') saveTarget(cat.id); if (e.key === 'Escape') setEditingId(null) }}
-                            className="w-20 bg-[oklch(0.20_0.01_250)] border border-[oklch(0.45_0.18_250)] rounded-md px-1.5 py-0.5 text-inherit text-[13px] text-right"
+                            className="w-20 bg-[oklch(0.20_0.01_250)] border border-[oklch(0.45_0.18_250)] rounded-md px-1.5 py-0.5 text-inherit text-[13px] text-end"
                           />
                         ) : (
                           <span
@@ -199,7 +199,7 @@ export default function BudgetPage() {
                       <div className="flex-1 h-[5px] rounded-sm bg-secondary overflow-hidden">
                         <div className="h-full rounded-sm transition-[width] duration-400 ease-out" style={{ width: `${Math.min(pct * 100, 100)}%`, background: barColor }} />
                       </div>
-                      <span className="text-[11px] font-medium min-w-8 text-left ltr" style={{ color: barColor }}>{pctDisplay > 200 ? '200%+' : `${pctDisplay}%`}</span>
+                      <span className="text-[11px] font-medium min-w-8 text-start ltr" style={{ color: barColor }}>{pctDisplay > 200 ? '200%+' : `${pctDisplay}%`}</span>
                     </div>
                   </div>
                 )

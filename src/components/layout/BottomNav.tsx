@@ -44,7 +44,7 @@ export function BottomNav() {
   const isMoreActive = moreLinks.some(l => pathname === l.href)
 
   return (
-    <nav className="flex md:hidden fixed bottom-0 right-0 left-0 h-[60px] bg-[oklch(0.14_0.01_250)] border-t border-[oklch(0.22_0.01_250)] items-center z-40">
+    <nav className="flex md:hidden fixed bottom-0 inset-x-0 h-[60px] bg-[oklch(0.14_0.01_250)] border-t border-[oklch(0.22_0.01_250)] items-center z-40">
       {nav.map(item => {
         const active = pathname === item.href
         const Icon = item.icon

@@ -79,7 +79,7 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 mr-0 max-w-[100vw]">
+    <div className="min-h-screen flex items-center justify-center p-4 me-0 max-w-[100vw]">
       <div className="w-[380px] bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-8">
         <h1 className="text-[22px] font-bold mb-1.5">My Family Finance</h1>
         <p className="text-[oklch(0.60_0.01_250)] text-sm mb-7">

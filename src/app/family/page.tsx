@@ -380,7 +380,7 @@ export default function FamilyPage() {
               aria-checked={myMembership?.show_personal_to_family ?? false}
             >
               <div className={`w-[18px] h-[18px] rounded-full bg-[oklch(0.92_0.01_250)] absolute top-[3px] transition-all duration-200 ${
-                myMembership?.show_personal_to_family ? 'right-[3px] left-auto' : 'left-[3px] right-auto'
+                myMembership?.show_personal_to_family ? 'end-[3px] start-auto' : 'start-[3px] end-auto'
               }`} />
             </button>
           </div>

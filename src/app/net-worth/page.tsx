@@ -108,7 +108,7 @@ export default function NetWorthPage() {
                 <div className="flex items-center gap-1.5">
                   {isEditing ? (
                     <>
-                      <input type="number" value={editAmount} onChange={e => setEditAmount(e.target.value)} autoFocus onKeyDown={e => { if (e.key === 'Enter') handleSaveEdit(entry); if (e.key === 'Escape') setEditingId(null) }} className="w-28 bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-md px-2 py-1 text-inherit text-[13px] ltr text-right" />
+                      <input type="number" value={editAmount} onChange={e => setEditAmount(e.target.value)} autoFocus onKeyDown={e => { if (e.key === 'Enter') handleSaveEdit(entry); if (e.key === 'Escape') setEditingId(null) }} className="w-28 bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-md px-2 py-1 text-inherit text-[13px] ltr text-end" />
                       <button onClick={() => handleSaveEdit(entry)} className="bg-transparent border-none cursor-pointer p-1 text-[oklch(0.70_0.18_145)]"><Check size={14} /></button>
                       <button onClick={() => setEditingId(null)} className="bg-transparent border-none cursor-pointer p-1 text-[oklch(0.65_0.01_250)]"><X size={14} /></button>
                     </>
@@ -179,7 +179,7 @@ export default function NetWorthPage() {
               </div>
               <div>
                 <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">סכום (₪)</label>
-                <input type="number" value={newEntry.amount} onChange={e => setNewEntry(prev => prev && { ...prev, amount: e.target.value })} placeholder="0" autoFocus className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-right" />
+                <input type="number" value={newEntry.amount} onChange={e => setNewEntry(prev => prev && { ...prev, amount: e.target.value })} placeholder="0" autoFocus className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-end" />
               </div>
             </div>
             <button onClick={handleAdd} disabled={upsert.isPending || !newEntry.category || Number(newEntry.amount) <= 0} className={`w-full bg-[oklch(0.70_0.15_185)] border-none rounded-lg py-[11px] font-semibold text-sm text-[oklch(0.10_0.01_250)] ${upsert.isPending ? 'cursor-not-allowed opacity-50' : 'cursor-pointer opacity-100'}`}>

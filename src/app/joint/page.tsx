@@ -148,7 +148,7 @@ export default function JointPage() {
             <div key={f.label} className="mb-3">
               <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">{f.label}</label>
               <input type="number" value={f.val} onChange={e => f.set(e.target.value)} placeholder="0"
-                className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-[15px] ltr text-right" />
+                className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-[15px] ltr text-end" />
             </div>
           ))}
           <button onClick={saveIncome} disabled={upsertIncome.isPending}
@@ -167,7 +167,7 @@ export default function JointPage() {
               {POOL_CATEGORIES.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
             </select>
             <input type="number" value={expAmount} onChange={e => setExpAmount(e.target.value)} placeholder="סכום (₪)" required min="0"
-              className="bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-[15px] ltr text-right" />
+              className="bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-[15px] ltr text-end" />
             <input type="text" value={expDesc} onChange={e => setExpDesc(e.target.value)} placeholder="תיאור (אופציונלי)"
               className="bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-[13px]" />
             <button type="submit" className="btn-hover bg-[oklch(0.72_0.18_55)] border-none rounded-lg py-2.5 font-semibold text-[13px] text-[oklch(0.10_0.01_250)] cursor-pointer">

@@ -133,8 +133,8 @@ export default function SubscriptionsPage() {
                 <div key={sub.id} className="py-2.5 border-b border-[oklch(0.20_0.01_250)] flex flex-col gap-1.5">
                   <div className="flex gap-1.5">
                     <input type="text" value={editForm.name} onChange={e => setEditForm(p => ({ ...p, name: e.target.value }))} className="flex-1 bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-md px-2 py-1 text-[12px] text-inherit" />
-                    <input type="number" value={editForm.amount} onChange={e => setEditForm(p => ({ ...p, amount: e.target.value }))} className="w-20 bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-md px-2 py-1 text-[12px] text-inherit ltr text-right" />
-                    <input type="number" value={editForm.billingDay} onChange={e => setEditForm(p => ({ ...p, billingDay: e.target.value }))} min="1" max="31" className="w-14 bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-md px-2 py-1 text-[12px] text-inherit ltr text-right" placeholder="יום" />
+                    <input type="number" value={editForm.amount} onChange={e => setEditForm(p => ({ ...p, amount: e.target.value }))} className="w-20 bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-md px-2 py-1 text-[12px] text-inherit ltr text-end" />
+                    <input type="number" value={editForm.billingDay} onChange={e => setEditForm(p => ({ ...p, billingDay: e.target.value }))} min="1" max="31" className="w-14 bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-md px-2 py-1 text-[12px] text-inherit ltr text-end" placeholder="יום" />
                   </div>
                   <div className="flex gap-1">
                     <button onClick={() => handleSaveEdit(sub.id)} className="flex items-center gap-1 bg-[oklch(0.65_0.18_310)] text-[oklch(0.10_0.01_250)] border-none rounded-md px-2 py-1 text-[11px] font-semibold cursor-pointer"><Check size={11} /> שמור</button>
@@ -196,11 +196,11 @@ export default function SubscriptionsPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">סכום חודשי (₪)</label>
-                  <input type="number" value={newSub.amount} onChange={e => setNewSub(p => p && { ...p, amount: e.target.value })} placeholder="0" className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-right" />
+                  <input type="number" value={newSub.amount} onChange={e => setNewSub(p => p && { ...p, amount: e.target.value })} placeholder="0" className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-end" />
                 </div>
                 <div>
                   <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">יום חיוב</label>
-                  <input type="number" value={newSub.billingDay} onChange={e => setNewSub(p => p && { ...p, billingDay: e.target.value })} min="1" max="31" className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-right" />
+                  <input type="number" value={newSub.billingDay} onChange={e => setNewSub(p => p && { ...p, billingDay: e.target.value })} min="1" max="31" className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-end" />
                 </div>
               </div>
               <div>

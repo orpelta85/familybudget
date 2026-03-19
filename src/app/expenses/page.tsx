@@ -468,7 +468,7 @@ export default function ExpensesPage() {
               return (
                 <div key={i} className="grid-import-row py-1.5 border-b border-[oklch(0.20_0.01_250)]">
                   <span className="text-xs text-[oklch(0.80_0.01_250)] overflow-hidden text-ellipsis whitespace-nowrap">{row.description}</span>
-                  <span className="text-xs font-semibold ltr text-right text-[oklch(0.72_0.18_55)]">{formatCurrency(row.amount)}</span>
+                  <span className="text-xs font-semibold ltr text-end text-[oklch(0.72_0.18_55)]">{formatCurrency(row.amount)}</span>
                   {/* Toggle אישי/משותף */}
                   <button
                     onClick={() => setImportRows(p => p.map((r, j) => j === i ? { ...r, is_shared: !r.is_shared } : r))}
@@ -604,7 +604,7 @@ export default function ExpensesPage() {
               <label htmlFor="expense-amount" className="text-[11px] text-muted-foreground block mb-1 font-medium">סכום (₪){expType === 'shared' ? ` — כולל (חלקך ${splitPctLabel}%)` : ''}</label>
               <input id="expense-amount" type="number" value={amount} onChange={e => setAmount(e.target.value)}
                 placeholder="0" required min="0.01" step="0.01"
-                className="w-full bg-secondary border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-2 text-inherit text-[13px] outline-none ltr text-right" />
+                className="w-full bg-secondary border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-2 text-inherit text-[13px] outline-none ltr text-end" />
               {expType === 'shared' && Number(amount) > 0 && (
                 <div className="mt-1 text-[11px] text-[oklch(0.65_0.12_310)]">
                   חלקך: {formatCurrency(Number(amount) * splitFrac)}
@@ -688,7 +688,7 @@ export default function ExpensesPage() {
                         <select value={editingPersonal.categoryId} onChange={ev => setEditingPersonal(prev => prev && { ...prev, categoryId: ev.target.value })} className="flex-1 bg-secondary border border-[oklch(0.28_0.01_250)] rounded-md px-2 py-1 text-[12px] text-inherit">
                           {categories?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                         </select>
-                        <input type="number" value={editingPersonal.amount} onChange={ev => setEditingPersonal(prev => prev && { ...prev, amount: ev.target.value })} className="w-20 bg-secondary border border-[oklch(0.28_0.01_250)] rounded-md px-2 py-1 text-[12px] text-inherit ltr text-right" />
+                        <input type="number" value={editingPersonal.amount} onChange={ev => setEditingPersonal(prev => prev && { ...prev, amount: ev.target.value })} className="w-20 bg-secondary border border-[oklch(0.28_0.01_250)] rounded-md px-2 py-1 text-[12px] text-inherit ltr text-end" />
                       </div>
                       <div className="flex gap-1">
                         <button onClick={async () => {
@@ -759,7 +759,7 @@ export default function ExpensesPage() {
                         <select value={editingShared.category} onChange={ev => setEditingShared(prev => prev && { ...prev, category: ev.target.value })} className="flex-1 bg-secondary border border-[oklch(0.28_0.01_250)] rounded-md px-2 py-1 text-[12px] text-inherit">
                           {SHARED_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
                         </select>
-                        <input type="number" value={editingShared.totalAmount} onChange={ev => setEditingShared(prev => prev && { ...prev, totalAmount: ev.target.value })} className="w-20 bg-secondary border border-[oklch(0.28_0.01_250)] rounded-md px-2 py-1 text-[12px] text-inherit ltr text-right" placeholder="סכום כולל" />
+                        <input type="number" value={editingShared.totalAmount} onChange={ev => setEditingShared(prev => prev && { ...prev, totalAmount: ev.target.value })} className="w-20 bg-secondary border border-[oklch(0.28_0.01_250)] rounded-md px-2 py-1 text-[12px] text-inherit ltr text-end" placeholder="סכום כולל" />
                       </div>
                       <div className="flex gap-1">
                         <button onClick={async () => {

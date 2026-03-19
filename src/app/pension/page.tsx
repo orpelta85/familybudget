@@ -325,7 +325,7 @@ export default function PensionPage() {
                     <Icon size={14} style={{ color: kpi.color }} />
                     <span className="text-[11px] text-[oklch(0.65_0.01_250)] font-medium">{kpi.label}</span>
                   </div>
-                  <div className="text-xl font-bold ltr text-left" style={{ color: kpi.color }}>
+                  <div className="text-xl font-bold ltr text-start" style={{ color: kpi.color }}>
                     {kpi.value}
                   </div>
                 </div>
@@ -361,19 +361,19 @@ export default function PensionPage() {
                 <div className="grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-3">
                   <div className="bg-[oklch(0.14_0.01_250)] rounded-lg p-3.5">
                     <div className="text-[11px] text-[oklch(0.65_0.01_250)] mb-1.5">צבירה צפויה בפרישה</div>
-                    <div className="text-lg font-bold ltr text-left text-[oklch(0.65_0.18_250)]">
+                    <div className="text-lg font-bold ltr text-start text-[oklch(0.65_0.18_250)]">
                       {formatCurrency(futureValue)}
                     </div>
                   </div>
                   <div className="bg-[oklch(0.14_0.01_250)] rounded-lg p-3.5">
                     <div className="text-[11px] text-[oklch(0.65_0.01_250)] mb-1.5">קצבה חודשית צפויה</div>
-                    <div className="text-lg font-bold ltr text-left text-[oklch(0.70_0.18_145)]">
+                    <div className="text-lg font-bold ltr text-start text-[oklch(0.70_0.18_145)]">
                       {formatCurrency(monthlyPension)}
                     </div>
                   </div>
                   <div className="bg-[oklch(0.14_0.01_250)] rounded-lg p-3.5">
                     <div className="text-[11px] text-[oklch(0.65_0.01_250)] mb-1.5">יחס החלפה</div>
-                    <div className="text-lg font-bold ltr text-left" style={{ color: ratioColor }}>
+                    <div className="text-lg font-bold ltr text-start" style={{ color: ratioColor }}>
                       {currentSalary > 0 ? `${replacementRatio.toFixed(0)}%` : 'אין נתון'}
                     </div>
                   </div>
@@ -402,7 +402,7 @@ export default function PensionPage() {
                     <item.Icon size={12} />
                     {item.label}
                   </div>
-                  <div className={`text-lg font-bold ltr text-left ${item.value > 0 ? 'text-[oklch(0.80_0.01_250)]' : 'text-[oklch(0.65_0.01_250)]'}`}>
+                  <div className={`text-lg font-bold ltr text-start ${item.value > 0 ? 'text-[oklch(0.80_0.01_250)]' : 'text-[oklch(0.65_0.01_250)]'}`}>
                     {item.value > 0 ? formatCurrency(item.value) : 'אין כיסוי'}
                   </div>
                 </div>
@@ -504,17 +504,17 @@ export default function PensionPage() {
                 <table className="w-full text-xs border-collapse">
                   <thead>
                     <tr className="border-b border-[oklch(0.25_0.01_250)]">
-                      <th className="text-right p-2 font-semibold">כיסוי</th>
-                      <th className="text-left p-2 font-semibold">מבוטח ראשי</th>
-                      <th className="text-left p-2 font-semibold">סה&quot;כ</th>
+                      <th className="text-start p-2 font-semibold">כיסוי</th>
+                      <th className="text-start p-2 font-semibold">מבוטח ראשי</th>
+                      <th className="text-start p-2 font-semibold">סה&quot;כ</th>
                     </tr>
                   </thead>
                   <tbody>
                     {healthCoverages.map(h => (
                       <tr key={h.id} className="border-b border-[oklch(0.20_0.01_250)]">
                         <td className="p-2">{h.coverage_name}</td>
-                        <td className="p-2 ltr text-left">{formatCurrency(h.main_insured)}</td>
-                        <td className="p-2 ltr text-left">{formatCurrency(h.total)}</td>
+                        <td className="p-2 ltr text-start">{formatCurrency(h.main_insured)}</td>
+                        <td className="p-2 ltr text-start">{formatCurrency(h.total)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -826,7 +826,7 @@ function ProductCard({ product: p, totalBalance, expanded, onToggle }: {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <div className="text-left">
+          <div className="text-start">
             <div className="font-bold text-base ltr" style={{ color }}>{formatCurrency(p.balance)}</div>
             <div className="text-[11px] text-[oklch(0.65_0.01_250)] ltr">{pct.toFixed(1)}% מהתיק</div>
           </div>
@@ -855,7 +855,7 @@ function ProductCard({ product: p, totalBalance, expanded, onToggle }: {
                 ].filter(item => item.value > 0).map(item => (
                   <div key={item.label} className="bg-[oklch(0.18_0.01_250)] rounded-md py-2 px-2.5">
                     <div className="text-[10px] text-[oklch(0.65_0.01_250)]">{item.label}</div>
-                    <div className="text-sm font-semibold ltr text-left">{formatCurrency(item.value)}</div>
+                    <div className="text-sm font-semibold ltr text-start">{formatCurrency(item.value)}</div>
                   </div>
                 ))}
               </div>
@@ -908,23 +908,23 @@ function ProductCard({ product: p, totalBalance, expanded, onToggle }: {
                 <table className="w-full text-[11px] border-collapse">
                   <thead>
                     <tr className="border-b border-[oklch(0.22_0.01_250)]">
-                      <th className="text-right p-1.5">תאריך</th>
-                      <th className="text-left p-1.5">שכר</th>
-                      <th className="text-left p-1.5">מעסיק</th>
-                      <th className="text-left p-1.5">עובד</th>
-                      <th className="text-left p-1.5">פיצויים</th>
-                      <th className="text-left p-1.5 font-bold">סה&quot;כ</th>
+                      <th className="text-start p-1.5">תאריך</th>
+                      <th className="text-start p-1.5">שכר</th>
+                      <th className="text-start p-1.5">מעסיק</th>
+                      <th className="text-start p-1.5">עובד</th>
+                      <th className="text-start p-1.5">פיצויים</th>
+                      <th className="text-start p-1.5 font-bold">סה&quot;כ</th>
                     </tr>
                   </thead>
                   <tbody>
                     {p.deposit_history.map((d, i) => (
                       <tr key={i} className="border-b border-[oklch(0.18_0.01_250)]">
                         <td className="p-1.5">{d.date}</td>
-                        <td className="p-1.5 ltr text-left">{formatCurrency(d.salary)}</td>
-                        <td className="p-1.5 ltr text-left">{formatCurrency(d.employer)}</td>
-                        <td className="p-1.5 ltr text-left">{formatCurrency(d.employee)}</td>
-                        <td className="p-1.5 ltr text-left">{formatCurrency(d.severance)}</td>
-                        <td className="p-1.5 ltr text-left font-semibold">{formatCurrency(d.total)}</td>
+                        <td className="p-1.5 ltr text-start">{formatCurrency(d.salary)}</td>
+                        <td className="p-1.5 ltr text-start">{formatCurrency(d.employer)}</td>
+                        <td className="p-1.5 ltr text-start">{formatCurrency(d.employee)}</td>
+                        <td className="p-1.5 ltr text-start">{formatCurrency(d.severance)}</td>
+                        <td className="p-1.5 ltr text-start font-semibold">{formatCurrency(d.total)}</td>
                       </tr>
                     ))}
                   </tbody>
