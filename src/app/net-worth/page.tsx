@@ -267,8 +267,10 @@ export default function NetWorthPage() {
   async function handleDelete(id: number) {
     if (!user) return
     if (!(await confirm({ message: 'למחוק רשומה זו?' }))) return
-    await deleteEntry.mutateAsync({ id, user_id: user.id })
-    toast.success('נמחק')
+    try {
+      await deleteEntry.mutateAsync({ id, user_id: user.id })
+      toast.success('נמחק')
+    } catch { toast.error('שגיאה במחיקה') }
   }
 
   async function handleSync() {

@@ -161,14 +161,18 @@ export default function MortgagePage() {
 
   async function handleDeleteMortgage(id: number) {
     if (!(await confirm({ message: 'למחוק את המשכנתא? כל המסלולות יימחקו.' }))) return
-    await deleteMortgage.mutateAsync(id)
-    toast.success('נמחק')
+    try {
+      await deleteMortgage.mutateAsync(id)
+      toast.success('נמחק')
+    } catch { toast.error('שגיאה במחיקה') }
   }
 
   async function handleDeleteTrack(id: number) {
     if (!(await confirm({ message: 'למחוק את המסלול?' }))) return
-    await deleteTrack.mutateAsync(id)
-    toast.success('מסלול נמחק')
+    try {
+      await deleteTrack.mutateAsync(id)
+      toast.success('מסלול נמחק')
+    } catch { toast.error('שגיאה במחיקה') }
   }
 
   // What-if calculation

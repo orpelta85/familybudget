@@ -192,8 +192,10 @@ export default function InsurancePage() {
 
   async function handleDelete(id: number) {
     if (!(await confirm({ message: 'למחוק את הפוליסה?' }))) return
-    await deletePolicy.mutateAsync(id)
-    toast.success('הפוליסה נמחקה')
+    try {
+      await deletePolicy.mutateAsync(id)
+      toast.success('הפוליסה נמחקה')
+    } catch { toast.error('שגיאה במחיקה') }
   }
 
   if (loading || !user) return null

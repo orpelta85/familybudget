@@ -41,7 +41,11 @@ export function useInsurancePolicies(userId: string | undefined, familyId: strin
       }
       const { data, error } = await query.order('policy_type').order('name')
       if (error) throw error
-      return data
+      return (data ?? []).map(p => ({
+        ...p,
+        monthly_cost: Number(p.monthly_cost),
+        annual_cost: p.annual_cost != null ? Number(p.annual_cost) : null,
+      }))
     },
   })
 }

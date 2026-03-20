@@ -76,8 +76,9 @@ export function useKidExpenses(kidId: number | undefined, periodId: number | und
 }
 
 export function useAllKidExpenses(kidIds: number[]) {
+  const key = kidIds.slice().sort().join(',')
   return useQuery<KidExpense[]>({
-    queryKey: ['kid_expenses_all', kidIds],
+    queryKey: ['kid_expenses_all', key],
     enabled: kidIds.length > 0,
     queryFn: async () => {
       const sb = createClient()
@@ -143,8 +144,9 @@ export function useKidActivities(kidId: number | undefined) {
 }
 
 export function useAllKidActivities(kidIds: number[]) {
+  const key = kidIds.slice().sort().join(',')
   return useQuery<KidActivity[]>({
-    queryKey: ['kid_activities_all', kidIds],
+    queryKey: ['kid_activities_all', key],
     enabled: kidIds.length > 0,
     queryFn: async () => {
       const sb = createClient()

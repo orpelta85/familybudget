@@ -85,15 +85,19 @@ export default function SubscriptionsPage() {
 
   async function handleToggleActive(id: number, isActive: boolean) {
     if (!user) return
-    await updateSub.mutateAsync({ id, user_id: user.id, is_active: !isActive })
-    toast.success(!isActive ? 'מנוי הופעל' : 'מנוי הושהה')
+    try {
+      await updateSub.mutateAsync({ id, user_id: user.id, is_active: !isActive })
+      toast.success(!isActive ? 'מנוי הופעל' : 'מנוי הושהה')
+    } catch { toast.error('שגיאה בעדכון') }
   }
 
   async function handleDelete(id: number) {
     if (!user) return
     if (!(await confirm({ message: 'למחוק מנוי זה?' }))) return
-    await deleteSub.mutateAsync({ id, user_id: user.id })
-    toast.success('נמחק')
+    try {
+      await deleteSub.mutateAsync({ id, user_id: user.id })
+      toast.success('נמחק')
+    } catch { toast.error('שגיאה במחיקה') }
   }
 
   function startEdit(sub: typeof activeSubs[0]) {

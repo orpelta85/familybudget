@@ -380,8 +380,6 @@ export default function DebtsPage() {
               </h2>
               <div className="relative h-48 flex items-end gap-px">
                 {chartData.map((row, colIdx) => {
-                  const total = row.reduce((s, v) => s + v, 0)
-                  const totalHeight = (total / chartMax) * 100
                   return (
                     <div key={colIdx} className="flex-1 flex flex-col-reverse" style={{ height: '100%' }}>
                       {row.map((val, debtIdx) => {
