@@ -1308,26 +1308,41 @@ function FamilyExpensesView({
         })}
       </div>
 
-      {/* Shared expenses */}
-      {(sharedExp ?? []).length > 0 && (
-        <div className="bg-card border border-border rounded-xl p-5 mt-4">
-          <div className="flex justify-between items-center mb-3">
-            <div className="flex items-center gap-2">
-              <Users size={14} className="text-[oklch(0.65_0.12_310)]" />
-              <span className="font-semibold text-sm">הוצאות משותפות</span>
-            </div>
-            <span className="text-[15px] font-bold text-[oklch(0.65_0.12_310)]">{fmt(totalShared)}</span>
-          </div>
-          <div className="flex flex-col gap-0.5">
-            {(sharedExp ?? []).map(e => (
-              <div key={e.id} className="flex justify-between items-center py-2 border-b border-[oklch(0.20_0.01_250)]">
-                <span className="text-[12px] text-[oklch(0.75_0.01_250)]">{e.notes || e.category}</span>
-                <span className="text-[12px] font-semibold">{fmt(e.total_amount)}</span>
+      {/* Shared expenses — grouped by category */}
+      {(sharedExp ?? []).length > 0 && (() => {
+        const SHARED_CAT_LABELS: Record<string, string> = {
+          rent: 'שכירות', property_tax: 'ארנונה', electricity: 'חשמל',
+          water_gas: 'מים+גז', building_committee: 'ועד בית', internet: 'אינטרנט',
+          home_insurance: 'ביטוח דירה', misc: 'שונות',
+        }
+        const catTotals = new Map<string, number>()
+        for (const e of (sharedExp ?? [])) {
+          const label = SHARED_CAT_LABELS[e.category] ?? e.category
+          catTotals.set(label, (catTotals.get(label) ?? 0) + e.total_amount)
+        }
+        const sorted = [...catTotals.entries()].sort((a, b) => b[1] - a[1])
+
+        return (
+          <div className="bg-card border border-border rounded-xl p-5 mt-4">
+            <div className="flex justify-between items-center mb-3">
+              <div className="flex items-center gap-2">
+                <Users size={14} className="text-[oklch(0.65_0.12_310)]" />
+                <span className="font-semibold text-sm">הוצאות משותפות</span>
+                <span className="text-[10px] text-[oklch(0.50_0.01_250)] bg-[oklch(0.20_0.01_250)] px-2 py-0.5 rounded-full">{sorted.length} קטגוריות</span>
               </div>
-            ))}
+              <span className="text-[15px] font-bold text-[oklch(0.65_0.12_310)]">{fmt(totalShared)}</span>
+            </div>
+            <div className="flex flex-col gap-0.5">
+              {sorted.map(([label, total]) => (
+                <div key={label} className="flex justify-between items-center py-2 border-b border-[oklch(0.20_0.01_250)]">
+                  <span className="text-[12px] text-[oklch(0.75_0.01_250)]">{label}</span>
+                  <span className="text-[12px] font-semibold">{fmt(total)}</span>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )
+      })()}
     </>
   )
 }
