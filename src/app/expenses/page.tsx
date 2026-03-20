@@ -1114,6 +1114,81 @@ function FamilyExpensesView({
         </div>
       </div>
 
+      {/* ── Who Spent What — Category × Member Table ──────────────────────── */}
+      {(familyExpenses ?? []).length > 1 && (() => {
+        // Build category → member → amount map
+        const catMemberMap = new Map<string, Map<string, number>>()
+        const memberNames = (familyExpenses ?? []).map(m => ({ id: m.user_id, name: m.display_name }))
+        for (const member of (familyExpenses ?? [])) {
+          for (const e of member.expenses) {
+            const catName = (e.budget_categories as BudgetCategory)?.name ?? 'כללי'
+            if (!catMemberMap.has(catName)) catMemberMap.set(catName, new Map())
+            const memberMap = catMemberMap.get(catName)!
+            memberMap.set(member.user_id, (memberMap.get(member.user_id) ?? 0) + e.amount)
+          }
+        }
+        const catRows = [...catMemberMap.entries()]
+          .map(([catName, memberMap]) => {
+            const total = [...memberMap.values()].reduce((s, v) => s + v, 0)
+            return { catName, memberMap, total }
+          })
+          .sort((a, b) => b.total - a.total)
+        const grandTotal = catRows.reduce((s, r) => s + r.total, 0)
+
+        return (
+          <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5 mb-5">
+            <div className="font-semibold text-sm mb-4">מי הוציא מה — לפי קטגוריה</div>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse text-[13px]">
+                <thead>
+                  <tr className="border-b border-[oklch(0.22_0.01_250)]">
+                    <th className="py-2 px-3 text-right text-[oklch(0.65_0.01_250)] font-medium text-[11px]">קטגוריה</th>
+                    {memberNames.map(m => (
+                      <th key={m.id} className="py-2 px-3 text-right text-[oklch(0.65_0.01_250)] font-medium text-[11px]">{m.name}</th>
+                    ))}
+                    <th className="py-2 px-3 text-right text-[oklch(0.65_0.01_250)] font-medium text-[11px]">סה&quot;כ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {catRows.map(row => (
+                    <tr key={row.catName} className="border-b border-[oklch(0.20_0.01_250)]">
+                      <td className="py-2 px-3 text-[oklch(0.75_0.01_250)] font-medium">{row.catName}</td>
+                      {memberNames.map(m => {
+                        const val = row.memberMap.get(m.id) ?? 0
+                        const pct = row.total > 0 ? Math.round((val / row.total) * 100) : 0
+                        return (
+                          <td key={m.id} className="py-2 px-3 text-right">
+                            <span className="text-[oklch(0.80_0.01_250)]">{val > 0 ? fmt(val) : '—'}</span>
+                            {val > 0 && <span className="text-[10px] text-[oklch(0.50_0.01_250)] mr-1">({pct}%)</span>}
+                          </td>
+                        )
+                      })}
+                      <td className="py-2 px-3 text-right font-semibold text-[oklch(0.72_0.18_55)]">{fmt(row.total)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="border-t-2 border-[oklch(0.25_0.01_250)]">
+                    <td className="py-2.5 px-3 font-bold text-[oklch(0.80_0.01_250)]">סה&quot;כ</td>
+                    {memberNames.map(m => {
+                      const memberTotal = catRows.reduce((s, r) => s + (r.memberMap.get(m.id) ?? 0), 0)
+                      const pct = grandTotal > 0 ? Math.round((memberTotal / grandTotal) * 100) : 0
+                      return (
+                        <td key={m.id} className="py-2.5 px-3 text-right font-bold text-[oklch(0.65_0.18_250)]">
+                          {fmt(memberTotal)}
+                          <span className="text-[10px] text-[oklch(0.50_0.01_250)] mr-1">({pct}%)</span>
+                        </td>
+                      )
+                    })}
+                    <td className="py-2.5 px-3 text-right font-bold text-[oklch(0.72_0.18_55)]">{fmt(grandTotal)}</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+        )
+      })()}
+
       {/* Per-member breakdown */}
       <div className="grid-2 items-start">
         {(familyExpenses ?? []).map(member => {

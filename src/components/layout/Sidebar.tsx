@@ -6,7 +6,7 @@ import { useState, useRef, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import {
   LayoutDashboard, Wallet, BarChart3, Receipt,
-  Users, PiggyBank, Target, TrendingUp, Link2, ListChecks, Mail, Copy, X, Send, Settings, CreditCard, Sparkles, CalendarDays, Calculator, Bell, Shield
+  Users, PiggyBank, Target, TrendingUp, Link2, ListChecks, Mail, Copy, X, Send, Settings, CreditCard, Sparkles, CalendarDays, Calculator, Bell, Shield, Home
 } from 'lucide-react'
 import { useAlerts, useUnreadAlertCount, useMarkAlertRead } from '@/lib/queries/useAlerts'
 import { useUser } from '@/lib/queries/useUser'
@@ -24,6 +24,7 @@ const nav = [
   { href: '/goals',     label: 'יעדים',             icon: Target },
   { href: '/kids',      label: 'ילדים',             icon: Users },
   { href: '/pension',   label: 'פנסיה',            icon: PiggyBank },
+  { href: '/mortgage',        label: 'משכנתא',            icon: Home },
   { href: '/debts',           label: 'מחשבון חובות',     icon: Calculator },
   { href: '/net-worth',      label: 'שווי נקי',         icon: TrendingUp },
   { href: '/insurance',     label: 'ביטוחים',           icon: Shield },

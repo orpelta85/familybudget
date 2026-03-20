@@ -30,6 +30,23 @@ export function useDebts(userId: string | undefined) {
   })
 }
 
+export function useFamilyDebts(memberIds: string[], enabled: boolean) {
+  return useQuery<Debt[]>({
+    queryKey: ['family_debts', memberIds],
+    enabled: memberIds.length > 0 && enabled,
+    queryFn: async () => {
+      const sb = createClient()
+      const { data, error } = await sb
+        .from('debts')
+        .select('*')
+        .in('user_id', memberIds)
+        .order('created_at')
+      if (error) throw error
+      return data
+    },
+  })
+}
+
 export function useAddDebt() {
   const qc = useQueryClient()
   return useMutation({

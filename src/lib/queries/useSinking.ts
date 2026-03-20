@@ -15,6 +15,35 @@ export function useSinkingFunds(userId: string | undefined) {
   })
 }
 
+export function useFamilySinkingFunds(memberIds: string[], enabled: boolean) {
+  return useQuery<SinkingFund[]>({
+    queryKey: ['family_sinking_funds', memberIds],
+    enabled: memberIds.length > 0 && enabled,
+    queryFn: async () => {
+      const sb = createClient()
+      const { data, error } = await sb.from('sinking_funds').select('*').in('user_id', memberIds).eq('is_active', true).order('id')
+      if (error) throw error
+      return data
+    },
+  })
+}
+
+export function useFamilySinkingTransactions(memberIds: string[], enabled: boolean) {
+  return useQuery<SinkingFundTransaction[]>({
+    queryKey: ['family_sinking_transactions', memberIds],
+    enabled: memberIds.length > 0 && enabled,
+    queryFn: async () => {
+      const sb = createClient()
+      const { data: funds } = await sb.from('sinking_funds').select('id').in('user_id', memberIds)
+      if (!funds?.length) return []
+      const ids = funds.map(f => f.id)
+      const { data, error } = await sb.from('sinking_fund_transactions').select('*').in('fund_id', ids)
+      if (error) throw error
+      return data
+    },
+  })
+}
+
 export function useSinkingTransactions(fundId: number | undefined) {
   return useQuery<SinkingFundTransaction[]>({
     queryKey: ['sinking_transactions', fundId],

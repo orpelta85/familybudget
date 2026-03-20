@@ -1,11 +1,13 @@
 'use client'
 
 import { useUser } from '@/lib/queries/useUser'
-import { useSubscriptions, useAddSubscription, useUpdateSubscription, useDeleteSubscription } from '@/lib/queries/useSubscriptions'
+import { useSubscriptions, useAddSubscription, useUpdateSubscription, useDeleteSubscription, useFamilySubscriptions } from '@/lib/queries/useSubscriptions'
 import { useBudgetCategories } from '@/lib/queries/useExpenses'
 import { formatCurrency } from '@/lib/utils'
+import { useFamilyContext } from '@/lib/context/FamilyContext'
+import { useFamilyView } from '@/contexts/FamilyViewContext'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { toast } from 'sonner'
 import { useConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { CreditCard, Plus, X, Pencil, Check, Trash2, Inbox, Pause, Play } from 'lucide-react'
@@ -18,7 +20,13 @@ type SubForm = { name: string; amount: string; billingDay: string; categoryId: s
 export default function SubscriptionsPage() {
   const { user, loading } = useUser()
   const router = useRouter()
-  const { data: subs } = useSubscriptions(user?.id)
+  const { members } = useFamilyContext()
+  const { viewMode } = useFamilyView()
+  const isFamily = viewMode === 'family'
+  const familyMemberIds = useMemo(() => members.map(m => m.user_id), [members])
+  const { data: mySubs } = useSubscriptions(user?.id)
+  const { data: familySubsData } = useFamilySubscriptions(familyMemberIds, isFamily)
+  const subs = isFamily ? familySubsData : mySubs
   const { data: categories } = useBudgetCategories(user?.id)
   const addSub = useAddSubscription()
   const updateSub = useUpdateSubscription()

@@ -1,8 +1,10 @@
 'use client'
 
 import { useUser } from '@/lib/queries/useUser'
-import { useDebts, useAddDebt, useDeleteDebt } from '@/lib/queries/useDebts'
+import { useDebts, useAddDebt, useDeleteDebt, useFamilyDebts } from '@/lib/queries/useDebts'
 import { formatCurrency } from '@/lib/utils'
+import { useFamilyContext } from '@/lib/context/FamilyContext'
+import { useFamilyView } from '@/contexts/FamilyViewContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useMemo } from 'react'
 import { Calculator, Plus, X, Trash2, Inbox, TrendingDown, ArrowDown } from 'lucide-react'
@@ -127,7 +129,13 @@ const COLORS = [
 export default function DebtsPage() {
   const { user, loading } = useUser()
   const router = useRouter()
-  const { data: debts } = useDebts(user?.id)
+  const { members } = useFamilyContext()
+  const { viewMode } = useFamilyView()
+  const isFamily = viewMode === 'family'
+  const familyMemberIds = useMemo(() => members.map(m => m.user_id), [members])
+  const { data: myDebts } = useDebts(user?.id)
+  const { data: familyDebtsData } = useFamilyDebts(familyMemberIds, isFamily)
+  const debts = isFamily ? familyDebtsData : myDebts
   const addDebt = useAddDebt()
   const deleteDebt = useDeleteDebt()
   const confirm = useConfirmDialog()

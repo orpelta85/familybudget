@@ -54,6 +54,23 @@ export function useUpdateSubscription() {
   })
 }
 
+export function useFamilySubscriptions(memberIds: string[], enabled: boolean) {
+  return useQuery<Subscription[]>({
+    queryKey: ['family_subscriptions', memberIds],
+    enabled: memberIds.length > 0 && enabled,
+    queryFn: async () => {
+      const sb = createClient()
+      const { data, error } = await sb
+        .from('subscriptions')
+        .select('*')
+        .in('user_id', memberIds)
+        .order('name')
+      if (error) throw error
+      return data
+    },
+  })
+}
+
 export function useDeleteSubscription() {
   const qc = useQueryClient()
   return useMutation({

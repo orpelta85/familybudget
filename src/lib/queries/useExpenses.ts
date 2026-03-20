@@ -55,6 +55,23 @@ export function useAllPersonalExpenses(userId: string | undefined) {
   })
 }
 
+export function useFamilyAllPersonalExpenses(memberIds: string[], enabled: boolean) {
+  return useQuery<PersonalExpense[]>({
+    queryKey: ['family_all_personal_expenses', memberIds],
+    enabled: memberIds.length > 0 && enabled,
+    queryFn: async () => {
+      const sb = createClient()
+      const { data, error } = await sb
+        .from('personal_expenses')
+        .select('*, budget_categories(*)')
+        .in('user_id', memberIds)
+        .order('period_id')
+      if (error) throw error
+      return data
+    },
+  })
+}
+
 export interface FamilyMemberExpenses {
   user_id: string
   display_name: string

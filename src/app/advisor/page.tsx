@@ -7,10 +7,11 @@ import { useAllIncome } from '@/lib/queries/useIncome'
 import { useSinkingFunds } from '@/lib/queries/useSinking'
 import { useSubscriptions } from '@/lib/queries/useSubscriptions'
 import { useFamilyContext } from '@/lib/context/FamilyContext'
+import { useFamilyView } from '@/contexts/FamilyViewContext'
 import { formatCurrency } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
-import { Sparkles, RefreshCw, Lightbulb, TrendingDown, TrendingUp, PiggyBank, AlertTriangle } from 'lucide-react'
+import { Sparkles, RefreshCw, Lightbulb, TrendingDown, TrendingUp, PiggyBank, AlertTriangle, Info } from 'lucide-react'
 import { TableSkeleton } from '@/components/ui/Skeleton'
 import { PageInfo } from '@/components/ui/PageInfo'
 import { PAGE_TIPS } from '@/lib/page-tips'
@@ -44,6 +45,7 @@ export default function AdvisorPage() {
   const { user, loading } = useUser()
   const router = useRouter()
   const { familyId } = useFamilyContext()
+  const { viewMode } = useFamilyView()
   const { data: allExpenses } = useAllPersonalExpenses(user?.id)
   const { data: allShared } = useAllSharedExpenses(familyId)
   const { data: allIncome } = useAllIncome(user?.id)
@@ -194,6 +196,16 @@ export default function AdvisorPage() {
         </button>
       </div>
       <p className="text-[oklch(0.65_0.01_250)] text-[13px] mb-5">המלצות מותאמות אישית על בסיס הנתונים הפיננסיים שלך</p>
+
+      {viewMode === 'family' && (
+        <div className="bg-[oklch(0.18_0.04_250)] border border-[oklch(0.28_0.08_250)] rounded-xl px-5 py-3.5 mb-5 flex items-center gap-3">
+          <Info size={18} className="text-[oklch(0.65_0.18_250)] shrink-0" />
+          <div>
+            <div className="font-semibold text-sm text-[oklch(0.65_0.18_250)]">היועץ מנתח נתונים אישיים</div>
+            <div className="text-xs text-[oklch(0.65_0.01_250)]">עבור לתצוגה אישית לקבלת המלצות מותאמות</div>
+          </div>
+        </div>
+      )}
 
       {!tips.length
         ? <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-10 text-center text-[oklch(0.65_0.01_250)] text-sm">טוען המלצות...</div>

@@ -2,16 +2,17 @@
 
 import { useUser } from '@/lib/queries/useUser'
 import { usePeriods } from '@/lib/queries/usePeriods'
-import { useAllIncome } from '@/lib/queries/useIncome'
-import { useAllPersonalExpenses, useBudgetCategories } from '@/lib/queries/useExpenses'
+import { useAllIncome, useFamilyAllIncome } from '@/lib/queries/useIncome'
+import { useAllPersonalExpenses, useBudgetCategories, useFamilyAllPersonalExpenses } from '@/lib/queries/useExpenses'
 import { useAllSharedExpenses } from '@/lib/queries/useShared'
 import { useApartmentDeposits } from '@/lib/queries/useApartment'
 import { useSinkingFunds, useAllSinkingTransactions } from '@/lib/queries/useSinking'
 import { useSplitFraction } from '@/lib/queries/useProfile'
 import { formatCurrency } from '@/lib/utils'
 import { useFamilyContext } from '@/lib/context/FamilyContext'
+import { useFamilyView } from '@/contexts/FamilyViewContext'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { BarChart3, Download, FileText } from 'lucide-react'
 import { PageInfo } from '@/components/ui/PageInfo'
 import { PAGE_TIPS } from '@/lib/page-tips'
@@ -49,11 +50,18 @@ const ALL_PERIOD_LABELS = [
 export default function AnalyticsPage() {
   const { user, loading } = useUser()
   const router = useRouter()
-  const { familyId } = useFamilyContext()
+  const { familyId, members } = useFamilyContext()
+  const { viewMode } = useFamilyView()
+  const isFamily = viewMode === 'family'
+  const familyMemberIds = useMemo(() => members.map(m => m.user_id), [members])
   const splitFrac = useSplitFraction(user?.id)
   const { data: periods } = usePeriods()
-  const { data: allIncome } = useAllIncome(user?.id)
-  const { data: allPersonal } = useAllPersonalExpenses(user?.id)
+  const { data: myIncome } = useAllIncome(user?.id)
+  const { data: familyIncomeData } = useFamilyAllIncome(familyMemberIds, isFamily)
+  const allIncome = isFamily ? familyIncomeData : myIncome
+  const { data: myPersonal } = useAllPersonalExpenses(user?.id)
+  const { data: familyPersonalData } = useFamilyAllPersonalExpenses(familyMemberIds, isFamily)
+  const allPersonal = isFamily ? familyPersonalData : myPersonal
   const { data: allShared } = useAllSharedExpenses(familyId)
   const { data: deposits } = useApartmentDeposits(familyId)
   const { data: categories } = useBudgetCategories(user?.id)
@@ -180,9 +188,17 @@ export default function AnalyticsPage() {
           <h1 className="text-xl font-bold tracking-tight">ניתוח שנתי</h1>
           <PageInfo {...PAGE_TIPS.analytics} />
         </div>
-        <button onClick={handleDownloadReport} className="flex items-center gap-1.5 bg-[oklch(0.20_0.04_250)] border border-[oklch(0.32_0.08_250)] rounded-lg px-3.5 py-[7px] text-[oklch(0.65_0.18_250)] text-[13px] font-medium cursor-pointer">
-          <FileText size={13} /> הורד דוח שנתי
-        </button>
+        <div className="flex gap-2">
+          <button onClick={() => {
+            const yearNum = selectedYearIdx === 0 ? 2 : selectedYearIdx
+            window.open(`/api/reports/annual?year=${yearNum}`, '_blank')
+          }} className="flex items-center gap-1.5 bg-[oklch(0.20_0.04_310)] border border-[oklch(0.32_0.08_310)] rounded-lg px-3.5 py-[7px] text-[oklch(0.70_0.15_310)] text-[13px] font-medium cursor-pointer">
+            <Download size={13} /> דוח שנתי PDF
+          </button>
+          <button onClick={handleDownloadReport} className="flex items-center gap-1.5 bg-[oklch(0.20_0.04_250)] border border-[oklch(0.32_0.08_250)] rounded-lg px-3.5 py-[7px] text-[oklch(0.65_0.18_250)] text-[13px] font-medium cursor-pointer">
+            <FileText size={13} /> הורד Excel
+          </button>
+        </div>
       </div>
       <p className="text-[oklch(0.65_0.01_250)] text-[13px] mb-5">
         סיכום הכנסות, הוצאות וחיסכון לאורך השנה

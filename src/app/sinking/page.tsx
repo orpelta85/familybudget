@@ -2,13 +2,15 @@
 
 import { useUser } from '@/lib/queries/useUser'
 import { usePeriods } from '@/lib/queries/usePeriods'
-import { useSinkingFunds, useAllSinkingTransactions, useAddSinkingTransaction, useUpdateSinkingFund, useAddSinkingFund, useDeleteSinkingFund } from '@/lib/queries/useSinking'
+import { useSinkingFunds, useAllSinkingTransactions, useAddSinkingTransaction, useUpdateSinkingFund, useAddSinkingFund, useDeleteSinkingFund, useFamilySinkingFunds, useFamilySinkingTransactions } from '@/lib/queries/useSinking'
 import { useSplitFraction } from '@/lib/queries/useProfile'
 import { formatCurrency } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { useQueryClient } from '@tanstack/react-query'
+import { useFamilyContext } from '@/lib/context/FamilyContext'
+import { useFamilyView } from '@/contexts/FamilyViewContext'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import { toast } from 'sonner'
 import { useConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { Target, Plus, X, Pencil, Users, User, Trash2, Inbox } from 'lucide-react'
@@ -22,10 +24,18 @@ type FundForm = { name: string; totalAnnual: string; isShared: boolean }
 export default function SinkingPage() {
   const { user, loading } = useUser()
   const router = useRouter()
+  const { members } = useFamilyContext()
+  const { viewMode } = useFamilyView()
+  const isFamily = viewMode === 'family'
+  const familyMemberIds = useMemo(() => members.map(m => m.user_id), [members])
   const splitFrac = useSplitFraction(user?.id)
   const { data: periods } = usePeriods()
-  const { data: funds } = useSinkingFunds(user?.id)
-  const { data: allTxns } = useAllSinkingTransactions(user?.id)
+  const { data: myFunds } = useSinkingFunds(user?.id)
+  const { data: familyFundsData } = useFamilySinkingFunds(familyMemberIds, isFamily)
+  const funds = isFamily ? familyFundsData : myFunds
+  const { data: myTxns } = useAllSinkingTransactions(user?.id)
+  const { data: familyTxnsData } = useFamilySinkingTransactions(familyMemberIds, isFamily)
+  const allTxns = isFamily ? familyTxnsData : myTxns
   const addTxn = useAddSinkingTransaction()
   const updateFund = useUpdateSinkingFund()
   const addFund = useAddSinkingFund()
