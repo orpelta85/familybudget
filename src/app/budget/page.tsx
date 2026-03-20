@@ -12,6 +12,9 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState, useMemo } from 'react'
 import { BarChart3, Inbox, Check, Clock, ChevronDown, Users, Download } from 'lucide-react'
 import { toast } from 'sonner'
+import { PageInfo } from '@/components/ui/PageInfo'
+import { InfoTooltip } from '@/components/ui/InfoTooltip'
+import { PAGE_TIPS } from '@/lib/page-tips'
 import { TableSkeleton } from '@/components/ui/Skeleton'
 import { PeriodSelector } from '@/components/layout/PeriodSelector'
 import type { BudgetCategory } from '@/lib/types'
@@ -222,6 +225,7 @@ export default function BudgetPage() {
         <div className="flex items-center gap-2">
           <BarChart3 size={18} className="text-primary" />
           <h1 className="text-xl font-bold tracking-tight">תקציב משפחתי</h1>
+          <PageInfo {...PAGE_TIPS.budget} />
         </div>
         <button onClick={handleExportBudget} className="flex items-center gap-1.5 bg-[oklch(0.20_0.04_250)] border border-[oklch(0.32_0.08_250)] rounded-lg px-3 py-[7px] text-[oklch(0.65_0.18_250)] text-[13px] font-medium cursor-pointer">
           <Download size={13} /> הורד לאקסל
@@ -236,7 +240,7 @@ export default function BudgetPage() {
       {/* KPI Cards */}
       <div className="grid-kpi mb-6">
         <div className="bg-card border border-border rounded-xl p-4">
-          <div className="text-[11px] text-muted-foreground mb-1 uppercase tracking-wide">הכנסה נטו</div>
+          <div className="text-[11px] text-muted-foreground mb-1 uppercase tracking-wide flex items-center gap-1">הכנסה נטו <InfoTooltip body="הכנסה אחרי מס ונכויים — הסכום שבאמת נכנס לחשבון" /></div>
           <div className="text-[22px] font-bold text-primary leading-none">{formatCurrency(totalIncome)}</div>
         </div>
         <div className="bg-card border border-border rounded-xl p-4">
@@ -253,7 +257,7 @@ export default function BudgetPage() {
           )}
         </div>
         <div className="bg-card border border-border rounded-xl p-4">
-          <div className="text-[11px] text-muted-foreground mb-1 uppercase tracking-wide">נשאר פנוי</div>
+          <div className="text-[11px] text-muted-foreground mb-1 uppercase tracking-wide flex items-center gap-1">נשאר פנוי <InfoTooltip body="הכנסה פחות הוצאות (קבועות + משתנות). זה מה שנשאר לחיסכון" /></div>
           <div className={`text-[22px] font-bold leading-none ${remaining >= 0 ? 'text-[oklch(0.70_0.18_145)]' : 'text-[oklch(0.62_0.22_27)]'}`}>
             {formatCurrency(remaining)}
           </div>
@@ -281,6 +285,7 @@ export default function BudgetPage() {
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full" style={{ background: 'oklch(0.65 0.18 250)' }} />
                   <span className="font-bold text-sm">הוצאות קבועות</span>
+                  <InfoTooltip body="הוצאות שלא משתנות מחודש לחודש — שכירות, ביטוח, הלוואות" />
                   <span className="text-[11px] text-muted-foreground bg-secondary rounded px-1.5 py-px">{fixedCats.length}</span>
                 </div>
                 <div className="text-[13px] font-bold text-[oklch(0.80_0.01_250)]">
@@ -361,6 +366,7 @@ export default function BudgetPage() {
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full" style={{ background: 'oklch(0.72 0.18 55)' }} />
                   <span className="font-bold text-sm">הוצאות משתנות</span>
+                  <InfoTooltip body="הוצאות שמשתנות — אוכל, בילויים, קניות. כאן אפשר לחסוך!" />
                   <span className="text-[11px] text-muted-foreground bg-secondary rounded px-1.5 py-px">{allNonFixed.length}</span>
                 </div>
                 <div className="text-[13px]">

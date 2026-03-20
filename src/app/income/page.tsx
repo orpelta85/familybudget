@@ -12,6 +12,8 @@ import { useFamilyView } from '@/contexts/FamilyViewContext'
 import { PeriodSelector } from '@/components/layout/PeriodSelector'
 import { Wallet, TrendingUp, Trash2, Users } from 'lucide-react'
 import { toast } from 'sonner'
+import { PageInfo } from '@/components/ui/PageInfo'
+import { PAGE_TIPS } from '@/lib/page-tips'
 import dynamic from 'next/dynamic'
 import { TableSkeleton, ChartSkeleton } from '@/components/ui/Skeleton'
 import { useConfirmDialog } from '@/components/ui/ConfirmDialog'
@@ -133,6 +135,7 @@ export default function IncomePage() {
         <div className="flex items-center gap-2">
           <Wallet size={18} className="text-[oklch(0.65_0.18_250)]" />
           <h1 className="text-xl font-bold tracking-tight">הכנסה</h1>
+          <PageInfo {...PAGE_TIPS.income} />
         </div>
         <div className="flex items-center gap-3">
           <button onClick={handleResetIncome} className="flex items-center gap-1.5 bg-transparent border border-[oklch(0.25_0.01_250)] rounded-lg px-3.5 py-[7px] text-[oklch(0.65_0.01_250)] text-xs font-medium cursor-pointer">

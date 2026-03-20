@@ -291,6 +291,12 @@ input[type="number"] {
   -moz-appearance: textfield;
 }
 
+/* Page info drawer slide-in */
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+
 /* Dark scrollbar */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: oklch(0.14 0.01 250); }

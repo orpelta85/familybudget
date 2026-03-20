@@ -13,6 +13,9 @@ import { toast } from 'sonner'
 import { useConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { Target, Plus, X, Pencil, Users, User, Trash2, Inbox } from 'lucide-react'
 import { TableSkeleton } from '@/components/ui/Skeleton'
+import { PageInfo } from '@/components/ui/PageInfo'
+import { InfoTooltip } from '@/components/ui/InfoTooltip'
+import { PAGE_TIPS } from '@/lib/page-tips'
 
 type FundForm = { name: string; totalAnnual: string; isShared: boolean }
 
@@ -151,6 +154,7 @@ export default function SinkingPage() {
         <div className="flex items-center gap-2">
           <Target size={18} className="text-[oklch(0.70_0.15_185)]" />
           <h1 className="text-xl font-bold tracking-tight">קרנות שנתיות</h1>
+          <PageInfo {...PAGE_TIPS.sinking} />
         </div>
         <div className="flex gap-2">
           <button onClick={handleResetBalances} className="flex items-center gap-1.5 bg-transparent border border-[oklch(0.25_0.01_250)] rounded-lg px-3.5 py-[7px] text-[oklch(0.65_0.01_250)] text-xs font-medium cursor-pointer">
@@ -165,7 +169,7 @@ export default function SinkingPage() {
         </div>
       </div>
       <p className="text-[oklch(0.65_0.01_250)] text-[13px] mb-5">
-        סה&quot;כ הפרשה חודשית: <span className="inline-block font-semibold text-[oklch(0.70_0.15_185)]">{formatCurrency(totalMonthly)}</span>
+        סה&quot;כ הפרשה חודשית <InfoTooltip body="הסכום שמפרישים כל חודש לקרן. נקבע לפי היעד השנתי חלקי 12" />: <span className="inline-block font-semibold text-[oklch(0.70_0.15_185)]">{formatCurrency(totalMonthly)}</span>
         <span className="ml-2 text-[oklch(0.65_0.01_250)] text-xs">
           (יעד שנתי: {formatCurrency((funds ?? []).reduce((s, f) => s + (f.yearly_target || f.monthly_allocation * 12), 0))})
         </span>
@@ -262,7 +266,7 @@ export default function SinkingPage() {
                         : { text: 'מאחור', color: 'text-[oklch(0.62_0.22_27)]' }
                     return (
                       <div className="mt-2 text-xs text-[oklch(0.65_0.01_250)] flex justify-between pt-2 border-t border-[oklch(0.20_0.01_250)]">
-                        <span>צבור: <span className={`${balanceColor} font-semibold inline-block`}>{formatCurrency(balance)}</span>{balance < 0 && <span className="text-[11px] text-[oklch(0.65_0.01_250)] ml-1">(הוצאה גדולה מהצבירה)</span>}</span>
+                        <span>צבור <InfoTooltip body="כמה צברתם עד עכשיו. ירוק = לא חרגתם, אדום = הוצאתם יותר ממה שצברתם" />: <span className={`${balanceColor} font-semibold inline-block`}>{formatCurrency(balance)}</span>{balance < 0 && <span className="text-[11px] text-[oklch(0.65_0.01_250)] ml-1">(הוצאה גדולה מהצבירה)</span>}</span>
                         <span className="flex items-center gap-2">
                           {pct.toFixed(0)}% מהיעד השנתי
                           <span className={`text-[11px] font-medium ${trackStatus.color}`}>{trackStatus.text}</span>

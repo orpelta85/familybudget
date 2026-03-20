@@ -22,6 +22,9 @@ import { useEffect, useMemo } from 'react'
 import { useFamilyView } from '@/contexts/FamilyViewContext'
 import { PeriodSelector } from '@/components/layout/PeriodSelector'
 import { Wallet, Receipt, TrendingUp, PiggyBank, Target, AlertTriangle, CalendarDays, Users, X, Download } from 'lucide-react'
+import { PageInfo } from '@/components/ui/PageInfo'
+import { InfoTooltip } from '@/components/ui/InfoTooltip'
+import { PAGE_TIPS } from '@/lib/page-tips'
 import dynamic from 'next/dynamic'
 import { DashboardSkeleton, ChartSkeleton } from '@/components/ui/Skeleton'
 
@@ -212,7 +215,10 @@ export default function Dashboard() {
       {/* Header */}
       <div className="flex justify-between items-start mb-4">
         <div>
-          <h1 className="text-xl font-bold tracking-tight">דשבורד</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl font-bold tracking-tight">דשבורד</h1>
+            <PageInfo {...PAGE_TIPS.dashboard} />
+          </div>
           <p className="text-sm mt-1 text-text-secondary">
             {selectedPeriod ? periodLabel(selectedPeriod.start_date) : '...'}
           </p>
@@ -326,22 +332,26 @@ export default function Dashboard() {
       {/* ── KPI cards ──────────────────────────────────────────────────────── */}
       <div className="grid-kpi">
         {[
-          { label: 'הכנסה נטו', value: dataLoading ? '—' : formatCurrency(totalIncome), color: 'var(--accent-blue)', Icon: Wallet },
-          { label: 'הוצאות החודש', value: dataLoading ? '—' : formatCurrency(totalExpenses), color: 'var(--accent-orange)', Icon: Receipt },
+          { label: 'הכנסה נטו', value: dataLoading ? '—' : formatCurrency(totalIncome), color: 'var(--accent-blue)', Icon: Wallet, tip: 'הכנסה אחרי מס ונכויים — הסכום שבאמת נכנס לחשבון' },
+          { label: 'הוצאות החודש', value: dataLoading ? '—' : formatCurrency(totalExpenses), color: 'var(--accent-orange)', Icon: Receipt, tip: '' },
           {
             label: 'תזרים נקי', value: dataLoading ? '—' : formatCurrency(netFlow),
-            color: netFlow >= 0 ? 'var(--accent-green)' : 'var(--accent-red)', Icon: TrendingUp,
+            color: netFlow >= 0 ? 'var(--accent-green)' : 'var(--accent-red)', Icon: TrendingUp, tip: '',
           },
           {
             label: '% חיסכון', value: dataLoading ? '—' : `${savingsPct}%`,
             color: savingsPct >= 20 ? 'var(--accent-green)' : savingsPct >= 0 ? 'var(--accent-orange)' : 'var(--accent-red)',
             Icon: PiggyBank,
             sub: savingsPct >= 20 ? '✓ יעד חיסכון' : savingsPct >= 0 ? 'מתחת ל-20%' : 'גירעון',
+            tip: 'כמה מההכנסה נשאר אחרי כל ההוצאות. מעל 20% = מצוין',
           },
         ].map(kpi => (
           <div key={kpi.label} className="kpi-card">
             <div className="flex justify-between items-center mb-2">
-              <span className="kpi-label">{kpi.label}</span>
+              <div className="flex items-center gap-1">
+                <span className="kpi-label">{kpi.label}</span>
+                {kpi.tip && <InfoTooltip body={kpi.tip} />}
+              </div>
               <kpi.Icon size={14} className="opacity-70" style={{ color: kpi.color }} />
             </div>
             <div className="kpi-value" style={{ color: kpi.color }}>{kpi.value}</div>
@@ -494,6 +504,7 @@ export default function Dashboard() {
           <div className="flex justify-between items-center mb-3.5">
             <h2 className="card-header">
               <PiggyBank size={14} className="text-accent-teal" /> קרנות צבירה
+              <InfoTooltip body="כסף שמופרש מדי חודש ליעדים ספציפיים — חירום, חופשה, רכב" />
             </h2>
             <div className="text-[13px] font-bold text-accent-teal">
               {formatCurrency(totalFundBalance)}
@@ -590,6 +601,7 @@ export default function Dashboard() {
           <div className="card">
             <h2 className="card-header mb-3.5">
               <TrendingUp size={14} style={{ color: healthColor }} /> בריאות פיננסית
+              <InfoTooltip body="ציון מ-0 עד 100 שמשקלל: חיסכון, חירום, חובות, תקציב" />
             </h2>
             <div className="flex items-baseline gap-2.5 mb-2">
               <span className="text-4xl font-bold" style={{ color: healthColor }}>{healthScore}</span>

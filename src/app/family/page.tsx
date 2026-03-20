@@ -10,6 +10,8 @@ import {
   Users, Copy, Mail, Send, X, Link2, Pencil, Check, Shield, Eye, EyeOff,
 } from 'lucide-react'
 import { TableSkeleton } from '@/components/ui/Skeleton'
+import { PageInfo } from '@/components/ui/PageInfo'
+import { PAGE_TIPS } from '@/lib/page-tips'
 
 function formatDate(dateStr: string) {
   try {
@@ -123,6 +125,7 @@ export default function FamilyPage() {
           <h1 className="text-[22px] font-bold tracking-tight m-0">
             הגדרות משפחה
           </h1>
+          <PageInfo {...PAGE_TIPS.family} />
         </div>
         <p className="text-[13px] text-[oklch(0.65_0.01_250)] m-0">
           {family.name}

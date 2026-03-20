@@ -13,6 +13,8 @@ import { useFamilyContext } from '@/lib/context/FamilyContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { BarChart3, Download, FileText } from 'lucide-react'
+import { PageInfo } from '@/components/ui/PageInfo'
+import { PAGE_TIPS } from '@/lib/page-tips'
 import dynamic from 'next/dynamic'
 import { ChartSkeleton } from '@/components/ui/Skeleton'
 
@@ -176,6 +178,7 @@ export default function AnalyticsPage() {
         <div className="flex items-center gap-2">
           <BarChart3 size={18} className="text-[oklch(0.65_0.18_250)]" />
           <h1 className="text-xl font-bold tracking-tight">ניתוח שנתי</h1>
+          <PageInfo {...PAGE_TIPS.analytics} />
         </div>
         <button onClick={handleDownloadReport} className="flex items-center gap-1.5 bg-[oklch(0.20_0.04_250)] border border-[oklch(0.32_0.08_250)] rounded-lg px-3.5 py-[7px] text-[oklch(0.65_0.18_250)] text-[13px] font-medium cursor-pointer">
           <FileText size={13} /> הורד דוח שנתי

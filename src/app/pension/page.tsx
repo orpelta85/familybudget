@@ -13,6 +13,9 @@ import {
 } from 'lucide-react'
 import type { PensionReport, PensionProduct, PensionProductType } from '@/lib/types'
 import { TableSkeleton } from '@/components/ui/Skeleton'
+import { PageInfo } from '@/components/ui/PageInfo'
+import { InfoTooltip } from '@/components/ui/InfoTooltip'
+import { PAGE_TIPS } from '@/lib/page-tips'
 
 const TYPE_LABELS: Record<PensionProductType, string> = {
   pension: 'קרן פנסיה',
@@ -256,6 +259,7 @@ export default function PensionPage() {
           <h1 className="text-xl font-bold tracking-tight flex items-center gap-2">
             <TrendingUp size={22} className="text-[oklch(0.65_0.18_250)]" />
             פנסיה והשקעות
+            <PageInfo {...PAGE_TIPS.pension} />
           </h1>
           {report && (
             <p className="text-[oklch(0.65_0.01_250)] text-[13px] mt-1">
@@ -314,16 +318,17 @@ export default function PensionPage() {
               { label: 'סך חיסכון', value: formatCurrency(report.total_savings || totalBalance), color: TYPE_COLORS.pension, icon: PiggyBank },
               { label: 'תשואה מתחילת שנה', value: `${report.ytd_return}%`, color: 'oklch(0.70 0.18 145)', icon: TrendingUp },
               { label: 'הפקדות חודשיות', value: formatCurrency(report.total_monthly_deposits), color: 'oklch(0.70 0.18 145)', icon: Wallet },
-              { label: 'קצבה חזויה', value: formatCurrency(report.estimated_pension), color: TYPE_COLORS.gemel_invest, icon: Clock },
+              { label: 'קצבה חזויה', value: formatCurrency(report.estimated_pension), color: TYPE_COLORS.gemel_invest, icon: Clock, tip: 'הסכום החודשי שתקבלו בפנסיה. תלוי בצבירה, תוחלת חיים, ודמי ניהול' },
               { label: 'פרמיית ביטוח', value: formatCurrency(report.insurance_premium), color: TYPE_COLORS.health_insurance, icon: Heart },
               { label: 'מוצרים פעילים', value: `${activeProducts.length} / ${products.length}`, color: 'oklch(0.68 0.18 295)', icon: Check },
-            ].map(kpi => {
+            ].map((kpi: { label: string; value: string; color: string; icon: React.ComponentType<{ size?: number; style?: React.CSSProperties; className?: string }>; tip?: string }) => {
               const Icon = kpi.icon
               return (
                 <div key={kpi.label} className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-4">
                   <div className="flex items-center gap-1.5 mb-2.5">
                     <Icon size={14} style={{ color: kpi.color }} />
                     <span className="text-[11px] text-[oklch(0.65_0.01_250)] font-medium">{kpi.label}</span>
+                    {kpi.tip && <InfoTooltip body={kpi.tip} />}
                   </div>
                   <div className="text-xl font-bold text-left" style={{ color: kpi.color }}>
                     {kpi.value}
@@ -865,7 +870,7 @@ function ProductCard({ product: p, totalBalance, expanded, onToggle }: {
           {/* Management fees */}
           {(p.mgmt_fee_deposits > 0 || p.mgmt_fee_accumulation > 0) && (
             <div className="mb-3.5">
-              <div className="text-xs font-semibold mb-2 text-[oklch(0.70_0.01_250)]">דמי ניהול</div>
+              <div className="text-xs font-semibold mb-2 text-[oklch(0.70_0.01_250)] flex items-center gap-1">דמי ניהול <InfoTooltip body="עמלה שהחברה גובה. 0.5% הפרש = עשרות אלפי ש&quot;ח בפנסיה" /></div>
               <div className="flex gap-4 text-[13px]">
                 <div>
                   <span className="text-[oklch(0.65_0.01_250)] ml-1.5">מהפקדה:</span>

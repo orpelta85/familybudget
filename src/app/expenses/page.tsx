@@ -23,6 +23,8 @@ import { Receipt, Upload, Download, Plus, X, FileSpreadsheet, User, Users, Lock,
 import type { RawExpenseRow } from '@/lib/excel-import'
 import type { BudgetCategory, SharedCategory } from '@/lib/types'
 import { useConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { PageInfo } from '@/components/ui/PageInfo'
+import { PAGE_TIPS } from '@/lib/page-tips'
 
 type ExpType = 'personal' | 'shared'
 
@@ -534,6 +536,7 @@ export default function ExpensesPage() {
           <div className="flex items-center gap-2 mb-1">
             <Receipt size={18} className="text-[oklch(0.72_0.18_55)]" />
             <h1 className="text-xl font-bold tracking-tight">הוצאות</h1>
+            <PageInfo {...PAGE_TIPS.expenses} />
           </div>
           <p className="text-muted-foreground text-[13px]">{selectedPeriod?.label ?? '...'}</p>
         </div>

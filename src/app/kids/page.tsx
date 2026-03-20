@@ -16,6 +16,8 @@ import { toast } from 'sonner'
 import { Users, Plus, ChevronDown, ChevronUp, Trash2, X, Baby, Heart, TrendingUp, Coins, PiggyBank } from 'lucide-react'
 import { TableSkeleton } from '@/components/ui/Skeleton'
 import { useConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { PageInfo } from '@/components/ui/PageInfo'
+import { PAGE_TIPS } from '@/lib/page-tips'
 import type { Kid, KidActivity } from '@/lib/types'
 
 const KID_EXPENSE_CATEGORIES = [
@@ -96,6 +98,7 @@ export default function KidsPage() {
         <div className="flex items-center gap-2">
           <Users size={18} className="text-accent-purple" />
           <h1 className="text-xl font-bold tracking-tight">ילדים</h1>
+          <PageInfo {...PAGE_TIPS.kids} />
         </div>
         <button onClick={() => setShowAddKid(true)} className="btn-primary flex items-center gap-1.5">
           <Plus size={14} /> הוסף ילד/ה

@@ -14,6 +14,9 @@ import { useFamilyView } from '@/contexts/FamilyViewContext'
 import { toast } from 'sonner'
 import { Shield, Plus, X, Pencil, Trash2, Calendar, AlertTriangle } from 'lucide-react'
 import { useConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { PageInfo } from '@/components/ui/PageInfo'
+import { InfoTooltip } from '@/components/ui/InfoTooltip'
+import { PAGE_TIPS } from '@/lib/page-tips'
 
 const TYPE_OPTIONS: { value: string; label: string }[] = [
   { value: 'health', label: 'בריאות' },
@@ -203,6 +206,7 @@ export default function InsurancePage() {
           <div className="flex items-center gap-2 mb-1">
             <Shield size={18} className="text-[oklch(0.65_0.18_250)]" />
             <h1 className="text-xl font-bold tracking-tight">ביטוחים</h1>
+            <PageInfo {...PAGE_TIPS.insurance} />
           </div>
           <p className="text-[oklch(0.65_0.01_250)] text-[13px]">ניהול פוליסות ביטוח ומעקב חידושים</p>
         </div>
@@ -225,7 +229,7 @@ export default function InsurancePage() {
           <div className="text-lg font-bold">{formatCurrency(totalAnnual)}</div>
         </div>
         <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.22_0.01_250)] rounded-xl p-4">
-          <div className="text-[11px] text-[oklch(0.65_0.01_250)] mb-1">חידוש הבא</div>
+          <div className="text-[11px] text-[oklch(0.65_0.01_250)] mb-1 flex items-center gap-1">חידוש הבא <InfoTooltip body="היום שבו הפוליסה מתחדשת — ההזדמנות לעבור לביטוח זול יותר" /></div>
           <div className="text-lg font-bold" style={{ color: nextRenewal ? renewalColor(daysUntil(nextRenewal.renewal_date)) : undefined }}>
             {nextRenewal ? renewalLabel(daysUntil(nextRenewal.renewal_date)) : 'אין'}
           </div>
@@ -254,8 +258,9 @@ export default function InsurancePage() {
             <div key={type}>
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-base">{TYPE_ICONS[type] ?? '📋'}</span>
-                <h2 className="text-[14px] font-semibold text-[oklch(0.80_0.01_250)]">
+                <h2 className="text-[14px] font-semibold text-[oklch(0.80_0.01_250)] flex items-center gap-1">
                   {POLICY_TYPE_LABELS[type] ?? type}
+                  {type === 'life' && <InfoTooltip body="משלם לשארים במקרה פטירה. חשוב במיוחד להורים עם ילדים" />}
                 </h2>
                 <span className="text-[11px] text-[oklch(0.50_0.01_250)]">({items.length})</span>
               </div>

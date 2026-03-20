@@ -17,6 +17,8 @@ import { toast } from 'sonner'
 import { Target, Plus, ChevronDown, ChevronUp, Trash2, Edit3, TrendingUp, X } from 'lucide-react'
 import { TableSkeleton } from '@/components/ui/Skeleton'
 import { useConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { PageInfo } from '@/components/ui/PageInfo'
+import { PAGE_TIPS } from '@/lib/page-tips'
 import type { SavingsGoal, GoalDeposit, Period } from '@/lib/types'
 
 const ICON_OPTIONS = ['🎯', '🏠', '🚗', '✈️', '💍', '🎓', '💻', '📱', '🏖️', '💰', '🎁', '🏥']
@@ -91,6 +93,7 @@ export default function GoalsPage() {
         <div className="flex items-center gap-2">
           <Target size={18} className="text-accent-blue" />
           <h1 className="text-xl font-bold tracking-tight">יעדי חיסכון</h1>
+          <PageInfo {...PAGE_TIPS.goals} />
         </div>
         <button onClick={() => setShowAddModal(true)} className="btn-primary flex items-center gap-1.5">
           <Plus size={14} /> הוסף יעד

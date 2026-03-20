@@ -18,6 +18,8 @@ import {
   ArrowDownCircle, ArrowUpCircle, Repeat,
   Plus, Trash2, Pencil, X, Check, Inbox,
 } from 'lucide-react'
+import { PageInfo } from '@/components/ui/PageInfo'
+import { PAGE_TIPS } from '@/lib/page-tips'
 import { TableSkeleton } from '@/components/ui/Skeleton'
 import dynamic from 'next/dynamic'
 import { ChartSkeleton } from '@/components/ui/Skeleton'
@@ -228,6 +230,7 @@ export default function ForecastPage() {
         <div className="flex items-center gap-2">
           <CalendarDays size={18} className="text-[oklch(0.65_0.18_250)]" />
           <h1 className="text-xl font-bold tracking-tight">תחזית תזרים</h1>
+          <PageInfo {...PAGE_TIPS.forecast} />
         </div>
         <button
           onClick={() => setShowSettings(!showSettings)}

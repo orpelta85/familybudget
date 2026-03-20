@@ -9,6 +9,9 @@ import { Calculator, Plus, X, Trash2, Inbox, TrendingDown, ArrowDown } from 'luc
 import { toast } from 'sonner'
 import { useConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { TableSkeleton } from '@/components/ui/Skeleton'
+import { PageInfo } from '@/components/ui/PageInfo'
+import { InfoTooltip } from '@/components/ui/InfoTooltip'
+import { PAGE_TIPS } from '@/lib/page-tips'
 
 type DebtType = 'fixed' | 'prime' | 'cpi_linked'
 type Method = 'snowball' | 'avalanche'
@@ -205,6 +208,7 @@ export default function DebtsPage() {
         <div className="flex items-center gap-2">
           <Calculator size={18} className="text-[oklch(0.72_0.18_55)]" />
           <h1 className="text-xl font-bold tracking-tight">מחשבון חובות</h1>
+          <PageInfo {...PAGE_TIPS.debts} />
         </div>
         <button
           onClick={() => setNewDebt({ name: '', balance: '', interestRate: '', minimumPayment: '', debtType: 'fixed', earlyPayoffPenalty: false })}
@@ -255,7 +259,10 @@ export default function DebtsPage() {
                     <div>
                       <div className="font-semibold text-sm">{debt.name}</div>
                       <div className="text-xs text-[oklch(0.65_0.01_250)] flex gap-3 mt-0.5">
-                        <span>{DEBT_TYPE_LABELS[debt.debt_type as DebtType] ?? debt.debt_type}</span>
+                        <span className="flex items-center gap-0.5">{DEBT_TYPE_LABELS[debt.debt_type as DebtType] ?? debt.debt_type}
+                          {debt.debt_type === 'prime' && <InfoTooltip body="ריבית בסיס של בנק ישראל + 1.5%. משתנה כל כמה חודשים" />}
+                          {debt.debt_type === 'cpi_linked' && <InfoTooltip body="הקרן עולה עם האינפלציה. ריבית נמוכה יותר אבל הקרן גדלה" />}
+                        </span>
                         <span>{Number(debt.interest_rate)}% ריבית</span>
                         {debt.early_payoff_penalty && <span className="text-[oklch(0.72_0.18_55)]">קנס פירעון מוקדם</span>}
                       </div>
@@ -317,7 +324,7 @@ export default function DebtsPage() {
                   <tr className={`border-b border-[oklch(0.20_0.01_250)] ${method === 'snowball' ? 'bg-[oklch(0.18_0.02_250)]' : ''}`}>
                     <td className="py-2.5 px-3">
                       <button onClick={() => setMethod('snowball')} className={`bg-transparent border-none cursor-pointer text-inherit font-medium ${method === 'snowball' ? 'text-[oklch(0.70_0.18_145)]' : ''}`}>
-                        Snowball (מהקטן לגדול)
+                        Snowball (מהקטן לגדול) <InfoTooltip body="שיטה שבה סוגרים קודם את החוב הקטן ביותר — נותן מוטיבציה" />
                       </button>
                     </td>
                     <td className="py-2.5 px-3">{formatMonths(snowballResult.months)}</td>
@@ -327,7 +334,7 @@ export default function DebtsPage() {
                   <tr className={`${method === 'avalanche' ? 'bg-[oklch(0.18_0.02_250)]' : ''}`}>
                     <td className="py-2.5 px-3">
                       <button onClick={() => setMethod('avalanche')} className={`bg-transparent border-none cursor-pointer text-inherit font-medium ${method === 'avalanche' ? 'text-[oklch(0.70_0.18_145)]' : ''}`}>
-                        Avalanche (מהיקר לזול)
+                        Avalanche (מהיקר לזול) <InfoTooltip body="שיטה שבה סוגרים קודם את החוב עם הריבית הגבוהה — חוסך הכי הרבה כסף" />
                       </button>
                     </td>
                     <td className="py-2.5 px-3">{formatMonths(avalancheResult.months)}</td>

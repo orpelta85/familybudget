@@ -12,6 +12,8 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { Sparkles, RefreshCw, Lightbulb, TrendingDown, TrendingUp, PiggyBank, AlertTriangle } from 'lucide-react'
 import { TableSkeleton } from '@/components/ui/Skeleton'
+import { PageInfo } from '@/components/ui/PageInfo'
+import { PAGE_TIPS } from '@/lib/page-tips'
 
 interface Tip {
   icon: 'saving' | 'spending' | 'fund' | 'alert' | 'growth'
@@ -185,6 +187,7 @@ export default function AdvisorPage() {
         <div className="flex items-center gap-2">
           <Sparkles size={18} className="text-[oklch(0.72_0.18_55)]" />
           <h1 className="text-xl font-bold tracking-tight">יועץ פיננסי</h1>
+          <PageInfo {...PAGE_TIPS.advisor} />
         </div>
         <button onClick={generateTips} disabled={generating} className="flex items-center gap-1.5 bg-[oklch(0.20_0.04_55)] border border-[oklch(0.32_0.08_55)] rounded-lg px-3.5 py-[7px] text-[oklch(0.72_0.18_55)] text-[13px] font-medium cursor-pointer">
           <RefreshCw size={13} className={generating ? 'animate-spin' : ''} /> רענן

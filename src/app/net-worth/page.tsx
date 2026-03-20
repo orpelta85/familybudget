@@ -18,6 +18,9 @@ import {
   TrendingUp, Plus, X, Check, Trash2, Inbox, RefreshCw,
   Droplets, Clock, Lock, Building2, Pencil, CalendarDays,
 } from 'lucide-react'
+import { PageInfo } from '@/components/ui/PageInfo'
+import { InfoTooltip } from '@/components/ui/InfoTooltip'
+import { PAGE_TIPS } from '@/lib/page-tips'
 import { TableSkeleton } from '@/components/ui/Skeleton'
 import dynamic from 'next/dynamic'
 import { ChartSkeleton } from '@/components/ui/Skeleton'
@@ -63,11 +66,11 @@ const LIQUIDITY_MAP: Record<string, LiquidityType> = {
   real_estate: 'property',
 }
 
-const LIQUIDITY_GROUPS: { key: LiquidityType; label: string; icon: typeof Droplets; color: string }[] = [
-  { key: 'liquid', label: 'נזיל', icon: Droplets, color: 'oklch(0.70 0.18 145)' },
-  { key: 'semi_liquid', label: 'חצי-נזיל', icon: Clock, color: 'oklch(0.65 0.18 250)' },
-  { key: 'locked', label: 'נעול', icon: Lock, color: 'oklch(0.65 0.18 40)' },
-  { key: 'property', label: 'נדל"ן', icon: Building2, color: 'oklch(0.65 0.18 300)' },
+const LIQUIDITY_GROUPS: { key: LiquidityType; label: string; icon: typeof Droplets; color: string; tip: string }[] = [
+  { key: 'liquid', label: 'נזיל', icon: Droplets, color: 'oklch(0.70 0.18 145)', tip: 'כסף שאפשר למשוך מיד — עו"ש, חיסכון רגיל, קרנות צבירה' },
+  { key: 'semi_liquid', label: 'חצי-נזיל', icon: Clock, color: 'oklch(0.65 0.18 250)', tip: 'אפשר למשוך אבל עם מס או קנס — קרן השתלמות (לפני 6 שנים), גמל להשקעה' },
+  { key: 'locked', label: 'נעול', icon: Lock, color: 'oklch(0.65 0.18 40)', tip: 'לא ניתן למשוך עד גיל 60+ — קרן פנסיה, ביטוח מנהלים' },
+  { key: 'property', label: 'נדל"ן', icon: Building2, color: 'oklch(0.65 0.18 300)', tip: 'נכס חשוב אבל לא נזיל — אל תספרו עליו לטווח קצר' },
 ]
 
 type EntryForm = {
@@ -307,6 +310,7 @@ export default function NetWorthPage() {
           <div className="flex items-center gap-2 mb-1.5">
             <TrendingUp size={18} className="text-[oklch(0.70_0.18_145)]" />
             <h1 className="text-xl font-bold tracking-tight">שווי נקי</h1>
+            <PageInfo {...PAGE_TIPS['net-worth']} />
           </div>
           <p className="text-[oklch(0.65_0.01_250)] text-[13px]">מעקב אחר נכסים והתחייבויות</p>
         </div>
@@ -349,7 +353,7 @@ export default function NetWorthPage() {
           </div>
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <div className="text-[11px] text-[oklch(0.65_0.01_250)] mb-1 tracking-wide">תשואה חודשית</div>
+              <div className="text-[11px] text-[oklch(0.65_0.01_250)] mb-1 tracking-wide flex items-center gap-1">תשואה חודשית <InfoTooltip body="כמה הכסף שלכם הרוויח (או הפסיד). תשואה שנתית של 8% = ממוצע שוק המניות" /></div>
               <div className={`text-xl font-bold ${returnsSummary.monthlyReturn >= 0 ? 'text-[oklch(0.70_0.18_145)]' : 'text-[oklch(0.62_0.22_27)]'}`}>
                 {returnsSummary.monthlyReturn >= 0 ? '+' : ''}{formatCurrency(returnsSummary.monthlyReturn)}
               </div>
@@ -382,6 +386,7 @@ export default function NetWorthPage() {
                 <div className="flex items-center gap-2">
                   <Icon size={15} style={{ color: group.color }} />
                   <span className="font-bold text-sm">{group.label}</span>
+                  <InfoTooltip body={group.tip} />
                 </div>
                 <span className="text-lg font-bold" style={{ color: group.color }}>{formatCurrency(groupTotal)}</span>
               </div>

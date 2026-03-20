@@ -10,6 +10,8 @@ import { toast } from 'sonner'
 import { useConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { CreditCard, Plus, X, Pencil, Check, Trash2, Inbox, Pause, Play } from 'lucide-react'
 import { TableSkeleton } from '@/components/ui/Skeleton'
+import { PageInfo } from '@/components/ui/PageInfo'
+import { PAGE_TIPS } from '@/lib/page-tips'
 
 type SubForm = { name: string; amount: string; billingDay: string; categoryId: string }
 
@@ -97,6 +99,7 @@ export default function SubscriptionsPage() {
         <div className="flex items-center gap-2">
           <CreditCard size={18} className="text-[oklch(0.65_0.18_310)]" />
           <h1 className="text-xl font-bold tracking-tight">מנויים</h1>
+          <PageInfo {...PAGE_TIPS.subscriptions} />
         </div>
         <button onClick={() => setNewSub({ name: '', amount: '', billingDay: '1', categoryId: '' })} className="btn-hover flex items-center gap-1.5 bg-[oklch(0.20_0.04_310)] border border-[oklch(0.32_0.08_310)] rounded-lg px-3.5 py-[7px] text-[oklch(0.70_0.15_310)] text-[13px] font-medium cursor-pointer">
           <Plus size={13} /> מנוי חדש
