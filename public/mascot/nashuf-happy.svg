@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" fill="none">
+  <!-- Body (slightly bounced up) -->
+  <ellipse cx="60" cy="65" rx="32" ry="36" fill="#3d3470"/>
+  <!-- Belly -->
+  <ellipse cx="60" cy="73" rx="20" ry="22" fill="#d4ccb8"/>
+  <!-- Ear tufts left -->
+  <path d="M38 33 L32 19 L40 27Z" fill="#3d3470"/>
+  <path d="M42 30 L38 17 L44 25Z" fill="#3d3470"/>
+  <!-- Ear tufts right -->
+  <path d="M82 33 L88 19 L80 27Z" fill="#3d3470"/>
+  <path d="M78 30 L82 17 L76 25Z" fill="#3d3470"/>
+  <!-- Face disc -->
+  <ellipse cx="60" cy="53" rx="26" ry="22" fill="#d4ccb8"/>
+  <!-- Left eye white -->
+  <ellipse cx="48" cy="51" rx="10" ry="10" fill="#f0ede6"/>
+  <!-- Right eye white -->
+  <ellipse cx="72" cy="51" rx="10" ry="10" fill="#f0ede6"/>
+  <!-- Left iris (brighter glow) -->
+  <circle cx="48" cy="51" r="6" fill="#34d4bc"/>
+  <!-- Right iris (brighter glow) -->
+  <circle cx="72" cy="51" r="6" fill="#34d4bc"/>
+  <!-- Eye glow -->
+  <circle cx="48" cy="51" r="8" fill="#2bb5a0" opacity="0.15"/>
+  <circle cx="72" cy="51" r="8" fill="#2bb5a0" opacity="0.15"/>
+  <!-- Left pupil -->
+  <circle cx="49" cy="50" r="3" fill="#1a1530"/>
+  <!-- Right pupil -->
+  <circle cx="73" cy="50" r="3" fill="#1a1530"/>
+  <!-- Left eye sparkle -->
+  <circle cx="46" cy="48" r="2" fill="#fff"/>
+  <circle cx="50" cy="53" r="1" fill="#fff"/>
+  <!-- Right eye sparkle -->
+  <circle cx="70" cy="48" r="2" fill="#fff"/>
+  <circle cx="74" cy="53" r="1" fill="#fff"/>
+  <!-- Glasses frame -->
+  <circle cx="48" cy="51" r="12" stroke="#b5a050" stroke-width="1.8" fill="none"/>
+  <circle cx="72" cy="51" r="12" stroke="#b5a050" stroke-width="1.8" fill="none"/>
+  <path d="M60.5 49 Q60 46 59.5 49" stroke="#b5a050" stroke-width="1.5" fill="none"/>
+  <line x1="36" y1="51" x2="28" y2="49" stroke="#b5a050" stroke-width="1.5"/>
+  <line x1="84" y1="51" x2="92" y2="49" stroke="#b5a050" stroke-width="1.5"/>
+  <!-- Happy eyebrows (raised) -->
+  <path d="M40 38 Q48 34 56 38" stroke="#3d3470" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+  <path d="M64 38 Q72 34 80 38" stroke="#3d3470" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+  <!-- Beak -->
+  <path d="M57 59 L60 64 L63 59Z" fill="#c4943a"/>
+  <!-- Big smile -->
+  <path d="M53 65 Q60 70 67 65" stroke="#b5944a" stroke-width="1.2" fill="none" stroke-linecap="round"/>
+  <!-- Left wing UP -->
+  <path d="M26 52 Q16 42 22 32 Q26 42 30 48Z" fill="#3d3470"/>
+  <!-- Right wing UP -->
+  <path d="M94 52 Q104 42 98 32 Q94 42 90 48Z" fill="#3d3470"/>
+  <!-- Feet -->
+  <path d="M48 99 L44 105 M48 99 L48 105 M48 99 L52 105" stroke="#c4943a" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M72 99 L68 105 M72 99 L72 105 M72 99 L76 105" stroke="#c4943a" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- Branch/line -->
+  <line x1="20" y1="108" x2="100" y2="108" stroke="#4a4270" stroke-width="2" stroke-linecap="round"/>
+</svg>
