@@ -19,7 +19,7 @@ import { useEffect, useState, useRef, useMemo } from 'react'
 import { useFamilyView } from '@/contexts/FamilyViewContext'
 import { PeriodSelector } from '@/components/layout/PeriodSelector'
 import { toast } from 'sonner'
-import { Receipt, Upload, Download, Plus, X, FileSpreadsheet, User, Users, Lock, Unlock, Target, Trash2, Inbox, Pencil, Check, ChevronDown, ChevronLeft } from 'lucide-react'
+import { Receipt, Upload, Download, Plus, X, FileSpreadsheet, User, Users, Lock, Unlock, Target, Trash2, Inbox, Pencil, Check } from 'lucide-react'
 import type { RawExpenseRow } from '@/lib/excel-import'
 import type { BudgetCategory, SharedCategory } from '@/lib/types'
 import { useConfirmDialog } from '@/components/ui/ConfirmDialog'
@@ -104,10 +104,6 @@ export default function ExpensesPage() {
   const [detailMode, setDetailMode]   = useState(true)  // true = פירוט, false = סה"כ בלבד
   const [description, setDescription] = useState('')     // description for detailed mode
 
-  // Expand/collapse state for category groups
-  const [expandedPersonal, setExpandedPersonal] = useState<Set<number>>(new Set())
-  const [expandedShared, setExpandedShared]     = useState<Set<string>>(new Set())
-
   // Edit expense state
   const [editingPersonal, setEditingPersonal] = useState<{ id: number; categoryId: string; amount: string; description: string } | null>(null)
   const [editingShared, setEditingShared] = useState<{ id: number; category: string; totalAmount: string; notes: string } | null>(null)
@@ -136,49 +132,21 @@ export default function ExpensesPage() {
     })
   }
 
-  // ── Group personal expenses by category_id ──────────────────────────────────
-  const personalGroups = useMemo(() => {
+  // Sort personal expenses by amount descending
+  const sortedPersonalExp = useMemo(() => {
     if (!personalExp?.length) return []
-    const map = new Map<number, { catId: number; catName: string; total: number; expenses: typeof personalExp }>()
-    for (const e of personalExp) {
-      const catId = e.category_id
-      const catName = (e.budget_categories as BudgetCategory)?.name ?? 'כללי'
-      if (!map.has(catId)) map.set(catId, { catId, catName, total: 0, expenses: [] })
-      const g = map.get(catId)!
-      g.total += e.amount
-      g.expenses.push(e)
-    }
-    return [...map.values()].sort((a, b) => b.total - a.total)
+    return [...personalExp].sort((a, b) => b.amount - a.amount)
   }, [personalExp])
 
-  // ── Group shared expenses by category ───────────────────────────────────────
-  const sharedGroups = useMemo(() => {
+  // Sort shared expenses by my share descending
+  const sortedSharedExp = useMemo(() => {
     if (!sharedExp?.length) return []
-    const map = new Map<string, { category: string; categoryLabel: string; total: number; totalMy: number; expenses: typeof sharedExp }>()
-    for (const e of sharedExp) {
-      const cat = e.category
-      const catLabel = SHARED_CATEGORIES.find(c => c.value === cat)?.label ?? cat
-      if (!map.has(cat)) map.set(cat, { category: cat, categoryLabel: catLabel, total: 0, totalMy: 0, expenses: [] })
-      const g = map.get(cat)!
-      g.total += e.total_amount
-      g.totalMy += (e.my_share ?? e.total_amount * splitFrac)
-      g.expenses.push(e)
-    }
-    return [...map.values()].sort((a, b) => b.totalMy - a.totalMy)
+    return [...sharedExp].sort((a, b) => {
+      const myA = a.my_share ?? a.total_amount * splitFrac
+      const myB = b.my_share ?? b.total_amount * splitFrac
+      return myB - myA
+    })
   }, [sharedExp, splitFrac])
-
-  // Initialize expanded sets when data changes
-  useEffect(() => {
-    if (personalGroups.length && expandedPersonal.size === 0) {
-      setExpandedPersonal(new Set(personalGroups.map(g => g.catId)))
-    }
-  }, [personalGroups.length]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (sharedGroups.length && expandedShared.size === 0) {
-      setExpandedShared(new Set(sharedGroups.map(g => g.category)))
-    }
-  }, [sharedGroups.length]) // eslint-disable-line react-hooks/exhaustive-deps
 
   if (loading || !user) return <TableSkeleton rows={6} />
 
@@ -188,21 +156,6 @@ export default function ExpensesPage() {
   const totalSinking   = (funds ?? []).reduce((s, f) => s + f.monthly_allocation, 0)
   const totalAll       = totalPersonal + totalSharedMy
 
-  function togglePersonalGroup(catId: number) {
-    setExpandedPersonal(prev => {
-      const next = new Set(prev)
-      if (next.has(catId)) next.delete(catId); else next.add(catId)
-      return next
-    })
-  }
-
-  function toggleSharedGroup(cat: string) {
-    setExpandedShared(prev => {
-      const next = new Set(prev)
-      if (next.has(cat)) next.delete(cat); else next.add(cat)
-      return next
-    })
-  }
 
   // ── Add expense ─────────────────────────────────────────────────────────────
   async function handleAdd(e: React.FormEvent) {
@@ -907,7 +860,7 @@ export default function ExpensesPage() {
           {/* ── Personal + Shared side by side ──────────────────────────────── */}
           <div className="grid-2 items-start">
 
-          {/* ── Personal expenses (grouped by category) ──────────────────────── */}
+          {/* ── Personal expenses (flat list) ──────────────────────── */}
           <div className="bg-card border border-border rounded-xl p-5">
             <div className="flex justify-between items-center mb-3">
               <div className="flex items-center gap-1.5 text-[13px] font-semibold">
@@ -915,88 +868,67 @@ export default function ExpensesPage() {
               </div>
               <span className="text-sm font-bold text-primary">{formatCurrency(totalPersonal)}</span>
             </div>
-            {!personalGroups.length
+            {!sortedPersonalExp.length
               ? <div className="text-xs text-muted-foreground text-center py-6"><Inbox size={32} className="text-[oklch(0.30_0.01_250)] mx-auto mb-2" />אין הוצאות אישיות</div>
-              : personalGroups.map(group => {
-                const isOpen = expandedPersonal.has(group.catId)
+              : sortedPersonalExp.map(e => {
+                const itemId = personalItemId(e.category_id, e.description ?? '', e.id)
+                const locked = recurringPersonal.isLocked(itemId)
+                const catName = (e.budget_categories as BudgetCategory)?.name ?? 'כללי'
+                const isEditing = editingPersonal?.id === e.id
+
+                if (isEditing) {
+                  return (
+                    <div key={e.id} className="py-2 border-b border-[oklch(0.20_0.01_250)] flex flex-col gap-1.5">
+                      <input type="text" value={editingPersonal.description} onChange={ev => setEditingPersonal(prev => prev && { ...prev, description: ev.target.value })} placeholder="תיאור" className="w-full bg-secondary border border-[oklch(0.28_0.01_250)] rounded-md px-2 py-1 text-[12px] text-inherit" />
+                      <div className="flex gap-1.5">
+                        <select value={editingPersonal.categoryId} onChange={ev => setEditingPersonal(prev => prev && { ...prev, categoryId: ev.target.value })} className="flex-1 bg-secondary border border-[oklch(0.28_0.01_250)] rounded-md px-2 py-1 text-[12px] text-inherit">
+                          {categories?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                        </select>
+                        <input type="number" value={editingPersonal.amount} onChange={ev => setEditingPersonal(prev => prev && { ...prev, amount: ev.target.value })} className="w-20 bg-secondary border border-[oklch(0.28_0.01_250)] rounded-md px-2 py-1 text-[12px] text-inherit text-left" style={{ direction: 'ltr' }} />
+                      </div>
+                      <div className="flex gap-1">
+                        <button onClick={async () => {
+                          if (!editingPersonal || !user || !selectedPeriodId) return
+                          await updateExpense.mutateAsync({ id: editingPersonal.id, period_id: selectedPeriodId, user_id: user.id, category_id: Number(editingPersonal.categoryId), amount: Number(editingPersonal.amount), description: editingPersonal.description })
+                          toast.success('הוצאה עודכנה')
+                          setEditingPersonal(null)
+                        }} className="flex items-center gap-1 bg-primary text-primary-foreground border-none rounded-md px-2 py-1 text-[11px] font-semibold cursor-pointer"><Check size={11} /> שמור</button>
+                        <button onClick={() => setEditingPersonal(null)} className="bg-transparent border border-[oklch(0.28_0.01_250)] text-muted-foreground rounded-md px-2 py-1 text-[11px] cursor-pointer">ביטול</button>
+                      </div>
+                    </div>
+                  )
+                }
+
                 return (
-                  <div key={group.catId} className="mb-1">
-                    {/* Category header */}
-                    <button
-                      onClick={() => togglePersonalGroup(group.catId)}
-                      className="w-full flex justify-between items-center py-2.5 px-1 bg-transparent border-none cursor-pointer text-inherit rounded-lg hover:bg-[oklch(0.18_0.01_250)] transition-colors"
-                    >
-                      <div className="flex items-center gap-2">
-                        {isOpen ? <ChevronDown size={14} className="text-muted-foreground" /> : <ChevronLeft size={14} className="text-muted-foreground" />}
-                        <span className="text-[13px] font-semibold">{group.catName}</span>
-                        <span className="text-[11px] text-muted-foreground">({group.expenses.length})</span>
-                      </div>
-                      <span className="text-[13px] font-bold text-primary">{formatCurrency(group.total)}</span>
-                    </button>
-                    {/* Expanded items */}
-                    {isOpen && (
-                      <div className="pr-6 border-r-2 border-[oklch(0.25_0.01_250)] mr-[7px]">
-                        {group.expenses.map(e => {
-                          const itemId = personalItemId(e.category_id, e.description ?? '', e.id)
-                          const locked = recurringPersonal.isLocked(itemId)
-                          const catName = (e.budget_categories as BudgetCategory)?.name ?? 'כללי'
-                          const isEditing = editingPersonal?.id === e.id
-
-                          if (isEditing) {
-                            return (
-                              <div key={e.id} className="py-2 border-b border-[oklch(0.20_0.01_250)] flex flex-col gap-1.5">
-                                <input type="text" value={editingPersonal.description} onChange={ev => setEditingPersonal(prev => prev && { ...prev, description: ev.target.value })} placeholder="תיאור" className="w-full bg-secondary border border-[oklch(0.28_0.01_250)] rounded-md px-2 py-1 text-[12px] text-inherit" />
-                                <div className="flex gap-1.5">
-                                  <select value={editingPersonal.categoryId} onChange={ev => setEditingPersonal(prev => prev && { ...prev, categoryId: ev.target.value })} className="flex-1 bg-secondary border border-[oklch(0.28_0.01_250)] rounded-md px-2 py-1 text-[12px] text-inherit">
-                                    {categories?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                                  </select>
-                                  <input type="number" value={editingPersonal.amount} onChange={ev => setEditingPersonal(prev => prev && { ...prev, amount: ev.target.value })} className="w-20 bg-secondary border border-[oklch(0.28_0.01_250)] rounded-md px-2 py-1 text-[12px] text-inherit text-left" style={{ direction: 'ltr' }} />
-                                </div>
-                                <div className="flex gap-1">
-                                  <button onClick={async () => {
-                                    if (!editingPersonal || !user || !selectedPeriodId) return
-                                    await updateExpense.mutateAsync({ id: editingPersonal.id, period_id: selectedPeriodId, user_id: user.id, category_id: Number(editingPersonal.categoryId), amount: Number(editingPersonal.amount), description: editingPersonal.description })
-                                    toast.success('הוצאה עודכנה')
-                                    setEditingPersonal(null)
-                                  }} className="flex items-center gap-1 bg-primary text-primary-foreground border-none rounded-md px-2 py-1 text-[11px] font-semibold cursor-pointer"><Check size={11} /> שמור</button>
-                                  <button onClick={() => setEditingPersonal(null)} className="bg-transparent border border-[oklch(0.28_0.01_250)] text-muted-foreground rounded-md px-2 py-1 text-[11px] cursor-pointer">ביטול</button>
-                                </div>
-                              </div>
-                            )
-                          }
-
-                          return (
-                            <div key={e.id} className="flex justify-between items-center py-2 border-b border-[oklch(0.20_0.01_250)]">
-                              <div className="text-[12px] text-[oklch(0.80_0.01_250)]">{e.description || catName}</div>
-                              <div className="flex items-center gap-1.5">
-                                <span className="text-[12px] font-semibold">{formatCurrency(e.amount)}</span>
-                                <button onClick={() => setEditingPersonal({ id: e.id, categoryId: String(e.category_id), amount: String(e.amount), description: e.description ?? '' })}
-                                  aria-label="ערוך הוצאה"
-                                  className="bg-transparent border-none cursor-pointer flex items-center justify-center p-1 min-w-6 min-h-6 text-[oklch(0.45_0.01_250)] hover:text-[oklch(0.70_0.01_250)]">
-                                  <Pencil size={10} />
-                                </button>
-                                <button onClick={() => toggleLockPersonal(e)}
-                                  title={locked ? 'בטל נעילה' : 'נעל לחודשים הבאים'}
-                                  aria-label={locked ? 'בטל נעילה' : 'נעל לחודשים הבאים'}
-                                  className={`bg-transparent border-none cursor-pointer flex items-center justify-center p-1 min-w-6 min-h-6 ${locked ? 'text-[oklch(0.70_0.15_185)]' : 'text-[oklch(0.35_0.01_250)]'}`}>
-                                  {locked ? <Lock size={11} /> : <Unlock size={11} />}
-                                </button>
-                                <button onClick={() => handleDeletePersonal(e)} aria-label="מחק הוצאה" className="bg-transparent border-none cursor-pointer flex items-center justify-center p-1 min-w-6 min-h-6 text-muted-foreground">
-                                  <X size={12} />
-                                </button>
-                              </div>
-                            </div>
-                          )
-                        })}
-                      </div>
-                    )}
+                  <div key={e.id} className="flex justify-between items-center py-2.5 border-b border-[oklch(0.20_0.01_250)] last:border-b-0">
+                    <div>
+                      <div className="text-[13px] font-medium text-[oklch(0.82_0.01_250)]">{e.description || catName}</div>
+                      {e.description && <div className="text-[10px] text-muted-foreground">{catName}</div>}
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[13px] font-semibold">{formatCurrency(e.amount)}</span>
+                      <button onClick={() => setEditingPersonal({ id: e.id, categoryId: String(e.category_id), amount: String(e.amount), description: e.description ?? '' })}
+                        aria-label="ערוך הוצאה"
+                        className="bg-transparent border-none cursor-pointer flex items-center justify-center p-1 min-w-6 min-h-6 text-[oklch(0.45_0.01_250)] hover:text-[oklch(0.70_0.01_250)]">
+                        <Pencil size={10} />
+                      </button>
+                      <button onClick={() => toggleLockPersonal(e)}
+                        title={locked ? 'בטל נעילה' : 'נעל לחודשים הבאים'}
+                        aria-label={locked ? 'בטל נעילה' : 'נעל לחודשים הבאים'}
+                        className={`bg-transparent border-none cursor-pointer flex items-center justify-center p-1 min-w-6 min-h-6 ${locked ? 'text-[oklch(0.70_0.15_185)]' : 'text-[oklch(0.35_0.01_250)]'}`}>
+                        {locked ? <Lock size={11} /> : <Unlock size={11} />}
+                      </button>
+                      <button onClick={() => handleDeletePersonal(e)} aria-label="מחק הוצאה" className="bg-transparent border-none cursor-pointer flex items-center justify-center p-1 min-w-6 min-h-6 text-muted-foreground">
+                        <X size={12} />
+                      </button>
+                    </div>
                   </div>
                 )
               })
             }
           </div>
 
-          {/* ── Shared expenses (grouped by category) ──────────────────────────── */}
+          {/* ── Shared expenses (flat list) ──────────────────────────── */}
           <div className="bg-card border border-border rounded-xl p-5">
             <div className="flex justify-between items-center mb-3">
               <div className="flex items-center gap-1.5 text-[13px] font-semibold">
@@ -1007,88 +939,64 @@ export default function ExpensesPage() {
             <div className="text-[11px] text-muted-foreground mb-2.5">
               הסכום שמוצג הוא חלקך ({splitPctLabel}%) — ניתן לנעול הוצאות קבועות
             </div>
-            {!sharedGroups.length
+            {!sortedSharedExp.length
               ? <div className="text-xs text-muted-foreground text-center py-6"><Inbox size={32} className="text-[oklch(0.30_0.01_250)] mx-auto mb-2" />אין הוצאות משותפות</div>
-              : sharedGroups.map(group => {
-                const isOpen = expandedShared.has(group.category)
+              : sortedSharedExp.map(e => {
+                const myAmt = e.my_share ?? e.total_amount * splitFrac
+                const locked = recurringShared.isLocked(e.category)
+                const label = e.notes || e.category
+                const catLabel = SHARED_CATEGORIES.find(c => c.value === e.category)?.label ?? e.category
+                const isEditing = editingShared?.id === e.id
+
+                if (isEditing) {
+                  return (
+                    <div key={e.id} className="py-2 border-b border-[oklch(0.20_0.01_250)] flex flex-col gap-1.5">
+                      <input type="text" value={editingShared.notes} onChange={ev => setEditingShared(prev => prev && { ...prev, notes: ev.target.value })} placeholder="תיאור" className="w-full bg-secondary border border-[oklch(0.28_0.01_250)] rounded-md px-2 py-1 text-[12px] text-inherit" />
+                      <div className="flex gap-1.5">
+                        <select value={editingShared.category} onChange={ev => setEditingShared(prev => prev && { ...prev, category: ev.target.value })} className="flex-1 bg-secondary border border-[oklch(0.28_0.01_250)] rounded-md px-2 py-1 text-[12px] text-inherit">
+                          {SHARED_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                        </select>
+                        <input type="number" value={editingShared.totalAmount} onChange={ev => setEditingShared(prev => prev && { ...prev, totalAmount: ev.target.value })} className="w-20 bg-secondary border border-[oklch(0.28_0.01_250)] rounded-md px-2 py-1 text-[12px] text-inherit text-left" style={{ direction: 'ltr' }} placeholder="סכום כולל" />
+                      </div>
+                      <div className="flex gap-1">
+                        <button onClick={async () => {
+                          if (!editingShared || !selectedPeriodId) return
+                          await updateShared.mutateAsync({ id: editingShared.id, period_id: selectedPeriodId, category: editingShared.category, total_amount: Number(editingShared.totalAmount), notes: editingShared.notes })
+                          toast.success('הוצאה עודכנה')
+                          setEditingShared(null)
+                        }} className="flex items-center gap-1 bg-[oklch(0.55_0.12_310)] text-primary-foreground border-none rounded-md px-2 py-1 text-[11px] font-semibold cursor-pointer"><Check size={11} /> שמור</button>
+                        <button onClick={() => setEditingShared(null)} className="bg-transparent border border-[oklch(0.28_0.01_250)] text-muted-foreground rounded-md px-2 py-1 text-[11px] cursor-pointer">ביטול</button>
+                      </div>
+                    </div>
+                  )
+                }
+
                 return (
-                  <div key={group.category} className="mb-1">
-                    {/* Category header */}
-                    <button
-                      onClick={() => toggleSharedGroup(group.category)}
-                      className="w-full flex justify-between items-center py-2.5 px-1 bg-transparent border-none cursor-pointer text-inherit rounded-lg hover:bg-[oklch(0.18_0.01_250)] transition-colors"
-                    >
-                      <div className="flex items-center gap-2">
-                        {isOpen ? <ChevronDown size={14} className="text-muted-foreground" /> : <ChevronLeft size={14} className="text-muted-foreground" />}
-                        <span className="text-[13px] font-semibold">{group.categoryLabel}</span>
-                        <span className="text-[11px] text-muted-foreground">({group.expenses.length})</span>
+                  <div key={e.id} className="flex justify-between items-center py-2.5 border-b border-[oklch(0.20_0.01_250)] last:border-b-0">
+                    <div>
+                      <div className="text-[13px] font-medium text-[oklch(0.82_0.01_250)]">{label}</div>
+                      {label !== catLabel && <div className="text-[10px] text-muted-foreground">{catLabel}</div>}
+                      <div className="text-[10px] text-muted-foreground">
+                        סה&quot;כ {formatCurrency(e.total_amount)} · חלקי {formatCurrency(myAmt)}
                       </div>
-                      <span className="text-[13px] font-bold text-[oklch(0.65_0.12_310)]">{formatCurrency(group.totalMy)}</span>
-                    </button>
-                    {/* Expanded items */}
-                    {isOpen && (
-                      <div className="pr-6 border-r-2 border-[oklch(0.25_0.01_250)] mr-[7px]">
-                        {group.expenses.map(e => {
-                          const myAmt = e.my_share ?? e.total_amount * splitFrac
-                          const locked = recurringShared.isLocked(e.category)
-                          const label = e.notes || e.category
-                          const catLabel = SHARED_CATEGORIES.find(c => c.value === e.category)?.label ?? e.category
-                          const isEditing = editingShared?.id === e.id
-
-                          if (isEditing) {
-                            return (
-                              <div key={e.id} className="py-2 border-b border-[oklch(0.20_0.01_250)] flex flex-col gap-1.5">
-                                <input type="text" value={editingShared.notes} onChange={ev => setEditingShared(prev => prev && { ...prev, notes: ev.target.value })} placeholder="תיאור" className="w-full bg-secondary border border-[oklch(0.28_0.01_250)] rounded-md px-2 py-1 text-[12px] text-inherit" />
-                                <div className="flex gap-1.5">
-                                  <select value={editingShared.category} onChange={ev => setEditingShared(prev => prev && { ...prev, category: ev.target.value })} className="flex-1 bg-secondary border border-[oklch(0.28_0.01_250)] rounded-md px-2 py-1 text-[12px] text-inherit">
-                                    {SHARED_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-                                  </select>
-                                  <input type="number" value={editingShared.totalAmount} onChange={ev => setEditingShared(prev => prev && { ...prev, totalAmount: ev.target.value })} className="w-20 bg-secondary border border-[oklch(0.28_0.01_250)] rounded-md px-2 py-1 text-[12px] text-inherit text-left" style={{ direction: 'ltr' }} placeholder="סכום כולל" />
-                                </div>
-                                <div className="flex gap-1">
-                                  <button onClick={async () => {
-                                    if (!editingShared || !selectedPeriodId) return
-                                    await updateShared.mutateAsync({ id: editingShared.id, period_id: selectedPeriodId, category: editingShared.category, total_amount: Number(editingShared.totalAmount), notes: editingShared.notes })
-                                    toast.success('הוצאה עודכנה')
-                                    setEditingShared(null)
-                                  }} className="flex items-center gap-1 bg-[oklch(0.55_0.12_310)] text-primary-foreground border-none rounded-md px-2 py-1 text-[11px] font-semibold cursor-pointer"><Check size={11} /> שמור</button>
-                                  <button onClick={() => setEditingShared(null)} className="bg-transparent border border-[oklch(0.28_0.01_250)] text-muted-foreground rounded-md px-2 py-1 text-[11px] cursor-pointer">ביטול</button>
-                                </div>
-                              </div>
-                            )
-                          }
-
-                          return (
-                            <div key={e.id} className="flex justify-between items-center py-2 border-b border-[oklch(0.20_0.01_250)]">
-                              <div>
-                                <div className="text-[12px] text-[oklch(0.80_0.01_250)]">{label}</div>
-                                {label !== catLabel && <div className="text-[10px] text-muted-foreground">{catLabel}</div>}
-                                <div className="text-[10px] text-muted-foreground">
-                                  סה&quot;כ {formatCurrency(e.total_amount)} · חלקי {formatCurrency(myAmt)}
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-1.5">
-                                <span className="text-[12px] font-semibold text-[oklch(0.65_0.12_310)]">{formatCurrency(myAmt)}</span>
-                                <button onClick={() => setEditingShared({ id: e.id, category: e.category, totalAmount: String(e.total_amount), notes: e.notes ?? '' })}
-                                  aria-label="ערוך הוצאה"
-                                  className="bg-transparent border-none cursor-pointer flex items-center justify-center p-1 min-w-6 min-h-6 text-[oklch(0.45_0.01_250)] hover:text-[oklch(0.70_0.01_250)]">
-                                  <Pencil size={10} />
-                                </button>
-                                <button onClick={() => toggleLockShared(e)}
-                                  title={locked ? 'בטל נעילה' : 'נעל לחודשים הבאים'}
-                                  aria-label={locked ? 'בטל נעילה' : 'נעל לחודשים הבאים'}
-                                  className={`bg-transparent border-none cursor-pointer flex items-center justify-center p-1 min-w-6 min-h-6 ${locked ? 'text-[oklch(0.70_0.15_185)]' : 'text-[oklch(0.35_0.01_250)]'}`}>
-                                  {locked ? <Lock size={11} /> : <Unlock size={11} />}
-                                </button>
-                                <button onClick={() => handleDeleteShared(e.id)} aria-label="מחק הוצאה" className="bg-transparent border-none cursor-pointer flex items-center justify-center p-1 min-w-6 min-h-6 text-muted-foreground">
-                                  <X size={12} />
-                                </button>
-                              </div>
-                            </div>
-                          )
-                        })}
-                      </div>
-                    )}
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[13px] font-semibold text-[oklch(0.65_0.12_310)]">{formatCurrency(myAmt)}</span>
+                      <button onClick={() => setEditingShared({ id: e.id, category: e.category, totalAmount: String(e.total_amount), notes: e.notes ?? '' })}
+                        aria-label="ערוך הוצאה"
+                        className="bg-transparent border-none cursor-pointer flex items-center justify-center p-1 min-w-6 min-h-6 text-[oklch(0.45_0.01_250)] hover:text-[oklch(0.70_0.01_250)]">
+                        <Pencil size={10} />
+                      </button>
+                      <button onClick={() => toggleLockShared(e)}
+                        title={locked ? 'בטל נעילה' : 'נעל לחודשים הבאים'}
+                        aria-label={locked ? 'בטל נעילה' : 'נעל לחודשים הבאים'}
+                        className={`bg-transparent border-none cursor-pointer flex items-center justify-center p-1 min-w-6 min-h-6 ${locked ? 'text-[oklch(0.70_0.15_185)]' : 'text-[oklch(0.35_0.01_250)]'}`}>
+                        {locked ? <Lock size={11} /> : <Unlock size={11} />}
+                      </button>
+                      <button onClick={() => handleDeleteShared(e.id)} aria-label="מחק הוצאה" className="bg-transparent border-none cursor-pointer flex items-center justify-center p-1 min-w-6 min-h-6 text-muted-foreground">
+                        <X size={12} />
+                      </button>
+                    </div>
                   </div>
                 )
               })
