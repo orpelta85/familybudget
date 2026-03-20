@@ -31,24 +31,19 @@ type ExpType = 'personal' | 'shared'
 
 const SHARED_CATEGORIES: { value: string; label: string }[] = [
   { value: 'rent', label: 'שכירות' },
-  { value: 'property_tax', label: 'ארנונה' },
-  { value: 'electricity', label: 'חשמל' },
-  { value: 'water_gas', label: 'מים+גז' },
-  { value: 'building_committee', label: 'ועד בית' },
-  { value: 'car_loan', label: 'הלוואת רכב' },
+  { value: 'household', label: 'חשבונות בית' },
   { value: 'insurance', label: 'ביטוחים' },
+  { value: 'loans', label: 'הלוואות' },
+  { value: 'subscriptions', label: 'מנויים' },
   { value: 'groceries', label: 'מכולת' },
   { value: 'eating_out', label: 'אוכל בחוץ' },
-  { value: 'entertainment', label: 'בילויים' },
-  { value: 'subscriptions', label: 'מנויים' },
-  { value: 'shopping', label: 'קניות' },
+  { value: 'transport', label: 'תחבורה' },
+  { value: 'health', label: 'בריאות ורפואה' },
+  { value: 'clothing', label: 'בגדים וקניות' },
+  { value: 'leisure', label: 'בילויים ופנאי' },
+  { value: 'kids', label: 'ילדים' },
   { value: 'pets', label: 'חיות מחמד' },
-  { value: 'travel', label: 'טיולים' },
-  { value: 'internet', label: 'אינטרנט' },
-  { value: 'home_insurance', label: 'ביטוח דירה' },
-  { value: 'netflix', label: 'נטפליקס' },
-  { value: 'spotify', label: 'ספוטיפיי' },
-  { value: 'groceries', label: 'מכולת' },
+  { value: 'savings', label: 'חיסכון והשקעות' },
   { value: 'misc', label: 'שונות' },
 ]
 
@@ -1320,12 +1315,18 @@ function FamilyExpensesView({
       {/* Shared expenses — grouped by category */}
       {(sharedExp ?? []).length > 0 && (() => {
         const SHARED_CAT_LABELS: Record<string, string> = {
-          rent: 'שכירות', property_tax: 'ארנונה', electricity: 'חשמל',
-          water_gas: 'מים+גז', building_committee: 'ועד בית', internet: 'אינטרנט',
-          home_insurance: 'ביטוח דירה', car_loan: 'הלוואת רכב', insurance: 'ביטוחים',
-          groceries: 'מכולת', eating_out: 'אוכל בחוץ', entertainment: 'בילויים',
-          subscriptions: 'מנויים', shopping: 'קניות', pets: 'חיות מחמד',
-          travel: 'טיולים', misc: 'שונות',
+          rent: 'שכירות', household: 'חשבונות בית', insurance: 'ביטוחים',
+          loans: 'הלוואות', subscriptions: 'מנויים', groceries: 'מכולת',
+          eating_out: 'אוכל בחוץ', transport: 'תחבורה', health: 'בריאות ורפואה',
+          clothing: 'בגדים וקניות', leisure: 'בילויים ופנאי', kids: 'ילדים',
+          pets: 'חיות מחמד', savings: 'חיסכון והשקעות', misc: 'שונות',
+          // Legacy mappings for existing data
+          property_tax: 'חשבונות בית', electricity: 'חשבונות בית',
+          water_gas: 'חשבונות בית', building_committee: 'חשבונות בית',
+          home_insurance: 'ביטוחים', car_loan: 'הלוואות',
+          internet: 'מנויים', entertainment: 'בילויים ופנאי',
+          shopping: 'בגדים וקניות', travel: 'בילויים ופנאי',
+          netflix: 'מנויים', spotify: 'מנויים',
         }
         const catTotals = new Map<string, number>()
         for (const e of (sharedExp ?? [])) {

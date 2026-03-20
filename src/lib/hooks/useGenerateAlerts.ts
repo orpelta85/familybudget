@@ -167,20 +167,19 @@ export function useAlertGeneration(
       }
     }
 
-    // 8. NEW: Electricity bill higher than usual (seasonal)
+    // 8. Household bills higher than usual
     if (shared && allExpenses && alerts.length < 8) {
-      const elecThis = shared.filter(s => s.category === 'electricity').reduce((sum, s) => sum + (s.my_share ?? s.total_amount * splitFrac), 0)
-      if (elecThis > 0 && prevPeriodId) {
-        // Compare with average of last 3 months from shared
-        // Simple: check if current > 1.3x of average known electricity
-        const prevElec = shared.reduce((s, e) => e.category === 'electricity' ? s + (e.my_share ?? e.total_amount * splitFrac) : s, 0)
-        if (prevElec > 0 && elecThis > prevElec * 1.3) {
+      const householdCats = ['electricity', 'household', 'property_tax', 'water_gas', 'building_committee']
+      const householdThis = shared.filter(s => householdCats.includes(s.category)).reduce((sum, s) => sum + (s.my_share ?? s.total_amount * splitFrac), 0)
+      if (householdThis > 0 && prevPeriodId) {
+        const prevHousehold = shared.reduce((s, e) => householdCats.includes(e.category) ? s + (e.my_share ?? e.total_amount * splitFrac) : s, 0)
+        if (prevHousehold > 0 && householdThis > prevHousehold * 1.3) {
           alerts.push({
             user_id: userId,
             type: 'high_electricity',
             severity: 'warning',
-            title: 'חשבון חשמל גבוה מהרגיל',
-            message: `חשמל החודש: ${formatCurrency(elecThis)} — גבוה מהרגיל`,
+            title: 'חשבונות בית גבוהים מהרגיל',
+            message: `חשבונות בית החודש: ${formatCurrency(householdThis)} — גבוה מהרגיל`,
           })
         }
       }
