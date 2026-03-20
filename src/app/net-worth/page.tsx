@@ -11,6 +11,7 @@ import { useFamilyContext } from '@/lib/context/FamilyContext'
 import { formatCurrency } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useMemo } from 'react'
+import { useFamilyView } from '@/contexts/FamilyViewContext'
 import { toast } from 'sonner'
 import { useConfirmDialog } from '@/components/ui/ConfirmDialog'
 import {
@@ -111,7 +112,7 @@ export default function NetWorthPage() {
   const saveSnapshot = useSaveSnapshot()
   const confirm = useConfirmDialog()
 
-  const [viewMode, setViewMode] = useState<'personal' | 'family'>('personal')
+  const { viewMode } = useFamilyView()
   const [newEntry, setNewEntry] = useState<EntryForm | null>(null)
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editAmount, setEditAmount] = useState('')
@@ -137,7 +138,7 @@ export default function NetWorthPage() {
   // Filter entries by view mode
   const filteredEntries = useMemo(() => {
     if (!entries) return []
-    if (viewMode === 'family') return entries
+    if (viewMode !== 'personal') return entries
     return entries.filter(e => e.owner === 'personal')
   }, [entries, viewMode])
 
@@ -321,27 +322,6 @@ export default function NetWorthPage() {
             סנכרן מנתונים קיימים
           </button>
 
-          {/* Personal/Family toggle */}
-          {familyId && (
-            <div className="flex border border-[oklch(0.25_0.01_250)] rounded-lg overflow-hidden">
-              {([
-                { key: 'personal' as const, label: 'אישי' },
-                { key: 'family' as const, label: 'משפחתי' },
-              ]).map(opt => (
-                <button
-                  key={opt.key}
-                  onClick={() => setViewMode(opt.key)}
-                  className={`px-4 py-1.5 text-[13px] font-medium cursor-pointer border-none ${
-                    viewMode === opt.key
-                      ? 'bg-[oklch(0.22_0.01_250)] text-[oklch(0.92_0.01_250)] shadow-[inset_0_0_0_1px_oklch(0.65_0.18_250)]'
-                      : 'bg-transparent text-[oklch(0.65_0.01_250)]'
-                  } ${opt.key === 'personal' ? 'border-l border-l-[oklch(0.25_0.01_250)]' : ''}`}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          )}
         </div>
       </div>
 
@@ -427,7 +407,7 @@ export default function NetWorthPage() {
                               אוטומטי
                             </span>
                           )}
-                          {entry.owner === 'shared' && viewMode === 'family' && (
+                          {entry.owner === 'shared' && viewMode !== 'personal' && (
                             <span className="text-[10px] bg-[oklch(0.25_0.02_180)] text-[oklch(0.70_0.15_180)] px-1.5 py-0.5 rounded-md font-medium">
                               משותף
                             </span>
@@ -488,7 +468,7 @@ export default function NetWorthPage() {
                 })
               )}
               <button
-                onClick={() => setNewEntry({ category: '', type: 'asset', amount: '', name: '', owner: viewMode === 'family' ? 'shared' : 'personal', return_pct: '', start_date: '', end_date: '' })}
+                onClick={() => setNewEntry({ category: '', type: 'asset', amount: '', name: '', owner: viewMode !== 'personal' ? 'shared' : 'personal', return_pct: '', start_date: '', end_date: '' })}
                 className="flex items-center gap-1 mt-3 bg-transparent border border-[oklch(0.25_0.01_250)] rounded-lg px-3 py-1.5 text-[oklch(0.65_0.01_250)] text-xs cursor-pointer"
               >
                 <Plus size={12} /> הוסף נכס

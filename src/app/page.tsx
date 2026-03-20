@@ -18,7 +18,8 @@ import { useFamilyContext } from '@/lib/context/FamilyContext'
 import { useFamilySummary } from '@/lib/queries/useFamily'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
+import { useFamilyView } from '@/contexts/FamilyViewContext'
 import { PeriodSelector } from '@/components/layout/PeriodSelector'
 import { Wallet, Receipt, TrendingUp, PiggyBank, Target, AlertTriangle, CalendarDays, Users, X } from 'lucide-react'
 import dynamic from 'next/dynamic'
@@ -49,8 +50,8 @@ export default function Dashboard() {
   const { selectedPeriodId, setSelectedPeriodId } = useSharedPeriod()
   const { familyId } = useFamilyContext()
   const splitFrac = useSplitFraction(user?.id)
-  const [viewMode, setViewMode] = useState<'personal' | 'family'>('personal')
-  const { data: familySummary } = useFamilySummary(selectedPeriodId, viewMode === 'family')
+  const { viewMode } = useFamilyView()
+  const { data: familySummary } = useFamilySummary(selectedPeriodId, viewMode !== 'personal')
   const { data: dashboardAlerts } = useAlerts(user?.id)
   const markAlertRead = useMarkAlertRead()
 
@@ -209,33 +210,11 @@ export default function Dashboard() {
   return (
     <div>
       {/* Header */}
-      <div className="mb-4 flex justify-between items-start">
-        <div>
-          <h1 className="text-xl font-bold tracking-tight">דשבורד</h1>
-          <p className="text-sm mt-1 text-text-secondary">
-            {selectedPeriod ? periodLabel(selectedPeriod.start_date) : '...'}
-          </p>
-        </div>
-        {familyId && (
-          <div className="flex border border-border-default rounded-lg overflow-hidden">
-            {([
-              { key: 'personal' as const, label: 'אישי' },
-              { key: 'family' as const, label: 'משפחתי' },
-            ]).map(opt => (
-              <button
-                key={opt.key}
-                onClick={() => setViewMode(opt.key)}
-                className={`px-4 py-1.5 text-[13px] font-medium cursor-pointer border-none ${
-                  viewMode === opt.key
-                    ? 'bg-bg-hover text-text-primary shadow-[inset_0_0_0_1px_var(--accent-blue)]'
-                    : 'bg-transparent text-text-secondary'
-                } ${opt.key === 'personal' ? 'border-l border-l-border-default' : ''}`}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-        )}
+      <div className="mb-4">
+        <h1 className="text-xl font-bold tracking-tight">דשבורד</h1>
+        <p className="text-sm mt-1 text-text-secondary">
+          {selectedPeriod ? periodLabel(selectedPeriod.start_date) : '...'}
+        </p>
       </div>
 
       {periods && <PeriodSelector periods={periods} selectedId={selectedPeriodId} onChange={setSelectedPeriodId} />}
@@ -280,7 +259,7 @@ export default function Dashboard() {
       })()}
 
       {/* ── Family View ──────────────────────────────────────────────────── */}
-      {viewMode === 'family' && (
+      {(viewMode === 'family' || viewMode === 'member') && (
         <FamilyDashboard
           summary={familySummary}
           totalSharedFromPersonal={totalShared}

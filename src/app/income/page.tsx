@@ -8,6 +8,7 @@ import { useSharedPeriod } from '@/lib/context/PeriodContext'
 import { useFamilyContext } from '@/lib/context/FamilyContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useMemo } from 'react'
+import { useFamilyView } from '@/contexts/FamilyViewContext'
 import { PeriodSelector } from '@/components/layout/PeriodSelector'
 import { Wallet, TrendingUp, Trash2, Users } from 'lucide-react'
 import { toast } from 'sonner'
@@ -27,10 +28,10 @@ export default function IncomePage() {
   const currentPeriod = useCurrentPeriod()
   const { selectedPeriodId, setSelectedPeriodId } = useSharedPeriod()
   const { familyId, members } = useFamilyContext()
-  const [viewMode, setViewMode] = useState<'personal' | 'family'>('personal')
+  const { viewMode } = useFamilyView()
 
   const familyMemberIds = useMemo(() => members.map(m => m.user_id), [members])
-  const { data: familyIncome } = useFamilyIncome(selectedPeriodId, familyMemberIds, viewMode === 'family')
+  const { data: familyIncome } = useFamilyIncome(selectedPeriodId, familyMemberIds, viewMode !== 'personal')
 
   useEffect(() => {
     if (currentPeriod && !selectedPeriodId) setSelectedPeriodId(currentPeriod.id)
@@ -134,26 +135,6 @@ export default function IncomePage() {
           <h1 className="text-xl font-bold tracking-tight">הכנסה</h1>
         </div>
         <div className="flex items-center gap-3">
-          {familyId && (
-            <div className="flex border border-[oklch(0.25_0.01_250)] rounded-lg overflow-hidden">
-              {([
-                { key: 'personal' as const, label: 'אישי' },
-                { key: 'family' as const, label: 'משפחתי' },
-              ]).map(opt => (
-                <button
-                  key={opt.key}
-                  onClick={() => setViewMode(opt.key)}
-                  className={`px-4 py-1.5 text-[13px] font-medium cursor-pointer border-none ${
-                    viewMode === opt.key
-                      ? 'bg-[oklch(0.20_0.01_250)] text-[oklch(0.92_0.01_250)] shadow-[inset_0_0_0_1px_var(--accent-blue)]'
-                      : 'bg-transparent text-[oklch(0.55_0.01_250)]'
-                  }`}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          )}
           <button onClick={handleResetIncome} className="flex items-center gap-1.5 bg-transparent border border-[oklch(0.25_0.01_250)] rounded-lg px-3.5 py-[7px] text-[oklch(0.65_0.01_250)] text-xs font-medium cursor-pointer">
             <Trash2 size={13} /> אפס הכנסה
           </button>
@@ -166,7 +147,7 @@ export default function IncomePage() {
       {periods && <PeriodSelector periods={periods} selectedId={selectedPeriodId} onChange={setSelectedPeriodId} />}
 
       {/* ── Family View ──────────────────────────────────────────────────── */}
-      {viewMode === 'family' && (
+      {viewMode !== 'personal' && (
         <>
           {/* Family total KPI */}
           <div className="bg-card border border-border rounded-xl p-5 mb-4">

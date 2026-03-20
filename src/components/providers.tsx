@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { PeriodProvider } from '@/lib/context/PeriodContext'
 import { FamilyProvider } from '@/lib/context/FamilyContext'
 import { ConfirmDialogProvider } from '@/components/ui/ConfirmDialog'
+import { FamilyViewProvider } from '@/contexts/FamilyViewContext'
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient({
@@ -17,9 +18,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <QueryClientProvider client={queryClient}>
       <PeriodProvider>
         <FamilyProvider>
-          <ConfirmDialogProvider>
-            {children}
-          </ConfirmDialogProvider>
+          <FamilyViewProvider>
+            <ConfirmDialogProvider>
+              {children}
+            </ConfirmDialogProvider>
+          </FamilyViewProvider>
         </FamilyProvider>
       </PeriodProvider>
     </QueryClientProvider>

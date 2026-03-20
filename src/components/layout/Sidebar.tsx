@@ -11,6 +11,7 @@ import {
 import { useAlerts, useUnreadAlertCount, useMarkAlertRead } from '@/lib/queries/useAlerts'
 import { useUser } from '@/lib/queries/useUser'
 import { useFamilyContext } from '@/lib/context/FamilyContext'
+import { FamilyViewSelector } from '@/components/layout/FamilyViewSelector'
 import { toast } from 'sonner'
 
 const nav = [
@@ -152,6 +153,9 @@ export function Sidebar() {
           </div>
         )}
       </div>
+
+      {/* View Selector */}
+      <FamilyViewSelector />
 
       {/* Nav */}
       <nav className="flex-1 p-2 px-2.5 overflow-y-auto flex flex-col gap-0.5">

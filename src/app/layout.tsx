@@ -3,6 +3,8 @@ import "./globals.css";
 import { Providers } from "@/components/providers";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { BottomNav } from "@/components/layout/BottomNav";
+import { MemberBanner } from "@/components/layout/MemberBanner";
+import { MobileViewSelector } from "@/components/layout/MobileViewSelector";
 import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
@@ -26,6 +28,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <div className="page-layout">
             <Sidebar />
             <main className="main-content">
+              <MobileViewSelector />
+              <MemberBanner />
               {children}
             </main>
           </div>

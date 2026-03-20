@@ -15,6 +15,7 @@ import { parseExpenseExcel, createExpenseTemplate } from '@/lib/excel-import'
 import { useRecurringPersonal, useRecurringShared, personalItemId } from '@/lib/hooks/useRecurring'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useRef, useMemo } from 'react'
+import { useFamilyView } from '@/contexts/FamilyViewContext'
 import { PeriodSelector } from '@/components/layout/PeriodSelector'
 import { toast } from 'sonner'
 import { Receipt, Upload, Download, Plus, X, FileSpreadsheet, User, Users, Lock, Unlock, Target, Trash2, Inbox, Pencil, Check, ChevronDown, ChevronLeft } from 'lucide-react'
@@ -48,9 +49,9 @@ export default function ExpensesPage() {
   const { familyId, members } = useFamilyContext()
   const splitFrac = useSplitFraction(user?.id)
   const splitPctLabel = Math.round(splitFrac * 100)
-  const [viewMode, setViewMode] = useState<'personal' | 'family'>('personal')
+  const { viewMode } = useFamilyView()
   const familyMemberIds = useMemo(() => members.map(m => m.user_id), [members])
-  const { data: familyExpenses } = useFamilyPersonalExpenses(selectedPeriodId, familyMemberIds, viewMode === 'family')
+  const { data: familyExpenses } = useFamilyPersonalExpenses(selectedPeriodId, familyMemberIds, viewMode !== 'personal')
 
   useEffect(() => {
     if (currentPeriod && !selectedPeriodId) setSelectedPeriodId(currentPeriod.id)
@@ -503,26 +504,6 @@ export default function ExpensesPage() {
           <p className="text-muted-foreground text-[13px]">{selectedPeriod?.label ?? '...'}</p>
         </div>
         <div className="flex items-center gap-3">
-        {familyId && (
-          <div className="flex border border-border rounded-lg overflow-hidden">
-            {([
-              { key: 'personal' as const, label: 'אישי' },
-              { key: 'family' as const, label: 'משפחתי' },
-            ]).map(opt => (
-              <button
-                key={opt.key}
-                onClick={() => setViewMode(opt.key)}
-                className={`px-4 py-1.5 text-[13px] font-medium cursor-pointer border-none ${
-                  viewMode === opt.key
-                    ? 'bg-[oklch(0.20_0.01_250)] text-[oklch(0.92_0.01_250)] shadow-[inset_0_0_0_1px_var(--accent-blue)]'
-                    : 'bg-transparent text-[oklch(0.55_0.01_250)]'
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-        )}
         <div className="flex gap-2">
           <button onClick={handleResetExpenses} className="flex items-center gap-1.5 bg-transparent border border-border rounded-lg px-3.5 py-[7px] text-muted-foreground text-xs font-medium cursor-pointer">
             <Trash2 size={13} /> אפס הוצאות
@@ -544,7 +525,7 @@ export default function ExpensesPage() {
       {periods && <PeriodSelector periods={periods} selectedId={selectedPeriodId} onChange={setSelectedPeriodId} />}
 
       {/* ── Family View ──────────────────────────────────────────────────── */}
-      {viewMode === 'family' && (
+      {viewMode !== 'personal' && (
         <FamilyExpensesView
           familyExpenses={familyExpenses}
           sharedExp={sharedExp}
@@ -554,7 +535,7 @@ export default function ExpensesPage() {
       )}
 
       {/* ── Personal View ────────────────────────────────────────────────── */}
-      {viewMode === 'personal' && <>
+      {viewMode === 'personal' && <>{/* Personal View */}
 
       {/* ── Excel import preview ────────────────────────────────────────────── */}
       {showImport && (

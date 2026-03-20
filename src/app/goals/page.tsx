@@ -12,6 +12,7 @@ import { useFamilyContext } from '@/lib/context/FamilyContext'
 import { useSharedPeriod } from '@/lib/context/PeriodContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useMemo } from 'react'
+import { useFamilyView } from '@/contexts/FamilyViewContext'
 import { toast } from 'sonner'
 import { Target, Plus, ChevronDown, ChevronUp, Trash2, Edit3, TrendingUp, X } from 'lucide-react'
 import { TableSkeleton } from '@/components/ui/Skeleton'
@@ -46,7 +47,8 @@ export default function GoalsPage() {
   const [showAddModal, setShowAddModal] = useState(false)
   const [editGoal, setEditGoal] = useState<SavingsGoal | null>(null)
   const [expandedGoal, setExpandedGoal] = useState<number | null>(null)
-  const [viewMode, setViewMode] = useState<'all' | 'personal' | 'shared'>('all')
+  const { viewMode: globalView } = useFamilyView()
+  const goalsFilter = globalView === 'personal' ? 'personal' : 'all'
 
   useEffect(() => {
     if (currentPeriod && !selectedPeriodId) setSelectedPeriodId(currentPeriod.id)
@@ -59,8 +61,7 @@ export default function GoalsPage() {
   if (loading || !user) return <TableSkeleton rows={5} />
 
   const filteredGoals = (goals ?? []).filter(g => {
-    if (viewMode === 'personal') return !g.is_shared
-    if (viewMode === 'shared') return g.is_shared
+    if (goalsFilter === 'personal') return !g.is_shared
     return true
   })
 
@@ -96,24 +97,6 @@ export default function GoalsPage() {
         </button>
       </div>
       <p className="text-text-secondary text-[13px] mb-5">ניהול יעדי חיסכון אישיים ומשפחתיים</p>
-
-      {/* View filter */}
-      <div className="flex gap-1.5 mb-5">
-        {([
-          { key: 'all' as const, label: 'הכל' },
-          { key: 'personal' as const, label: 'אישי' },
-          { key: 'shared' as const, label: 'משותף' },
-        ]).map(opt => (
-          <button key={opt.key} onClick={() => setViewMode(opt.key)}
-            className={`px-3.5 py-1.5 rounded-lg text-[13px] font-medium cursor-pointer border-none transition-colors ${
-              viewMode === opt.key
-                ? 'bg-[oklch(0.25_0.02_250)] text-text-primary'
-                : 'bg-transparent text-text-secondary'
-            }`}>
-            {opt.label}
-          </button>
-        ))}
-      </div>
 
       {/* Summary KPIs */}
       <div className="grid-kpi">

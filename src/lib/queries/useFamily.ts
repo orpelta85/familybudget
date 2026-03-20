@@ -2,6 +2,39 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import type { Family, FamilyMember } from '@/lib/types'
 
+export interface FamilyMemberProfile {
+  user_id: string
+  name: string
+  role: 'admin' | 'member'
+  show_personal_to_family: boolean
+}
+
+export function useFamilyMemberProfiles(memberIds: string[], enabled: boolean) {
+  return useQuery<FamilyMemberProfile[]>({
+    queryKey: ['family_member_profiles', memberIds],
+    enabled: enabled && memberIds.length > 0,
+    queryFn: async () => {
+      const sb = createClient()
+      const { data: profiles } = await sb
+        .from('profiles')
+        .select('id, name')
+        .in('id', memberIds)
+      const { data: memberships } = await sb
+        .from('family_members')
+        .select('user_id, role, show_personal_to_family')
+        .in('user_id', memberIds)
+      const membershipMap = new Map((memberships ?? []).map(m => [m.user_id, m]))
+      return (profiles ?? []).map(p => ({
+        user_id: p.id,
+        name: p.name ?? 'חבר/ת משפחה',
+        role: (membershipMap.get(p.id)?.role ?? 'member') as 'admin' | 'member',
+        show_personal_to_family: membershipMap.get(p.id)?.show_personal_to_family ?? false,
+      }))
+    },
+    staleTime: 1000 * 60 * 5,
+  })
+}
+
 export interface FamilyMemberSummary {
   user_id: string
   display_name: string
