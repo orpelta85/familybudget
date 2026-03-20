@@ -850,27 +850,10 @@ export default function ExpensesPage() {
               {isPending ? '...' : '+ הוסף'}
             </button>
           </form>
-        </div>
 
-        {/* ── Lists ──────────────────────────────────────────────────────────── */}
-        <div>
-          {/* Totals summary */}
-          <div className="flex gap-3 mb-3 flex-wrap">
-            {[
-              { label: 'אישי', value: totalPersonal, color: 'text-primary' },
-              { label: 'משותף (חלקי)', value: totalSharedMy, color: 'text-[oklch(0.65_0.12_310)]' },
-              { label: 'סה"כ', value: totalAll, color: 'text-[oklch(0.72_0.18_55)]' },
-            ].filter(t => t.value > 0).map(t => (
-              <div key={t.label} className="card-transition bg-card border border-border rounded-lg px-3.5 py-2">
-                <div className="text-[10px] text-muted-foreground mb-0.5">{t.label}</div>
-                <div className={`text-[15px] font-bold ${t.color}`}>{formatCurrency(t.value)}</div>
-              </div>
-            ))}
-          </div>
-
-          {/* ── Sinking fund rows (locked, read-only) ────────────────────────── */}
+          {/* ── Sinking fund rows (under add form) ────────────────────────── */}
           {(funds ?? []).length > 0 && (
-            <div className="bg-card border border-border rounded-xl p-5 mb-3">
+            <div className="bg-card border border-border rounded-xl p-5 mt-3">
               <div className="flex items-center gap-1.5 mb-2.5 text-xs text-[oklch(0.70_0.15_185)] font-semibold">
                 <Target size={12} /> קרנות שנתיות — הפרשה חודשית
                 <span className="font-normal text-muted-foreground mr-1">(נעולות — לשינוי עבור לעמוד הקרנות)</span>
@@ -892,6 +875,23 @@ export default function ExpensesPage() {
               </div>
             </div>
           )}
+        </div>
+
+        {/* ── Lists ──────────────────────────────────────────────────────────── */}
+        <div>
+          {/* Totals summary */}
+          <div className="flex gap-3 mb-3 flex-wrap">
+            {[
+              { label: 'אישי', value: totalPersonal, color: 'text-primary' },
+              { label: 'משותף (חלקי)', value: totalSharedMy, color: 'text-[oklch(0.65_0.12_310)]' },
+              { label: 'סה"כ', value: totalAll, color: 'text-[oklch(0.72_0.18_55)]' },
+            ].filter(t => t.value > 0).map(t => (
+              <div key={t.label} className="card-transition bg-card border border-border rounded-lg px-3.5 py-2">
+                <div className="text-[10px] text-muted-foreground mb-0.5">{t.label}</div>
+                <div className={`text-[15px] font-bold ${t.color}`}>{formatCurrency(t.value)}</div>
+              </div>
+            ))}
+          </div>
 
           {/* ── Personal + Shared side by side ──────────────────────────────── */}
           <div className="grid-2 items-start">
