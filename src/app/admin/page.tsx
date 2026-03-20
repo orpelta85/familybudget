@@ -39,7 +39,13 @@ interface AdminUser {
   name: string | null
   created_at: string
   last_sign_in_at: string | null
+  family_id: string | null
+  family_name: string | null
+  family_role: string | null
   family_member_count: number
+  family_member_names: string[]
+  family_kids: { name: string; birth_date: string }[]
+  is_family_creator: boolean
   has_family: boolean
   plan: string
   plan_active: boolean
@@ -426,7 +432,22 @@ export default function AdminPage() {
                   <td className="py-2.5 px-2 text-[oklch(0.65_0.01_250)]">{relativeTime(u.last_sign_in_at)}</td>
                   {/* Family */}
                   <td className="py-2.5 px-2 text-[oklch(0.65_0.01_250)]">
-                    {u.has_family ? `${u.family_member_count} חברים` : 'יחיד'}
+                    {u.has_family ? (
+                      <div>
+                        <div className="flex items-center gap-1">
+                          <span className="text-[oklch(0.85_0.01_250)] font-medium">{u.family_name ?? 'משפחה'}</span>
+                          {u.is_family_creator && <span className="text-[9px] bg-[oklch(0.35_0.15_250)] text-[oklch(0.85_0.15_250)] px-1.5 py-0.5 rounded-full">מנהל</span>}
+                        </div>
+                        <div className="text-[10px] text-[oklch(0.55_0.01_250)]">
+                          {u.family_member_names.join(', ')}
+                          {u.family_kids.length > 0 && (
+                            <span> + {u.family_kids.length} ילדים ({u.family_kids.map(k => k.name).join(', ')})</span>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <span className="text-[oklch(0.45_0.01_250)]">יחיד</span>
+                    )}
                   </td>
                   {/* Plan */}
                   <td className="py-2.5 px-2">

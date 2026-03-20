@@ -19,10 +19,27 @@ export async function GET() {
   const { data: memberships } = await sb.from('family_members').select('user_id, family_id, role')
   const membershipMap = new Map((memberships ?? []).map(m => [m.user_id, m]))
 
-  // Family member counts
+  // Family member counts + family member names
   const familyCounts = new Map<string, number>()
+  const familyMembers = new Map<string, string[]>()
   for (const m of memberships ?? []) {
     familyCounts.set(m.family_id, (familyCounts.get(m.family_id) ?? 0) + 1)
+    const memberName = profileMap.get(m.user_id) ?? m.user_id.slice(0, 8)
+    if (!familyMembers.has(m.family_id)) familyMembers.set(m.family_id, [])
+    familyMembers.get(m.family_id)!.push(memberName)
+  }
+
+  // Get families info
+  const { data: families } = await sb.from('families').select('id, name, created_by')
+  const familyNameMap = new Map((families ?? []).map(f => [f.id, f.name]))
+  const familyCreatorMap = new Map((families ?? []).map(f => [f.id, f.created_by]))
+
+  // Get kids per family
+  const { data: kids } = await sb.from('kids').select('id, name, family_id, birth_date')
+  const familyKids = new Map<string, { name: string; birth_date: string }[]>()
+  for (const k of kids ?? []) {
+    if (!familyKids.has(k.family_id)) familyKids.set(k.family_id, [])
+    familyKids.get(k.family_id)!.push({ name: k.name, birth_date: k.birth_date })
   }
 
   // Get plans
@@ -46,13 +63,20 @@ export async function GET() {
     const plan = planMap.get(u.id)
     const isActive = u.last_sign_in_at ? new Date(u.last_sign_in_at) > new Date(sevenDaysAgo) : false
 
+    const familyId = membership?.family_id
     return {
       id: u.id,
       email: u.email,
       name: profileMap.get(u.id) ?? null,
       created_at: u.created_at,
       last_sign_in_at: u.last_sign_in_at,
+      family_id: familyId ?? null,
+      family_name: familyId ? (familyNameMap.get(familyId) ?? 'משפחה') : null,
+      family_role: membership?.role ?? null,
       family_member_count: familyMemberCount,
+      family_member_names: familyId ? (familyMembers.get(familyId) ?? []) : [],
+      family_kids: familyId ? (familyKids.get(familyId) ?? []) : [],
+      is_family_creator: familyId ? familyCreatorMap.get(familyId) === u.id : false,
       has_family: !!membership,
       plan: plan?.plan ?? 'free',
       plan_active: plan?.is_active ?? true,
