@@ -10,6 +10,7 @@ import {
 import { formatCurrency } from '@/lib/utils'
 import { useFamilyContext } from '@/lib/context/FamilyContext'
 import { useSharedPeriod } from '@/lib/context/PeriodContext'
+import { useFamilyView } from '@/contexts/FamilyViewContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useMemo } from 'react'
 import { toast } from 'sonner'
@@ -58,9 +59,21 @@ export default function KidsPage() {
   const { data: allActivities } = useAllKidActivities(kidIds)
   const confirm = useConfirmDialog()
 
+  const { selectedMemberId } = useFamilyView()
   const deleteKidMutation = useDeleteKid()
   const [showAddKid, setShowAddKid] = useState(false)
   const [expandedKid, setExpandedKid] = useState<number | null>(null)
+
+  // Auto-expand kid when selected from FamilyViewSelector
+  useEffect(() => {
+    if (selectedMemberId && selectedMemberId.startsWith('kid-') && kids) {
+      const kidId = Number(selectedMemberId.replace('kid-', ''))
+      const matchedKid = kids.find(k => k.id === kidId)
+      if (matchedKid) {
+        setExpandedKid(matchedKid.id)
+      }
+    }
+  }, [selectedMemberId, kids])
 
   useEffect(() => {
     if (currentPeriod && !selectedPeriodId) setSelectedPeriodId(currentPeriod.id)

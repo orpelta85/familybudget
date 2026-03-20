@@ -1,7 +1,7 @@
 'use client'
 
 import { useUser } from '@/lib/queries/useUser'
-import { useBudgetCategories, usePersonalExpenses, useUpdateCategoryTarget } from '@/lib/queries/useExpenses'
+import { useBudgetCategories, usePersonalExpenses, useFamilyPersonalExpenses, useUpdateCategoryTarget } from '@/lib/queries/useExpenses'
 import { useSharedExpenses } from '@/lib/queries/useShared'
 import { usePeriods, useCurrentPeriod } from '@/lib/queries/usePeriods'
 import { useIncome, useFamilyIncome } from '@/lib/queries/useIncome'
@@ -90,6 +90,7 @@ export default function BudgetPage() {
   const { familyId, members } = useFamilyContext()
   const familyMemberIds = useMemo(() => members.map(m => m.user_id), [members])
   const { data: familyIncome } = useFamilyIncome(selectedPeriodId ?? currentPeriod?.id, familyMemberIds, familyMemberIds.length > 0)
+  const { data: familyExpenses } = useFamilyPersonalExpenses(selectedPeriodId ?? currentPeriod?.id, familyMemberIds, familyMemberIds.length > 0)
 
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editValue, setEditValue] = useState('')
@@ -117,24 +118,31 @@ export default function BudgetPage() {
   const fixedCats = (categories ?? []).filter(c => c.type === 'fixed')
   const allNonFixed = (categories ?? []).filter(c => c.type !== 'fixed')
 
-  // Personal spending by category
-  const spendByCat = (expenses ?? []).reduce<Record<number, number>>((acc, e) => {
+  // Personal spending by category — aggregate ALL family members' expenses
+  const allFamilyExpensesList = useMemo(() => {
+    if (familyExpenses && familyExpenses.length > 0) {
+      return familyExpenses.flatMap(m => m.expenses)
+    }
+    return expenses ?? []
+  }, [familyExpenses, expenses])
+
+  const spendByCat = allFamilyExpensesList.reduce<Record<number, number>>((acc, e) => {
     acc[e.category_id] = (acc[e.category_id] ?? 0) + e.amount
     return acc
   }, {})
 
-  // Shared expenses: map to fixed categories by name, accumulate my_share
+  // Shared expenses: map to fixed categories by name, use FULL total_amount (family budget view)
   const sharedSpendByCatName = (sharedExpenses ?? []).reduce<Record<string, number>>((acc, se) => {
     const fixedName = resolveSharedToFixed(se.category, se.notes)
     if (fixedName) {
-      acc[fixedName] = (acc[fixedName] ?? 0) + se.my_share
+      acc[fixedName] = (acc[fixedName] ?? 0) + se.total_amount
     }
     return acc
   }, {})
 
   // Unmatched shared expenses (category not mapped to a fixed budget category)
   const unmatchedSharedTotal = (sharedExpenses ?? []).reduce((sum, se) => {
-    return resolveSharedToFixed(se.category, se.notes) ? sum : sum + se.my_share
+    return resolveSharedToFixed(se.category, se.notes) ? sum : sum + se.total_amount
   }, 0)
 
   // Combined spend for fixed categories: personal + shared
