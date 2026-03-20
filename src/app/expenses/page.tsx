@@ -352,7 +352,7 @@ export default function ExpensesPage() {
     if (!user || !selectedPeriodId || importing) return
     setImporting(true)
     const valid = importRows.filter(r => (r.categoryId || r.category) && r.amount > 0)
-    if (!valid.length) { toast.error('אין שורות עם קטגוריה וסכום'); return }
+    if (!valid.length) { toast.error('אין שורות עם קטגוריה וסכום'); setImporting(false); return }
     // Auto-assign __new__ for rows that have category name but no categoryId
     valid.forEach(r => {
       if (!r.categoryId && r.category) r.categoryId = `__new__${r.category.trim()}`
@@ -474,8 +474,9 @@ export default function ExpensesPage() {
     const catName = (categories ?? []).find(c => c.id === exp.category_id)?.name ?? ''
     const desc = exp.description ?? ''
     const lockId = personalItemId(exp.category_id, desc, exp.id)
+    const wasLocked = recurringPersonal.isLocked(lockId)
     recurringPersonal.toggle({ id: lockId, category_id: exp.category_id, category_name: catName, amount: exp.amount, description: desc })
-    toast.success(recurringPersonal.isLocked(lockId) ? `בוטל נעילה: ${desc || catName}` : `נעול: ${desc || catName}`)
+    toast.success(wasLocked ? `בוטל נעילה: ${desc || catName}` : `נעול: ${desc || catName}`)
   }
 
   function toggleLockShared(exp: { id: number; category: string; total_amount: number; notes?: string | null }) {
@@ -520,7 +521,7 @@ export default function ExpensesPage() {
       }
       if ((resetTarget === 'shared' || resetTarget === 'both') && familyId) {
         await sb.from('shared_expenses').delete().eq('period_id', selectedPeriodId).eq('family_id', familyId)
-        queryClient.invalidateQueries({ queryKey: ['shared_expenses', selectedPeriodId] })
+        queryClient.invalidateQueries({ queryKey: ['shared_expenses', selectedPeriodId, familyId] })
       }
       toast.success(`ההוצאות ה${labels[resetTarget]} אופסו`)
     } catch { toast.error('שגיאה באיפוס') }

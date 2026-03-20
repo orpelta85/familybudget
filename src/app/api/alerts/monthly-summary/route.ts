@@ -1,8 +1,6 @@
-import { createClient } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+import { createServiceClient } from '@/lib/supabase/server'
+import { getAuthUser } from '@/lib/supabase/auth'
 
 function fmt(n: number): string {
   const formatted = new Intl.NumberFormat('he-IL', { maximumFractionDigits: 0 }).format(Math.abs(n))
@@ -11,6 +9,11 @@ function fmt(n: number): string {
 }
 
 export async function GET(req: NextRequest) {
+  const authUser = await getAuthUser()
+  if (!authUser) {
+    return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+  }
+
   const userId = req.nextUrl.searchParams.get('user_id')
   const periodId = req.nextUrl.searchParams.get('period_id')
 
@@ -18,7 +21,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Missing user_id or period_id' }, { status: 400 })
   }
 
-  const sb = createClient(supabaseUrl, supabaseServiceKey)
+  if (authUser.id !== userId) {
+    return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+  }
+
+  const sb = createServiceClient()
 
   // Fetch income
   const { data: income } = await sb
@@ -143,7 +150,7 @@ export async function GET(req: NextRequest) {
         <div class="label">הוצאות</div>
       </div>
       <div class="kpi">
-        <div class="value" class="${netFlow >= 0 ? 'good' : 'overspent'}">${fmt(netFlow)}</div>
+        <div class="value ${netFlow >= 0 ? 'good' : 'overspent'}">${fmt(netFlow)}</div>
         <div class="label">תזרים נקי</div>
       </div>
       <div class="kpi">
