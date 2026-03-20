@@ -175,7 +175,7 @@ export default function IncomePage() {
 
           <div className="flex justify-between items-center py-3.5 border-t border-[oklch(0.22_0.01_250)]">
             <span className="font-semibold">סה&quot;כ הכנסה</span>
-            <span className="text-[22px] font-bold ltr text-[oklch(0.65_0.18_250)]">
+            <span className="text-[22px] font-bold text-[oklch(0.65_0.18_250)]">
               {formatCurrency(total)}
             </span>
           </div>
@@ -216,7 +216,7 @@ export default function IncomePage() {
                   <span className={`${d.isCurrent ? 'text-[oklch(0.92_0.01_250)] font-semibold' : 'text-[oklch(0.65_0.01_250)] font-normal'}`}>
                     {d.label}{d.isCurrent ? ' ✦' : ''}
                   </span>
-                  <span className={`ltr ${d.isCurrent ? 'font-semibold' : 'font-normal'}`}>{formatCurrency(d.total)}</span>
+                  <span className={`${d.isCurrent ? 'font-semibold' : 'font-normal'}`}>{formatCurrency(d.total)}</span>
                 </div>
               ))}
             </div>

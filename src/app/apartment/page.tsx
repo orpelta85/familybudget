@@ -90,13 +90,13 @@ export default function ApartmentPage() {
         <div className="flex justify-between items-start mb-5">
           <div>
             <div className="text-[13px] text-[oklch(0.65_0.10_145)] mb-1.5 uppercase tracking-[0.04em]">נחסך עד כה</div>
-            <div className="text-[40px] font-extrabold ltr text-[oklch(0.88_0.08_145)] tracking-[-0.04em]">
+            <div className="text-[40px] font-extrabold text-[oklch(0.88_0.08_145)] tracking-[-0.04em]">
               {formatCurrency(totalSaved)}
             </div>
           </div>
           <div className="text-left">
             <div className="text-[13px] text-[oklch(0.65_0.10_145)] mb-1.5">יעד סופי</div>
-            <div className="text-[22px] font-bold ltr text-[oklch(0.75_0.08_145)]">{formatCurrency(TOTAL_GOAL)}</div>
+            <div className="text-[22px] font-bold text-[oklch(0.75_0.08_145)]">{formatCurrency(TOTAL_GOAL)}</div>
           </div>
         </div>
 
@@ -110,7 +110,7 @@ export default function ApartmentPage() {
         </div>
         <div className="flex justify-between mt-2 text-xs">
           <span className="text-[oklch(0.70_0.15_145)] font-semibold">{pct.toFixed(1)}% מהיעד</span>
-          <span className="text-[oklch(0.60_0.08_145)] ltr">נותר: {formatCurrency(remaining)}</span>
+          <span className="text-[oklch(0.60_0.08_145)]">נותר: {formatCurrency(remaining)}</span>
         </div>
 
         {/* Stats */}
@@ -121,7 +121,7 @@ export default function ApartmentPage() {
             { label: 'ממוצע חודשי', value: deposits?.length ? formatCurrency(totalSaved / (deposits?.length ?? 1)) : '—' },
           ].map(s => (
             <div key={s.label} className="bg-[oklch(0.12_0.02_145)] rounded-lg px-3 py-2.5 text-center">
-              <div className="text-lg font-bold text-[oklch(0.88_0.08_145)] ltr">{s.value}</div>
+              <div className="text-lg font-bold text-[oklch(0.88_0.08_145)]">{s.value}</div>
               <div className="text-[11px] text-[oklch(0.60_0.08_145)] mt-0.5">{s.label}</div>
             </div>
           ))}

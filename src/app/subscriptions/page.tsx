@@ -112,11 +112,11 @@ export default function SubscriptionsPage() {
         </div>
         <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5">
           <div className="text-[11px] text-[oklch(0.65_0.01_250)] mb-1.5 uppercase tracking-wide">סה"כ חודשי</div>
-          <div className="text-2xl font-bold text-[oklch(0.72_0.18_55)] ltr">{formatCurrency(totalMonthly)}</div>
+          <div className="text-2xl font-bold text-[oklch(0.72_0.18_55)]">{formatCurrency(totalMonthly)}</div>
         </div>
         <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5">
           <div className="text-[11px] text-[oklch(0.65_0.01_250)] mb-1.5 uppercase tracking-wide">צפי שנתי</div>
-          <div className="text-2xl font-bold text-[oklch(0.62_0.22_27)] ltr">{formatCurrency(totalYearly)}</div>
+          <div className="text-2xl font-bold text-[oklch(0.62_0.22_27)]">{formatCurrency(totalYearly)}</div>
         </div>
       </div>
 
@@ -152,7 +152,7 @@ export default function SubscriptionsPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[13px] font-semibold ltr text-[oklch(0.72_0.18_55)]">{formatCurrency(sub.amount)}</span>
+                  <span className="text-[13px] font-semibold text-[oklch(0.72_0.18_55)]">{formatCurrency(sub.amount)}</span>
                   <button onClick={() => startEdit(sub)} aria-label="ערוך" className="bg-transparent border-none cursor-pointer p-1.5 text-[oklch(0.45_0.01_250)]"><Pencil size={11} /></button>
                   <button onClick={() => handleToggleActive(sub.id, sub.is_active)} aria-label="השהה" className="bg-transparent border-none cursor-pointer p-1.5 text-[oklch(0.45_0.01_250)]"><Pause size={11} /></button>
                   <button onClick={() => handleDelete(sub.id)} aria-label="מחק" className="bg-transparent border-none cursor-pointer p-1.5 text-[oklch(0.45_0.01_250)]"><Trash2 size={11} /></button>
@@ -171,7 +171,7 @@ export default function SubscriptionsPage() {
             <div key={sub.id} className="flex justify-between items-center py-2 border-b border-[oklch(0.20_0.01_250)]">
               <span className="text-[13px] text-[oklch(0.55_0.01_250)]">{sub.name}</span>
               <div className="flex items-center gap-1.5">
-                <span className="text-[13px] text-[oklch(0.55_0.01_250)] ltr">{formatCurrency(sub.amount)}</span>
+                <span className="text-[13px] text-[oklch(0.55_0.01_250)]">{formatCurrency(sub.amount)}</span>
                 <button onClick={() => handleToggleActive(sub.id, sub.is_active)} aria-label="הפעל" className="bg-transparent border-none cursor-pointer p-1.5 text-[oklch(0.70_0.18_145)]"><Play size={11} /></button>
                 <button onClick={() => handleDelete(sub.id)} aria-label="מחק" className="bg-transparent border-none cursor-pointer p-1.5 text-[oklch(0.45_0.01_250)]"><Trash2 size={11} /></button>
               </div>

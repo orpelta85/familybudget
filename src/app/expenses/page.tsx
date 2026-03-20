@@ -468,7 +468,7 @@ export default function ExpensesPage() {
               return (
                 <div key={i} className="grid-import-row py-1.5 border-b border-[oklch(0.20_0.01_250)]">
                   <span className="text-xs text-[oklch(0.80_0.01_250)] overflow-hidden text-ellipsis whitespace-nowrap">{row.description}</span>
-                  <span className="text-xs font-semibold ltr text-left text-[oklch(0.72_0.18_55)]">{formatCurrency(row.amount)}</span>
+                  <span className="text-xs font-semibold text-left text-[oklch(0.72_0.18_55)]">{formatCurrency(row.amount)}</span>
                   {/* Toggle אישי/משותף */}
                   <button
                     onClick={() => setImportRows(p => p.map((r, j) => j === i ? { ...r, is_shared: !r.is_shared } : r))}
@@ -631,7 +631,7 @@ export default function ExpensesPage() {
             ].filter(t => t.value > 0).map(t => (
               <div key={t.label} className="card-transition bg-card border border-border rounded-lg px-3.5 py-2">
                 <div className="text-[10px] text-muted-foreground mb-0.5">{t.label}</div>
-                <div className={`text-[15px] font-bold ltr ${t.color}`}>{formatCurrency(t.value)}</div>
+                <div className={`text-[15px] font-bold ${t.color}`}>{formatCurrency(t.value)}</div>
               </div>
             ))}
           </div>
@@ -649,14 +649,14 @@ export default function ExpensesPage() {
                     <Lock size={11} className="text-[oklch(0.70_0.15_185)] shrink-0" />
                     <span className="text-[13px] text-[oklch(0.80_0.01_250)]">{fund.name}</span>
                   </div>
-                  <span className="text-[13px] font-semibold ltr text-[oklch(0.70_0.15_185)]">
+                  <span className="text-[13px] font-semibold text-[oklch(0.70_0.15_185)]">
                     {formatCurrency(fund.monthly_allocation)}
                   </span>
                 </div>
               ))}
               <div className="flex justify-between pt-2 mt-1 text-xs text-[oklch(0.60_0.01_250)]">
                 <span>סה&quot;כ קרנות חודשי</span>
-                <span className="ltr font-semibold text-[oklch(0.70_0.15_185)]">{formatCurrency(totalSinking)}</span>
+                <span className="font-semibold text-[oklch(0.70_0.15_185)]">{formatCurrency(totalSinking)}</span>
               </div>
             </div>
           )}
@@ -670,7 +670,7 @@ export default function ExpensesPage() {
               <div className="flex items-center gap-1.5 text-[13px] font-semibold">
                 <User size={12} className="text-primary" /> <h2 className="text-[13px] font-semibold m-0 inline">הוצאות אישיות</h2>
               </div>
-              <span className="text-sm font-bold ltr text-primary">{formatCurrency(totalPersonal)}</span>
+              <span className="text-sm font-bold text-primary">{formatCurrency(totalPersonal)}</span>
             </div>
             {!(personalExp?.length)
               ? <div className="text-xs text-muted-foreground text-center py-6"><Inbox size={32} className="text-[oklch(0.30_0.01_250)] mx-auto mb-2" />אין הוצאות אישיות</div>
@@ -710,7 +710,7 @@ export default function ExpensesPage() {
                       {e.description && <div className="text-[11px] text-muted-foreground">{catName}</div>}
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[13px] font-semibold ltr">{formatCurrency(e.amount)}</span>
+                      <span className="text-[13px] font-semibold">{formatCurrency(e.amount)}</span>
                       <button onClick={() => setEditingPersonal({ id: e.id, categoryId: String(e.category_id), amount: String(e.amount), description: e.description ?? '' })}
                         aria-label="ערוך הוצאה"
                         className="bg-transparent border-none cursor-pointer flex items-center justify-center p-1.5 min-w-7 min-h-7 text-[oklch(0.45_0.01_250)] hover:text-[oklch(0.70_0.01_250)]">
@@ -738,7 +738,7 @@ export default function ExpensesPage() {
               <div className="flex items-center gap-1.5 text-[13px] font-semibold">
                 <Users size={12} className="text-[oklch(0.65_0.12_310)]" /> <h2 className="text-[13px] font-semibold m-0 inline">הוצאות משותפות</h2>
               </div>
-              <span className="text-sm font-bold ltr text-[oklch(0.65_0.12_310)]">{formatCurrency(totalSharedMy)}</span>
+              <span className="text-sm font-bold text-[oklch(0.65_0.12_310)]">{formatCurrency(totalSharedMy)}</span>
             </div>
             <div className="text-[11px] text-muted-foreground mb-2.5">
               הסכום שמוצג הוא חלקך ({splitPctLabel}%) — ניתן לנעול הוצאות קבועות
@@ -778,12 +778,12 @@ export default function ExpensesPage() {
                   <div key={e.id} className="flex justify-between items-center py-2.5 border-b border-[oklch(0.20_0.01_250)]">
                     <div>
                       <div className="text-[13px] font-medium">{label}</div>
-                      <div className="text-[11px] text-muted-foreground ltr mt-px">
+                      <div className="text-[11px] text-muted-foreground mt-px">
                         סה&quot;כ {formatCurrency(e.total_amount)} · חלקי {formatCurrency(myAmt)}
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[13px] font-semibold ltr text-[oklch(0.65_0.12_310)]">{formatCurrency(myAmt)}</span>
+                      <span className="text-[13px] font-semibold text-[oklch(0.65_0.12_310)]">{formatCurrency(myAmt)}</span>
                       <button onClick={() => setEditingShared({ id: e.id, category: e.category, totalAmount: String(e.total_amount), notes: e.notes ?? '' })}
                         aria-label="ערוך הוצאה"
                         className="bg-transparent border-none cursor-pointer flex items-center justify-center p-1.5 min-w-7 min-h-7 text-[oklch(0.45_0.01_250)] hover:text-[oklch(0.70_0.01_250)]">

@@ -122,15 +122,15 @@ export default function JointPage() {
         <div className="flex justify-between items-center">
           <div>
             <div className="text-xs text-[oklch(0.60_0.08_295)] mb-1 uppercase tracking-[0.04em]">יתרת הקופה</div>
-            <div className={`text-4xl font-extrabold ltr tracking-[-0.04em] ${balance >= 0 ? 'text-[oklch(0.80_0.12_295)]' : 'text-[oklch(0.75_0.15_27)]'}`}>{formatCurrency(balance)}</div>
+            <div className={`text-4xl font-extrabold tracking-[-0.04em] ${balance >= 0 ? 'text-[oklch(0.80_0.12_295)]' : 'text-[oklch(0.75_0.15_27)]'}`}>{formatCurrency(balance)}</div>
           </div>
           <div className="flex gap-6">
             <div className="text-center">
-              <div className="text-lg font-bold ltr text-[oklch(0.70_0.18_145)]">{formatCurrency(totalIncome)}</div>
+              <div className="text-lg font-bold text-[oklch(0.70_0.18_145)]">{formatCurrency(totalIncome)}</div>
               <div className="text-[11px] text-[oklch(0.65_0.01_250)]">הכנסות</div>
             </div>
             <div className="text-center">
-              <div className="text-lg font-bold ltr text-[oklch(0.72_0.18_55)]">{formatCurrency(totalExpenses)}</div>
+              <div className="text-lg font-bold text-[oklch(0.72_0.18_55)]">{formatCurrency(totalExpenses)}</div>
               <div className="text-[11px] text-[oklch(0.65_0.01_250)]">הוצאות</div>
             </div>
           </div>
@@ -186,7 +186,7 @@ export default function JointPage() {
               <span className="font-medium">{POOL_CATEGORIES.find(c => c.key === e.category)?.label ?? e.category}</span>
               {e.description && <span className="text-[oklch(0.65_0.01_250)] ml-2">· {e.description}</span>}
             </div>
-            <span className="ltr font-semibold text-[oklch(0.72_0.18_55)]">{formatCurrency(e.amount)}</span>
+            <span className="font-semibold text-[oklch(0.72_0.18_55)]">{formatCurrency(e.amount)}</span>
           </div>
         )) : (
           <div className="text-center py-6">

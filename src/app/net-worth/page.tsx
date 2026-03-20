@@ -355,7 +355,7 @@ export default function NetWorthPage() {
         ].map(kpi => (
           <div key={kpi.label} className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5">
             <div className="text-[11px] text-[oklch(0.65_0.01_250)] mb-1.5 tracking-wide">{kpi.label}</div>
-            <div className="text-2xl font-bold ltr" style={{ color: kpi.color }}>{kpi.value}</div>
+            <div className="text-2xl font-bold" style={{ color: kpi.color }}>{kpi.value}</div>
           </div>
         ))}
       </div>
@@ -370,19 +370,19 @@ export default function NetWorthPage() {
           <div className="grid grid-cols-3 gap-4">
             <div>
               <div className="text-[11px] text-[oklch(0.65_0.01_250)] mb-1 tracking-wide">תשואה חודשית</div>
-              <div className={`text-xl font-bold ltr ${returnsSummary.monthlyReturn >= 0 ? 'text-[oklch(0.70_0.18_145)]' : 'text-[oklch(0.62_0.22_27)]'}`}>
+              <div className={`text-xl font-bold ${returnsSummary.monthlyReturn >= 0 ? 'text-[oklch(0.70_0.18_145)]' : 'text-[oklch(0.62_0.22_27)]'}`}>
                 {returnsSummary.monthlyReturn >= 0 ? '+' : ''}{formatCurrency(returnsSummary.monthlyReturn)}
               </div>
             </div>
             <div>
               <div className="text-[11px] text-[oklch(0.65_0.01_250)] mb-1 tracking-wide">תשואה שנתית</div>
-              <div className={`text-xl font-bold ltr ${returnsSummary.annualReturn >= 0 ? 'text-[oklch(0.70_0.18_145)]' : 'text-[oklch(0.62_0.22_27)]'}`}>
+              <div className={`text-xl font-bold ${returnsSummary.annualReturn >= 0 ? 'text-[oklch(0.70_0.18_145)]' : 'text-[oklch(0.62_0.22_27)]'}`}>
                 {returnsSummary.annualReturn >= 0 ? '+' : ''}{formatCurrency(returnsSummary.annualReturn)}
               </div>
             </div>
             <div>
               <div className="text-[11px] text-[oklch(0.65_0.01_250)] mb-1 tracking-wide">תשואה ממוצעת משוקללת</div>
-              <div className={`text-xl font-bold ltr ${returnsSummary.weightedAvgPct >= 0 ? 'text-[oklch(0.70_0.18_145)]' : 'text-[oklch(0.62_0.22_27)]'}`}>
+              <div className={`text-xl font-bold ${returnsSummary.weightedAvgPct >= 0 ? 'text-[oklch(0.70_0.18_145)]' : 'text-[oklch(0.62_0.22_27)]'}`}>
                 {returnsSummary.weightedAvgPct >= 0 ? '+' : ''}{returnsSummary.weightedAvgPct.toFixed(1)}%
               </div>
             </div>
@@ -403,7 +403,7 @@ export default function NetWorthPage() {
                   <Icon size={15} style={{ color: group.color }} />
                   <span className="font-bold text-sm">{group.label}</span>
                 </div>
-                <span className="text-lg font-bold ltr" style={{ color: group.color }}>{formatCurrency(groupTotal)}</span>
+                <span className="text-lg font-bold" style={{ color: group.color }}>{formatCurrency(groupTotal)}</span>
               </div>
               {!items.length ? (
                 <div className="text-xs text-[oklch(0.65_0.01_250)] text-center py-4">
@@ -454,7 +454,7 @@ export default function NetWorthPage() {
                             </>
                           ) : (
                             <>
-                              <span className="text-[13px] font-semibold ltr" style={{ color: group.color }}>{formatCurrency(entry.amount)}</span>
+                              <span className="text-[13px] font-semibold" style={{ color: group.color }}>{formatCurrency(entry.amount)}</span>
                               {!isAuto && (
                                 <>
                                   <button onClick={() => { setEditingId(entry.id); setEditAmount(String(entry.amount)) }} aria-label="ערוך" className="bg-transparent border-none cursor-pointer p-1.5 text-[oklch(0.45_0.01_250)]"><Pencil size={11} /></button>
@@ -504,7 +504,7 @@ export default function NetWorthPage() {
         <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5">
           <div className="flex justify-between items-center mb-4 pb-3 border-b border-[oklch(0.22_0.01_250)]">
             <span className="font-bold text-sm">התחייבויות</span>
-            <span className="text-lg font-bold ltr text-[oklch(0.62_0.22_27)]">{formatCurrency(totalLiabilities)}</span>
+            <span className="text-lg font-bold text-[oklch(0.62_0.22_27)]">{formatCurrency(totalLiabilities)}</span>
           </div>
           {!liabilities.length ? (
             <div className="text-xs text-[oklch(0.65_0.01_250)] text-center py-4">
@@ -537,7 +537,7 @@ export default function NetWorthPage() {
                         </>
                       ) : (
                         <>
-                          <span className="text-[13px] font-semibold ltr text-[oklch(0.62_0.22_27)]">{formatCurrency(entry.amount)}</span>
+                          <span className="text-[13px] font-semibold text-[oklch(0.62_0.22_27)]">{formatCurrency(entry.amount)}</span>
                           <button onClick={() => { setEditingId(entry.id); setEditAmount(String(entry.amount)) }} aria-label="ערוך" className="bg-transparent border-none cursor-pointer p-1.5 text-[oklch(0.45_0.01_250)]"><Pencil size={11} /></button>
                           <button onClick={() => handleDelete(entry.id)} aria-label="מחק" className="bg-transparent border-none cursor-pointer p-1.5 text-[oklch(0.45_0.01_250)]"><Trash2 size={11} /></button>
                         </>

@@ -189,15 +189,15 @@ export default function BudgetPage() {
       <div className="grid-kpi mb-6">
         <div className="bg-card border border-border rounded-xl p-4">
           <div className="text-[11px] text-muted-foreground mb-1 uppercase tracking-wide">הכנסה נטו</div>
-          <div className="text-[22px] font-bold text-primary ltr leading-none">{formatCurrency(totalIncome)}</div>
+          <div className="text-[22px] font-bold text-primary leading-none">{formatCurrency(totalIncome)}</div>
         </div>
         <div className="bg-card border border-border rounded-xl p-4">
           <div className="text-[11px] text-muted-foreground mb-1 uppercase tracking-wide">סה״כ קבועות</div>
-          <div className="text-[22px] font-bold text-[oklch(0.65_0.18_250)] ltr leading-none">{formatCurrency(totalFixed)}</div>
+          <div className="text-[22px] font-bold text-[oklch(0.65_0.18_250)] leading-none">{formatCurrency(totalFixed)}</div>
         </div>
         <div className="bg-card border border-border rounded-xl p-4">
           <div className="text-[11px] text-muted-foreground mb-1 uppercase tracking-wide">סה״כ משתנות בפועל</div>
-          <div className="text-[22px] font-bold text-[oklch(0.72_0.18_55)] ltr leading-none">{formatCurrency(totalVariableActual)}</div>
+          <div className="text-[22px] font-bold text-[oklch(0.72_0.18_55)] leading-none">{formatCurrency(totalVariableActual)}</div>
           {totalVariableBudget > 0 && (
             <div className="text-[11px] text-muted-foreground mt-1.5">
               מתוך {formatCurrency(totalVariableBudget)} תקציב
@@ -206,7 +206,7 @@ export default function BudgetPage() {
         </div>
         <div className="bg-card border border-border rounded-xl p-4">
           <div className="text-[11px] text-muted-foreground mb-1 uppercase tracking-wide">נשאר פנוי</div>
-          <div className={`text-[22px] font-bold ltr leading-none ${remaining >= 0 ? 'text-[oklch(0.70_0.18_145)]' : 'text-[oklch(0.62_0.22_27)]'}`}>
+          <div className={`text-[22px] font-bold leading-none ${remaining >= 0 ? 'text-[oklch(0.70_0.18_145)]' : 'text-[oklch(0.62_0.22_27)]'}`}>
             {formatCurrency(remaining)}
           </div>
           {totalIncome > 0 && (
@@ -235,7 +235,7 @@ export default function BudgetPage() {
                   <span className="font-bold text-sm">הוצאות קבועות</span>
                   <span className="text-[11px] text-muted-foreground bg-secondary rounded px-1.5 py-px">{fixedCats.length}</span>
                 </div>
-                <div className="ltr text-[13px] font-bold text-[oklch(0.80_0.01_250)]">
+                <div className="text-[13px] font-bold text-[oklch(0.80_0.01_250)]">
                   {formatCurrency(totalFixed)}
                 </div>
               </div>
@@ -268,7 +268,7 @@ export default function BudgetPage() {
                             <Users size={11} className="text-[oklch(0.50_0.01_250)]" />
                           )}
                         </div>
-                        <span className={`ltr text-[13px] font-semibold ${isPaid ? 'text-[oklch(0.82_0.01_250)]' : 'text-[oklch(0.40_0.01_250)]'}`}>
+                        <span className={`text-[13px] font-semibold ${isPaid ? 'text-[oklch(0.82_0.01_250)]' : 'text-[oklch(0.40_0.01_250)]'}`}>
                           {isPaid ? formatCurrency(spent) : '—'}
                         </span>
                       </div>
@@ -286,7 +286,7 @@ export default function BudgetPage() {
                           הוצאות משותפות
                         </span>
                       </div>
-                      <span className="ltr text-[13px] font-semibold text-[oklch(0.82_0.01_250)]">
+                      <span className="text-[13px] font-semibold text-[oklch(0.82_0.01_250)]">
                         {formatCurrency(unmatchedSharedTotal)}
                       </span>
                     </div>
@@ -300,7 +300,7 @@ export default function BudgetPage() {
                   <span className="text-[12px] text-muted-foreground">
                     {fixedPaidCount}/{fixedCats.length} שולמו
                   </span>
-                  <span className="ltr text-[14px] font-bold text-[oklch(0.65_0.18_250)]">
+                  <span className="text-[14px] font-bold text-[oklch(0.65_0.18_250)]">
                     {formatCurrency(totalFixed)}
                   </span>
                 </div>
@@ -315,7 +315,7 @@ export default function BudgetPage() {
                   <span className="font-bold text-sm">הוצאות משתנות</span>
                   <span className="text-[11px] text-muted-foreground bg-secondary rounded px-1.5 py-px">{allNonFixed.length}</span>
                 </div>
-                <div className="ltr text-[13px]">
+                <div className="text-[13px]">
                   <span className="font-bold text-[oklch(0.80_0.01_250)]">{formatCurrency(totalVariableActual)}</span>
                   <span className="text-muted-foreground mx-1">/</span>
                   <span className="text-muted-foreground">{formatCurrency(totalVariableBudget)}</span>
@@ -352,7 +352,7 @@ export default function BudgetPage() {
                             <div className="w-16 h-[4px] rounded-sm bg-[oklch(0.20_0.01_250)] overflow-hidden">
                               <div className="h-full rounded-sm transition-[width] duration-400 ease-out" style={{ width: `${Math.min(groupPct * 100, 100)}%`, background: groupBarColor }} />
                             </div>
-                            <div className="ltr text-[12px]">
+                            <div className="text-[12px]">
                               <span className="font-semibold" style={{ color: groupBarColor }}>{formatCurrency(groupActual)}</span>
                               {groupBudget > 0 && (
                                 <>
@@ -388,7 +388,7 @@ export default function BudgetPage() {
                                   </div>
                                   {/* Row 2: Actual / Target */}
                                   <div className="flex justify-between items-baseline mb-1">
-                                    <div className="flex items-baseline gap-1 ltr text-[12px]">
+                                    <div className="flex items-baseline gap-1 text-[12px]">
                                       <span className="font-semibold" style={{ color: barColor }}>{formatCurrency(spent)}</span>
                                       <span className="text-muted-foreground">/</span>
                                       {isEditing ? (
@@ -445,7 +445,7 @@ export default function BudgetPage() {
                           <span className="font-semibold text-[13px] text-[oklch(0.82_0.01_250)]">אחר</span>
                           <span className="text-[11px] text-muted-foreground bg-[oklch(0.20_0.01_250)] rounded px-1.5 py-px">{ungroupedCats.length}</span>
                         </div>
-                        <div className="ltr text-[12px]">
+                        <div className="text-[12px]">
                           <span className="font-semibold text-[oklch(0.65_0.18_250)]">
                             {formatCurrency(ungroupedCats.reduce((s, c) => s + (spendByCat[c.id] ?? 0), 0))}
                           </span>
@@ -464,7 +464,7 @@ export default function BudgetPage() {
                                   <span className="font-medium text-[12px] text-[oklch(0.75_0.01_250)]">{cat.name}</span>
                                 </div>
                                 <div className="flex justify-between items-baseline mb-1">
-                                  <div className="flex items-baseline gap-1 ltr text-[12px]">
+                                  <div className="flex items-baseline gap-1 text-[12px]">
                                     <span className="font-semibold" style={{ color: barColor }}>{formatCurrency(spent)}</span>
                                     <span className="text-muted-foreground">/</span>
                                     {isEditing ? (
@@ -507,7 +507,7 @@ export default function BudgetPage() {
                   <span className="text-[12px] text-muted-foreground">
                     {totalVariableBudget > 0 ? `${Math.round((totalVariableActual / totalVariableBudget) * 100)}% מהתקציב` : ''}
                   </span>
-                  <div className="ltr text-[14px]">
+                  <div className="text-[14px]">
                     <span className="font-bold text-[oklch(0.80_0.01_250)]">{formatCurrency(totalVariableActual)}</span>
                     <span className="text-muted-foreground mx-1">/</span>
                     <span className="text-muted-foreground">{formatCurrency(totalVariableBudget)}</span>

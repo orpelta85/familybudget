@@ -322,7 +322,7 @@ export default function ForecastPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className={`text-[13px] font-semibold ltr ${ev.type === 'income' ? 'text-[oklch(0.70_0.18_145)]' : 'text-[oklch(0.62_0.22_27)]'}`}>
+                  <span className={`text-[13px] font-semibold ${ev.type === 'income' ? 'text-[oklch(0.70_0.18_145)]' : 'text-[oklch(0.62_0.22_27)]'}`}>
                     {ev.amount_mode === 'average'
                       ? `~${formatCurrency(avgMonthlyExpenses)}`
                       : `${ev.type === 'income' ? '+' : '-'}${formatCurrency(Number(ev.amount))}`
@@ -477,7 +477,7 @@ export default function ForecastPage() {
       <div className="grid grid-cols-3 gap-3 mb-6">
         <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5">
           <div className="text-[11px] text-[oklch(0.65_0.01_250)] mb-1.5 tracking-wide">יתרה נמוכה ביותר</div>
-          <div className={`text-2xl font-bold ltr ${(minDay?.balance ?? 0) >= 0 ? 'text-[oklch(0.70_0.18_145)]' : 'text-[oklch(0.62_0.22_27)]'}`}>
+          <div className={`text-2xl font-bold ${(minDay?.balance ?? 0) >= 0 ? 'text-[oklch(0.70_0.18_145)]' : 'text-[oklch(0.62_0.22_27)]'}`}>
             {formatCurrency(minDay?.balance ?? 0)}
           </div>
           {minDay && (
@@ -486,7 +486,7 @@ export default function ForecastPage() {
         </div>
         <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5">
           <div className="text-[11px] text-[oklch(0.65_0.01_250)] mb-1.5 tracking-wide">יתרה גבוהה ביותר</div>
-          <div className="text-2xl font-bold text-[oklch(0.70_0.18_145)] ltr">{formatCurrency(maxDay?.balance ?? 0)}</div>
+          <div className="text-2xl font-bold text-[oklch(0.70_0.18_145)]">{formatCurrency(maxDay?.balance ?? 0)}</div>
           {maxDay && (
             <div className="text-[11px] text-[oklch(0.50_0.01_250)] mt-1">{maxDay.label}</div>
           )}
@@ -530,10 +530,10 @@ export default function ForecastPage() {
                     </div>
                   </div>
                   <div className="text-left">
-                    <div className={`text-[13px] font-semibold ltr ${isPositive ? 'text-[oklch(0.70_0.18_145)]' : 'text-[oklch(0.62_0.22_27)]'}`}>
+                    <div className={`text-[13px] font-semibold ${isPositive ? 'text-[oklch(0.70_0.18_145)]' : 'text-[oklch(0.62_0.22_27)]'}`}>
                       {isPositive ? '+' : ''}{formatCurrency(ev.amount)}
                     </div>
-                    <div className="text-[11px] text-[oklch(0.50_0.01_250)] ltr">
+                    <div className="text-[11px] text-[oklch(0.50_0.01_250)]">
                       יתרה: {formatCurrency(ev.balanceAfter)}
                     </div>
                   </div>

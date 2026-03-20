@@ -325,7 +325,7 @@ export default function PensionPage() {
                     <Icon size={14} style={{ color: kpi.color }} />
                     <span className="text-[11px] text-[oklch(0.65_0.01_250)] font-medium">{kpi.label}</span>
                   </div>
-                  <div className="text-xl font-bold ltr text-left" style={{ color: kpi.color }}>
+                  <div className="text-xl font-bold text-left" style={{ color: kpi.color }}>
                     {kpi.value}
                   </div>
                 </div>
@@ -361,19 +361,19 @@ export default function PensionPage() {
                 <div className="grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-3">
                   <div className="bg-[oklch(0.14_0.01_250)] rounded-lg p-3.5">
                     <div className="text-[11px] text-[oklch(0.65_0.01_250)] mb-1.5">צבירה צפויה בפרישה</div>
-                    <div className="text-lg font-bold ltr text-left text-[oklch(0.65_0.18_250)]">
+                    <div className="text-lg font-bold text-left text-[oklch(0.65_0.18_250)]">
                       {formatCurrency(futureValue)}
                     </div>
                   </div>
                   <div className="bg-[oklch(0.14_0.01_250)] rounded-lg p-3.5">
                     <div className="text-[11px] text-[oklch(0.65_0.01_250)] mb-1.5">קצבה חודשית צפויה</div>
-                    <div className="text-lg font-bold ltr text-left text-[oklch(0.70_0.18_145)]">
+                    <div className="text-lg font-bold text-left text-[oklch(0.70_0.18_145)]">
                       {formatCurrency(monthlyPension)}
                     </div>
                   </div>
                   <div className="bg-[oklch(0.14_0.01_250)] rounded-lg p-3.5">
                     <div className="text-[11px] text-[oklch(0.65_0.01_250)] mb-1.5">יחס החלפה</div>
-                    <div className="text-lg font-bold ltr text-left" style={{ color: ratioColor }}>
+                    <div className="text-lg font-bold text-left" style={{ color: ratioColor }}>
                       {currentSalary > 0 ? `${replacementRatio.toFixed(0)}%` : 'אין נתון'}
                     </div>
                   </div>
@@ -402,7 +402,7 @@ export default function PensionPage() {
                     <item.Icon size={12} />
                     {item.label}
                   </div>
-                  <div className={`text-lg font-bold ltr text-left ${item.value > 0 ? 'text-[oklch(0.80_0.01_250)]' : 'text-[oklch(0.65_0.01_250)]'}`}>
+                  <div className={`text-lg font-bold text-left ${item.value > 0 ? 'text-[oklch(0.80_0.01_250)]' : 'text-[oklch(0.65_0.01_250)]'}`}>
                     {item.value > 0 ? formatCurrency(item.value) : 'אין כיסוי'}
                   </div>
                 </div>
@@ -461,7 +461,7 @@ export default function PensionPage() {
                   <div key={type} className="mb-2.5">
                     <div className="flex justify-between text-xs mb-1">
                       <span>{TYPE_LABELS[type as PensionProductType] || type}</span>
-                      <span className="ltr" style={{ color }}>{pct.toFixed(0)}% · {formatCurrency(amount)}</span>
+                      <span style={{ color }}>{pct.toFixed(0)}% · {formatCurrency(amount)}</span>
                     </div>
                     <div className="h-1.5 bg-[oklch(0.20_0.01_250)] rounded-sm">
                       <div className="h-full rounded-sm transition-[width] duration-500 ease-out" style={{ width: `${pct}%`, background: color }} />
@@ -482,7 +482,7 @@ export default function PensionPage() {
                   <div key={company} className="mb-2.5">
                     <div className="flex justify-between text-xs mb-1">
                       <span>{company}</span>
-                      <span className="ltr" style={{ color }}>{pct.toFixed(0)}% · {formatCurrency(amount)}</span>
+                      <span style={{ color }}>{pct.toFixed(0)}% · {formatCurrency(amount)}</span>
                     </div>
                     <div className="h-1.5 bg-[oklch(0.20_0.01_250)] rounded-sm">
                       <div className="h-full rounded-sm transition-[width] duration-500 ease-out" style={{ width: `${pct}%`, background: color }} />
@@ -513,8 +513,8 @@ export default function PensionPage() {
                     {healthCoverages.map(h => (
                       <tr key={h.id} className="border-b border-[oklch(0.20_0.01_250)]">
                         <td className="p-2">{h.coverage_name}</td>
-                        <td className="p-2 ltr text-left">{formatCurrency(h.main_insured)}</td>
-                        <td className="p-2 ltr text-left">{formatCurrency(h.total)}</td>
+                        <td className="p-2 text-left">{formatCurrency(h.main_insured)}</td>
+                        <td className="p-2 text-left">{formatCurrency(h.total)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -827,8 +827,8 @@ function ProductCard({ product: p, totalBalance, expanded, onToggle }: {
         </div>
         <div className="flex items-center gap-3">
           <div className="text-left">
-            <div className="font-bold text-base ltr" style={{ color }}>{formatCurrency(p.balance)}</div>
-            <div className="text-[11px] text-[oklch(0.65_0.01_250)] ltr">{pct.toFixed(1)}% מהתיק</div>
+            <div className="font-bold text-base" style={{ color }}>{formatCurrency(p.balance)}</div>
+            <div className="text-[11px] text-[oklch(0.65_0.01_250)]">{pct.toFixed(1)}% מהתיק</div>
           </div>
           {expanded ? <ChevronUp size={16} className="text-[oklch(0.65_0.01_250)]" /> : <ChevronDown size={16} className="text-[oklch(0.65_0.01_250)]" />}
         </div>
@@ -855,7 +855,7 @@ function ProductCard({ product: p, totalBalance, expanded, onToggle }: {
                 ].filter(item => item.value > 0).map(item => (
                   <div key={item.label} className="bg-[oklch(0.18_0.01_250)] rounded-md py-2 px-2.5">
                     <div className="text-[10px] text-[oklch(0.65_0.01_250)]">{item.label}</div>
-                    <div className="text-sm font-semibold ltr text-left">{formatCurrency(item.value)}</div>
+                    <div className="text-sm font-semibold text-left">{formatCurrency(item.value)}</div>
                   </div>
                 ))}
               </div>
@@ -883,7 +883,7 @@ function ProductCard({ product: p, totalBalance, expanded, onToggle }: {
           {p.salary_basis > 0 && (
             <div className="mb-3.5 text-[13px]">
               <span className="text-[oklch(0.65_0.01_250)] ml-1.5">שכר בסיס:</span>
-              <span className="font-semibold ltr">{formatCurrency(p.salary_basis)}</span>
+              <span className="font-semibold">{formatCurrency(p.salary_basis)}</span>
             </div>
           )}
 
@@ -920,11 +920,11 @@ function ProductCard({ product: p, totalBalance, expanded, onToggle }: {
                     {p.deposit_history.map((d, i) => (
                       <tr key={i} className="border-b border-[oklch(0.18_0.01_250)]">
                         <td className="p-1.5">{d.date}</td>
-                        <td className="p-1.5 ltr text-left">{formatCurrency(d.salary)}</td>
-                        <td className="p-1.5 ltr text-left">{formatCurrency(d.employer)}</td>
-                        <td className="p-1.5 ltr text-left">{formatCurrency(d.employee)}</td>
-                        <td className="p-1.5 ltr text-left">{formatCurrency(d.severance)}</td>
-                        <td className="p-1.5 ltr text-left font-semibold">{formatCurrency(d.total)}</td>
+                        <td className="p-1.5 text-left">{formatCurrency(d.salary)}</td>
+                        <td className="p-1.5 text-left">{formatCurrency(d.employer)}</td>
+                        <td className="p-1.5 text-left">{formatCurrency(d.employee)}</td>
+                        <td className="p-1.5 text-left">{formatCurrency(d.severance)}</td>
+                        <td className="p-1.5 text-left font-semibold">{formatCurrency(d.total)}</td>
                       </tr>
                     ))}
                   </tbody>

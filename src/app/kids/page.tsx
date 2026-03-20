@@ -115,14 +115,14 @@ export default function KidsPage() {
             <span className="kpi-label">עלות חודשית (חוגים)</span>
             <Coins size={14} className="opacity-70 text-accent-orange" />
           </div>
-          <div className="kpi-value text-accent-orange ltr">{formatCurrency(totalActivitiesCost)}</div>
+          <div className="kpi-value text-accent-orange">{formatCurrency(totalActivitiesCost)}</div>
         </div>
         <div className="kpi-card">
           <div className="flex justify-between items-center mb-2">
             <span className="kpi-label">קצבת ילדים</span>
             <Heart size={14} className="opacity-70 text-accent-green" />
           </div>
-          <div className="kpi-value text-accent-green ltr">{formatCurrency(childBenefit)}</div>
+          <div className="kpi-value text-accent-green">{formatCurrency(childBenefit)}</div>
           <div className="kpi-sub text-text-secondary">חודשי</div>
         </div>
         <div className="kpi-card">
@@ -130,7 +130,7 @@ export default function KidsPage() {
             <span className="kpi-label">חיסכון ביטוח לאומי</span>
             <TrendingUp size={14} className="opacity-70 text-accent-teal" />
           </div>
-          <div className="kpi-value text-accent-teal ltr">{formatCurrency(totalSavingsPerMonth)}</div>
+          <div className="kpi-value text-accent-teal">{formatCurrency(totalSavingsPerMonth)}</div>
           <div className="kpi-sub text-text-secondary">{BITUACH_LEUMI_SAVINGS} ₪/ילד/חודש</div>
         </div>
       </div>
@@ -227,7 +227,7 @@ function KidCard({
           </div>
           <div className="flex gap-4 text-xs text-text-secondary">
             <span>{activities.length} חוגים</span>
-            <span className="ltr">עלות חודשית: {formatCurrency(monthlyCost)}</span>
+            <span>עלות חודשית: {formatCurrency(monthlyCost)}</span>
           </div>
         </div>
         {expanded ? <ChevronUp size={16} className="text-text-secondary" /> : <ChevronDown size={16} className="text-text-secondary" />}
@@ -330,15 +330,15 @@ function KidExpandedView({
         <div className="font-semibold text-sm mb-3">סיכום חודשי</div>
         <div className="grid-3 mb-0">
           <div className="bg-[oklch(0.16_0.01_250)] rounded-lg px-3 py-2.5 text-center">
-            <div className="text-lg font-bold text-accent-orange ltr">{formatCurrency(monthlyCost)}</div>
+            <div className="text-lg font-bold text-accent-orange">{formatCurrency(monthlyCost)}</div>
             <div className="text-[11px] text-text-secondary mt-0.5">חוגים</div>
           </div>
           <div className="bg-[oklch(0.16_0.01_250)] rounded-lg px-3 py-2.5 text-center">
-            <div className="text-lg font-bold text-accent-red ltr">{formatCurrency(currentMonthExpenses)}</div>
+            <div className="text-lg font-bold text-accent-red">{formatCurrency(currentMonthExpenses)}</div>
             <div className="text-[11px] text-text-secondary mt-0.5">הוצאות</div>
           </div>
           <div className="bg-[oklch(0.16_0.01_250)] rounded-lg px-3 py-2.5 text-center">
-            <div className="text-lg font-bold text-accent-purple ltr">{formatCurrency(totalMonthly)}</div>
+            <div className="text-lg font-bold text-accent-purple">{formatCurrency(totalMonthly)}</div>
             <div className="text-[11px] text-text-secondary mt-0.5">סה"כ</div>
           </div>
         </div>
@@ -387,11 +387,11 @@ function KidExpandedView({
           ) : (
             <div className="grid-2 !mb-0">
               <div className="bg-[oklch(0.16_0.02_280)] rounded-lg px-3 py-2.5 text-center">
-                <div className="text-lg font-bold text-accent-purple ltr">{formatCurrency(monthlySavings)}</div>
+                <div className="text-lg font-bold text-accent-purple">{formatCurrency(monthlySavings)}</div>
                 <div className="text-[11px] text-text-secondary mt-0.5">חיסכון חודשי</div>
               </div>
               <div className="bg-[oklch(0.16_0.02_280)] rounded-lg px-3 py-2.5 text-center">
-                <div className="text-lg font-bold text-accent-purple ltr">{formatCurrency(projectedSavings)}</div>
+                <div className="text-lg font-bold text-accent-purple">{formatCurrency(projectedSavings)}</div>
                 <div className="text-[11px] text-text-secondary mt-0.5">תחזית לגיל {targetAge}</div>
               </div>
             </div>
@@ -436,7 +436,7 @@ function KidExpandedView({
                   <div>
                     <span className="text-text-heading">{a.name}</span>
                     <div className="flex gap-3 text-[11px] text-text-secondary mt-0.5">
-                      <span className="ltr">{formatCurrency(a.monthly_cost)}/חודש</span>
+                      <span>{formatCurrency(a.monthly_cost)}/חודש</span>
                       {a.equipment_cost > 0 && <span>ציוד: {formatCurrency(a.equipment_cost)}</span>}
                       {a.transport_cost > 0 && <span>הסעות: {formatCurrency(a.transport_cost)}</span>}
                     </div>
@@ -471,7 +471,7 @@ function KidExpandedView({
                       <div className="text-[11px] text-text-secondary mt-0.5">{e.category}</div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="ltr font-medium text-accent-red">{formatCurrency(e.amount)}</span>
+                      <span className="font-medium text-accent-red">{formatCurrency(e.amount)}</span>
                       <button onClick={() => handleDeleteExpense(e.id)} aria-label="מחק"
                         className="bg-transparent border-none cursor-pointer text-text-secondary hover:text-accent-red p-1">
                         <Trash2 size={13} />
@@ -482,7 +482,7 @@ function KidExpandedView({
               </div>
               <div className="flex justify-between items-center mt-3 pt-3 border-t border-t-[oklch(0.22_0.01_250)] text-sm">
                 <span className="font-semibold text-text-secondary">סה"כ חודשי</span>
-                <span className="font-bold text-accent-red ltr">{formatCurrency(currentMonthExpenses)}</span>
+                <span className="font-bold text-accent-red">{formatCurrency(currentMonthExpenses)}</span>
               </div>
             </>
           )}

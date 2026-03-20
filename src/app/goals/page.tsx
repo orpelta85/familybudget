@@ -129,14 +129,14 @@ export default function GoalsPage() {
             <span className="kpi-label">סה"כ יעדים</span>
             <TrendingUp size={14} className="opacity-70 text-accent-orange" />
           </div>
-          <div className="kpi-value text-accent-orange ltr">{formatCurrency(totalAllGoals)}</div>
+          <div className="kpi-value text-accent-orange">{formatCurrency(totalAllGoals)}</div>
         </div>
         <div className="kpi-card">
           <div className="flex justify-between items-center mb-2">
             <span className="kpi-label">נחסך עד כה</span>
             <TrendingUp size={14} className="opacity-70 text-accent-green" />
           </div>
-          <div className="kpi-value text-accent-green ltr">{formatCurrency(totalAllSaved)}</div>
+          <div className="kpi-value text-accent-green">{formatCurrency(totalAllSaved)}</div>
         </div>
         <div className="kpi-card">
           <div className="flex justify-between items-center mb-2">
@@ -232,7 +232,7 @@ function GoalCard({
             )}
           </div>
           <div className="flex gap-4 text-xs text-text-secondary">
-            <span className="ltr">{formatCurrency(totalSaved)} / {formatCurrency(goal.target_amount)}</span>
+            <span>{formatCurrency(totalSaved)} / {formatCurrency(goal.target_amount)}</span>
             <span>{pct.toFixed(1)}%</span>
             {monthsRemaining !== null && monthsRemaining > 0 && (
               <span>עוד {monthsRemaining} חודשים</span>
@@ -335,13 +335,13 @@ function GoalExpandedView({
         <div className="flex justify-between items-start mb-4">
           <div>
             <div className="text-[13px] text-text-secondary mb-1">נחסך עד כה</div>
-            <div className="text-[32px] font-extrabold ltr" style={{ color: goal.color }}>
+            <div className="text-[32px] font-extrabold" style={{ color: goal.color }}>
               {formatCurrency(totalSaved)}
             </div>
           </div>
           <div className="text-right">
             <div className="text-[13px] text-text-secondary mb-1">יעד סופי</div>
-            <div className="text-lg font-bold ltr text-text-heading">{formatCurrency(goal.target_amount)}</div>
+            <div className="text-lg font-bold text-text-heading">{formatCurrency(goal.target_amount)}</div>
           </div>
         </div>
         <div className="bar-track-lg mb-2">
@@ -349,7 +349,7 @@ function GoalExpandedView({
         </div>
         <div className="flex justify-between text-xs text-text-secondary">
           <span style={{ color: goal.color }} className="font-semibold">{pct.toFixed(1)}% מהיעד</span>
-          <span className="ltr">נותר: {formatCurrency(remaining)}</span>
+          <span>נותר: {formatCurrency(remaining)}</span>
         </div>
 
         {/* Stats */}
@@ -360,7 +360,7 @@ function GoalExpandedView({
             { label: monthsRemaining !== null && monthsRemaining > 0 ? 'חודשים נותרים' : 'הושלם', value: monthsRemaining !== null && monthsRemaining > 0 ? monthsRemaining : '✓' },
           ].map(s => (
             <div key={s.label} className="bg-[oklch(0.16_0.01_250)] rounded-lg px-3 py-2.5 text-center">
-              <div className="text-lg font-bold text-text-heading ltr">{s.value}</div>
+              <div className="text-lg font-bold text-text-heading">{s.value}</div>
               <div className="text-[11px] text-text-secondary mt-0.5">{s.label}</div>
             </div>
           ))}
@@ -409,7 +409,7 @@ function GoalExpandedView({
                     {d.notes && <span className="text-text-secondary mr-2 text-[11px]">— {d.notes}</span>}
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="ltr font-medium" style={{ color: goal.color }}>{formatCurrency(d.amount_deposited)}</span>
+                    <span className="font-medium" style={{ color: goal.color }}>{formatCurrency(d.amount_deposited)}</span>
                     <button onClick={() => handleDeleteDeposit(d.id)} aria-label="מחק"
                       className="bg-transparent border-none cursor-pointer text-text-secondary hover:text-accent-red p-1">
                       <Trash2 size={13} />

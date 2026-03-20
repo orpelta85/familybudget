@@ -355,19 +355,19 @@ export default function Dashboard() {
                 ].map(row => (
                   <div key={row.label} className="flex justify-between py-[5px] row-divider">
                     <span className="text-text-body">{row.label}</span>
-                    <span className="ltr font-medium" style={{ color: row.color }}>
+                    <span className="font-medium" style={{ color: row.color }}>
                       {row.sign}{formatCurrency(Math.abs(row.value))}
                     </span>
                   </div>
                 ))}
                 <div className="flex justify-between pt-2.5 mt-1">
                   <span className="font-semibold">נשאר בטוח להוציא</span>
-                  <span className={`text-base font-bold ltr ${safeToSpend >= 0 ? 'text-accent-green' : 'text-accent-red'}`}>
+                  <span className={`text-base font-bold ${safeToSpend >= 0 ? 'text-accent-green' : 'text-accent-red'}`}>
                     {formatCurrency(safeToSpend)}
                   </span>
                 </div>
                 {variableRemaining > 0 && (
-                  <div className="text-[11px] text-text-secondary mt-1.5 ltr text-right">
+                  <div className="text-[11px] text-text-secondary mt-1.5 text-right">
                     יתרת תקציב משתנות: {formatCurrency(variableRemaining)}
                   </div>
                 )}
@@ -399,7 +399,7 @@ export default function Dashboard() {
                   return (
                     <div key={row.label} className="flex justify-between items-center py-[7px] row-divider">
                       <span className="text-text-body">{row.label}</span>
-                      <div className="flex gap-2 items-center ltr">
+                      <div className="flex gap-2 items-center">
                         {pct !== null && (
                           <span className={`text-[11px] font-semibold ${isGood ? 'text-accent-green' : 'text-accent-red'}`}>
                             {pct >= 0 ? `↑${pct}%` : `↓${Math.abs(pct)}%`}
@@ -443,7 +443,7 @@ export default function Dashboard() {
                   <div key={cat.id} className="mb-2.5">
                     <div className="flex justify-between text-xs mb-[3px]">
                       <span className="text-text-heading">{cat.name}</span>
-                      <div className="flex gap-1.5 items-center ltr">
+                      <div className="flex gap-1.5 items-center">
                         {deviation !== null && (
                           <span className={`text-[10px] ${deviation > 15 ? 'text-accent-red' : deviation < -15 ? 'text-accent-green' : 'text-text-secondary'}`}>
                             {deviation > 0 ? `↑${deviation}%` : `↓${Math.abs(deviation)}%`}
@@ -477,7 +477,7 @@ export default function Dashboard() {
             <h2 className="card-header">
               <PiggyBank size={14} className="text-accent-teal" /> קרנות צבירה
             </h2>
-            <div className="text-[13px] font-bold text-accent-teal ltr">
+            <div className="text-[13px] font-bold text-accent-teal">
               {formatCurrency(totalFundBalance)}
             </div>
           </div>
@@ -491,7 +491,7 @@ export default function Dashboard() {
                 <div key={fund.id} className="mb-[11px]">
                   <div className="flex justify-between text-xs mb-[3px]">
                     <span className="text-text-heading">{fund.name}</span>
-                    <span className={`ltr font-semibold ${balance >= 0 ? 'text-accent-teal' : 'text-accent-red'}`}>
+                    <span className={`font-semibold ${balance >= 0 ? 'text-accent-teal' : 'text-accent-red'}`}>
                       {formatCurrency(balance)}
                     </span>
                   </div>
@@ -523,7 +523,7 @@ export default function Dashboard() {
                 <div key={goal.id} className="mb-[11px]">
                   <div className="flex justify-between text-xs mb-[3px]">
                     <span className="text-text-heading">{goal.icon} {goal.name}</span>
-                    <span className="ltr font-semibold" style={{ color: goal.color }}>
+                    <span className="font-semibold" style={{ color: goal.color }}>
                       {formatCurrency(saved)} / {formatCurrency(goal.target_amount)}
                     </span>
                   </div>
@@ -545,25 +545,25 @@ export default function Dashboard() {
             <h2 className="card-header mb-3.5">
               <Wallet size={14} className="text-accent-purple" /> שווי נקי
             </h2>
-            <div className={`text-[28px] font-bold ltr text-right mb-3.5 ${netWorth >= 0 ? 'text-accent-purple' : 'text-accent-red'}`}>
+            <div className={`text-[28px] font-bold text-right mb-3.5 ${netWorth >= 0 ? 'text-accent-purple' : 'text-accent-red'}`}>
               {formatCurrency(netWorth)}
             </div>
             <div className="flex flex-col gap-1.5 text-xs">
               {pensionTotal > 0 && (
                 <div className="flex justify-between">
                   <span className="text-text-secondary">פנסיה והשקעות</span>
-                  <span className="ltr text-text-body">{formatCurrency(pensionTotal)}</span>
+                  <span className="text-text-body">{formatCurrency(pensionTotal)}</span>
                 </div>
               )}
               {totalFundBalance !== 0 && (
                 <div className="flex justify-between">
                   <span className="text-text-secondary">קרנות צבירה</span>
-                  <span className="ltr text-text-body">{formatCurrency(totalFundBalance)}</span>
+                  <span className="text-text-body">{formatCurrency(totalFundBalance)}</span>
                 </div>
               )}
               <div className="flex justify-between">
                 <span className="text-text-secondary">יעדי חיסכון</span>
-                <span className="ltr text-text-body">{formatCurrency(totalGoalsSaved)}</span>
+                <span className="text-text-body">{formatCurrency(totalGoalsSaved)}</span>
               </div>
             </div>
           </div>
@@ -664,22 +664,22 @@ function FamilyDashboard({
                 <div className="flex flex-col gap-2 text-[13px]">
                   <div className="flex justify-between">
                     <span className="text-text-secondary">הכנסה</span>
-                    <span className="ltr font-medium text-accent-green">{formatCurrency(member.income)}</span>
+                    <span className="font-medium text-accent-green">{formatCurrency(member.income)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-text-secondary">הוצאות אישיות</span>
-                    <span className="ltr font-medium text-accent-orange">{formatCurrency(member.personal_expenses)}</span>
+                    <span className="font-medium text-accent-orange">{formatCurrency(member.personal_expenses)}</span>
                   </div>
                   <div className="flex justify-between border-t border-t-bg-hover pt-2">
                     <span className="font-semibold">נטו</span>
-                    <span className={`ltr font-bold ${memberNet >= 0 ? 'text-accent-green' : 'text-accent-red'}`}>{formatCurrency(memberNet)}</span>
+                    <span className={`font-bold ${memberNet >= 0 ? 'text-accent-green' : 'text-accent-red'}`}>{formatCurrency(memberNet)}</span>
                   </div>
                 </div>
               ) : (
                 <div className="text-[13px] text-text-secondary">
                   <div className="flex justify-between mb-2">
                     <span>הכנסה</span>
-                    <span className="ltr font-medium text-accent-green">{formatCurrency(member.income)}</span>
+                    <span className="font-medium text-accent-green">{formatCurrency(member.income)}</span>
                   </div>
                   <div className="text-xs text-text-secondary italic">פרטי הוצאות מוסתרים</div>
                 </div>
@@ -695,7 +695,7 @@ function FamilyDashboard({
           <div className="card-header mb-3.5">
             <Receipt size={14} className="text-accent-shared" /> הוצאות משותפות
           </div>
-          <div className="text-[22px] font-bold text-accent-shared ltr tracking-tight mb-3.5">
+          <div className="text-[22px] font-bold text-accent-shared tracking-tight mb-3.5">
             {formatCurrency(summary.total_shared_expenses)}
           </div>
           {(shared ?? []).length > 0 && (
@@ -703,7 +703,7 @@ function FamilyDashboard({
               {(shared ?? []).map(s => (
                 <div key={s.id} className="flex justify-between">
                   <span className="text-text-secondary">{s.category}</span>
-                  <span className="ltr text-text-body">{formatCurrency(s.total_amount)}</span>
+                  <span className="text-text-body">{formatCurrency(s.total_amount)}</span>
                 </div>
               ))}
             </div>
@@ -726,7 +726,7 @@ function FamilyDashboard({
                 <div key={goal.id} className="mb-[11px]">
                   <div className="flex justify-between text-xs mb-[3px]">
                     <span className="text-text-heading">{goal.icon} {goal.name}</span>
-                    <span className="ltr font-semibold" style={{ color: goal.color }}>
+                    <span className="font-semibold" style={{ color: goal.color }}>
                       {formatCurrency(saved)} / {formatCurrency(goal.target_amount)}
                     </span>
                   </div>

@@ -262,7 +262,7 @@ export default function DebtsPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="text-left ltr">
+                    <div className="text-left">
                       <div className="text-base font-bold text-[oklch(0.88_0.01_250)]">{formatCurrency(Number(debt.balance))}</div>
                       <div className="text-xs text-[oklch(0.65_0.01_250)]">מינימום: {formatCurrency(Number(debt.minimum_payment))}</div>
                     </div>
@@ -310,9 +310,9 @@ export default function DebtsPage() {
                 <tbody>
                   <tr className="border-b border-[oklch(0.20_0.01_250)] opacity-60">
                     <td className="py-2.5 px-3 font-medium">מינימום בלבד</td>
-                    <td className="py-2.5 px-3 ltr">{formatMonths(minimumResult.months)}</td>
-                    <td className="py-2.5 px-3 ltr text-[oklch(0.72_0.18_55)]">{formatCurrency(minimumResult.totalInterest)}</td>
-                    <td className="py-2.5 px-3 ltr">—</td>
+                    <td className="py-2.5 px-3">{formatMonths(minimumResult.months)}</td>
+                    <td className="py-2.5 px-3 text-[oklch(0.72_0.18_55)]">{formatCurrency(minimumResult.totalInterest)}</td>
+                    <td className="py-2.5 px-3">—</td>
                   </tr>
                   <tr className={`border-b border-[oklch(0.20_0.01_250)] ${method === 'snowball' ? 'bg-[oklch(0.18_0.02_250)]' : ''}`}>
                     <td className="py-2.5 px-3">
@@ -320,9 +320,9 @@ export default function DebtsPage() {
                         Snowball (מהקטן לגדול)
                       </button>
                     </td>
-                    <td className="py-2.5 px-3 ltr">{formatMonths(snowballResult.months)}</td>
-                    <td className="py-2.5 px-3 ltr text-[oklch(0.72_0.18_55)]">{formatCurrency(snowballResult.totalInterest)}</td>
-                    <td className="py-2.5 px-3 ltr text-[oklch(0.70_0.18_145)] font-semibold">{formatCurrency(minimumResult.totalInterest - snowballResult.totalInterest)}</td>
+                    <td className="py-2.5 px-3">{formatMonths(snowballResult.months)}</td>
+                    <td className="py-2.5 px-3 text-[oklch(0.72_0.18_55)]">{formatCurrency(snowballResult.totalInterest)}</td>
+                    <td className="py-2.5 px-3 text-[oklch(0.70_0.18_145)] font-semibold">{formatCurrency(minimumResult.totalInterest - snowballResult.totalInterest)}</td>
                   </tr>
                   <tr className={`${method === 'avalanche' ? 'bg-[oklch(0.18_0.02_250)]' : ''}`}>
                     <td className="py-2.5 px-3">
@@ -330,9 +330,9 @@ export default function DebtsPage() {
                         Avalanche (מהיקר לזול)
                       </button>
                     </td>
-                    <td className="py-2.5 px-3 ltr">{formatMonths(avalancheResult.months)}</td>
-                    <td className="py-2.5 px-3 ltr text-[oklch(0.72_0.18_55)]">{formatCurrency(avalancheResult.totalInterest)}</td>
-                    <td className="py-2.5 px-3 ltr text-[oklch(0.70_0.18_145)] font-semibold">{formatCurrency(minimumResult.totalInterest - avalancheResult.totalInterest)}</td>
+                    <td className="py-2.5 px-3">{formatMonths(avalancheResult.months)}</td>
+                    <td className="py-2.5 px-3 text-[oklch(0.72_0.18_55)]">{formatCurrency(avalancheResult.totalInterest)}</td>
+                    <td className="py-2.5 px-3 text-[oklch(0.70_0.18_145)] font-semibold">{formatCurrency(minimumResult.totalInterest - avalancheResult.totalInterest)}</td>
                   </tr>
                 </tbody>
               </table>
@@ -442,11 +442,11 @@ export default function DebtsPage() {
                         <tr key={rowIdx} className="border-b border-[oklch(0.18_0.01_250)]">
                           <td className="py-1.5 px-2 text-[oklch(0.65_0.01_250)]">{monthNum}</td>
                           {row.map((val, i) => (
-                            <td key={i} className="py-1.5 px-2 ltr" style={{ color: val > 0 ? COLORS[i % COLORS.length] : 'oklch(0.40 0.01 250)' }}>
+                            <td key={i} className="py-1.5 px-2" style={{ color: val > 0 ? COLORS[i % COLORS.length] : 'oklch(0.40 0.01 250)' }}>
                               {val > 0 ? formatCurrency(Math.round(val)) : '0 ₪'}
                             </td>
                           ))}
-                          <td className="py-1.5 px-2 ltr font-semibold text-[oklch(0.80_0.01_250)]">{formatCurrency(Math.round(total))}</td>
+                          <td className="py-1.5 px-2 font-semibold text-[oklch(0.80_0.01_250)]">{formatCurrency(Math.round(total))}</td>
                         </tr>
                       )
                     })}

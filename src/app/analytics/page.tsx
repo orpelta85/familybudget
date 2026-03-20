@@ -194,7 +194,7 @@ export default function AnalyticsPage() {
         ].map(kpi => (
           <div key={kpi.label} className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-4">
             <div className="text-[11px] text-[oklch(0.65_0.01_250)] mb-1.5 uppercase tracking-wide">{kpi.label}</div>
-            <div className={`text-xl font-bold ltr tracking-tight text-[${kpi.color}]`}>{kpi.value}</div>
+            <div className={`text-xl font-bold tracking-tight text-[${kpi.color}]`}>{kpi.value}</div>
           </div>
         ))}
       </div>
@@ -249,7 +249,7 @@ export default function AnalyticsPage() {
                     <div className="flex-1 h-5 rounded-sm bg-[oklch(0.20_0.01_250)] overflow-hidden">
                       <div className="h-full rounded-sm bg-[oklch(0.50_0.18_250)] transition-[width] duration-500" style={{ width: `${width}%` }} />
                     </div>
-                    <span className="text-[11px] text-[oklch(0.65_0.01_250)] w-16 ltr text-right shrink-0">{formatCurrency(amount)}</span>
+                    <span className="text-[11px] text-[oklch(0.65_0.01_250)] w-16 text-right shrink-0">{formatCurrency(amount)}</span>
                     <span className="text-[10px] text-[oklch(0.55_0.01_250)] w-10 text-left shrink-0">{pct.toFixed(1)}%</span>
                   </div>
                 )
@@ -261,7 +261,7 @@ export default function AnalyticsPage() {
                 <div className="flex-1 h-5 rounded-sm bg-[oklch(0.20_0.01_250)] overflow-hidden">
                   <div className="h-full rounded-sm bg-[oklch(0.50_0.18_145)] transition-[width] duration-500" style={{ width: `${Math.max(2, (yearNet / maxCat) * 100)}%` }} />
                 </div>
-                <span className="text-[11px] text-[oklch(0.70_0.18_145)] w-16 ltr text-right shrink-0 font-semibold">{formatCurrency(yearNet)}</span>
+                <span className="text-[11px] text-[oklch(0.70_0.18_145)] w-16 text-right shrink-0 font-semibold">{formatCurrency(yearNet)}</span>
                 <span className="text-[10px] text-[oklch(0.55_0.01_250)] w-10 text-left shrink-0">{((yearNet / yearIncome) * 100).toFixed(1)}%</span>
               </div>
             )}
@@ -287,14 +287,14 @@ export default function AnalyticsPage() {
                 return (
                   <tr key={i} className={`border-b border-[oklch(0.20_0.01_250)] ${hasData ? 'opacity-100' : 'opacity-35'}`}>
                     <td className="py-2 px-3 text-[oklch(0.75_0.01_250)]">{row.name}</td>
-                    <td className="py-2 px-3 ltr text-left text-[oklch(0.65_0.18_250)] font-medium">{row.income > 0 ? formatCurrency(row.income) : '—'}</td>
-                    <td className="py-2 px-3 ltr text-left">{row.personal > 0 ? formatCurrency(row.personal) : '—'}</td>
-                    <td className="py-2 px-3 ltr text-left">{row.shared > 0 ? formatCurrency(row.shared) : '—'}</td>
-                    <td className="py-2 px-3 ltr text-left text-[oklch(0.72_0.18_55)]">{row.expenses > 0 ? formatCurrency(row.expenses) : '—'}</td>
-                    <td className={`py-2 px-3 ltr text-left font-semibold ${row.net >= 0 ? 'text-[oklch(0.70_0.18_145)]' : 'text-[oklch(0.62_0.22_27)]'}`}>
+                    <td className="py-2 px-3 text-left text-[oklch(0.65_0.18_250)] font-medium">{row.income > 0 ? formatCurrency(row.income) : '—'}</td>
+                    <td className="py-2 px-3 text-left">{row.personal > 0 ? formatCurrency(row.personal) : '—'}</td>
+                    <td className="py-2 px-3 text-left">{row.shared > 0 ? formatCurrency(row.shared) : '—'}</td>
+                    <td className="py-2 px-3 text-left text-[oklch(0.72_0.18_55)]">{row.expenses > 0 ? formatCurrency(row.expenses) : '—'}</td>
+                    <td className={`py-2 px-3 text-left font-semibold ${row.net >= 0 ? 'text-[oklch(0.70_0.18_145)]' : 'text-[oklch(0.62_0.22_27)]'}`}>
                       {row.income > 0 ? formatCurrency(row.net) : '—'}
                     </td>
-                    <td className="py-2 px-3 ltr text-left text-[oklch(0.70_0.18_145)]">{row.saved > 0 ? formatCurrency(row.saved) : '—'}</td>
+                    <td className="py-2 px-3 text-left text-[oklch(0.70_0.18_145)]">{row.saved > 0 ? formatCurrency(row.saved) : '—'}</td>
                   </tr>
                 )
               })}
@@ -302,11 +302,11 @@ export default function AnalyticsPage() {
             <tfoot>
               <tr className="border-t-2 border-[oklch(0.25_0.01_250)]">
                 <td className="py-2.5 px-3 font-semibold text-[oklch(0.75_0.01_250)]">סה&quot;כ שנתי</td>
-                <td className="py-2.5 px-3 ltr text-left font-bold text-[oklch(0.65_0.18_250)]">{formatCurrency(yearIncome)}</td>
+                <td className="py-2.5 px-3 text-left font-bold text-[oklch(0.65_0.18_250)]">{formatCurrency(yearIncome)}</td>
                 <td colSpan={2} />
-                <td className="py-2.5 px-3 ltr text-left font-bold text-[oklch(0.72_0.18_55)]">{formatCurrency(yearExpenses)}</td>
-                <td className={`py-2.5 px-3 ltr text-left font-bold ${yearNet >= 0 ? 'text-[oklch(0.70_0.18_145)]' : 'text-[oklch(0.62_0.22_27)]'}`}>{formatCurrency(yearNet)}</td>
-                <td className="py-2.5 px-3 ltr text-left font-bold text-[oklch(0.70_0.18_145)]">{formatCurrency(yearSaved)}</td>
+                <td className="py-2.5 px-3 text-left font-bold text-[oklch(0.72_0.18_55)]">{formatCurrency(yearExpenses)}</td>
+                <td className={`py-2.5 px-3 text-left font-bold ${yearNet >= 0 ? 'text-[oklch(0.70_0.18_145)]' : 'text-[oklch(0.62_0.22_27)]'}`}>{formatCurrency(yearNet)}</td>
+                <td className="py-2.5 px-3 text-left font-bold text-[oklch(0.70_0.18_145)]">{formatCurrency(yearSaved)}</td>
               </tr>
             </tfoot>
           </table>

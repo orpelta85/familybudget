@@ -32,7 +32,7 @@ export function ExpenseDonut({ data }: { data: DonutEntry[] }) {
           <div key={d.name} className="flex items-center gap-[5px] text-xs">
             <div className="w-[7px] h-[7px] rounded-full shrink-0" style={{ background: d.color }} />
             <span className="text-[oklch(0.70_0.01_250)]">{d.name}</span>
-            <span className="text-[oklch(0.65_0.01_250)]" dir="ltr">{formatCurrency(d.value)}</span>
+            <span className="text-[oklch(0.65_0.01_250)]">{formatCurrency(d.value)}</span>
           </div>
         ))}
       </div>
