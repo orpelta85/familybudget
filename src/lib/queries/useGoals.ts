@@ -39,8 +39,9 @@ export function useGoalDeposits(goalId: number | undefined) {
 }
 
 export function useAllGoalDeposits(goalIds: number[]) {
+  const key = goalIds.slice().sort().join(',')
   return useQuery<GoalDeposit[]>({
-    queryKey: ['goal_deposits_all', goalIds],
+    queryKey: ['goal_deposits_all', key],
     enabled: goalIds.length > 0,
     queryFn: async () => {
       const sb = createClient()
