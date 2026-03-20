@@ -6,8 +6,9 @@ import { useState, useRef, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import {
   LayoutDashboard, Wallet, BarChart3, Receipt,
-  Users, PiggyBank, Target, TrendingUp, Link2, ListChecks, Mail, Copy, X, Send, Settings, CreditCard, Sparkles, CalendarDays, Calculator, Bell, Shield, Home
+  Users, PiggyBank, Target, TrendingUp, Link2, ListChecks, Mail, Copy, X, Send, Settings, CreditCard, Sparkles, CalendarDays, Calculator, Bell, Shield, Home, ShieldCheck
 } from 'lucide-react'
+import { isAdminEmail } from '@/lib/admin'
 import { useAlerts, useUnreadAlertCount, useMarkAlertRead } from '@/lib/queries/useAlerts'
 import { useUser } from '@/lib/queries/useUser'
 import { useFamilyContext } from '@/lib/context/FamilyContext'
@@ -180,6 +181,23 @@ export function Sidebar() {
             </Link>
           )
         })}
+        {isAdminEmail(user?.email ?? undefined) && (
+          <>
+            <div className="h-px bg-[oklch(0.22_0.01_250)] my-2" />
+            <Link
+              href="/admin"
+              className={cn(
+                'flex items-center gap-2.5 py-2 px-3 rounded-lg text-[13px] no-underline transition-all duration-150 border-r-2',
+                pathname === '/admin'
+                  ? 'font-medium text-[oklch(0.85_0.16_290)] bg-[oklch(0.20_0.03_290)] border-r-[oklch(0.60_0.20_290)]'
+                  : 'font-normal text-[oklch(0.60_0.12_290)] bg-transparent border-r-transparent'
+              )}
+            >
+              <ShieldCheck size={15} className="shrink-0" />
+              <span>ניהול</span>
+            </Link>
+          </>
+        )}
       </nav>
 
       {/* Footer */}

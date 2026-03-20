@@ -49,11 +49,20 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
+  // Admin routes — only owner can access
+  if (pathname.startsWith('/admin')) {
+    if (!user || user.email !== 'orpelta85@gmail.com') {
+      const url = request.nextUrl.clone()
+      url.pathname = '/'
+      return NextResponse.redirect(url)
+    }
+  }
+
   return supabaseResponse
 }
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon\\.ico|logo\\.svg|api/).*)',
+    '/((?!_next/static|_next/image|favicon\\.ico|logo\\.svg|api/(?!admin)).*)',
   ],
 }

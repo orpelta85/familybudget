@@ -155,6 +155,11 @@ export const PAGE_TIPS: Record<string, PageTipData> = {
     description: 'ניהול חברי משפחה, הזמנות, הרשאות',
     tips: [],
   },
+  admin: {
+    title: 'ניהול',
+    description: 'פאנל ניהול — רק אתה רואה את העמוד הזה. כאן תנהל משתמשים, תוכניות, ותראה סטטיסטיקות שימוש.',
+    tips: [],
+  },
   mortgage: {
     title: 'משכנתא',
     description: 'מעקב מסלולי משכנתא, לוח סילוקין, סימולציות פירעון מוקדם',
