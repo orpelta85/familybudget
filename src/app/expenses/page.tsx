@@ -833,13 +833,6 @@ export default function ExpensesPage() {
                             </div>
                           )
                         })}
-                        {/* Quick add to this category */}
-                        <button
-                          onClick={() => { setExpType('personal'); setCategoryId(String(group.catId)); setDetailMode(true) }}
-                          className="flex items-center gap-1 text-[11px] text-[oklch(0.55_0.18_250)] bg-transparent border-none cursor-pointer py-1.5 px-0 hover:text-primary"
-                        >
-                          <Plus size={11} /> הוסף ל{group.catName}
-                        </button>
                       </div>
                     )}
                   </div>
@@ -939,13 +932,6 @@ export default function ExpensesPage() {
                             </div>
                           )
                         })}
-                        {/* Quick add to this category */}
-                        <button
-                          onClick={() => { setExpType('shared'); setSharedCategory(group.category); setSharedLabel(group.categoryLabel); setDetailMode(true) }}
-                          className="flex items-center gap-1 text-[11px] text-[oklch(0.55_0.18_250)] bg-transparent border-none cursor-pointer py-1.5 px-0 hover:text-[oklch(0.65_0.12_310)]"
-                        >
-                          <Plus size={11} /> הוסף ל{group.categoryLabel}
-                        </button>
                       </div>
                     )}
                   </div>
