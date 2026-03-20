@@ -6,6 +6,7 @@ import { useAllIncome } from '@/lib/queries/useIncome'
 import { useAllPersonalExpenses, useBudgetCategories } from '@/lib/queries/useExpenses'
 import { useAllSharedExpenses } from '@/lib/queries/useShared'
 import { useApartmentDeposits } from '@/lib/queries/useApartment'
+import { useSinkingFunds, useAllSinkingTransactions } from '@/lib/queries/useSinking'
 import { useSplitFraction } from '@/lib/queries/useProfile'
 import { formatCurrency } from '@/lib/utils'
 import { useFamilyContext } from '@/lib/context/FamilyContext'
@@ -54,6 +55,8 @@ export default function AnalyticsPage() {
   const { data: allShared } = useAllSharedExpenses(familyId)
   const { data: deposits } = useApartmentDeposits(familyId)
   const { data: categories } = useBudgetCategories(user?.id)
+  const { data: sinkingFunds } = useSinkingFunds(user?.id)
+  const { data: allSinkingTx } = useAllSinkingTransactions(user?.id)
 
   const [selectedYearIdx, setSelectedYearIdx] = useState(0)
 
@@ -100,6 +103,19 @@ export default function AnalyticsPage() {
       const catWs = XLSX.utils.aoa_to_sheet([['קטגוריה', 'סכום', '% מהכנסה'], ...catRows])
       catWs['!cols'] = [{ wch: 22 }, { wch: 14 }, { wch: 12 }]
       XLSX.utils.book_append_sheet(wb, catWs, 'קטגוריות')
+
+      // Sinking fund progress sheet
+      if (sinkingFunds?.length) {
+        const fundRows = sinkingFunds.map(f => {
+          const txns = (allSinkingTx ?? []).filter(t => t.fund_id === f.id)
+          const balance = txns.reduce((s, t) => s + t.amount, 0)
+          const pct = f.yearly_target > 0 ? Math.round((balance / f.yearly_target) * 100) : 0
+          return [f.name, f.monthly_allocation, f.yearly_target, balance, `${pct}%`]
+        })
+        const fundWs = XLSX.utils.aoa_to_sheet([['קרן', 'הפקדה חודשית', 'יעד שנתי', 'יתרה', '% התקדמות'], ...fundRows])
+        fundWs['!cols'] = [{ wch: 22 }, { wch: 16 }, { wch: 14 }, { wch: 14 }, { wch: 12 }]
+        XLSX.utils.book_append_sheet(wb, fundWs, 'קרנות צבירה')
+      }
 
       const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' })
       const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })

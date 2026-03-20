@@ -6,7 +6,7 @@ import { useState, useRef, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import {
   LayoutDashboard, Wallet, BarChart3, Receipt,
-  Users, PiggyBank, Target, TrendingUp, Link2, ListChecks, Mail, Copy, X, Send, Settings, CreditCard, Sparkles, CalendarDays, Calculator, Bell
+  Users, PiggyBank, Target, TrendingUp, Link2, ListChecks, Mail, Copy, X, Send, Settings, CreditCard, Sparkles, CalendarDays, Calculator, Bell, Shield
 } from 'lucide-react'
 import { useAlerts, useUnreadAlertCount, useMarkAlertRead } from '@/lib/queries/useAlerts'
 import { useUser } from '@/lib/queries/useUser'
@@ -19,13 +19,14 @@ const nav = [
   { href: '/income',    label: 'הכנסה',            icon: Wallet },
   { href: '/budget',    label: 'תקציב משפחתי',     icon: ListChecks },
   { href: '/expenses',  label: 'הוצאות',           icon: Receipt },
-  { href: '/joint',     label: 'קופה משותפת',      icon: PiggyBank },
+  { href: '/joint',     label: 'קופה קטנה',        icon: PiggyBank },
   { href: '/sinking',   label: 'קרנות צבירה',      icon: Target },
   { href: '/goals',     label: 'יעדים',             icon: Target },
   { href: '/kids',      label: 'ילדים',             icon: Users },
   { href: '/pension',   label: 'פנסיה',            icon: PiggyBank },
   { href: '/debts',           label: 'מחשבון חובות',     icon: Calculator },
   { href: '/net-worth',      label: 'שווי נקי',         icon: TrendingUp },
+  { href: '/insurance',     label: 'ביטוחים',           icon: Shield },
   { href: '/subscriptions', label: 'מנויים',           icon: CreditCard },
   { href: '/forecast',      label: 'תחזית תזרים',     icon: CalendarDays },
   { href: '/advisor',       label: 'יועץ פיננסי',     icon: Sparkles },

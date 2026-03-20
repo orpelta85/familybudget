@@ -10,7 +10,7 @@ import { useSharedPeriod } from '@/lib/context/PeriodContext'
 import { useFamilyContext } from '@/lib/context/FamilyContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useMemo } from 'react'
-import { BarChart3, Inbox, Check, Clock, ChevronDown, Users } from 'lucide-react'
+import { BarChart3, Inbox, Check, Clock, ChevronDown, Users, Download } from 'lucide-react'
 import { toast } from 'sonner'
 import { TableSkeleton } from '@/components/ui/Skeleton'
 import { PeriodSelector } from '@/components/layout/PeriodSelector'
@@ -177,11 +177,55 @@ export default function BudgetPage() {
 
   const fixedPaidCount = fixedCats.filter(c => fixedSpend(c) > 0).length
 
+  async function handleExportBudget() {
+    try {
+      const XLSX = await import('xlsx')
+      const wb = XLSX.utils.book_new()
+      const rows: (string | number)[][] = [
+        ['תקציב משפחתי', selectedPeriod?.label ?? ''],
+        [],
+        ['הכנסה נטו', totalIncome],
+        ['סה"כ קבועות', totalFixed],
+        ['סה"כ משתנות', totalVariableActual],
+        ['תקציב משתנות', totalVariableBudget],
+        ['נשאר פנוי', remaining],
+        [],
+        ['הוצאות קבועות'],
+        ['קטגוריה', 'תקציב', 'בפועל', '% ניצול'],
+      ]
+      fixedCats.forEach(c => {
+        const spent = fixedSpend(c)
+        const pct = c.monthly_target > 0 ? Math.round((spent / c.monthly_target) * 100) : 0
+        rows.push([c.name, c.monthly_target, spent, `${pct}%`])
+      })
+      rows.push([], ['הוצאות משתנות'], ['קטגוריה', 'תקציב', 'בפועל', '% ניצול'])
+      allNonFixed.forEach(c => {
+        const spent = spendByCat[c.id] ?? 0
+        const pct = c.monthly_target > 0 ? Math.round((spent / c.monthly_target) * 100) : 0
+        rows.push([c.name, c.monthly_target, spent, `${pct}%`])
+      })
+      const ws = XLSX.utils.aoa_to_sheet(rows)
+      ws['!cols'] = [{ wch: 22 }, { wch: 14 }, { wch: 14 }, { wch: 10 }]
+      XLSX.utils.book_append_sheet(wb, ws, 'תקציב')
+      const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' })
+      const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a'); a.href = url; a.download = `תקציב_${selectedPeriod?.label ?? 'export'}.xlsx`; a.click()
+      URL.revokeObjectURL(url)
+      toast.success('הקובץ הורד')
+    } catch { toast.error('שגיאה בייצוא') }
+  }
+
   return (
     <div>
-      <div className="flex items-center gap-2 mb-1.5">
-        <BarChart3 size={18} className="text-primary" />
-        <h1 className="text-xl font-bold tracking-tight">תקציב משפחתי</h1>
+      <div className="flex justify-between items-start mb-1.5">
+        <div className="flex items-center gap-2">
+          <BarChart3 size={18} className="text-primary" />
+          <h1 className="text-xl font-bold tracking-tight">תקציב משפחתי</h1>
+        </div>
+        <button onClick={handleExportBudget} className="flex items-center gap-1.5 bg-[oklch(0.20_0.04_250)] border border-[oklch(0.32_0.08_250)] rounded-lg px-3 py-[7px] text-[oklch(0.65_0.18_250)] text-[13px] font-medium cursor-pointer">
+          <Download size={13} /> הורד לאקסל
+        </button>
       </div>
       <p className="text-muted-foreground text-[13px] mb-5">
         {selectedPeriod?.label ?? currentPeriod?.label ?? '...'}

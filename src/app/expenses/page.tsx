@@ -11,7 +11,8 @@ import { createClient } from '@/lib/supabase/client'
 import { useQueryClient } from '@tanstack/react-query'
 import { useSharedPeriod } from '@/lib/context/PeriodContext'
 import { useFamilyContext } from '@/lib/context/FamilyContext'
-import { parseExpenseExcel, createExpenseTemplate } from '@/lib/excel-import'
+import { parseExpenseExcelDetailed, createExpenseTemplate } from '@/lib/excel-import'
+import type { ParseResult } from '@/lib/excel-import'
 import { useRecurringPersonal, useRecurringShared, personalItemId } from '@/lib/hooks/useRecurring'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useRef, useMemo } from 'react'
@@ -108,6 +109,11 @@ export default function ExpensesPage() {
   const [importRows, setImportRows] = useState<(RawExpenseRow & { categoryId: string })[]>([])
   const [showImport, setShowImport] = useState(false)
   const [importing, setImporting] = useState(false)
+  const [detectedFormat, setDetectedFormat] = useState<string | null>(null)
+  const [importTotal, setImportTotal] = useState(0)
+  const [isDragging, setIsDragging] = useState(false)
+  const [bulkCategory, setBulkCategory] = useState('')
+  const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set())
 
   if (loading || !user) return <div className="loading-pulse p-10 text-center text-muted-foreground">טוען...</div>
 
@@ -225,15 +231,14 @@ export default function ExpensesPage() {
   }
 
   // ── Excel ───────────────────────────────────────────────────────────────────
-  async function handleExcelUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]; if (!file) return
+  async function processExcelFile(file: File) {
     try {
-      const r = await parseExpenseExcel(file)
+      const result: ParseResult = await parseExpenseExcelDetailed(file)
+      const r = result.rows
       const cats = categories ?? []
       const rules = categoryRules ?? []
       let autoMatched = 0
       const mapped = r.map(row => {
-        // Auto-match category name from Excel to existing budget categories
         let categoryId = ''
         if (row.category) {
           const catName = row.category.trim()
@@ -243,7 +248,6 @@ export default function ExpensesPage() {
           if (match) categoryId = String(match.id)
           else categoryId = `__new__${catName}`
         }
-        // If no category from Excel — try auto-categorize by merchant name rules
         if (!categoryId && row.description && rules.length > 0) {
           const rule = findMatchingRule(row.description, rules)
           if (rule) {
@@ -253,19 +257,21 @@ export default function ExpensesPage() {
         }
         return { ...row, categoryId }
       })
-      // Flag new funds: if fund_name doesn't match existing fund names, prefix with __new_fund__
       const existingFundNames = (funds ?? []).map(f => f.name)
       mapped.forEach(row => {
         if (row.fund_name && !existingFundNames.includes(row.fund_name)) {
           row.fund_name = `__new_fund__${row.fund_name}`
         }
       })
-      setImportRows(mapped); setShowImport(true)
+      setImportRows(mapped); setShowImport(true); setSelectedRows(new Set())
+      setDetectedFormat(result.detectedFormat?.label ?? null)
+      setImportTotal(result.totalAmount)
       const sharedCount = mapped.filter(r => r.is_shared).length
       const matched = mapped.filter(r => r.categoryId && !r.categoryId.startsWith('__new__')).length
       const newCats = new Set(mapped.filter(r => r.categoryId.startsWith('__new__')).map(r => r.category)).size
       const newFunds = new Set(mapped.filter(r => r.fund_name?.startsWith('__new_fund__')).map(r => r.fund_name!.replace('__new_fund__', ''))).size
       let msg = `נטענו ${r.length} שורות`
+      if (result.detectedFormat) msg += ` · זוהה: ${result.detectedFormat.label}`
       if (sharedCount > 0) msg += ` · ${sharedCount} משותפות`
       if (matched > 0) msg += ` · ${matched} קטגוריות זוהו`
       if (autoMatched > 0) msg += ` · ${autoMatched} זוהו אוטומטית`
@@ -273,7 +279,35 @@ export default function ExpensesPage() {
       if (newFunds > 0) msg += ` · ${newFunds} קרנות חדשות ייווצרו`
       toast.success(msg)
     } catch { toast.error('שגיאה בקריאת הקובץ') }
+  }
+
+  async function handleExcelUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]; if (!file) return
+    await processExcelFile(file)
     e.target.value = ''
+  }
+
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault(); setIsDragging(false)
+    const file = e.dataTransfer.files?.[0]
+    if (file && /\.(xlsx|xls|csv)$/i.test(file.name)) {
+      processExcelFile(file)
+    } else {
+      toast.error('קובץ לא נתמך — השתמש ב-xlsx, xls או csv')
+    }
+  }
+
+  function applyBulkCategory() {
+    if (!bulkCategory || selectedRows.size === 0) return
+    setImportRows(prev => prev.map((r, i) => {
+      if (!selectedRows.has(i)) return r
+      if (bulkCategory.startsWith('__new__')) return { ...r, categoryId: bulkCategory, category: bulkCategory.replace('__new__', '') }
+      const catName = categories?.find(c => String(c.id) === bulkCategory)?.name ?? ''
+      return { ...r, categoryId: bulkCategory, category: catName }
+    }))
+    setSelectedRows(new Set())
+    setBulkCategory('')
+    toast.success(`עודכנו ${selectedRows.size} שורות`)
   }
 
   async function handleExportExcel() {
@@ -537,6 +571,29 @@ export default function ExpensesPage() {
       {/* ── Personal View ────────────────────────────────────────────────── */}
       {viewMode === 'personal' && <>{/* Personal View */}
 
+      {/* ── Drag & Drop Zone ──────────────────────────────────────────────── */}
+      {!showImport && (
+        <div
+          onDragOver={e => { e.preventDefault(); setIsDragging(true) }}
+          onDragLeave={() => setIsDragging(false)}
+          onDrop={handleDrop}
+          className={`border-2 border-dashed rounded-xl p-6 mb-4 text-center cursor-pointer transition-all duration-200 ${
+            isDragging
+              ? 'border-[oklch(0.65_0.18_250)] bg-[oklch(0.16_0.04_250)]'
+              : 'border-[oklch(0.25_0.01_250)] bg-transparent hover:border-[oklch(0.35_0.01_250)]'
+          }`}
+          onClick={() => fileRef.current?.click()}
+        >
+          <Upload size={24} className={`mx-auto mb-2 ${isDragging ? 'text-[oklch(0.65_0.18_250)]' : 'text-[oklch(0.40_0.01_250)]'}`} />
+          <div className="text-[13px] text-[oklch(0.65_0.01_250)]">
+            גרור קובץ Excel לכאן או לחץ לבחירה
+          </div>
+          <div className="text-[11px] text-[oklch(0.45_0.01_250)] mt-1">
+            xlsx, xls, csv — תומך בפורמטים של בנקים וכרטיסי אשראי ישראליים
+          </div>
+        </div>
+      )}
+
       {/* ── Excel import preview ────────────────────────────────────────────── */}
       {showImport && (
         <div className="bg-card border border-[oklch(0.65_0.18_250_/_0.4)] rounded-xl p-5 mb-4">
@@ -544,15 +601,67 @@ export default function ExpensesPage() {
             <div className="flex items-center gap-2">
               <FileSpreadsheet size={14} className="text-primary" />
               <span className="font-semibold text-[13px]">{importRows.length} שורות מ-Excel</span>
+              {detectedFormat && (
+                <span className="text-[11px] bg-[oklch(0.22_0.06_250)] text-[oklch(0.75_0.15_250)] px-2 py-0.5 rounded-md font-medium">
+                  זוהה: {detectedFormat}
+                </span>
+              )}
             </div>
             <button onClick={() => setShowImport(false)} aria-label="סגור ייבוא" className="bg-transparent border-none cursor-pointer flex items-center justify-center p-2 min-w-9 min-h-9 text-muted-foreground"><X size={14} /></button>
           </div>
+          {/* Summary bar */}
+          <div className="flex items-center gap-4 mb-3 text-[12px] text-[oklch(0.65_0.01_250)] bg-[oklch(0.14_0.01_250)] rounded-lg px-3 py-2">
+            <span>סה&quot;כ: <strong className="text-[oklch(0.80_0.01_250)]">{formatCurrency(importTotal)}</strong></span>
+            <span>{importRows.length} שורות</span>
+            <span>{importRows.filter(r => r.categoryId.startsWith('__new__')).length > 0 && (
+              <span className="text-[oklch(0.72_0.18_55)]">
+                {new Set(importRows.filter(r => r.categoryId.startsWith('__new__')).map(r => r.category)).size} קטגוריות חדשות
+              </span>
+            )}</span>
+          </div>
+          {/* Bulk category change */}
+          {selectedRows.size > 0 && (
+            <div className="flex items-center gap-2 mb-3 bg-[oklch(0.18_0.04_250)] rounded-lg px-3 py-2">
+              <span className="text-[12px] text-[oklch(0.75_0.15_250)]">{selectedRows.size} נבחרו</span>
+              <select
+                value={bulkCategory}
+                onChange={e => setBulkCategory(e.target.value)}
+                className="bg-[oklch(0.20_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-2 py-1 text-[12px] text-inherit cursor-pointer"
+              >
+                <option value="">שנה קטגוריה ל...</option>
+                {categories?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+              <button
+                onClick={applyBulkCategory}
+                disabled={!bulkCategory}
+                className="bg-[oklch(0.65_0.18_250)] border-none rounded-md px-2.5 py-1 text-[11px] font-semibold text-[oklch(0.10_0.01_250)] cursor-pointer disabled:opacity-40"
+              >
+                החל
+              </button>
+              <button
+                onClick={() => setSelectedRows(new Set())}
+                className="bg-transparent border-none text-[oklch(0.55_0.01_250)] text-[11px] cursor-pointer underline"
+              >
+                נקה בחירה
+              </button>
+            </div>
+          )}
           <div className="max-h-80 overflow-y-auto mb-2.5">
             {importRows.map((row, i) => {
               const isAutoMatched = row.categoryId && !row.categoryId.startsWith('__new__') && row.category
               const isNewCat = row.categoryId?.startsWith('__new__')
               return (
                 <div key={i} className="grid-import-row py-1.5 border-b border-[oklch(0.20_0.01_250)]">
+                  <input
+                    type="checkbox"
+                    checked={selectedRows.has(i)}
+                    onChange={() => setSelectedRows(prev => {
+                      const next = new Set(prev)
+                      if (next.has(i)) next.delete(i); else next.add(i)
+                      return next
+                    })}
+                    className="cursor-pointer shrink-0 w-3.5 h-3.5"
+                  />
                   <span className="text-xs text-[oklch(0.80_0.01_250)] overflow-hidden text-ellipsis whitespace-nowrap">{row.description}</span>
                   <span className="text-xs font-semibold text-left text-[oklch(0.72_0.18_55)]">{formatCurrency(row.amount)}</span>
                   {/* Toggle אישי/משותף */}

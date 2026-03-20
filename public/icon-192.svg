@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192" fill="none">
+  <rect width="192" height="192" rx="32" fill="#0d0d1a"/>
+  <rect x="24" y="24" width="144" height="144" rx="24" fill="#1a1a2e"/>
+  <!-- House base -->
+  <rect x="40" y="100" width="112" height="68" rx="12" fill="#4a7dff" opacity="0.15"/>
+  <!-- House roof -->
+  <path d="M24 104L96 36L168 104" stroke="#4a7dff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- Growth arrow -->
+  <path d="M52 156L76 108L102 128L140 80" stroke="#50c878" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <!-- Arrow tip -->
+  <path d="M124 80L140 80L140 96" stroke="#50c878" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>

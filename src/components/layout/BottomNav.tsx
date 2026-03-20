@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useRef, useEffect } from 'react'
 import { cn } from '@/lib/utils'
-import { LayoutDashboard, Receipt, Users, Home, Menu, Wallet, BarChart3, PiggyBank, Heart, Target, TrendingUp, CreditCard, Sparkles, CalendarDays, Calculator } from 'lucide-react'
+import { LayoutDashboard, Receipt, Users, Home, Menu, Wallet, BarChart3, PiggyBank, Heart, Target, TrendingUp, CreditCard, Sparkles, CalendarDays, Calculator, Shield } from 'lucide-react'
 
 const nav = [
   { href: '/',          label: 'דשבורד',  icon: LayoutDashboard },
@@ -16,11 +16,12 @@ const nav = [
 const moreLinks = [
   { href: '/income',   label: 'הכנסות',       icon: Wallet },
   { href: '/budget',   label: 'תקציב',        icon: BarChart3 },
-  { href: '/joint',    label: 'קופה משותפת',   icon: Users },
+  { href: '/joint',    label: 'קופה קטנה',     icon: Users },
   { href: '/sinking',  label: 'קרנות צבירה',  icon: Target },
   { href: '/pension',       label: 'פנסיה',        icon: PiggyBank },
   { href: '/debts',         label: 'חובות',       icon: Calculator },
   { href: '/net-worth',     label: 'שווי נקי',    icon: TrendingUp },
+  { href: '/insurance',    label: 'ביטוחים',     icon: Shield },
   { href: '/subscriptions',label: 'מנויים',      icon: CreditCard },
   { href: '/forecast',     label: 'תחזית',       icon: CalendarDays },
   { href: '/advisor',      label: 'יועץ',        icon: Sparkles },

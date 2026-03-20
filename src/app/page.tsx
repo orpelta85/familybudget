@@ -21,7 +21,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useMemo } from 'react'
 import { useFamilyView } from '@/contexts/FamilyViewContext'
 import { PeriodSelector } from '@/components/layout/PeriodSelector'
-import { Wallet, Receipt, TrendingUp, PiggyBank, Target, AlertTriangle, CalendarDays, Users, X } from 'lucide-react'
+import { Wallet, Receipt, TrendingUp, PiggyBank, Target, AlertTriangle, CalendarDays, Users, X, Download } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import { DashboardSkeleton, ChartSkeleton } from '@/components/ui/Skeleton'
 
@@ -210,11 +210,50 @@ export default function Dashboard() {
   return (
     <div>
       {/* Header */}
-      <div className="mb-4">
-        <h1 className="text-xl font-bold tracking-tight">דשבורד</h1>
-        <p className="text-sm mt-1 text-text-secondary">
-          {selectedPeriod ? periodLabel(selectedPeriod.start_date) : '...'}
-        </p>
+      <div className="flex justify-between items-start mb-4">
+        <div>
+          <h1 className="text-xl font-bold tracking-tight">דשבורד</h1>
+          <p className="text-sm mt-1 text-text-secondary">
+            {selectedPeriod ? periodLabel(selectedPeriod.start_date) : '...'}
+          </p>
+        </div>
+        <button
+          onClick={async () => {
+            try {
+              const XLSX = await import('xlsx')
+              const wb = XLSX.utils.book_new()
+              const summaryRows = [
+                ['סיכום חודשי', selectedPeriod?.label ?? ''],
+                [],
+                ['הכנסות', totalIncome],
+                ['הוצאות אישיות', totalPersonal],
+                ['הוצאות משותפות (חלקי)', totalShared],
+                ['סה"כ הוצאות', totalExpenses],
+                ['תזרים נקי', netFlow],
+                ['אחוז חיסכון', `${savingsPct}%`],
+                [],
+                ['פירוט קטגוריות'],
+                ['קטגוריה', 'תקציב', 'הוצאות', '% ניצול'],
+              ];
+              (categories ?? []).forEach(c => {
+                const spent = spendByCat[c.id] ?? 0
+                const pct = c.monthly_target > 0 ? Math.round((spent / c.monthly_target) * 100) : 0
+                summaryRows.push([c.name, c.monthly_target, spent, `${pct}%`])
+              })
+              const ws = XLSX.utils.aoa_to_sheet(summaryRows)
+              ws['!cols'] = [{ wch: 22 }, { wch: 14 }, { wch: 14 }, { wch: 10 }]
+              XLSX.utils.book_append_sheet(wb, ws, 'סיכום חודשי')
+              const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' })
+              const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+              const url = URL.createObjectURL(blob)
+              const a = document.createElement('a'); a.href = url; a.download = `סיכום_חודשי_${selectedPeriod?.label ?? 'export'}.xlsx`; a.click()
+              URL.revokeObjectURL(url)
+            } catch { /* ignore */ }
+          }}
+          className="flex items-center gap-1.5 bg-[oklch(0.20_0.04_250)] border border-[oklch(0.32_0.08_250)] rounded-lg px-3 py-[7px] text-[oklch(0.65_0.18_250)] text-[13px] font-medium cursor-pointer"
+        >
+          <Download size={13} /> הורד סיכום חודשי
+        </button>
       </div>
 
       {periods && <PeriodSelector periods={periods} selectedId={selectedPeriodId} onChange={setSelectedPeriodId} />}

@@ -6,12 +6,18 @@ import { BottomNav } from "@/components/layout/BottomNav";
 import { MemberBanner } from "@/components/layout/MemberBanner";
 import { MobileViewSelector } from "@/components/layout/MobileViewSelector";
 import { Toaster } from "@/components/ui/sonner";
+import { PwaRegister } from "@/components/PwaRegister";
 
 export const metadata: Metadata = {
   title: "My Family Finance",
   description: "ניהול תקציב משפחתי חכם",
   icons: {
     icon: "/favicon.svg",
+  },
+  manifest: "/manifest.json",
+  other: {
+    "apple-mobile-web-app-capable": "yes",
+    "apple-mobile-web-app-status-bar-style": "black-translucent",
   },
 };
 
@@ -22,6 +28,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+        <meta name="theme-color" content="#0066cc" />
+        <link rel="apple-touch-icon" href="/icon-192.svg" />
       </head>
       <body>
         <Providers>
@@ -35,6 +43,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </div>
           <BottomNav />
           <Toaster position="top-center" richColors />
+          <PwaRegister />
         </Providers>
       </body>
     </html>

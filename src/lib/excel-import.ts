@@ -56,8 +56,52 @@ export interface RawExpenseRow {
   fund_name?: string   // אם מולא — גם הוצאה מקרן
 }
 
+// Israeli bank/credit card format detection
+interface DetectedFormat {
+  name: string
+  label: string
+}
+
+const BANK_FORMATS: { pattern: RegExp; name: string; label: string }[] = [
+  { pattern: /ויזה.?כאל|cal.*visa|visa.*cal/i, name: 'visa_cal', label: 'ויזה כאל' },
+  { pattern: /ישראכרט|isracard/i, name: 'isracard', label: 'ישראכרט' },
+  { pattern: /מקס|max/i, name: 'max', label: 'מקס' },
+  { pattern: /לאומי.?קארד|leumi.*card/i, name: 'leumi_card', label: 'לאומי קארד' },
+  { pattern: /בנק.?לאומי|leumi/i, name: 'leumi', label: 'בנק לאומי' },
+  { pattern: /הפועלים|hapoalim/i, name: 'hapoalim', label: 'בנק הפועלים' },
+  { pattern: /דיסקונט|discount/i, name: 'discount', label: 'בנק דיסקונט' },
+  { pattern: /מזרחי|mizrahi|טפחות/i, name: 'mizrahi', label: 'מזרחי טפחות' },
+]
+
+function detectBankFormat(keys: string[], sheetName: string): DetectedFormat | null {
+  const allText = [...keys, sheetName].join(' ')
+  for (const fmt of BANK_FORMATS) {
+    if (fmt.pattern.test(allText)) return { name: fmt.name, label: fmt.label }
+  }
+  // Heuristic: credit card format detection by column patterns
+  if (keys.some(k => /שם.?בית.?עסק/i.test(k)) && keys.some(k => /סכום.?חיוב/i.test(k))) {
+    return { name: 'credit_card', label: 'פירוט כרטיס אשראי' }
+  }
+  if (keys.some(k => /תאריך.?ערך/i.test(k)) && keys.some(k => /אסמכתא/i.test(k))) {
+    return { name: 'bank_statement', label: 'פירוט חשבון בנק' }
+  }
+  return null
+}
+
+export interface ParseResult {
+  rows: RawExpenseRow[]
+  detectedFormat: DetectedFormat | null
+  totalAmount: number
+  totalCount: number
+}
+
 // פירוט אשראי ישראלי — מנסה לזהות עמודות שונות
 export async function parseExpenseExcel(file: File): Promise<RawExpenseRow[]> {
+  const result = await parseExpenseExcelDetailed(file)
+  return result.rows
+}
+
+export async function parseExpenseExcelDetailed(file: File): Promise<ParseResult> {
   const XLSX = await getXLSX()
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
@@ -65,14 +109,18 @@ export async function parseExpenseExcel(file: File): Promise<RawExpenseRow[]> {
       try {
         const data = new Uint8Array(e.target?.result as ArrayBuffer)
         const wb = XLSX.read(data, { type: 'array', cellDates: true })
-        const sheet = wb.Sheets[wb.SheetNames[0]]
+        const sheetName = wb.SheetNames[0]
+        const sheet = wb.Sheets[sheetName]
         const rows: Record<string, unknown>[] = XLSX.utils.sheet_to_json(sheet, { defval: '' })
 
-        if (!rows.length) { resolve([]); return }
+        if (!rows.length) { resolve({ rows: [], detectedFormat: null, totalAmount: 0, totalCount: 0 }); return }
 
         // זיהוי עמודות — תומך בפורמטים של ישראכרט, ויזה, מאסטרקארד, לאומי, פועלים, כאל, מקס
         const firstRow = rows[0]
         const keys = Object.keys(firstRow)
+
+        // Detect format
+        const detectedFormat = detectBankFormat(keys, sheetName)
 
         const dateKey   = keys.find(k => /תאריך.?עסקה|תאריך.?חיוב|תאריך|date/i.test(k)) ?? keys[0]
         const descKey   = keys.find(k => /שם.?בית.?עסק|שם.?עסק|עסק|בית.?עסק|שם|תיאור|פירוט|description|merchant/i.test(k)) ?? keys[1]
@@ -97,7 +145,14 @@ export async function parseExpenseExcel(file: File): Promise<RawExpenseRow[]> {
           })
           .filter(r => r.amount > 0 && r.description)
 
-        resolve(parsed)
+        const totalAmount = parsed.reduce((s, r) => s + r.amount, 0)
+
+        resolve({
+          rows: parsed,
+          detectedFormat,
+          totalAmount,
+          totalCount: parsed.length,
+        })
       } catch (err) {
         reject(err)
       }
