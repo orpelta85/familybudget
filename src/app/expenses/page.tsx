@@ -132,14 +132,6 @@ export default function ExpensesPage() {
     })
   }
 
-  if (loading || !user) return <TableSkeleton rows={6} />
-
-  const selectedPeriod = periods?.find(p => p.id === selectedPeriodId)
-  const totalPersonal  = (personalExp ?? []).reduce((s, e) => s + e.amount, 0)
-  const totalSharedMy  = (sharedExp ?? []).reduce((s, e) => s + (e.my_share ?? e.total_amount * splitFrac), 0)
-  const totalSinking   = (funds ?? []).reduce((s, f) => s + f.monthly_allocation, 0)
-  const totalAll       = totalPersonal + totalSharedMy
-
   // ── Group personal expenses by category_id ──────────────────────────────────
   const personalGroups = useMemo(() => {
     if (!personalExp?.length) return []
@@ -183,6 +175,14 @@ export default function ExpensesPage() {
       setExpandedShared(new Set(sharedGroups.map(g => g.category)))
     }
   }, [sharedGroups.length]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (loading || !user) return <TableSkeleton rows={6} />
+
+  const selectedPeriod = periods?.find(p => p.id === selectedPeriodId)
+  const totalPersonal  = (personalExp ?? []).reduce((s, e) => s + e.amount, 0)
+  const totalSharedMy  = (sharedExp ?? []).reduce((s, e) => s + (e.my_share ?? e.total_amount * splitFrac), 0)
+  const totalSinking   = (funds ?? []).reduce((s, f) => s + f.monthly_allocation, 0)
+  const totalAll       = totalPersonal + totalSharedMy
 
   function togglePersonalGroup(catId: number) {
     setExpandedPersonal(prev => {

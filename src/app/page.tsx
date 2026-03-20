@@ -9,6 +9,7 @@ import { useSplitFraction } from '@/lib/queries/useProfile'
 import { useSavingsGoals, useAllGoalDeposits } from '@/lib/queries/useGoals'
 import { useSinkingFunds, useAllSinkingTransactions } from '@/lib/queries/useSinking'
 import { usePensionReports } from '@/lib/queries/usePension'
+import { useNetWorthEntries } from '@/lib/queries/useNetWorth'
 import { useHasSetup } from '@/lib/queries/useSetup'
 import { useAlerts, useMarkAlertRead } from '@/lib/queries/useAlerts'
 import { useAlertGeneration } from '@/lib/hooks/useGenerateAlerts'
@@ -91,6 +92,7 @@ export default function Dashboard() {
   const { data: allExpenses } = useAllPersonalExpenses(user?.id)
   const { data: funds } = useSinkingFunds(user?.id)
   const { data: allSinkingTx } = useAllSinkingTransactions(user?.id)
+  const { data: nwEntries } = useNetWorthEntries(user?.id)
 
   // ── 3-month rolling average (must be before early returns) ────────────────
   const avgByCat = useMemo(() => {
@@ -168,9 +170,18 @@ export default function Dashboard() {
 
   // ── Sinking balance ───────────────────────────────────────────────────────
   function getFundBalance(fundId: number) {
+    const fund = (funds ?? []).find(f => f.id === fundId)
     const txns = allSinkingTx?.filter(t => t.fund_id === fundId) ?? []
-    return txns.filter(t => t.amount > 0).reduce((s, t) => s + t.amount, 0)
-      - txns.filter(t => t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0)
+    const txBalance = txns.reduce((s, t) => s + t.amount, 0)
+    if (txns.length > 0) return txBalance
+    // No transactions yet — estimate from monthly allocation x months elapsed
+    if (fund && fund.monthly_allocation > 0 && fund.created_at) {
+      const created = new Date(fund.created_at)
+      const now = new Date()
+      const monthsElapsed = (now.getFullYear() - created.getFullYear()) * 12 + (now.getMonth() - created.getMonth())
+      return fund.monthly_allocation * Math.max(0, monthsElapsed)
+    }
+    return 0
   }
   const totalFundBalance = (funds ?? []).reduce((s, f) => s + getFundBalance(f.id), 0)
 
@@ -185,13 +196,17 @@ export default function Dashboard() {
   const selectedPeriod = periods?.find(p => p.id === selectedPeriodId)
   const overspentCats = (categories ?? []).filter(c => {
     const pct = c.monthly_target > 0 ? (spendByCat[c.id] ?? 0) / c.monthly_target : 0
-    return pct >= 0.9
+    return pct > 1.1
   })
   const showAlert = !dataLoading && (netFlow < 0 || overspentCats.length > 0)
 
   // ── Net Worth ─────────────────────────────────────────────────────────────
   const pensionTotal = pensionReports?.[0]?.total_savings ?? 0
-  const netWorth = totalFundBalance + totalGoalsSaved + pensionTotal
+  const netWorthEntries = (nwEntries ?? [])
+  const nwAssets = netWorthEntries.filter(e => e.type === 'asset').reduce((s, e) => s + e.amount, 0)
+  const nwLiabilities = netWorthEntries.filter(e => e.type === 'liability').reduce((s, e) => s + e.amount, 0)
+  const netWorthFromEntries = nwAssets - nwLiabilities
+  const netWorth = netWorthFromEntries > 0 ? netWorthFromEntries : (totalFundBalance + totalGoalsSaved + pensionTotal)
 
   // ── Financial Health Score (0-100) ─────────────────────────────────────────
   const healthScores: number[] = []

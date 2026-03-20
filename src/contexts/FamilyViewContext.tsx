@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, useCallback } from 'react'
+import { createContext, useContext, useState, useCallback, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 
 export type ViewMode = 'personal' | 'family' | 'member'
@@ -22,10 +22,30 @@ const FamilyViewCtx = createContext<FamilyViewState>({
 })
 
 export function FamilyViewProvider({ children }: { children: React.ReactNode }) {
-  const [viewMode, setViewModeRaw] = useState<ViewMode>('personal')
-  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null)
-  const [selectedMemberName, setSelectedMemberName] = useState<string | null>(null)
+  const [viewMode, setViewModeRaw] = useState<ViewMode>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('familyViewMode')
+      if (saved === 'personal' || saved === 'family' || saved === 'member') return saved
+    }
+    return 'personal'
+  })
+  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') return localStorage.getItem('familyViewMemberId')
+    return null
+  })
+  const [selectedMemberName, setSelectedMemberName] = useState<string | null>(() => {
+    if (typeof window !== 'undefined') return localStorage.getItem('familyViewMemberName')
+    return null
+  })
   const router = useRouter()
+
+  useEffect(() => {
+    localStorage.setItem('familyViewMode', viewMode)
+    if (selectedMemberId) localStorage.setItem('familyViewMemberId', selectedMemberId)
+    else localStorage.removeItem('familyViewMemberId')
+    if (selectedMemberName) localStorage.setItem('familyViewMemberName', selectedMemberName)
+    else localStorage.removeItem('familyViewMemberName')
+  }, [viewMode, selectedMemberId, selectedMemberName])
 
   const setViewMode = useCallback((mode: ViewMode) => {
     setViewModeRaw(mode)

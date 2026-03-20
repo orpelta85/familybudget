@@ -75,8 +75,8 @@ export default function GoalsPage() {
     return getGoalDeposits(goalId).reduce((s, d) => s + d.amount_deposited, 0)
   }
 
-  const totalAllGoals = (goals ?? []).reduce((s, g) => s + g.target_amount, 0)
-  const totalAllSaved = (goals ?? []).reduce((s, g) => s + getGoalTotalSaved(g.id), 0)
+  const totalAllGoals = filteredGoals.reduce((s, g) => s + g.target_amount, 0)
+  const totalAllSaved = filteredGoals.reduce((s, g) => s + getGoalTotalSaved(g.id), 0)
   const overallPct = totalAllGoals > 0 ? (totalAllSaved / totalAllGoals) * 100 : 0
 
   async function handleDeleteGoal(goal: SavingsGoal) {
@@ -108,7 +108,7 @@ export default function GoalsPage() {
             <span className="kpi-label">יעדים פעילים</span>
             <Target size={14} className="opacity-70 text-accent-blue" />
           </div>
-          <div className="kpi-value text-accent-blue">{goals?.length ?? 0}</div>
+          <div className="kpi-value text-accent-blue">{filteredGoals.length}</div>
         </div>
         <div className="kpi-card">
           <div className="flex justify-between items-center mb-2">

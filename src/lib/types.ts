@@ -74,6 +74,7 @@ export interface SinkingFund {
   icon?: string
   color?: string
   is_active: boolean
+  created_at?: string
 }
 
 export interface SinkingFundTransaction {

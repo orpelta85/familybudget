@@ -115,12 +115,6 @@ export default function BudgetPage() {
   const { data: sharedExpenses } = useSharedExpenses(activePeriodId, familyId)
   const { data: income } = useIncome(activePeriodId, user?.id)
 
-  if (loading || !user) return <TableSkeleton rows={8} />
-
-  // Split categories by type
-  const fixedCats = (categories ?? []).filter(c => c.type === 'fixed')
-  const allNonFixed = (categories ?? []).filter(c => c.type !== 'fixed')
-
   // Personal spending by category — aggregate family members' expenses only in family view
   const allFamilyExpensesList = useMemo(() => {
     if (isFamily && familyExpenses && familyExpenses.length > 0) {
@@ -128,6 +122,22 @@ export default function BudgetPage() {
     }
     return expenses ?? []
   }, [isFamily, familyExpenses, expenses])
+
+  // Group variable categories
+  const allNonFixed = useMemo(() => (categories ?? []).filter(c => c.type !== 'fixed'), [categories])
+  const groupedVariables = useMemo(() => {
+    return VARIABLE_GROUPS.map(group => {
+      const cats = group.categoryNames
+        .map(name => allNonFixed.find(c => c.name === name))
+        .filter((c): c is BudgetCategory => !!c)
+      return { ...group, cats }
+    }).filter(g => g.cats.length > 0)
+  }, [allNonFixed])
+
+  if (loading || !user) return <TableSkeleton rows={8} />
+
+  // Split categories by type
+  const fixedCats = (categories ?? []).filter(c => c.type === 'fixed')
 
   const spendByCat = allFamilyExpensesList.reduce<Record<number, number>>((acc, e) => {
     acc[e.category_id] = (acc[e.category_id] ?? 0) + e.amount
@@ -152,16 +162,6 @@ export default function BudgetPage() {
   function fixedSpend(cat: BudgetCategory): number {
     return (spendByCat[cat.id] ?? 0) + (sharedSpendByCatName[cat.name] ?? 0)
   }
-
-  // Group variable categories
-  const groupedVariables = useMemo(() => {
-    return VARIABLE_GROUPS.map(group => {
-      const cats = group.categoryNames
-        .map(name => allNonFixed.find(c => c.name === name))
-        .filter((c): c is BudgetCategory => !!c)
-      return { ...group, cats }
-    }).filter(g => g.cats.length > 0)
-  }, [allNonFixed])
 
   // Categories not in any group (catch-all)
   const groupedNames = new Set(VARIABLE_GROUPS.flatMap(g => g.categoryNames))

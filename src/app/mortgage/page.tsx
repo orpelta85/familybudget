@@ -97,11 +97,91 @@ export default function MortgagePage() {
     return mortgages
   }, [mortgages, viewMode, user?.id])
 
+  // What-if calculation
+  const extra = Number(extraPayment) || 0
+  const totalRemaining = filtered.reduce((s, m) => s + m.remaining_balance, 0)
+  const whatIfResults = useMemo(() => {
+    if (!filtered.length) return null
+    let totalCurrentInterest = 0
+    let totalExtraInterest = 0
+    let maxCurrentMonths = 0
+    let maxExtraMonths = 0
+
+    for (const m of filtered) {
+      for (const t of (m.mortgage_tracks ?? [])) {
+        const monthlyRate = t.interest_rate / 100 / 12
+        const currentResult = computePayoff(t.remaining_amount, monthlyRate, t.monthly_payment)
+        const extraPerTrack = totalRemaining > 0 ? extra * (t.remaining_amount / totalRemaining) : 0
+        const extraResult = computePayoff(t.remaining_amount, monthlyRate, t.monthly_payment + extraPerTrack)
+
+        totalCurrentInterest += currentResult.totalInterest
+        totalExtraInterest += extraResult.totalInterest
+        maxCurrentMonths = Math.max(maxCurrentMonths, currentResult.months)
+        maxExtraMonths = Math.max(maxExtraMonths, extraResult.months)
+      }
+    }
+
+    return {
+      currentMonths: maxCurrentMonths,
+      extraMonths: maxExtraMonths,
+      savedMonths: maxCurrentMonths - maxExtraMonths,
+      currentInterest: totalCurrentInterest,
+      extraInterest: totalExtraInterest,
+      savedInterest: totalCurrentInterest - totalExtraInterest,
+    }
+  }, [filtered, extra, totalRemaining])
+
+  // Amortization chart data (simplified: show remaining balance over time)
+  const amortizationData = useMemo(() => {
+    if (!filtered.length) return []
+    const allTracks = filtered.flatMap(m => m.mortgage_tracks ?? [])
+    if (!allTracks.length) return []
+
+    const maxMonths = Math.max(...allTracks.map(t => {
+      const monthlyRate = t.interest_rate / 100 / 12
+      return computePayoff(t.remaining_amount, monthlyRate, t.monthly_payment).months
+    }))
+
+    const points: { month: number; principal: number; interest: number; balance: number }[] = []
+    const step = Math.max(1, Math.floor(maxMonths / 30))
+
+    const rates = allTracks.map(t => t.interest_rate / 100 / 12)
+    const payments = allTracks.map(t => t.monthly_payment)
+
+    for (let month = 0; month <= maxMonths; month += step) {
+      const bals = allTracks.map(t => t.remaining_amount)
+      let totalInterestPaid = 0
+      let totalPrincipalPaid = 0
+
+      for (let m = 0; m < month; m++) {
+        for (let i = 0; i < bals.length; i++) {
+          if (bals[i] <= 0) continue
+          const interest = bals[i] * rates[i]
+          totalInterestPaid += interest
+          const principalPart = Math.min(payments[i] - interest, bals[i])
+          totalPrincipalPaid += principalPart
+          bals[i] = Math.max(0, bals[i] + interest - payments[i])
+        }
+      }
+
+      const totalBalance = bals.reduce((s, b) => s + b, 0)
+      points.push({
+        month,
+        principal: Math.round(totalPrincipalPaid),
+        interest: Math.round(totalInterestPaid),
+        balance: Math.round(totalBalance),
+      })
+
+      if (totalBalance <= 0) break
+    }
+
+    return points
+  }, [filtered])
+
   if (loading || !user) return <TableSkeleton rows={5} />
 
   // Aggregate KPIs
   const totalOriginal = filtered.reduce((s, m) => s + m.total_amount, 0)
-  const totalRemaining = filtered.reduce((s, m) => s + m.remaining_balance, 0)
   const totalPaid = totalOriginal - totalRemaining
   const totalMonthlyPayment = filtered.reduce((s, m) =>
     s + (m.mortgage_tracks ?? []).reduce((ts, t) => ts + t.monthly_payment, 0), 0)
@@ -176,93 +256,6 @@ export default function MortgagePage() {
       toast.success('מסלול נמחק')
     } catch { toast.error('שגיאה במחיקה') }
   }
-
-  // What-if calculation
-  const extra = Number(extraPayment) || 0
-  const whatIfResults = useMemo(() => {
-    if (!filtered.length) return null
-    let totalRemainingBal = 0
-    let totalCurrentPayment = 0
-    let totalCurrentInterest = 0
-    let totalExtraInterest = 0
-    let maxCurrentMonths = 0
-    let maxExtraMonths = 0
-
-    for (const m of filtered) {
-      for (const t of (m.mortgage_tracks ?? [])) {
-        const monthlyRate = t.interest_rate / 100 / 12
-        const currentResult = computePayoff(t.remaining_amount, monthlyRate, t.monthly_payment)
-        const extraPerTrack = extra * (t.remaining_amount / totalRemaining)
-        const extraResult = computePayoff(t.remaining_amount, monthlyRate, t.monthly_payment + extraPerTrack)
-
-        totalRemainingBal += t.remaining_amount
-        totalCurrentPayment += t.monthly_payment
-        totalCurrentInterest += currentResult.totalInterest
-        totalExtraInterest += extraResult.totalInterest
-        maxCurrentMonths = Math.max(maxCurrentMonths, currentResult.months)
-        maxExtraMonths = Math.max(maxExtraMonths, extraResult.months)
-      }
-    }
-
-    return {
-      currentMonths: maxCurrentMonths,
-      extraMonths: maxExtraMonths,
-      savedMonths: maxCurrentMonths - maxExtraMonths,
-      currentInterest: totalCurrentInterest,
-      extraInterest: totalExtraInterest,
-      savedInterest: totalCurrentInterest - totalExtraInterest,
-    }
-  }, [filtered, extra, totalRemaining])
-
-  // Amortization chart data (simplified: show remaining balance over time)
-  const amortizationData = useMemo(() => {
-    if (!filtered.length) return []
-    const allTracks = filtered.flatMap(m => m.mortgage_tracks ?? [])
-    if (!allTracks.length) return []
-
-    const maxMonths = Math.max(...allTracks.map(t => {
-      const monthlyRate = t.interest_rate / 100 / 12
-      return computePayoff(t.remaining_amount, monthlyRate, t.monthly_payment).months
-    }))
-
-    const points: { month: number; principal: number; interest: number; balance: number }[] = []
-    const step = Math.max(1, Math.floor(maxMonths / 30))
-
-    // Simulate month by month
-    const balances = allTracks.map(t => t.remaining_amount)
-    const rates = allTracks.map(t => t.interest_rate / 100 / 12)
-    const payments = allTracks.map(t => t.monthly_payment)
-
-    for (let month = 0; month <= maxMonths; month += step) {
-      // Reset to initial and simulate to this month
-      const bals = allTracks.map(t => t.remaining_amount)
-      let totalInterestPaid = 0
-      let totalPrincipalPaid = 0
-
-      for (let m = 0; m < month; m++) {
-        for (let i = 0; i < bals.length; i++) {
-          if (bals[i] <= 0) continue
-          const interest = bals[i] * rates[i]
-          totalInterestPaid += interest
-          const principalPart = Math.min(payments[i] - interest, bals[i])
-          totalPrincipalPaid += principalPart
-          bals[i] = Math.max(0, bals[i] + interest - payments[i])
-        }
-      }
-
-      const totalBalance = bals.reduce((s, b) => s + b, 0)
-      points.push({
-        month,
-        principal: Math.round(totalPrincipalPaid),
-        interest: Math.round(totalInterestPaid),
-        balance: Math.round(totalBalance),
-      })
-
-      if (totalBalance <= 0) break
-    }
-
-    return points
-  }, [filtered])
 
   const chartMax = amortizationData.length > 0 ? Math.max(...amortizationData.map(d => d.principal + d.interest)) : 1
 
