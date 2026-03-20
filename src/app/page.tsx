@@ -120,7 +120,7 @@ export default function Dashboard() {
     const personal = allExpenses.filter(e => e.period_id === yearAgoPeriodId).reduce((s, e) => s + e.amount, 0)
     const sharedYearAgo = (allShared ?? []).filter(e => e.period_id === yearAgoPeriodId).reduce((s, e) => s + (e.my_share ?? e.total_amount * splitFrac), 0)
     return personal + sharedYearAgo
-  }, [allExpenses, allShared, yearAgoPeriodId])
+  }, [allExpenses, allShared, yearAgoPeriodId, splitFrac])
 
   if (userLoading || setupLoading) return <DashboardSkeleton />
   if (!user) return null

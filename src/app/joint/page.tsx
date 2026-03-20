@@ -107,11 +107,13 @@ export default function JointPage() {
   return (
     <div>
       <div className="flex justify-between items-start mb-1.5">
-        <div className="flex items-center gap-2">
-          <PiggyBank size={18} className="text-[oklch(0.68_0.18_295)]" />
-          <h1 className="text-xl font-bold tracking-tight">קופה קטנה</h1>
-          <PageInfo {...PAGE_TIPS.joint} />
-        <p className="text-sm text-[oklch(0.65_0.01_250)]">מזומן, שוברים, מתנות והוצאות/הכנסות קטנות שלא נכנסים לתקציב הגדול</p>
+        <div>
+          <div className="flex items-center gap-2">
+            <PiggyBank size={18} className="text-[oklch(0.68_0.18_295)]" />
+            <h1 className="text-xl font-bold tracking-tight">קופה קטנה</h1>
+            <PageInfo {...PAGE_TIPS.joint} />
+          </div>
+          <p className="text-sm text-[oklch(0.65_0.01_250)] mt-1">מזומן, שוברים, מתנות והוצאות/הכנסות קטנות שלא נכנסים לתקציב הגדול</p>
         </div>
         <button onClick={handleResetPool} className="flex items-center gap-1.5 bg-transparent border border-[oklch(0.25_0.01_250)] rounded-lg px-3.5 py-[7px] text-[oklch(0.65_0.01_250)] text-xs font-medium cursor-pointer">
           <Trash2 size={13} /> אפס קופה

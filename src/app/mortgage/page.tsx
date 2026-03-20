@@ -12,6 +12,8 @@ import { toast } from 'sonner'
 import { useConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { Home, Plus, X, Trash2, Inbox, TrendingDown, Calculator } from 'lucide-react'
 import { TableSkeleton } from '@/components/ui/Skeleton'
+import { PageInfo } from '@/components/ui/PageInfo'
+import { PAGE_TIPS } from '@/lib/page-tips'
 
 interface MortgageForm {
   name: string
@@ -279,6 +281,7 @@ export default function MortgagePage() {
         <div className="flex items-center gap-2">
           <Home size={18} className="text-[oklch(0.70_0.15_185)]" />
           <h1 className="text-xl font-bold tracking-tight">משכנתא</h1>
+          <PageInfo {...PAGE_TIPS.mortgage} />
         </div>
         <button
           onClick={() => setShowAddMortgage(true)}

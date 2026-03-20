@@ -25,6 +25,7 @@ import type { BudgetCategory, SharedCategory } from '@/lib/types'
 import { useConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { PageInfo } from '@/components/ui/PageInfo'
 import { PAGE_TIPS } from '@/lib/page-tips'
+import { TableSkeleton } from '@/components/ui/Skeleton'
 
 type ExpType = 'personal' | 'shared'
 
@@ -117,7 +118,21 @@ export default function ExpensesPage() {
   const [bulkCategory, setBulkCategory] = useState('')
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set())
 
-  if (loading || !user) return <div className="loading-pulse p-10 text-center text-muted-foreground">טוען...</div>
+  // Reset expenses dialog state
+  const [showResetDialog, setShowResetDialog] = useState(false)
+
+  // Inline text input modal (replaces native prompt)
+  const [textInputModal, setTextInputModal] = useState<{ title: string; resolve: (value: string | null) => void } | null>(null)
+  const [textInputValue, setTextInputValue] = useState('')
+
+  function showTextInput(title: string): Promise<string | null> {
+    return new Promise(resolve => {
+      setTextInputValue('')
+      setTextInputModal({ title, resolve })
+    })
+  }
+
+  if (loading || !user) return <TableSkeleton rows={6} />
 
   const selectedPeriod = periods?.find(p => p.id === selectedPeriodId)
   const totalPersonal  = (personalExp ?? []).reduce((s, e) => s + e.amount, 0)
@@ -490,26 +505,24 @@ export default function ExpensesPage() {
     }
   }
 
-  async function handleResetExpenses() {
+  function handleResetExpenses() {
     if (!user || !selectedPeriodId) return
     const hasPersonal = (personalExp ?? []).length > 0
     const hasShared = (sharedExp ?? []).length > 0
     if (!hasPersonal && !hasShared) { toast.info('אין הוצאות למחיקה'); return }
 
-    // Build options based on what exists
-    let resetTarget: 'personal' | 'shared' | 'both' = 'personal'
     if (hasPersonal && hasShared) {
-      const msg = 'מה ברצונך למחוק?\n\n• "אישי" — רק הוצאות אישיות\n• "משותף" — רק הוצאות משותפות\n• "הכל" — אישיות + משותפות'
-      const result = prompt(msg, 'הכל')
-      if (!result) return
-      const trimmed = result.trim()
-      if (trimmed === 'אישי' || trimmed.toLowerCase() === 'personal') resetTarget = 'personal'
-      else if (trimmed === 'משותף' || trimmed.toLowerCase() === 'shared') resetTarget = 'shared'
-      else resetTarget = 'both'
+      setShowResetDialog(true)
     } else if (hasShared && !hasPersonal) {
-      resetTarget = 'shared'
+      doResetExpenses('shared')
+    } else {
+      doResetExpenses('personal')
     }
+  }
 
+  async function doResetExpenses(resetTarget: 'personal' | 'shared' | 'both') {
+    if (!user || !selectedPeriodId) return
+    setShowResetDialog(false)
     const labels = { personal: 'אישיות', shared: 'משותפות', both: 'אישיות + משותפות' }
     if (!(await confirm({ message: `למחוק את כל ההוצאות ה${labels[resetTarget]} של המחזור הנוכחי?` }))) return
 
@@ -686,10 +699,11 @@ export default function ExpensesPage() {
                       onChange={e => {
                         const val = e.target.value
                         if (val === '__manual__') {
-                          const name = prompt('שם קטגוריה חדשה:')
-                          if (name?.trim()) {
-                            setImportRows(p => p.map((r, j) => j === i ? { ...r, categoryId: `__new__${name.trim()}`, category: name.trim() } : r))
-                          }
+                          showTextInput('שם קטגוריה חדשה:').then(name => {
+                            if (name?.trim()) {
+                              setImportRows(p => p.map((r, j) => j === i ? { ...r, categoryId: `__new__${name.trim()}`, category: name.trim() } : r))
+                            }
+                          })
                         } else {
                           const text = e.target.selectedOptions[0]?.text || ''
                           setImportRows(p => p.map((r, j) => j === i ? { ...r, categoryId: val === '__new__' ? `__new__${r.category}` : val, category: val === '__new__' ? r.category : text } : r))
@@ -713,10 +727,11 @@ export default function ExpensesPage() {
                     onChange={e => {
                       const val = e.target.value
                       if (val === '__manual_fund__') {
-                        const name = prompt('שם קרן חדשה:')
-                        if (name?.trim()) {
-                          setImportRows(p => p.map((r, j) => j === i ? { ...r, fund_name: `__new_fund__${name.trim()}` } : r))
-                        }
+                        showTextInput('שם קרן חדשה:').then(name => {
+                          if (name?.trim()) {
+                            setImportRows(p => p.map((r, j) => j === i ? { ...r, fund_name: `__new_fund__${name.trim()}` } : r))
+                          }
+                        })
                       } else {
                         setImportRows(p => p.map((r, j) => j === i ? { ...r, fund_name: val === '__new_fund__' ? r.fund_name : (val || undefined) } : r))
                       }
@@ -1076,6 +1091,65 @@ export default function ExpensesPage() {
       </div>
 
       </>}
+
+      {/* ── Reset Expenses Dialog ─────────────────────────────────────────── */}
+      {showResetDialog && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-background border border-border rounded-xl p-6 w-[340px]">
+            <h3 className="text-base font-semibold mb-4">מה ברצונך למחוק?</h3>
+            <div className="flex flex-col gap-2">
+              <button onClick={() => doResetExpenses('personal')} className="bg-secondary border border-border rounded-lg py-2.5 text-[13px] font-medium cursor-pointer text-inherit hover:bg-[oklch(0.22_0.01_250)]">
+                רק הוצאות אישיות
+              </button>
+              <button onClick={() => doResetExpenses('shared')} className="bg-secondary border border-border rounded-lg py-2.5 text-[13px] font-medium cursor-pointer text-inherit hover:bg-[oklch(0.22_0.01_250)]">
+                רק הוצאות משותפות
+              </button>
+              <button onClick={() => doResetExpenses('both')} className="bg-[oklch(0.20_0.04_27)] border border-[oklch(0.32_0.08_27)] rounded-lg py-2.5 text-[13px] font-semibold cursor-pointer text-[oklch(0.75_0.15_27)] hover:bg-[oklch(0.24_0.06_27)]">
+                הכל — אישיות + משותפות
+              </button>
+              <button onClick={() => setShowResetDialog(false)} className="bg-transparent border border-border rounded-lg py-2.5 text-[13px] font-medium cursor-pointer text-muted-foreground">
+                ביטול
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Text Input Modal (replaces native prompt) ────────────────────── */}
+      {textInputModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-background border border-border rounded-xl p-6 w-[340px]">
+            <h3 className="text-base font-semibold mb-3">{textInputModal.title}</h3>
+            <input
+              type="text"
+              value={textInputValue}
+              onChange={e => setTextInputValue(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter') { textInputModal.resolve(textInputValue); setTextInputModal(null) }
+                if (e.key === 'Escape') { textInputModal.resolve(null); setTextInputModal(null) }
+              }}
+              autoFocus
+              className="w-full bg-secondary border border-border rounded-lg px-3 py-2.5 text-inherit text-sm mb-4 outline-none"
+              placeholder="הקלד כאן..."
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={() => { textInputModal.resolve(textInputValue); setTextInputModal(null) }}
+                disabled={!textInputValue.trim()}
+                className="flex-1 bg-primary border-none rounded-lg py-2 text-primary-foreground font-semibold text-[13px] cursor-pointer disabled:opacity-40"
+              >
+                אישור
+              </button>
+              <button
+                onClick={() => { textInputModal.resolve(null); setTextInputModal(null) }}
+                className="bg-secondary border border-border rounded-lg px-4 py-2 text-inherit text-[13px] cursor-pointer"
+              >
+                ביטול
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
