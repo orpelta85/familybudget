@@ -90,7 +90,7 @@ export default function BudgetPage() {
   const { selectedPeriodId, setSelectedPeriodId } = useSharedPeriod()
   const { familyId, members } = useFamilyContext()
   const { viewMode } = useFamilyView()
-  const isFamily = viewMode !== 'personal'
+  const isFamily = true // Budget is always family-level
   const familyMemberIds = useMemo(() => members.map(m => m.user_id), [members])
   const { data: familyIncome } = useFamilyIncome(selectedPeriodId ?? currentPeriod?.id, familyMemberIds, isFamily && familyMemberIds.length > 0)
   const { data: familyExpenses } = useFamilyPersonalExpenses(selectedPeriodId ?? currentPeriod?.id, familyMemberIds, isFamily && familyMemberIds.length > 0)
