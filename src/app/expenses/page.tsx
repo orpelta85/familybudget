@@ -47,6 +47,42 @@ const SHARED_CATEGORIES: { value: string; label: string }[] = [
   { value: 'misc', label: 'שונות' },
 ]
 
+// Complete Hebrew label lookup — includes legacy/granular category enums
+const SHARED_CAT_LABEL_MAP: Record<string, string> = {
+  rent: 'שכירות',
+  household: 'חשבונות בית',
+  insurance: 'ביטוחים',
+  loans: 'הלוואות',
+  subscriptions: 'מנויים',
+  groceries: 'מכולת',
+  eating_out: 'אוכל בחוץ',
+  transport: 'תחבורה',
+  health: 'בריאות ורפואה',
+  clothing: 'בגדים וקניות',
+  leisure: 'בילויים ופנאי',
+  kids: 'ילדים',
+  pets: 'חיות מחמד',
+  savings: 'חיסכון והשקעות',
+  misc: 'שונות',
+  // Legacy / granular enums
+  travel: 'טיולים',
+  car_loan: 'הלוואת רכב',
+  property_tax: 'ארנונה',
+  electricity: 'חשמל',
+  water_gas: 'מים+גז',
+  building_committee: 'ועד בית',
+  entertainment: 'בילויים ופנאי',
+  shopping: 'בגדים וקניות',
+  home_insurance: 'ביטוח דירה',
+  internet: 'אינטרנט',
+  netflix: 'נטפליקס',
+  spotify: 'ספוטיפיי',
+}
+
+function sharedCatLabel(category: string): string {
+  return SHARED_CAT_LABEL_MAP[category] ?? category
+}
+
 export default function ExpensesPage() {
   const { user, loading } = useUser()
   const router = useRouter()
@@ -183,7 +219,7 @@ export default function ExpensesPage() {
         if (!resolvedCategory) { toast.error('בחר קטגוריה'); return }
         const label = useCustomCat
           ? (sharedLabel.trim() || 'הוצאה משותפת')
-          : (sharedLabel.trim() || SHARED_CATEGORIES.find(c => c.value === sharedCategory)?.label || 'הוצאה משותפת')
+          : (sharedLabel.trim() || sharedCatLabel(sharedCategory) || 'הוצאה משותפת')
         await upsertShared.mutateAsync({ period_id: selectedPeriodId, category: resolvedCategory as SharedCategory, total_amount: amt, notes: label, family_id: familyId })
       }
       setAmount(''); setSharedLabel(''); setCustomCat(''); setCategoryId(''); setSharedCategory(''); setDescription('')
@@ -298,8 +334,8 @@ export default function ExpensesPage() {
         rows.push({ 'תאריך': e.expense_date ?? '', 'תיאור': e.description ?? '', 'סכום': e.amount, 'קטגוריה': catName, 'סוג': 'אישי' })
       }
       for (const e of sharedExp ?? []) {
-        const label = e.notes || SHARED_CATEGORIES.find(c => c.value === e.category)?.label || e.category
-        rows.push({ 'תאריך': '', 'תיאור': label, 'סכום': e.total_amount, 'קטגוריה': e.category, 'סוג': 'משותף' })
+        const label = e.notes || sharedCatLabel(e.category)
+        rows.push({ 'תאריך': '', 'תיאור': label, 'סכום': e.total_amount, 'קטגוריה': sharedCatLabel(e.category), 'סוג': 'משותף' })
       }
       const ws = XLSX.utils.json_to_sheet(rows)
       ws['!cols'] = [{ wch: 14 }, { wch: 28 }, { wch: 12 }, { wch: 22 }, { wch: 12 }]
@@ -456,7 +492,7 @@ export default function ExpensesPage() {
   }
 
   function toggleLockShared(exp: { id: number; category: string; total_amount: number; notes?: string | null }) {
-    const label = exp.notes || exp.category
+    const label = exp.notes || sharedCatLabel(exp.category)
     if (recurringShared.isLocked(exp.category)) {
       recurringShared.unlock(exp.category)
       toast.success(`בוטל נעילה: ${label}`)
@@ -944,8 +980,8 @@ export default function ExpensesPage() {
               : sortedSharedExp.map(e => {
                 const myAmt = e.my_share ?? e.total_amount * splitFrac
                 const locked = recurringShared.isLocked(e.category)
-                const label = e.notes || e.category
-                const catLabel = SHARED_CATEGORIES.find(c => c.value === e.category)?.label ?? e.category
+                const label = e.notes || sharedCatLabel(e.category)
+                const catLabel = sharedCatLabel(e.category)
                 const isEditing = editingShared?.id === e.id
 
                 if (isEditing) {
@@ -1222,23 +1258,9 @@ function FamilyExpensesView({
 
       {/* Shared expenses — grouped by category */}
       {(sharedExp ?? []).length > 0 && (() => {
-        const SHARED_CAT_LABELS: Record<string, string> = {
-          rent: 'שכירות', household: 'חשבונות בית', insurance: 'ביטוחים',
-          loans: 'הלוואות', subscriptions: 'מנויים', groceries: 'מכולת',
-          eating_out: 'אוכל בחוץ', transport: 'תחבורה', health: 'בריאות ורפואה',
-          clothing: 'בגדים וקניות', leisure: 'בילויים ופנאי', kids: 'ילדים',
-          pets: 'חיות מחמד', savings: 'חיסכון והשקעות', misc: 'שונות',
-          // Legacy mappings for existing data
-          property_tax: 'חשבונות בית', electricity: 'חשבונות בית',
-          water_gas: 'חשבונות בית', building_committee: 'חשבונות בית',
-          home_insurance: 'ביטוחים', car_loan: 'הלוואות',
-          internet: 'מנויים', entertainment: 'בילויים ופנאי',
-          shopping: 'בגדים וקניות', travel: 'בילויים ופנאי',
-          netflix: 'מנויים', spotify: 'מנויים',
-        }
         const catTotals = new Map<string, number>()
         for (const e of (sharedExp ?? [])) {
-          const label = SHARED_CAT_LABELS[e.category] ?? e.category
+          const label = sharedCatLabel(e.category)
           catTotals.set(label, (catTotals.get(label) ?? 0) + e.total_amount)
         }
         const sorted = [...catTotals.entries()].sort((a, b) => b[1] - a[1])
