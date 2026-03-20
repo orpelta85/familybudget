@@ -73,7 +73,9 @@ export default function KidsPage() {
   const totalKids = kids?.length ?? 0
   const childBenefit = calcChildBenefit(totalKids)
   const totalActivitiesCost = (allActivities ?? []).reduce((s, a) => s + a.monthly_cost, 0)
-  const totalSavingsPerMonth = totalKids * BITUACH_LEUMI_SAVINGS
+  const totalPersonalSavings = (kids ?? []).reduce((s, k) => s + (Number(k.monthly_savings) || 0), 0)
+  const totalBituachLeumi = totalKids * BITUACH_LEUMI_SAVINGS
+  const totalSavingsPerMonth = totalPersonalSavings + totalBituachLeumi
 
   function getKidActivities(kidId: number) {
     return (allActivities ?? []).filter(a => a.kid_id === kidId)
@@ -127,11 +129,13 @@ export default function KidsPage() {
         </div>
         <div className="kpi-card">
           <div className="flex justify-between items-center mb-2">
-            <span className="kpi-label">חיסכון ביטוח לאומי</span>
+            <span className="kpi-label">סה"כ חיסכון חודשי</span>
             <TrendingUp size={14} className="opacity-70 text-accent-teal" />
           </div>
           <div className="kpi-value text-accent-teal">{formatCurrency(totalSavingsPerMonth)}</div>
-          <div className="kpi-sub text-text-secondary">{BITUACH_LEUMI_SAVINGS} ₪/ילד/חודש</div>
+          <div className="kpi-sub text-text-secondary">
+            {formatCurrency(totalPersonalSavings)} אישי + {formatCurrency(totalBituachLeumi)} ביטוח לאומי
+          </div>
         </div>
       </div>
 
