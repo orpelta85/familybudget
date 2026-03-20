@@ -28,24 +28,53 @@ const NetFlowChart = dynamic(() => import('@/components/dashboard/AnalyticsChart
   ssr: false,
 })
 
-const YEAR_OPTIONS = [
-  { label: 'הכל', periods: Array.from({ length: 36 }, (_, i) => i + 1) },
-  { label: 'שנה 1 — 2025', periods: Array.from({ length: 12 }, (_, i) => i + 1) },
-  { label: 'שנה 2 — 2026', periods: Array.from({ length: 12 }, (_, i) => i + 13) },
-  { label: 'שנה 3 — 2027', periods: Array.from({ length: 12 }, (_, i) => i + 25) },
-]
-
 const PERIOD_SHORT_LABELS = [
   'פבר', 'מרץ', 'אפר', 'מאי', 'יוני', 'יולי',
   'אוג', 'ספט', 'אוק', 'נוב', 'דצמ', 'ינו',
 ]
 
-// Generate labels for all 36 periods
-const ALL_PERIOD_LABELS = [
-  ...PERIOD_SHORT_LABELS.map(l => `${l} 25`),
-  ...PERIOD_SHORT_LABELS.map(l => `${l} 26`),
-  ...PERIOD_SHORT_LABELS.map(l => `${l} 27`),
-]
+function buildYearOptions(periods: { id: number; year_number: number; start_date: string }[] | undefined) {
+  if (!periods || periods.length === 0) {
+    return [{ label: 'הכל', periods: [] as number[] }]
+  }
+  const allIds = periods.map(p => p.id)
+  const yearMap = new Map<number, number[]>()
+  for (const p of periods) {
+    const arr = yearMap.get(p.year_number) ?? []
+    arr.push(p.id)
+    yearMap.set(p.year_number, arr)
+  }
+  const sortedYears = [...yearMap.keys()].sort((a, b) => a - b)
+  const yearOptions: { label: string; periods: number[] }[] = [
+    { label: 'הכל', periods: allIds },
+  ]
+  for (const yn of sortedYears) {
+    const firstPeriod = periods.find(p => p.year_number === yn)
+    const calendarYear = firstPeriod ? new Date(firstPeriod.start_date).getFullYear() : 2024 + yn
+    yearOptions.push({ label: `שנה ${yn} — ${calendarYear}`, periods: yearMap.get(yn)! })
+  }
+  return yearOptions
+}
+
+function buildAllPeriodLabels(periods: { id: number; year_number: number; start_date: string }[] | undefined) {
+  if (!periods || periods.length === 0) return []
+  const yearMap = new Map<number, number>()
+  for (const p of periods) {
+    if (!yearMap.has(p.year_number)) {
+      yearMap.set(p.year_number, new Date(p.start_date).getFullYear() % 100)
+    }
+  }
+  const sortedYears = [...yearMap.keys()].sort((a, b) => a - b)
+  const labels: string[] = []
+  for (const yn of sortedYears) {
+    const suffix = yearMap.get(yn)!
+    const count = periods.filter(p => p.year_number === yn).length
+    for (let i = 0; i < count; i++) {
+      labels.push(`${PERIOD_SHORT_LABELS[i % PERIOD_SHORT_LABELS.length]} ${suffix}`)
+    }
+  }
+  return labels
+}
 
 export default function AnalyticsPage() {
   const { user, loading } = useUser()
@@ -69,6 +98,8 @@ export default function AnalyticsPage() {
   const { data: allSinkingTx } = useAllSinkingTransactions(user?.id)
 
   const [selectedYearIdx, setSelectedYearIdx] = useState(0)
+  const YEAR_OPTIONS = useMemo(() => buildYearOptions(periods), [periods])
+  const ALL_PERIOD_LABELS = useMemo(() => buildAllPeriodLabels(periods), [periods])
 
   useEffect(() => {
     if (!loading && !user) router.push('/login')

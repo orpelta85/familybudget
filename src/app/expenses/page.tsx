@@ -237,14 +237,18 @@ export default function ExpensesPage() {
   // ── Delete ──────────────────────────────────────────────────────────────────
   async function handleDeletePersonal(exp: { id: number; category_id: number; amount: number; description?: string }) {
     if (!(await confirm({ message: 'למחוק את ההוצאה?' }))) return
-    await deleteExpense.mutateAsync({ id: exp.id, period_id: selectedPeriodId!, user_id: user!.id })
-    toast.success('נמחק')
+    try {
+      await deleteExpense.mutateAsync({ id: exp.id, period_id: selectedPeriodId!, user_id: user!.id })
+      toast.success('נמחק')
+    } catch { toast.error('שגיאה במחיקה') }
   }
 
   async function handleDeleteShared(id: number) {
     if (!(await confirm({ message: 'למחוק את ההוצאה?' }))) return
-    await deleteShared.mutateAsync({ id, period_id: selectedPeriodId! })
-    toast.success('נמחק')
+    try {
+      await deleteShared.mutateAsync({ id, period_id: selectedPeriodId! })
+      toast.success('נמחק')
+    } catch { toast.error('שגיאה במחיקה') }
   }
 
   // ── Excel ───────────────────────────────────────────────────────────────────

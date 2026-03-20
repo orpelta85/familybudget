@@ -8,6 +8,7 @@ import { useIncome, useFamilyIncome } from '@/lib/queries/useIncome'
 import { formatCurrency } from '@/lib/utils'
 import { useSharedPeriod } from '@/lib/context/PeriodContext'
 import { useFamilyContext } from '@/lib/context/FamilyContext'
+import { useFamilyView } from '@/contexts/FamilyViewContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useMemo } from 'react'
 import { BarChart3, Inbox, Check, Clock, ChevronDown, Users, Download } from 'lucide-react'
@@ -88,9 +89,11 @@ export default function BudgetPage() {
   const updateTarget = useUpdateCategoryTarget()
   const { selectedPeriodId, setSelectedPeriodId } = useSharedPeriod()
   const { familyId, members } = useFamilyContext()
+  const { viewMode } = useFamilyView()
+  const isFamily = viewMode !== 'personal'
   const familyMemberIds = useMemo(() => members.map(m => m.user_id), [members])
-  const { data: familyIncome } = useFamilyIncome(selectedPeriodId ?? currentPeriod?.id, familyMemberIds, familyMemberIds.length > 0)
-  const { data: familyExpenses } = useFamilyPersonalExpenses(selectedPeriodId ?? currentPeriod?.id, familyMemberIds, familyMemberIds.length > 0)
+  const { data: familyIncome } = useFamilyIncome(selectedPeriodId ?? currentPeriod?.id, familyMemberIds, isFamily && familyMemberIds.length > 0)
+  const { data: familyExpenses } = useFamilyPersonalExpenses(selectedPeriodId ?? currentPeriod?.id, familyMemberIds, isFamily && familyMemberIds.length > 0)
 
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editValue, setEditValue] = useState('')
@@ -118,13 +121,13 @@ export default function BudgetPage() {
   const fixedCats = (categories ?? []).filter(c => c.type === 'fixed')
   const allNonFixed = (categories ?? []).filter(c => c.type !== 'fixed')
 
-  // Personal spending by category — aggregate ALL family members' expenses
+  // Personal spending by category — aggregate family members' expenses only in family view
   const allFamilyExpensesList = useMemo(() => {
-    if (familyExpenses && familyExpenses.length > 0) {
+    if (isFamily && familyExpenses && familyExpenses.length > 0) {
       return familyExpenses.flatMap(m => m.expenses)
     }
     return expenses ?? []
-  }, [familyExpenses, expenses])
+  }, [isFamily, familyExpenses, expenses])
 
   const spendByCat = allFamilyExpensesList.reduce<Record<number, number>>((acc, e) => {
     acc[e.category_id] = (acc[e.category_id] ?? 0) + e.amount
@@ -164,10 +167,10 @@ export default function BudgetPage() {
   const groupedNames = new Set(VARIABLE_GROUPS.flatMap(g => g.categoryNames))
   const ungroupedCats = allNonFixed.filter(c => !groupedNames.has(c.name))
 
-  // Totals — use family income if available (this is "תקציב משפחתי")
+  // Totals — use family income only in family view
   const familyTotalIncome = (familyIncome ?? []).reduce((s, m) => s + m.total, 0)
   const personalIncome = income ? (income.salary + income.bonus + income.other) : 0
-  const totalIncome = familyTotalIncome > 0 ? familyTotalIncome : personalIncome
+  const totalIncome = isFamily && familyTotalIncome > 0 ? familyTotalIncome : personalIncome
   const totalFixedPersonal = fixedCats.reduce((s, c) => s + fixedSpend(c), 0)
   const totalFixed = totalFixedPersonal + unmatchedSharedTotal
   const totalVariableActual = allNonFixed.reduce((s, c) => s + (spendByCat[c.id] ?? 0), 0)
@@ -181,9 +184,11 @@ export default function BudgetPage() {
   async function saveTarget(catId: number) {
     const val = Number(editValue)
     if (!val || val < 0) { setEditingId(null); return }
-    await updateTarget.mutateAsync({ id: catId, monthly_target: val, user_id: user!.id })
-    toast.success('יעד עודכן')
-    setEditingId(null)
+    try {
+      await updateTarget.mutateAsync({ id: catId, monthly_target: val, user_id: user!.id })
+      toast.success('יעד עודכן')
+      setEditingId(null)
+    } catch { toast.error('שגיאה בעדכון היעד') }
   }
 
   const fixedPaidCount = fixedCats.filter(c => fixedSpend(c) > 0).length

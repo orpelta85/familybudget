@@ -16,6 +16,7 @@ import { TableSkeleton } from '@/components/ui/Skeleton'
 import { PageInfo } from '@/components/ui/PageInfo'
 import { InfoTooltip } from '@/components/ui/InfoTooltip'
 import { PAGE_TIPS } from '@/lib/page-tips'
+import { useFamilyView } from '@/contexts/FamilyViewContext'
 
 const TYPE_LABELS: Record<PensionProductType, string> = {
   pension: 'קרן פנסיה',
@@ -76,7 +77,9 @@ type ManualProduct = Omit<PensionProduct, 'id' | 'report_id' | 'start_date'> & {
 export default function PensionPage() {
   const { user, loading } = useUser()
   const router = useRouter()
-  const { data: reports, isLoading: loadingReports } = usePensionReports(user?.id)
+  const { viewMode, selectedMemberId } = useFamilyView()
+  const effectiveUserId = viewMode === 'member' && selectedMemberId ? selectedMemberId : user?.id
+  const { data: reports, isLoading: loadingReports } = usePensionReports(effectiveUserId)
   const uploadMutation = useUploadPensionReport()
   const fileRef = useRef<HTMLInputElement>(null)
 

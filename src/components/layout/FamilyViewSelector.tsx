@@ -9,7 +9,7 @@ import { useKids } from '@/lib/queries/useKids'
 import { useUser } from '@/lib/queries/useUser'
 
 export function FamilyViewSelector() {
-  const { viewMode, selectedMemberName, setViewMode, selectMember } = useFamilyView()
+  const { viewMode, selectedMemberId, selectedMemberName, setViewMode, selectMember } = useFamilyView()
   const { familyId, members, myMembership } = useFamilyContext()
   const { user } = useUser()
   const [showDropdown, setShowDropdown] = useState(false)
@@ -96,7 +96,7 @@ export function FamilyViewSelector() {
                     key={m.user_id}
                     onClick={() => { selectMember(m.user_id, m.name); setShowDropdown(false) }}
                     className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[12px] cursor-pointer border-none text-right transition-colors duration-100 ${
-                      viewMode === 'member' && m.user_id === selectedMemberName
+                      viewMode === 'member' && m.user_id === selectedMemberId
                         ? 'bg-[oklch(0.22_0.02_250)] text-[oklch(0.90_0.01_250)]'
                         : 'bg-transparent text-[oklch(0.75_0.01_250)] hover:bg-[oklch(0.20_0.01_250)]'
                     }`}
@@ -117,7 +117,7 @@ export function FamilyViewSelector() {
                         key={`kid-${kid.id}`}
                         onClick={() => { selectMember(`kid-${kid.id}`, kid.name); setShowDropdown(false) }}
                         className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[12px] cursor-pointer border-none text-right transition-colors duration-100 ${
-                          viewMode === 'member' && selectedMemberName === kid.name
+                          viewMode === 'member' && selectedMemberId === `kid-${kid.id}`
                             ? 'bg-[oklch(0.22_0.02_250)] text-[oklch(0.90_0.01_250)]'
                             : 'bg-transparent text-[oklch(0.75_0.01_250)] hover:bg-[oklch(0.20_0.01_250)]'
                         }`}

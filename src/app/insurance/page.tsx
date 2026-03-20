@@ -13,6 +13,7 @@ import { useEffect, useState, useMemo } from 'react'
 import { useFamilyView } from '@/contexts/FamilyViewContext'
 import { toast } from 'sonner'
 import { Shield, Plus, X, Pencil, Trash2, Calendar, AlertTriangle } from 'lucide-react'
+import { TableSkeleton } from '@/components/ui/Skeleton'
 import { useConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { PageInfo } from '@/components/ui/PageInfo'
 import { InfoTooltip } from '@/components/ui/InfoTooltip'
@@ -198,7 +199,7 @@ export default function InsurancePage() {
     } catch { toast.error('שגיאה במחיקה') }
   }
 
-  if (loading || !user) return null
+  if (loading || !user) return <TableSkeleton rows={5} />
 
   return (
     <div>

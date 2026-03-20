@@ -10,11 +10,14 @@ import {
 import { cn } from '@/lib/utils'
 import { PageInfo } from '@/components/ui/PageInfo'
 import { PAGE_TIPS } from '@/lib/page-tips'
-import {
-  AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip,
-  ResponsiveContainer, CartesianGrid
-} from 'recharts'
 import { toast } from 'sonner'
+import dynamic from 'next/dynamic'
+import { ChartSkeleton } from '@/components/ui/Skeleton'
+
+const AdminGrowthChart = dynamic(
+  () => import('@/components/dashboard/AdminGrowthChart').then(m => ({ default: m.AdminGrowthChart })),
+  { loading: () => <ChartSkeleton height={200} />, ssr: false }
+)
 
 // ─── Types ─────────────────────────────────────────────────
 interface AdminStats {
@@ -318,25 +321,7 @@ export default function AdminPage() {
       <div className="bg-[oklch(0.14_0.01_250)] border border-[oklch(0.22_0.01_250)] rounded-xl p-4 mb-6">
         <h2 className="text-[14px] font-semibold text-[oklch(0.75_0.01_250)] mb-4">הרשמות חודשיות</h2>
         <div className="h-[200px]" dir="ltr">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={chartData}>
-              <defs>
-                <linearGradient id="regGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="oklch(0.65 0.18 290)" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="oklch(0.65 0.18 290)" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.22 0.01 250)" />
-              <XAxis dataKey="name" stroke="oklch(0.45 0.01 250)" fontSize={11} />
-              <YAxis stroke="oklch(0.45 0.01 250)" fontSize={11} allowDecimals={false} />
-              <Tooltip
-                contentStyle={{ background: 'oklch(0.18 0.01 250)', border: '1px solid oklch(0.28 0.01 250)', borderRadius: 8, fontSize: 12 }}
-                labelStyle={{ color: 'oklch(0.65 0.01 250)' }}
-                itemStyle={{ color: 'oklch(0.85 0.16 290)' }}
-              />
-              <Area type="monotone" dataKey="users" stroke="oklch(0.65 0.18 290)" fill="url(#regGrad)" strokeWidth={2} name="משתמשים" />
-            </AreaChart>
-          </ResponsiveContainer>
+          <AdminGrowthChart data={chartData} />
         </div>
       </div>
 

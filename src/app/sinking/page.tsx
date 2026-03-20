@@ -120,17 +120,19 @@ export default function SinkingPage() {
     if (!editFund || !user) return
     const total = Number(editFund.totalAnnual)
     if (total < 0) return
-    // monthly_allocation = user's share per month
-    const monthly = editFund.isShared ? Math.round(total / 12 * splitFrac) : Math.round(total / 12)
-    await updateFund.mutateAsync({
-      id: editFund.id,
-      name: editFund.name,
-      monthly_allocation: monthly,
-      yearly_target: total,
-      is_shared: editFund.isShared,
-    })
-    toast.success('קרן עודכנה')
-    setEditFund(null)
+    try {
+      // monthly_allocation = user's share per month
+      const monthly = editFund.isShared ? Math.round(total / 12 * splitFrac) : Math.round(total / 12)
+      await updateFund.mutateAsync({
+        id: editFund.id,
+        name: editFund.name,
+        monthly_allocation: monthly,
+        yearly_target: total,
+        is_shared: editFund.isShared,
+      })
+      toast.success('קרן עודכנה')
+      setEditFund(null)
+    } catch { toast.error('שגיאה בעדכון הקרן') }
   }
 
   async function handleTxn() {
