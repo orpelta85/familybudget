@@ -35,6 +35,15 @@ const SHARED_CATEGORIES: { value: string; label: string }[] = [
   { value: 'electricity', label: 'חשמל' },
   { value: 'water_gas', label: 'מים+גז' },
   { value: 'building_committee', label: 'ועד בית' },
+  { value: 'car_loan', label: 'הלוואת רכב' },
+  { value: 'insurance', label: 'ביטוחים' },
+  { value: 'groceries', label: 'מכולת' },
+  { value: 'eating_out', label: 'אוכל בחוץ' },
+  { value: 'entertainment', label: 'בילויים' },
+  { value: 'subscriptions', label: 'מנויים' },
+  { value: 'shopping', label: 'קניות' },
+  { value: 'pets', label: 'חיות מחמד' },
+  { value: 'travel', label: 'טיולים' },
   { value: 'internet', label: 'אינטרנט' },
   { value: 'home_insurance', label: 'ביטוח דירה' },
   { value: 'netflix', label: 'נטפליקס' },
@@ -1313,7 +1322,10 @@ function FamilyExpensesView({
         const SHARED_CAT_LABELS: Record<string, string> = {
           rent: 'שכירות', property_tax: 'ארנונה', electricity: 'חשמל',
           water_gas: 'מים+גז', building_committee: 'ועד בית', internet: 'אינטרנט',
-          home_insurance: 'ביטוח דירה', misc: 'שונות',
+          home_insurance: 'ביטוח דירה', car_loan: 'הלוואת רכב', insurance: 'ביטוחים',
+          groceries: 'מכולת', eating_out: 'אוכל בחוץ', entertainment: 'בילויים',
+          subscriptions: 'מנויים', shopping: 'קניות', pets: 'חיות מחמד',
+          travel: 'טיולים', misc: 'שונות',
         }
         const catTotals = new Map<string, number>()
         for (const e of (sharedExp ?? [])) {
