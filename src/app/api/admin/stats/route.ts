@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import { requireAdmin } from '@/lib/admin'
+import { requireAdmin } from '@/lib/admin-server'
 
 export async function GET() {
   const { error } = await requireAdmin()

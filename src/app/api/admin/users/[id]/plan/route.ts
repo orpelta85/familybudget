@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import { requireAdmin } from '@/lib/admin'
+import { requireAdmin } from '@/lib/admin-server'
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { error } = await requireAdmin()

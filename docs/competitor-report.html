@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<style>
+  @page {
+    size: A4;
+    margin: 20mm 15mm 15mm 15mm;
+  }
+  body {
+    font-family: Arial, 'Segoe UI', Tahoma, sans-serif;
+    direction: rtl;
+    text-align: right;
+    font-size: 11px;
+    line-height: 1.7;
+    color: #222;
+    background: #fff;
+  }
+  h1 {
+    font-size: 24px;
+    color: #1a1a2e;
+    border-bottom: 3px solid #0066cc;
+    padding-bottom: 8px;
+    margin-top: 0;
+    margin-bottom: 15px;
+  }
+  h2 {
+    font-size: 18px;
+    color: #0066cc;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 6px;
+    margin-top: 30px;
+    margin-bottom: 12px;
+    page-break-after: avoid;
+  }
+  h3 {
+    font-size: 14px;
+    color: #333;
+    margin-top: 20px;
+    margin-bottom: 8px;
+    page-break-after: avoid;
+  }
+  p { margin-bottom: 8px; }
+  blockquote {
+    border-right: 4px solid #0066cc;
+    padding: 10px 15px;
+    margin-right: 0;
+    margin-left: 0;
+    color: #555;
+    background: #f8f9fa;
+    border-radius: 4px;
+  }
+  ul, ol { padding-right: 20px; padding-left: 0; }
+  li { margin-bottom: 4px; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 9px;
+  }
+  th {
+    background: #1e3a5f;
+    color: white;
+    padding: 6px 8px;
+    text-align: right;
+    font-weight: bold;
+    border: 1px solid #ccc;
+  }
+  td {
+    padding: 5px 8px;
+    border: 1px solid #ddd;
+    text-align: right;
+  }
+  tr:nth-child(even) td { background: #f8fafc; }
+  hr { border: none; border-top: 1px solid #e0e0e0; margin: 20px 0; }
+  strong { color: #1a1a2e; }
+  a { color: #0066cc; text-decoration: none; }
+</style>
+</head>
+<body>
+<h1>דוח ניתוח מתחרים מאוחד — My Family Finance</h1>
+<blockquote>
+<p><strong>תאריך:</strong> מרץ 2026
+<strong>מתודולוגיה:</strong> ניתוח אתרים, ביקורות משתמשים, מדיה חברתית, השוואת פיצ'רים, נתוני שוק</p>
+</blockquote>
+<hr />
+<h2>1. תקציר מנהלים</h2>
+<ul>
+<li><strong>השוק פתוח:</strong> המתחרים הישראליים בדעיכה (Bizibox — אפליקציה הוסרה מ-Play Store, RiseUp — פיטרה 50% מהעובדים), יוצרים חלון הזדמנות לכניסה עם מוצר מודרני ואיכותי.</li>
+<li><strong>היתרון המרכזי שלנו:</strong> עיצוב פרימיום ברמת Linear/Vercel, פיצ'רים ייחודיים (ניהול כספי ילדים, Net Worth, Sinking Funds, יועץ AI), ופרטיות מוחלטת — בעוד שהמתחרים מציעים עיצוב מיושן, ו-FamilyBiz מוכרת נתוני משתמשים בעקיפין.</li>
+<li><strong>הפער הקריטי שלנו:</strong> חיבור אוטומטי לבנקים. כל שלושת המתחרים מציעים זאת (scraping או Open Banking), ואנחנו עדיין בייבוא ידני. זה החסם העיקרי לצמיחה.</li>
+<li><strong>אסטרטגיית הניצחון:</strong> להיות האפליקציה היפה והחכמה ביותר לניהול תקציב משפחתי בישראל — עם שליטה ידנית מלאה, פרטיות, ו-AI — ולגשר על פער חיבור הבנקים בהקדם (Open Banking / israeli-bank-scrapers).</li>
+<li><strong>הזדמנות שוק:</strong> אין כיום מוצר ישראלי שמשלב עיצוב מודרני + ניהול משפחתי מלא + AI + פרטיות. הנישה הזו פנויה לחלוטין.</li>
+</ul>
+<hr />
+<h2>2. טבלת השוואה מלאה</h2>
+<table>
+<thead>
+<tr>
+<th>פיצ'ר</th>
+<th style="text-align: center;">My Family Finance</th>
+<th style="text-align: center;">Bizibox</th>
+<th style="text-align: center;">FamilyBiz</th>
+<th style="text-align: center;">HandWallet</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>חיבור לבנקים/אשראי</strong></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td>סנכרון בנקים אוטומטי</td>
+<td style="text-align: center;">לא (Excel ידני)</td>
+<td style="text-align: center;">כן (Exporter/Scraping)</td>
+<td style="text-align: center;">כן (Open Banking)</td>
+<td style="text-align: center;">כן (5 בנקים)</td>
+</tr>
+<tr>
+<td>כרטיסי אשראי</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">כן</td>
+<td style="text-align: center;">כן (בנקאיים + לא-בנקאיים)</td>
+<td style="text-align: center;">כן (4 חברות)</td>
+</tr>
+<tr>
+<td>SMS Banking</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">כן</td>
+</tr>
+<tr>
+<td>טכנולוגיה</td>
+<td style="text-align: center;">—</td>
+<td style="text-align: center;">Screen Scraping</td>
+<td style="text-align: center;">Open Banking (רישיון ני"ע)</td>
+<td style="text-align: center;">Scraping</td>
+</tr>
+<tr>
+<td><strong>ניהול תקציב</strong></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td>תקציב חודשי</td>
+<td style="text-align: center;">כן (קטגוריות מקובצות)</td>
+<td style="text-align: center;">כן (אוטומטי מ-12 חודשים)</td>
+<td style="text-align: center;">כן (יעדים)</td>
+<td style="text-align: center;">כן (לפי קטגוריה)</td>
+</tr>
+<tr>
+<td>קטגוריות מותאמות אישית</td>
+<td style="text-align: center;">כן (חינם)</td>
+<td style="text-align: center;">כן</td>
+<td style="text-align: center;">פרימיום בלבד</td>
+<td style="text-align: center;">כן (100+)</td>
+</tr>
+<tr>
+<td>תאריך תקציב גמיש</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">פרימיום בלבד</td>
+<td style="text-align: center;">לא</td>
+</tr>
+<tr>
+<td>שיטת מעטפות</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">כן (אפליקציה נפרדת)</td>
+</tr>
+<tr>
+<td><strong>מעקב הוצאות</strong></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td>הזנה ידנית</td>
+<td style="text-align: center;">כן</td>
+<td style="text-align: center;">לא (אוטומטי)</td>
+<td style="text-align: center;">לא (אוטומטי)</td>
+<td style="text-align: center;">כן</td>
+</tr>
+<tr>
+<td>קטגוריזציה אוטומטית</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">כן</td>
+<td style="text-align: center;">כן</td>
+<td style="text-align: center;">לא</td>
+</tr>
+<tr>
+<td>מעקב לפי צריכה בפועל</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">כן</td>
+</tr>
+<tr>
+<td>סריקת קבלות</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">כן</td>
+</tr>
+<tr>
+<td>זיהוי קולי</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">כן</td>
+</tr>
+<tr>
+<td><strong>הכנסות</strong></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td>מעקב הכנסות</td>
+<td style="text-align: center;">כן</td>
+<td style="text-align: center;">כן</td>
+<td style="text-align: center;">כן</td>
+<td style="text-align: center;">כן</td>
+</tr>
+<tr>
+<td>הכנסות קבועות/חוזרות</td>
+<td style="text-align: center;">כן</td>
+<td style="text-align: center;">כן</td>
+<td style="text-align: center;">כן</td>
+<td style="text-align: center;">כן</td>
+</tr>
+<tr>
+<td>Toggle אישי/משפחתי</td>
+<td style="text-align: center;">כן</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">בסיסי</td>
+<td style="text-align: center;">לא</td>
+</tr>
+<tr>
+<td><strong>שווי נקי / הון</strong></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td>Net Worth Dashboard</td>
+<td style="text-align: center;">כן</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">כן</td>
+<td style="text-align: center;">לא</td>
+</tr>
+<tr>
+<td>מעקב חוסן כלכלי לאורך זמן</td>
+<td style="text-align: center;">כן</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">כן</td>
+<td style="text-align: center;">לא</td>
+</tr>
+<tr>
+<td><strong>קרנות צבירה / יעדים</strong></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td>Sinking Funds</td>
+<td style="text-align: center;">כן</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">לא</td>
+</tr>
+<tr>
+<td>יעדי חיסכון</td>
+<td style="text-align: center;">כן (גמיש, רב-יעדי)</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">כן (בסיסי)</td>
+<td style="text-align: center;">לא</td>
+</tr>
+<tr>
+<td><strong>פנסיה</strong></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td>מעקב פנסיה</td>
+<td style="text-align: center;">כן (עם חילוץ AI)</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">כן (פרימיום)</td>
+<td style="text-align: center;">לא</td>
+</tr>
+<tr>
+<td>איחוד קופות</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">כן</td>
+<td style="text-align: center;">לא</td>
+</tr>
+<tr>
+<td><strong>ביטוחים</strong></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td>תצוגת פוליסות</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">כן (+ המלצות)</td>
+<td style="text-align: center;">לא</td>
+</tr>
+<tr>
+<td>התראות חידוש</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">כן</td>
+<td style="text-align: center;">לא</td>
+</tr>
+<tr>
+<td>השוואת ביטוחים</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">כן (סוכנות ביטוח)</td>
+<td style="text-align: center;">לא</td>
+</tr>
+<tr>
+<td><strong>משכנתא</strong></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td>מעקב משכנתא/דירה</td>
+<td style="text-align: center;">כן (Apartment page)</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">כן (ניתוח + מחזור)</td>
+<td style="text-align: center;">לא</td>
+</tr>
+<tr>
+<td>מחשבון משכנתא</td>
+<td style="text-align: center;">כן</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">כן</td>
+<td style="text-align: center;">לא</td>
+</tr>
+<tr>
+<td><strong>ילדים</strong></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td>ניהול כספי ילדים</td>
+<td style="text-align: center;">כן (KPI, חיסכון, ביטוח לאומי)</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">לא</td>
+</tr>
+<tr>
+<td><strong>מחשבון חובות</strong></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td>מחשבון חובות</td>
+<td style="text-align: center;">כן (Snowball/Avalanche)</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">כן (הלוואות בסיסי)</td>
+<td style="text-align: center;">כן (ריבית/מדד/פריים)</td>
+</tr>
+<tr>
+<td><strong>יועץ AI</strong></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td>יועץ פיננסי AI</td>
+<td style="text-align: center;">כן</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">לא (יועץ אנושי)</td>
+<td style="text-align: center;">לא</td>
+</tr>
+<tr>
+<td>תובנות חכמות</td>
+<td style="text-align: center;">כן</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">כן (פרימיום)</td>
+<td style="text-align: center;">לא</td>
+</tr>
+<tr>
+<td><strong>תחזית תזרים</strong></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td>תחזית תזרים מזומנים</td>
+<td style="text-align: center;">כן (90 יום)</td>
+<td style="text-align: center;">כן (עסקי)</td>
+<td style="text-align: center;">כן (פרימיום)</td>
+<td style="text-align: center;">לא</td>
+</tr>
+<tr>
+<td>חיזוי יתרת סוף חודש</td>
+<td style="text-align: center;">כן</td>
+<td style="text-align: center;">כן</td>
+<td style="text-align: center;">כן</td>
+<td style="text-align: center;">לא</td>
+</tr>
+<tr>
+<td><strong>מנויים</strong></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td>ניהול מנויים</td>
+<td style="text-align: center;">כן</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">לא ברור</td>
+<td style="text-align: center;">לא</td>
+</tr>
+<tr>
+<td><strong>התראות</strong></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td>התראות חריגה מתקציב</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">כן (מייל, SMS, push)</td>
+<td style="text-align: center;">כן</td>
+<td style="text-align: center;">כן</td>
+</tr>
+<tr>
+<td>סיכום שבועי/חודשי</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">כן (מייל)</td>
+<td style="text-align: center;">כן</td>
+<td style="text-align: center;">לא</td>
+</tr>
+<tr>
+<td><strong>ייבוא/ייצוא</strong></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td>ייבוא Excel/CSV</td>
+<td style="text-align: center;">כן</td>
+<td style="text-align: center;">לא (אוטומטי)</td>
+<td style="text-align: center;">לא (אוטומטי)</td>
+<td style="text-align: center;">כן</td>
+</tr>
+<tr>
+<td>ייצוא Excel/PDF/XML</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">כן</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">כן (Pro)</td>
+</tr>
+<tr>
+<td><strong>דוחות</strong></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td>אנליטיקס מתקדם</td>
+<td style="text-align: center;">כן</td>
+<td style="text-align: center;">בסיסי</td>
+<td style="text-align: center;">כן (גרפים)</td>
+<td style="text-align: center;">כן (גרפים בסיסיים)</td>
+</tr>
+<tr>
+<td>ניתוח מוטבים</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">כן (12 חודשים)</td>
+<td style="text-align: center;">כן (אוטומטי)</td>
+<td style="text-align: center;">לא</td>
+</tr>
+<tr>
+<td>דוחות רווח/הפסד</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">כן (Business+)</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">לא</td>
+</tr>
+<tr>
+<td>ארכיון פיננסי ללא הגבלה</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">כן</td>
+<td style="text-align: center;">לא ברור</td>
+<td style="text-align: center;">כן</td>
+</tr>
+<tr>
+<td><strong>ניהול משפחתי</strong></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td>שיתוף משפחתי</td>
+<td style="text-align: center;">כן (Sandra, toggle אישי/משפחתי)</td>
+<td style="text-align: center;">לא ברור</td>
+<td style="text-align: center;">כן (הזמנת בני משפחה)</td>
+<td style="text-align: center;">כן (בסיסי)</td>
+</tr>
+<tr>
+<td>הוצאות משותפות (Joint)</td>
+<td style="text-align: center;">כן</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">כן</td>
+<td style="text-align: center;">לא</td>
+</tr>
+<tr>
+<td><strong>אפליקציה / ווב</strong></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td>Web App</td>
+<td style="text-align: center;">כן (Next.js, responsive)</td>
+<td style="text-align: center;">כן (ממשק ווב)</td>
+<td style="text-align: center;">לא (בקשה חוזרת!)</td>
+<td style="text-align: center;">לא (Chrome Extension ישנה)</td>
+</tr>
+<tr>
+<td>אפליקציית מובייל</td>
+<td style="text-align: center;">לא (responsive web)</td>
+<td style="text-align: center;">הוסרה מ-Play Store!</td>
+<td style="text-align: center;">כן (iOS + Android)</td>
+<td style="text-align: center;">כן (Android native)</td>
+</tr>
+<tr>
+<td>PWA / Offline</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">כן (מלא)</td>
+</tr>
+<tr>
+<td><strong>עיצוב ו-UX</strong></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td>רמת עיצוב</td>
+<td style="text-align: center;">פרימיום (Linear/Vercel)</td>
+<td style="text-align: center;">בינוני (2020 vibes)</td>
+<td style="text-align: center;">טוב</td>
+<td style="text-align: center;">מיושן (2012)</td>
+</tr>
+<tr>
+<td>Dark Mode</td>
+<td style="text-align: center;">כן (ברירת מחדל)</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">לא</td>
+</tr>
+<tr>
+<td>RTL עברית</td>
+<td style="text-align: center;">כן (מלא)</td>
+<td style="text-align: center;">כן</td>
+<td style="text-align: center;">כן</td>
+<td style="text-align: center;">חלקי</td>
+</tr>
+<tr>
+<td><strong>אבטחה</strong></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td>ISO 27001</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">כן</td>
+<td style="text-align: center;">כן</td>
+<td style="text-align: center;">לא</td>
+</tr>
+<tr>
+<td>רישיון רגולטורי</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">כן (ני"ע, Open Banking)</td>
+<td style="text-align: center;">לא</td>
+</tr>
+<tr>
+<td>פרטיות מוחלטת</td>
+<td style="text-align: center;">כן (נתונים של המשתמש)</td>
+<td style="text-align: center;">כן (קריאה בלבד)</td>
+<td style="text-align: center;">בעייתית (שיתוף לצד ג')</td>
+<td style="text-align: center;">כן (offline, מקומי)</td>
+</tr>
+<tr>
+<td><strong>מחיר</strong></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td>חינם</td>
+<td style="text-align: center;">כן</td>
+<td style="text-align: center;">חודש ניסיון</td>
+<td style="text-align: center;">כן (בסיסי)</td>
+<td style="text-align: center;">כן (עם פרסומות)</td>
+</tr>
+<tr>
+<td>Premium</td>
+<td style="text-align: center;">טרם נקבע</td>
+<td style="text-align: center;">194-312 ש"ח/חודש (עסקי)</td>
+<td style="text-align: center;">349.90 ש"ח/שנה</td>
+<td style="text-align: center;">$35 חד-פעמי (Pro)</td>
+</tr>
+<tr>
+<td><strong>נוספים</strong></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td>מט"ח</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">כן</td>
+</tr>
+<tr>
+<td>השקעות</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">כן (מעקב תיק)</td>
+<td style="text-align: center;">לא</td>
+</tr>
+<tr>
+<td>נדל"ן</td>
+<td style="text-align: center;">כן (דירה)</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">כן (מעקב נכסים)</td>
+<td style="text-align: center;">לא</td>
+</tr>
+<tr>
+<td>חינוך פיננסי</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">בלוג</td>
+<td style="text-align: center;">כן (פודקאסט, בלוג, ניוזלטר)</td>
+<td style="text-align: center;">לא</td>
+</tr>
+<tr>
+<td>הטבות/מרקטפלייס</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">כן (שותפויות ענפות)</td>
+<td style="text-align: center;">לא</td>
+</tr>
+<tr>
+<td>הפרדת בית/עסק</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">כן (עסקי)</td>
+<td style="text-align: center;">לא</td>
+<td style="text-align: center;">כן ("Worlds")</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2>3. ניתוח לפי מתחרה</h2>
+<h3>3.1 Bizibox (ביזיבוקס)</h3>
+<p><strong>מודל עסקי:</strong>
+- מנויים חודשיים לעסקים (194-312 ש"ח/חודש)
+- תוספות (Exporter — 59 ש"ח/חודש, חשבון בנק נוסף — 35.40 ש"ח/חודש)
+- מוצר לרואי חשבון (B2B)
+- Bootstrapped — לא גייסו הון כלל
+- קהל יעד עיקרי: עסקים קטנים-בינוניים, רו"ח (משפחות = קהל משני)</p>
+<p><strong>חוזקות:</strong>
+- חיבור אוטומטי לבנקים — הפיצ'ר המרכזי שלהם
+- 15 שנה בשוק (מאז 2011) — מותג מוכר
+- ISO 27001 — אמינות אבטחה
+- ערוץ B2B דרך רואי חשבון
+- אינטגרציה עם חשבשבת</p>
+<p><strong>חולשות:</strong>
+- האפליקציה הוסרה מ-Google Play (יולי 2024) — סימן חמור לדעיכה
+- עדכון אחרון: מאי 2023 — המוצר נראה נטוש
+- דירוג App Store: 3.0/5 עם 2 ביקורות בלבד
+- מחיר יקר מאוד (194+ ש"ח/חודש)
+- דורש התקנת תוכנת Exporter — חוויה לא מודרנית
+- 5 עובדים בלבד — קיבולת פיתוח מוגבלת
+- אין API</p>
+<p><strong>ביקורות משתמשים:</strong>
+- <em>מה אוהבים:</em> "הכל אוטומטי — 15 דקות לניהול שתי חברות", "הביא סדר לניהול הפיננסי, אפילו נטשתי את האקסל", שירות לקוחות טוב
+- <em>מה שונאים:</em> מחיר גבוה, דרישת התקנת תוכנה, האפליקציה לא מתוחזקת, אין ביקורות משמעותיות ב-Capterra</p>
+<p><strong>מדיה חברתית:</strong>
+- Facebook: ~5,100 עוקבים, מעורבות נמוכה
+- סרטוני הדגמה ב-Vimeo (לא YouTube)
+- בלוג פעיל אבל עם תנועה מינימלית</p>
+<p><strong>מצב נוכחי: בירידה</strong> — אפליקציה הוסרה, עדכונים נעצרו, נוכחות דיגיטלית חלשה</p>
+<hr />
+<h3>3.2 FamilyBiz</h3>
+<p><strong>מודל עסקי:</strong>
+- <strong>סוכנות ביטוח עם אפליקציה</strong> — לא באמת SaaS
+- Freemium: חינם (בסיסי) / 49.90 ש"ח/חודש / 349.90 ש"ח/שנה
+- ההכנסה העיקרית: עמלות מביטוח, פנסיה, משכנתא — כשהמשתמש מחליף מוצר פיננסי, FamilyBiz גובה עמלה מהספק
+- שותפויות רפרל: Interactive Brokers, Fair, Bits of Gold, כלל ביטוח ועוד
+- גיוס הון מוצלח (אפריל 2023) ממשקיעים אסטרטגיים
+- 100,000+ הורדות, ~9 עובדים</p>
+<p><strong>חוזקות:</strong>
+- אגרגציה אוטומטית מלאה — כל הבנקים, כרטיסי אשראי, ביטוח, פנסיה, משכנתא, השקעות
+- רישיון Open Banking מרשות ני"ע — לגיטימציה רגולטורית
+- אקוסיסטם הטבות עשיר (הנחות על ביטוח, השקעות, שירותים)
+- תוכן שבונה סמכות: פודקאסט "הארנק" (30+ פרקים), בלוג, ניוזלטר
+- שיתופי פעולה מוסדיים (בנק מרכנתיל, כלל ביטוח)
+- סיקור תקשורתי (Ynet, Calcalist, TheMarker)</p>
+<p><strong>חולשות:</strong>
+- אין גרסת ווב/דסקטופ — בקשה חוזרת ממשתמשים
+- פרטיות בעייתית: איסוף נתונים ביומטריים, שיתוף עם צד ג', איסוף גם כשהאפליקציה כבויה
+- מודל עסקי מעורפל — המשתמש לא מבין שהוא "המוצר"
+- צמיחה איטית: 317-583 הורדות/שבוע (Q1 2024)
+- אין שליטה ידנית — הכל "קופסה שחורה" אוטומטית
+- צוות קטן (9 עובדים)</p>
+<p><strong>ביקורות משתמשים:</strong>
+- <em>מה אוהבים:</em> "עיצוב נקי וקל לשימוש", "כל חשבונות הבנק עם ביטוח ופנסיה במקום אחד", "שירות לקוחות מצוין, לא דוחפים פרימיום"
+- <em>מה שונאים:</em> חוסר גרסת ווב, חששות פרטיות, חלק מעדיפים RiseUp בזכות ממשק ידידותי יותר</p>
+<p><strong>מדיה חברתית:</strong>
+- Facebook Page + קבוצה (2,275+ חברים)
+- Instagram: @familybiz_app
+- YouTube: תוכן פודקאסט
+- LinkedIn: ~9 עובדים</p>
+<p><strong>מצב נוכחי: יציב עם צמיחה איטית</strong> — גיוס הון, שותפויות, אבל הורדות נמוכות</p>
+<hr />
+<h3>3.3 HandWallet</h3>
+<p><strong>מודל עסקי:</strong>
+- Freemium עם תשלום חד-פעמי (לא מנוי!)
+- Basic: חינם (עם פרסומות) / Pro: $35 חד-פעמי / Business: $84 חד-פעמי
+- פרסומות בגרסה החינמית
+- חברת מפתח אחד (David Shahar, MediaVision)
+- 2,120,000+ הורדות, 22 שנה בשוק</p>
+<p><strong>חוזקות:</strong>
+- ותיקה ואמינה — 22 שנה, 2M+ הורדות, 4.7 כוכבים (25,200+ ביקורות)
+- תשלום חד-פעמי אטרקטיבי — $35 ל-Pro
+- חיבור בנקאי ישראלי (5 בנקים + 4 חברות אשראי)
+- עומק פונקציונלי עצום: מט"ח, ריבית, מדד, פריים, חגים ישראליים
+- עבודה offline מלאה
+- פיצ'רים ייחודיים: זיהוי קולי, סריקת קבלות, מעקב GPS, SMS Banking
+- תמיכה מהמפתח מוערכת ("הכי טובה שקיבלתי")</p>
+<p><strong>חולשות:</strong>
+- עיצוב מיושן מ-2012 — הבעיה הגדולה ביותר
+- אין Web App מודרנית (רק Chrome Extension ישנה)
+- פיצול ל-6+ אפליקציות נפרדות — חוויה מפוצלת
+- אין Dark Mode, אין אנימציות — הרגשה סטטית
+- אין Net Worth, אין יעדים, אין Sinking Funds, אין AI
+- נוכחות דיגיטלית חלשה מאוד (516 לייקים בפייסבוק עברית!)
+- חברה קטנה (1-3 אנשים?)
+- אין הכנסה חוזרת — מודל לא סקיילבילי</p>
+<p><strong>ביקורות משתמשים:</strong>
+- <em>מה אוהבים:</em> קלות שימוש, עומק פונקציונלי, תמיכה אישית מהמפתח, תמיכה במט"ח, "האפליקציה הכי מקצועית לניהול כספים"
+- <em>מה שונאים:</em> ממשק מיושן ("ה-UI לוקה זמן להתרגל"), סנכרון בנקאי לא אמין, מעבר בין חודשים לא אינטואיטיבי, באגים, אין API</p>
+<p><strong>מדיה חברתית:</strong>
+- Facebook עברית: 516 לייקים
+- Facebook אנגלית: 3,200 לייקים
+- פורום קהילתי (handforum.com) — קטן
+- אין Instagram, LinkedIn, YouTube משמעותי</p>
+<p><strong>מצב נוכחי: יציב אבל סטגננטי</strong> — בסיס משתמשים גדול וותיק אבל אין חדשנות, עיצוב לא מתעדכן</p>
+<hr />
+<h2>4. הזדמנויות עבורנו</h2>
+<h3>פיצ'רים שכדאי להעתיק/לשפר</h3>
+<table>
+<thead>
+<tr>
+<th>פיצ'ר</th>
+<th>מקור</th>
+<th>עדיפות</th>
+<th>סיבה</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>התראות חכמות (חריגה מתקציב, סיכום שבועי)</td>
+<td>Bizibox, FamilyBiz</td>
+<td>גבוהה</td>
+<td>כל המתחרים מציעים, אנחנו לא</td>
+</tr>
+<tr>
+<td>ייצוא דוחות (Excel/PDF)</td>
+<td>HandWallet, Bizibox</td>
+<td>גבוהה</td>
+<td>ציפייה בסיסית מהמשתמשים</td>
+</tr>
+<tr>
+<td>מעקב לפי תאריך צריכה vs חיוב</td>
+<td>HandWallet</td>
+<td>בינונית</td>
+<td>ערך גבוה, פשוט להוסיף</td>
+</tr>
+<tr>
+<td>ניתוח מוטבים (לאן הכסף הולך)</td>
+<td>Bizibox</td>
+<td>בינונית</td>
+<td>תובנות מעמיקות</td>
+</tr>
+<tr>
+<td>מעקב ביטוח בסיסי (תאריכי חידוש)</td>
+<td>FamilyBiz</td>
+<td>בינונית</td>
+<td>אפילו ידני — ערך גבוה למשפחות</td>
+</tr>
+<tr>
+<td>תמיכה במט"ח</td>
+<td>HandWallet</td>
+<td>נמוכה-בינונית</td>
+<td>רלוונטי למשפחות עם חשיפה לדולר</td>
+</tr>
+<tr>
+<td>ארכיון פיננסי ללא הגבלה</td>
+<td>Bizibox</td>
+<td>נמוכה</td>
+<td>נחמד לעתיד</td>
+</tr>
+<tr>
+<td>PWA + Offline בסיסי</td>
+<td>HandWallet</td>
+<td>נמוכה</td>
+<td>שיפור חוויה</td>
+</tr>
+</tbody>
+</table>
+<h3>נקודות תורפה של המתחרים שאפשר לנצל</h3>
+<ol>
+<li><strong>עיצוב מיושן (כולם):</strong> Bizibox ב-2020 vibes, HandWallet ב-2012 style, FamilyBiz "טובה" אבל לא premium — אנחנו ברמת Linear/Vercel.</li>
+<li><strong>אין גרסת ווב ב-FamilyBiz:</strong> בקשה חוזרת ממשתמשים שלהם — אנחנו Web-first.</li>
+<li><strong>Bizibox נטושה:</strong> אפליקציה הוסרה, עדכון אחרון 2023 — אנחנו מתוחזקים ומעודכנים.</li>
+<li><strong>פרטיות בעייתית ב-FamilyBiz:</strong> איסוף נתונים ביומטריים, שיתוף עם צד ג' — אנחנו "הנתונים שלך נשארים שלך".</li>
+<li><strong>אין AI בשום מתחרה ישראלי:</strong> יועץ AI זה פיצ'ר ייחודי לחלוטין.</li>
+<li><strong>אין ניהול כספי ילדים בשום מתחרה:</strong> Kids Finance הוא ייחודי שלנו.</li>
+<li><strong>אין Sinking Funds בשום מתחרה:</strong> קרנות צבירה ייעודיות — ייחודי שלנו.</li>
+<li><strong>HandWallet מפוצלת ל-6 אפליקציות:</strong> אנחנו הכל במקום אחד.</li>
+<li><strong>מחיר יקר של Bizibox (194+ ש"ח/חודש):</strong> אנחנו יכולים להציע ערך גבוה יותר במחיר נמוך משמעותית.</li>
+<li><strong>אין Dark Mode בשום מתחרה:</strong> אנחנו dark-by-default.</li>
+</ol>
+<h3>פוזיציה מומלצת בשוק</h3>
+<p><strong>"ניהול תקציב משפחתי חכם, יפה ופרטי"</strong> — האפליקציה היחידה בישראל שמשלבת עיצוב פרימיום, יועץ AI, ניהול כספי ילדים, ופרטיות מוחלטת. לא מוכרים את הנתונים שלך — רק עוזרים לך לנהל אותם.</p>
+<hr />
+<h2>5. איומים</h2>
+<h3>מה המתחרים עושים טוב שאנחנו לא</h3>
+<table>
+<thead>
+<tr>
+<th>איום</th>
+<th>מתחרה</th>
+<th>חומרה</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>חיבור אוטומטי לבנקים</td>
+<td>כולם</td>
+<td>קריטית</td>
+</tr>
+<tr>
+<td>התראות חכמות (מייל, SMS, push)</td>
+<td>Bizibox, FamilyBiz, HandWallet</td>
+<td>גבוהה</td>
+</tr>
+<tr>
+<td>אפליקציה native (מובייל)</td>
+<td>FamilyBiz, HandWallet</td>
+<td>בינונית</td>
+</tr>
+<tr>
+<td>ייצוא דוחות (Excel/PDF)</td>
+<td>HandWallet, Bizibox</td>
+<td>בינונית</td>
+</tr>
+<tr>
+<td>אקוסיסטם הטבות/שותפויות</td>
+<td>FamilyBiz</td>
+<td>בינונית</td>
+</tr>
+<tr>
+<td>תוכן שבונה סמכות (פודקאסט, בלוג)</td>
+<td>FamilyBiz</td>
+<td>בינונית</td>
+</tr>
+<tr>
+<td>ISO 27001 / רישיון רגולטורי</td>
+<td>Bizibox, FamilyBiz</td>
+<td>בינונית</td>
+</tr>
+<tr>
+<td>עבודה Offline</td>
+<td>HandWallet</td>
+<td>נמוכה</td>
+</tr>
+<tr>
+<td>סריקת קבלות / זיהוי קולי</td>
+<td>HandWallet</td>
+<td>נמוכה</td>
+</tr>
+</tbody>
+</table>
+<h3>הפער הגדול: חיבור אוטומטי לבנקים</h3>
+<p>זה הפיצ'ר היחיד שגורם למשתמשים לבחור מתחרים על פנינו. כל שלושת המתחרים מציעים חיבור בנקאי כלשהו — Bizibox דרך Screen Scraping, FamilyBiz דרך Open Banking, ו-HandWallet דרך חיבור ל-5 בנקים.</p>
+<h3>איך לגשר על הפער</h3>
+<p><strong>שלב 1 (מיידי):</strong> לשפר את חוויית ייבוא ה-Excel למקסימום — קל, מהיר, ברור.</p>
+<p><strong>שלב 2 (טווח קצר):</strong> לבחון שימוש ב-<a href="https://github.com/eshaham/israeli-bank-scrapers">israeli-bank-scrapers</a> (open source) — פתרון טכני שדורש שרת proxy אבל אפשרי.</p>
+<p><strong>שלב 3 (טווח בינוני):</strong> לבחון שירותים כמו <a href="https://www.banksource.co.il/">BankSource</a> — פתרון מנוהל שחוסך זמן פיתוח.</p>
+<p><strong>שלב 4 (טווח ארוך):</strong> Open Banking API של בנק ישראל — כשהרגולציה תבשיל, זה יהיה הפתרון האידיאלי (אבל דורש רישיון).</p>
+<hr />
+<h2>6. המלצות אסטרטגיות</h2>
+<h3>טווח קצר (1-3 חודשים)</h3>
+<ol>
+<li><strong>התראות חכמות בסיסיות</strong> — חריגה מתקציב, סיכום חודשי באימייל. זה פיצ'ר שכל המתחרים מציעים ואנחנו חסרים.</li>
+<li><strong>ייצוא דוחות</strong> — Excel/PDF. פיצ'ר שמשתמשים מצפים לו.</li>
+<li><strong>שיפור חוויית ייבוא Excel</strong> — drag &amp; drop, זיהוי אוטומטי של עמודות, תמיכה בפורמטים נפוצים של בנקים ישראליים.</li>
+<li><strong>מעקב ביטוח בסיסי</strong> — הזנה ידנית של פוליסות, תאריכי חידוש, עלות חודשית.</li>
+<li><strong>PWA</strong> — להפוך את האפליקציה ל-installable, להוסיף icon למסך הבית.</li>
+</ol>
+<h3>טווח בינוני (3-6 חודשים)</h3>
+<ol>
+<li><strong>חיבור בנקאי</strong> — דרך israeli-bank-scrapers או BankSource. זה ה-game changer.</li>
+<li><strong>ניתוח מוטבים</strong> — לזהות לאן הכסף הולך ברמת מוטב, מגמות 12 חודשים.</li>
+<li><strong>מעקב לפי תאריך צריכה vs חיוב</strong> — שדה פשוט שנותן תמונה אמיתית.</li>
+<li><strong>תמיכה במט"ח</strong> — רלוונטי למשפחות עם חשיפה לדולר/יורו.</li>
+<li><strong>טיפים פיננסיים בתוך האפליקציה</strong> — AI-driven, מבוסס על הנתונים של המשתמש.</li>
+</ol>
+<h3>טווח ארוך (6-12 חודשים)</h3>
+<ol>
+<li><strong>Open Banking API</strong> — כשהרגולציה תאפשר, להגיש בקשה לרישיון.</li>
+<li><strong>מעקב השקעות בסיסי</strong> — ערך תיק לאורך זמן, אפילו ידני.</li>
+<li><strong>מרקטפלייס הטבות</strong> — שותפויות עם שירותים (ביטוח, סלולר, אינטרנט) — לימוד מ-FamilyBiz.</li>
+<li><strong>אפליקציה native (או PWA מתקדם)</strong> — לשיפור חוויה מובייל.</li>
+<li><strong>תוכן שבונה סמכות</strong> — בלוג, ניוזלטר, טיפים — לימוד מ-FamilyBiz.</li>
+</ol>
+<h3>המלצת תמחור</h3>
+<table>
+<thead>
+<tr>
+<th>תוכנית</th>
+<th>מחיר מוצע</th>
+<th>מול המתחרים</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>חינם</strong></td>
+<td>0 ש"ח</td>
+<td>Bizibox אין חינם, FamilyBiz חינם מוגבל, HandWallet חינם עם פרסומות</td>
+</tr>
+<tr>
+<td><strong>Premium אישי</strong></td>
+<td>29-39 ש"ח/חודש</td>
+<td>FamilyBiz 49.90 ש"ח/חודש, RiseUp 45 ש"ח/חודש</td>
+</tr>
+<tr>
+<td><strong>Premium משפחתי</strong></td>
+<td>49-69 ש"ח/חודש</td>
+<td>FamilyBiz 349.90 ש"ח/שנה (~29 ש"ח/חודש)</td>
+</tr>
+<tr>
+<td><strong>Lifetime Deal</strong></td>
+<td>249-349 ש"ח חד-פעמי</td>
+<td>HandWallet $35 Pro — לשקול מודל דומה כמבצע השקה</td>
+</tr>
+</tbody>
+</table>
+<p><strong>עקרונות תמחור:</strong>
+- Free tier נדיב — רוב הפיצ'רים הבסיסיים חינם
+- Premium עם: יועץ AI, חיבור בנקים (כשיהיה), תחזיות מתקדמות, התראות, ייצוא דוחות
+- שנתי עם הנחה: ~30% פחות מחודשי
+- Benchmark: RiseUp גובה 45 ש"ח/חודש — זה התקרה לשוק האישי</p>
+<h3>הצהרת פוזיציה (Positioning Statement)</h3>
+<blockquote>
+<p><strong>My Family Finance — ניהול תקציב משפחתי חכם, יפה ופרטי.</strong>
+האפליקציה הישראלית היחידה שמשלבת עיצוב ברמת עולמית, יועץ פיננסי AI, ניהול כספי ילדים, ופרטיות מוחלטת. אנחנו לא מוכרים את הנתונים שלך — רק עוזרים לך לנהל אותם חכם יותר.</p>
+</blockquote>
+<hr />
+<h2>7. סיכום</h2>
+<p>My Family Finance נמצאת בעמדה תחרותית חזקה בשוק ניהול התקציב המשפחתי בישראל. המתחרים העיקריים (Bizibox, FamilyBiz, HandWallet) מציעים כל אחד יתרונות — בעיקר חיבור אוטומטי לבנקים — אבל כולם סובלים מחולשות משמעותיות: עיצוב מיושן, בעיות פרטיות, מודלים עסקיים לא שקופים, או היעדר חדשנות. אנחנו מציעים את העיצוב הטוב ביותר בשוק, פיצ'רים ייחודיים שאין לאף מתחרה (ניהול ילדים, Sinking Funds, יועץ AI), ופרטיות מוחלטת. הפער היחיד שחייבים לסגור הוא חיבור אוטומטי לבנקים — ברגע שזה יקרה, נהיה בעמדה מצוינת להפוך למוביל השוק. בינתיים, הערך הייחודי שלנו מספיק כדי למשוך משפחות שמחפשות כלי ניהול תקציב מדויק, יפה ואמין — ללא פשרות על פרטיות.</p>
+<hr />
+<h2>מקורות</h2>
+<h3>Bizibox</h3>
+<ul>
+<li><a href="https://bizibox.biz/">bizibox.biz</a> — אתר רשמי</li>
+<li><a href="https://www.capterra.com/p/209038/Bizibox/">Capterra — Bizibox</a></li>
+<li><a href="https://tracxn.com/d/companies/bizibox/__0a1BrExwPgXRKsn_yauYPPGcsy6RpPFJB2HKeAW2gfw">Tracxn — bizibox</a></li>
+<li><a href="https://apps.apple.com/us/app/bizibox-ui/id1448852782">App Store — bizibox UI</a></li>
+</ul>
+<h3>FamilyBiz</h3>
+<ul>
+<li><a href="https://familybiz.co.il/">familybiz.co.il</a> — אתר רשמי</li>
+<li>Sensor Tower Q1 2024 נתוני שוק</li>
+<li>Calcalist, Ynet, TheMarker — סיקור תקשורתי</li>
+</ul>
+<h3>HandWallet</h3>
+<ul>
+<li><a href="https://www.handwallet.com/">handwallet.com</a> — אתר רשמי</li>
+<li><a href="https://play.google.com/store/apps/details?id=com.handwallet">Google Play — HandWallet</a> — 2.12M+ הורדות</li>
+<li><a href="https://www.handforum.com/">handforum.com</a> — פורום קהילתי</li>
+<li>Capterra ביקורות</li>
+</ul>
+<h3>כללי</h3>
+<ul>
+<li><a href="https://github.com/eshaham/israeli-bank-scrapers">israeli-bank-scrapers</a> — Open source</li>
+<li><a href="https://www.banksource.co.il/">BankSource</a> — שירות scraping</li>
+<li><a href="https://boi.org.il/">Open Banking Israel — Bank of Israel</a> — רגולציה</li>
+<li><a href="https://www.calcalistech.com/ctechnews/article/sjhgncr11c">RiseUp layoffs — Calcalist</a></li>
+</ul>
+</body>
+</html>
