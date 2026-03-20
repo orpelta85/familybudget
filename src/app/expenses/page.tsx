@@ -667,7 +667,7 @@ export default function ExpensesPage() {
                     className="cursor-pointer shrink-0 w-3.5 h-3.5"
                   />
                   <span className="text-xs text-[oklch(0.80_0.01_250)] overflow-hidden text-ellipsis whitespace-nowrap">{row.description}</span>
-                  <span className="text-xs font-semibold text-left text-[oklch(0.72_0.18_55)]">{formatCurrency(row.amount)}</span>
+                  <span className="text-xs font-semibold text-right text-[oklch(0.72_0.18_55)]">{formatCurrency(row.amount)}</span>
                   {/* Toggle אישי/משותף */}
                   <button
                     onClick={() => setImportRows(p => p.map((r, j) => j === i ? { ...r, is_shared: !r.is_shared } : r))}
@@ -861,7 +861,7 @@ export default function ExpensesPage() {
             <div className="bg-card border border-border rounded-xl p-5 mb-3">
               <div className="flex items-center gap-1.5 mb-2.5 text-xs text-[oklch(0.70_0.15_185)] font-semibold">
                 <Target size={12} /> קרנות שנתיות — הפרשה חודשית
-                <span className="font-normal text-muted-foreground ml-1">(נעולות — לשינוי עבור לעמוד הקרנות)</span>
+                <span className="font-normal text-muted-foreground mr-1">(נעולות — לשינוי עבור לעמוד הקרנות)</span>
               </div>
               {(funds ?? []).map(fund => (
                 <div key={fund.id} className="flex justify-between items-center py-2.5 border-b border-[oklch(0.20_0.01_250)] opacity-85">

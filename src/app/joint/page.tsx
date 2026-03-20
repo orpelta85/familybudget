@@ -188,7 +188,7 @@ export default function JointPage() {
           <div key={e.id} className="flex justify-between py-[9px] border-b border-[oklch(0.20_0.01_250)] text-[13px]">
             <div>
               <span className="font-medium">{POOL_CATEGORIES.find(c => c.key === e.category)?.label ?? e.category}</span>
-              {e.description && <span className="text-[oklch(0.65_0.01_250)] ml-2">· {e.description}</span>}
+              {e.description && <span className="text-[oklch(0.65_0.01_250)] mr-2">· {e.description}</span>}
             </div>
             <span className="font-semibold text-[oklch(0.72_0.18_55)]">{formatCurrency(e.amount)}</span>
           </div>

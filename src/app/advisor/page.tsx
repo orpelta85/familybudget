@@ -34,9 +34,9 @@ function getIcon(type: Tip['icon']) {
 
 function getPriorityBorder(p: Tip['priority']) {
   switch (p) {
-    case 'high': return 'border-l-[oklch(0.62_0.22_27)]'
-    case 'medium': return 'border-l-[oklch(0.72_0.18_55)]'
-    case 'low': return 'border-l-[oklch(0.65_0.18_250)]'
+    case 'high': return 'border-r-[oklch(0.62_0.22_27)]'
+    case 'medium': return 'border-r-[oklch(0.72_0.18_55)]'
+    case 'low': return 'border-r-[oklch(0.65_0.18_250)]'
   }
 }
 
@@ -200,7 +200,7 @@ export default function AdvisorPage() {
         : (
           <div className="flex flex-col gap-3">
             {tips.map((tip, i) => (
-              <div key={i} className={`bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] border-l-2 ${getPriorityBorder(tip.priority)} rounded-xl px-5 py-4`}>
+              <div key={i} className={`bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] border-r-2 ${getPriorityBorder(tip.priority)} rounded-xl px-5 py-4`}>
                 <div className="flex items-center gap-2 mb-2">
                   {getIcon(tip.icon)}
                   <span className="font-semibold text-sm">{tip.title}</span>

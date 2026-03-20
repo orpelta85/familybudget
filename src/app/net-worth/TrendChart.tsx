@@ -18,6 +18,7 @@ export function TrendChart({ snapshots }: { snapshots: NetWorthSnapshot[] }) {
   }))
 
   return (
+    <div dir="ltr">
     <ResponsiveContainer width="100%" height={220}>
       <LineChart data={data}>
         <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.22 0.01 250)" />
@@ -28,6 +29,7 @@ export function TrendChart({ snapshots }: { snapshots: NetWorthSnapshot[] }) {
           tickLine={false}
         />
         <YAxis
+          orientation="right"
           tick={{ fill: 'oklch(0.55 0.01 250)', fontSize: 11 }}
           axisLine={false}
           tickLine={false}
@@ -50,5 +52,6 @@ export function TrendChart({ snapshots }: { snapshots: NetWorthSnapshot[] }) {
         <Line type="monotone" dataKey="liquid" stroke="oklch(0.65 0.15 180)" strokeWidth={1.5} dot={false} name="נזיל" strokeDasharray="4 4" />
       </LineChart>
     </ResponsiveContainer>
+    </div>
   )
 }

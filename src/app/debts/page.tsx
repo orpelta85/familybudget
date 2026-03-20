@@ -269,7 +269,7 @@ export default function DebtsPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="text-left">
+                    <div className="text-right">
                       <div className="text-base font-bold text-[oklch(0.88_0.01_250)]">{formatCurrency(Number(debt.balance))}</div>
                       <div className="text-xs text-[oklch(0.65_0.01_250)]">מינימום: {formatCurrency(Number(debt.minimum_payment))}</div>
                     </div>

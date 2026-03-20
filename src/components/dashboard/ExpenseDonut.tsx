@@ -16,6 +16,7 @@ export function ExpenseDonut({ data }: { data: DonutEntry[] }) {
 
   return (
     <>
+      <div dir="ltr">
       <ResponsiveContainer width="100%" height={150}>
         <PieChart>
           <Pie data={data} cx="50%" cy="50%" innerRadius={42} outerRadius={68} dataKey="value" paddingAngle={2}>
@@ -27,6 +28,7 @@ export function ExpenseDonut({ data }: { data: DonutEntry[] }) {
           />
         </PieChart>
       </ResponsiveContainer>
+      </div>
       <div className="flex flex-wrap gap-x-3.5 gap-y-[5px] mt-1">
         {data.map(d => (
           <div key={d.name} className="flex items-center gap-[5px] text-xs">

@@ -330,7 +330,7 @@ export default function PensionPage() {
                     <span className="text-[11px] text-[oklch(0.65_0.01_250)] font-medium">{kpi.label}</span>
                     {kpi.tip && <InfoTooltip body={kpi.tip} />}
                   </div>
-                  <div className="text-xl font-bold text-left" style={{ color: kpi.color }}>
+                  <div className="text-xl font-bold text-right" style={{ color: kpi.color }}>
                     {kpi.value}
                   </div>
                 </div>
@@ -366,19 +366,19 @@ export default function PensionPage() {
                 <div className="grid grid-cols-[repeat(auto-fit,minmax(160px,1fr))] gap-3">
                   <div className="bg-[oklch(0.14_0.01_250)] rounded-lg p-3.5">
                     <div className="text-[11px] text-[oklch(0.65_0.01_250)] mb-1.5">צבירה צפויה בפרישה</div>
-                    <div className="text-lg font-bold text-left text-[oklch(0.65_0.18_250)]">
+                    <div className="text-lg font-bold text-right text-[oklch(0.65_0.18_250)]">
                       {formatCurrency(futureValue)}
                     </div>
                   </div>
                   <div className="bg-[oklch(0.14_0.01_250)] rounded-lg p-3.5">
                     <div className="text-[11px] text-[oklch(0.65_0.01_250)] mb-1.5">קצבה חודשית צפויה</div>
-                    <div className="text-lg font-bold text-left text-[oklch(0.70_0.18_145)]">
+                    <div className="text-lg font-bold text-right text-[oklch(0.70_0.18_145)]">
                       {formatCurrency(monthlyPension)}
                     </div>
                   </div>
                   <div className="bg-[oklch(0.14_0.01_250)] rounded-lg p-3.5">
                     <div className="text-[11px] text-[oklch(0.65_0.01_250)] mb-1.5">יחס החלפה</div>
-                    <div className="text-lg font-bold text-left" style={{ color: ratioColor }}>
+                    <div className="text-lg font-bold text-right" style={{ color: ratioColor }}>
                       {currentSalary > 0 ? `${replacementRatio.toFixed(0)}%` : 'אין נתון'}
                     </div>
                   </div>
@@ -407,7 +407,7 @@ export default function PensionPage() {
                     <item.Icon size={12} />
                     {item.label}
                   </div>
-                  <div className={`text-lg font-bold text-left ${item.value > 0 ? 'text-[oklch(0.80_0.01_250)]' : 'text-[oklch(0.65_0.01_250)]'}`}>
+                  <div className={`text-lg font-bold text-right ${item.value > 0 ? 'text-[oklch(0.80_0.01_250)]' : 'text-[oklch(0.65_0.01_250)]'}`}>
                     {item.value > 0 ? formatCurrency(item.value) : 'אין כיסוי'}
                   </div>
                 </div>
@@ -518,8 +518,8 @@ export default function PensionPage() {
                     {healthCoverages.map(h => (
                       <tr key={h.id} className="border-b border-[oklch(0.20_0.01_250)]">
                         <td className="p-2">{h.coverage_name}</td>
-                        <td className="p-2 text-left">{formatCurrency(h.main_insured)}</td>
-                        <td className="p-2 text-left">{formatCurrency(h.total)}</td>
+                        <td className="p-2 text-right">{formatCurrency(h.main_insured)}</td>
+                        <td className="p-2 text-right">{formatCurrency(h.total)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -553,9 +553,9 @@ export default function PensionPage() {
                       : 'border-[oklch(0.25_0.01_250)] bg-[oklch(0.18_0.01_250)] text-[oklch(0.65_0.01_250)]'
                   }`}
                 >
-                  {mode === 'image' ? <><Camera size={14} className="ml-1.5 inline" /> צילום/תמונה</>
-                    : mode === 'manual' ? <><Pencil size={14} className="ml-1.5 inline" /> הזנה ידנית</>
-                    : <><FileUp size={14} className="ml-1.5 inline" /> העלאת PDF</>}
+                  {mode === 'image' ? <><Camera size={14} className="mr-1.5 inline" /> צילום/תמונה</>
+                    : mode === 'manual' ? <><Pencil size={14} className="mr-1.5 inline" /> הזנה ידנית</>
+                    : <><FileUp size={14} className="mr-1.5 inline" /> העלאת PDF</>}
                 </button>
               ))}
             </div>
@@ -831,7 +831,7 @@ function ProductCard({ product: p, totalBalance, expanded, onToggle }: {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <div className="text-left">
+          <div className="text-right">
             <div className="font-bold text-base" style={{ color }}>{formatCurrency(p.balance)}</div>
             <div className="text-[11px] text-[oklch(0.65_0.01_250)]">{pct.toFixed(1)}% מהתיק</div>
           </div>
@@ -860,7 +860,7 @@ function ProductCard({ product: p, totalBalance, expanded, onToggle }: {
                 ].filter(item => item.value > 0).map(item => (
                   <div key={item.label} className="bg-[oklch(0.18_0.01_250)] rounded-md py-2 px-2.5">
                     <div className="text-[10px] text-[oklch(0.65_0.01_250)]">{item.label}</div>
-                    <div className="text-sm font-semibold text-left">{formatCurrency(item.value)}</div>
+                    <div className="text-sm font-semibold text-right">{formatCurrency(item.value)}</div>
                   </div>
                 ))}
               </div>
@@ -873,11 +873,11 @@ function ProductCard({ product: p, totalBalance, expanded, onToggle }: {
               <div className="text-xs font-semibold mb-2 text-[oklch(0.70_0.01_250)] flex items-center gap-1">דמי ניהול <InfoTooltip body="עמלה שהחברה גובה. 0.5% הפרש = עשרות אלפי ש&quot;ח בפנסיה" /></div>
               <div className="flex gap-4 text-[13px]">
                 <div>
-                  <span className="text-[oklch(0.65_0.01_250)] ml-1.5">מהפקדה:</span>
+                  <span className="text-[oklch(0.65_0.01_250)] mr-1.5">מהפקדה:</span>
                   <span className="font-semibold">{p.mgmt_fee_deposits}%</span>
                 </div>
                 <div>
-                  <span className="text-[oklch(0.65_0.01_250)] ml-1.5">מצבירה:</span>
+                  <span className="text-[oklch(0.65_0.01_250)] mr-1.5">מצבירה:</span>
                   <span className="font-semibold">{p.mgmt_fee_accumulation}%</span>
                 </div>
               </div>
@@ -887,7 +887,7 @@ function ProductCard({ product: p, totalBalance, expanded, onToggle }: {
           {/* Salary basis */}
           {p.salary_basis > 0 && (
             <div className="mb-3.5 text-[13px]">
-              <span className="text-[oklch(0.65_0.01_250)] ml-1.5">שכר בסיס:</span>
+              <span className="text-[oklch(0.65_0.01_250)] mr-1.5">שכר בסיס:</span>
               <span className="font-semibold">{formatCurrency(p.salary_basis)}</span>
             </div>
           )}
@@ -925,11 +925,11 @@ function ProductCard({ product: p, totalBalance, expanded, onToggle }: {
                     {p.deposit_history.map((d, i) => (
                       <tr key={i} className="border-b border-[oklch(0.18_0.01_250)]">
                         <td className="p-1.5">{d.date}</td>
-                        <td className="p-1.5 text-left">{formatCurrency(d.salary)}</td>
-                        <td className="p-1.5 text-left">{formatCurrency(d.employer)}</td>
-                        <td className="p-1.5 text-left">{formatCurrency(d.employee)}</td>
-                        <td className="p-1.5 text-left">{formatCurrency(d.severance)}</td>
-                        <td className="p-1.5 text-left font-semibold">{formatCurrency(d.total)}</td>
+                        <td className="p-1.5 text-right">{formatCurrency(d.salary)}</td>
+                        <td className="p-1.5 text-right">{formatCurrency(d.employer)}</td>
+                        <td className="p-1.5 text-right">{formatCurrency(d.employee)}</td>
+                        <td className="p-1.5 text-right">{formatCurrency(d.severance)}</td>
+                        <td className="p-1.5 text-right font-semibold">{formatCurrency(d.total)}</td>
                       </tr>
                     ))}
                   </tbody>

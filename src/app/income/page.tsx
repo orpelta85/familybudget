@@ -230,9 +230,9 @@ export default function IncomePage() {
                   value={field.val}
                   onChange={e => field.set(e.target.value)}
                   placeholder={field.placeholder}
-                  className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg py-2.5 pr-10 pl-3 text-inherit text-[15px] text-left" style={{ direction: 'ltr' }}
+                  className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg py-2.5 pr-3 pl-10 text-inherit text-[15px] text-right" style={{ direction: 'ltr' }}
                 />
-                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[oklch(0.65_0.01_250)] text-[13px]">₪</span>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[oklch(0.65_0.01_250)] text-[13px]">₪</span>
               </div>
             </div>
           ))}

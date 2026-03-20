@@ -94,7 +94,7 @@ export default function ApartmentPage() {
               {formatCurrency(totalSaved)}
             </div>
           </div>
-          <div className="text-left">
+          <div className="text-right">
             <div className="text-[13px] text-[oklch(0.65_0.10_145)] mb-1.5">יעד סופי</div>
             <div className="text-[22px] font-bold text-[oklch(0.75_0.08_145)]">{formatCurrency(TOTAL_GOAL)}</div>
           </div>

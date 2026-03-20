@@ -532,7 +532,7 @@ export default function ForecastPage() {
                       <div className="text-[11px] text-[oklch(0.50_0.01_250)]">{ev.label}</div>
                     </div>
                   </div>
-                  <div className="text-left">
+                  <div className="text-right">
                     <div className={`text-[13px] font-semibold ${isPositive ? 'text-[oklch(0.70_0.18_145)]' : 'text-[oklch(0.62_0.22_27)]'}`}>
                       {isPositive ? '+' : ''}{formatCurrency(ev.amount)}
                     </div>

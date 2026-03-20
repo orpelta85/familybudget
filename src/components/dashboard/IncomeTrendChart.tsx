@@ -15,6 +15,7 @@ export function IncomeTrendChart({ data }: { data: TrendEntry[] }) {
   }
 
   return (
+    <div dir="ltr">
     <ResponsiveContainer width="100%" height={200}>
       <BarChart data={data} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
         <XAxis dataKey="label" tick={{ fill: 'oklch(0.65 0.01 250)', fontSize: 11 }} axisLine={false} tickLine={false} />
@@ -30,5 +31,6 @@ export function IncomeTrendChart({ data }: { data: TrendEntry[] }) {
         </Bar>
       </BarChart>
     </ResponsiveContainer>
+    </div>
   )
 }

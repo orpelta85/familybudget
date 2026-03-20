@@ -26,10 +26,11 @@ const tooltipStyle = {
 
 export function IncomeVsExpensesChart({ data }: { data: ChartEntry[] }) {
   return (
+    <div dir="ltr">
     <ResponsiveContainer width="100%" height={220}>
       <BarChart data={data} barGap={2}>
         <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'oklch(0.65 0.01 250)' }} axisLine={false} tickLine={false} />
-        <YAxis tick={{ fontSize: 11, fill: 'oklch(0.65 0.01 250)' }} axisLine={false} tickLine={false}
+        <YAxis orientation="right" tick={{ fontSize: 11, fill: 'oklch(0.65 0.01 250)' }} axisLine={false} tickLine={false}
           tickFormatter={v => v === 0 ? '0' : `${(v / 1000).toFixed(0)}K`} />
         <Tooltip
           {...tooltipStyle}
@@ -43,15 +44,17 @@ export function IncomeVsExpensesChart({ data }: { data: ChartEntry[] }) {
         <Bar dataKey="expenses" name="expenses" fill="oklch(0.72 0.18 55)" radius={[4, 4, 0, 0]} maxBarSize={28} />
       </BarChart>
     </ResponsiveContainer>
+    </div>
   )
 }
 
 export function NetFlowChart({ data }: { data: ChartEntry[] }) {
   return (
+    <div dir="ltr">
     <ResponsiveContainer width="100%" height={180}>
       <LineChart data={data}>
         <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'oklch(0.65 0.01 250)' }} axisLine={false} tickLine={false} />
-        <YAxis tick={{ fontSize: 11, fill: 'oklch(0.65 0.01 250)' }} axisLine={false} tickLine={false}
+        <YAxis orientation="right" tick={{ fontSize: 11, fill: 'oklch(0.65 0.01 250)' }} axisLine={false} tickLine={false}
           tickFormatter={v => v === 0 ? '0' : `${(v / 1000).toFixed(0)}K`} />
         <Tooltip
           {...tooltipStyle}
@@ -65,5 +68,6 @@ export function NetFlowChart({ data }: { data: ChartEntry[] }) {
         />
       </LineChart>
     </ResponsiveContainer>
+    </div>
   )
 }
