@@ -4,7 +4,7 @@ import { useUser } from '@/lib/queries/useUser'
 import { useBudgetCategories, usePersonalExpenses, useUpdateCategoryTarget } from '@/lib/queries/useExpenses'
 import { useSharedExpenses } from '@/lib/queries/useShared'
 import { usePeriods, useCurrentPeriod } from '@/lib/queries/usePeriods'
-import { useIncome } from '@/lib/queries/useIncome'
+import { useIncome, useFamilyIncome } from '@/lib/queries/useIncome'
 import { formatCurrency } from '@/lib/utils'
 import { useSharedPeriod } from '@/lib/context/PeriodContext'
 import { useFamilyContext } from '@/lib/context/FamilyContext'
@@ -84,7 +84,9 @@ export default function BudgetPage() {
   const { data: periods } = usePeriods()
   const updateTarget = useUpdateCategoryTarget()
   const { selectedPeriodId, setSelectedPeriodId } = useSharedPeriod()
-  const { familyId } = useFamilyContext()
+  const { familyId, members } = useFamilyContext()
+  const familyMemberIds = useMemo(() => members.map(m => m.user_id), [members])
+  const { data: familyIncome } = useFamilyIncome(selectedPeriodId ?? currentPeriod?.id, familyMemberIds, familyMemberIds.length > 0)
 
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editValue, setEditValue] = useState('')
@@ -151,8 +153,10 @@ export default function BudgetPage() {
   const groupedNames = new Set(VARIABLE_GROUPS.flatMap(g => g.categoryNames))
   const ungroupedCats = allNonFixed.filter(c => !groupedNames.has(c.name))
 
-  // Totals
-  const totalIncome = income ? (income.salary + income.bonus + income.other) : 0
+  // Totals — use family income if available (this is "תקציב משפחתי")
+  const familyTotalIncome = (familyIncome ?? []).reduce((s, m) => s + m.total, 0)
+  const personalIncome = income ? (income.salary + income.bonus + income.other) : 0
+  const totalIncome = familyTotalIncome > 0 ? familyTotalIncome : personalIncome
   const totalFixedPersonal = fixedCats.reduce((s, c) => s + fixedSpend(c), 0)
   const totalFixed = totalFixedPersonal + unmatchedSharedTotal
   const totalVariableActual = allNonFixed.reduce((s, c) => s + (spendByCat[c.id] ?? 0), 0)

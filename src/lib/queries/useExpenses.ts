@@ -55,6 +55,25 @@ export function useAllPersonalExpenses(userId: string | undefined) {
   })
 }
 
+export interface FamilyMemberExpenses {
+  user_id: string
+  display_name: string
+  expenses: PersonalExpense[]
+  total: number
+}
+
+export function useFamilyPersonalExpenses(periodId: number | undefined, memberIds: string[], enabled: boolean) {
+  return useQuery<FamilyMemberExpenses[]>({
+    queryKey: ['family_personal_expenses', periodId, memberIds],
+    enabled: !!periodId && memberIds.length > 0 && enabled,
+    queryFn: async () => {
+      const res = await fetch(`/api/family/expenses?period_id=${periodId}&member_ids=${memberIds.join(',')}`)
+      if (!res.ok) throw new Error('Failed to fetch family expenses')
+      return res.json()
+    },
+  })
+}
+
 export function useUpdateCategoryTarget() {
   const qc = useQueryClient()
   return useMutation({

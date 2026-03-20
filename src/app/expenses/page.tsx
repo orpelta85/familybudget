@@ -2,7 +2,7 @@
 
 import { useUser } from '@/lib/queries/useUser'
 import { usePeriods, useCurrentPeriod } from '@/lib/queries/usePeriods'
-import { usePersonalExpenses, useBudgetCategories, useAddExpense, useDeleteExpense, useUpdateExpense, useAddBudgetCategory, useCategoryRules, useSaveCategoryRule, findMatchingRule } from '@/lib/queries/useExpenses'
+import { usePersonalExpenses, useBudgetCategories, useAddExpense, useDeleteExpense, useUpdateExpense, useAddBudgetCategory, useCategoryRules, useSaveCategoryRule, findMatchingRule, useFamilyPersonalExpenses } from '@/lib/queries/useExpenses'
 import { useSharedExpenses, useUpsertSharedExpense, useDeleteSharedExpense, useUpdateSharedExpense } from '@/lib/queries/useShared'
 import { useSinkingFunds, useAddSinkingTransaction, useAddSinkingFund } from '@/lib/queries/useSinking'
 import { useSplitFraction } from '@/lib/queries/useProfile'
@@ -45,9 +45,12 @@ export default function ExpensesPage() {
   const currentPeriod = useCurrentPeriod()
   const { selectedPeriodId, setSelectedPeriodId } = useSharedPeriod()
   const fileRef = useRef<HTMLInputElement>(null)
-  const { familyId } = useFamilyContext()
+  const { familyId, members } = useFamilyContext()
   const splitFrac = useSplitFraction(user?.id)
   const splitPctLabel = Math.round(splitFrac * 100)
+  const [viewMode, setViewMode] = useState<'personal' | 'family'>('personal')
+  const familyMemberIds = useMemo(() => members.map(m => m.user_id), [members])
+  const { data: familyExpenses } = useFamilyPersonalExpenses(selectedPeriodId, familyMemberIds, viewMode === 'family')
 
   useEffect(() => {
     if (currentPeriod && !selectedPeriodId) setSelectedPeriodId(currentPeriod.id)
@@ -499,6 +502,27 @@ export default function ExpensesPage() {
           </div>
           <p className="text-muted-foreground text-[13px]">{selectedPeriod?.label ?? '...'}</p>
         </div>
+        <div className="flex items-center gap-3">
+        {familyId && (
+          <div className="flex border border-border rounded-lg overflow-hidden">
+            {([
+              { key: 'personal' as const, label: 'אישי' },
+              { key: 'family' as const, label: 'משפחתי' },
+            ]).map(opt => (
+              <button
+                key={opt.key}
+                onClick={() => setViewMode(opt.key)}
+                className={`px-4 py-1.5 text-[13px] font-medium cursor-pointer border-none ${
+                  viewMode === opt.key
+                    ? 'bg-[oklch(0.20_0.01_250)] text-[oklch(0.92_0.01_250)] shadow-[inset_0_0_0_1px_var(--accent-blue)]'
+                    : 'bg-transparent text-[oklch(0.55_0.01_250)]'
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        )}
         <div className="flex gap-2">
           <button onClick={handleResetExpenses} className="flex items-center gap-1.5 bg-transparent border border-border rounded-lg px-3.5 py-[7px] text-muted-foreground text-xs font-medium cursor-pointer">
             <Trash2 size={13} /> אפס הוצאות
@@ -514,9 +538,23 @@ export default function ExpensesPage() {
           </button>
           <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleExcelUpload} />
         </div>
+        </div>
       </div>
 
       {periods && <PeriodSelector periods={periods} selectedId={selectedPeriodId} onChange={setSelectedPeriodId} />}
+
+      {/* ── Family View ──────────────────────────────────────────────────── */}
+      {viewMode === 'family' && (
+        <FamilyExpensesView
+          familyExpenses={familyExpenses}
+          sharedExp={sharedExp}
+          splitFrac={splitFrac}
+          formatCurrency={formatCurrency}
+        />
+      )}
+
+      {/* ── Personal View ────────────────────────────────────────────────── */}
+      {viewMode === 'personal' && <>
 
       {/* ── Excel import preview ────────────────────────────────────────────── */}
       {showImport && (
@@ -942,6 +980,107 @@ export default function ExpensesPage() {
           </div>{/* close grid-2 */}
         </div>
       </div>
+
+      </>}
     </div>
+  )
+}
+
+// ── Family Expenses View Component ──────────────────────────────────────────
+function FamilyExpensesView({
+  familyExpenses,
+  sharedExp,
+  splitFrac,
+  formatCurrency: fmt,
+}: {
+  familyExpenses: import('@/lib/queries/useExpenses').FamilyMemberExpenses[] | undefined
+  sharedExp: import('@/lib/types').SharedExpense[] | undefined
+  splitFrac: number
+  formatCurrency: (n: number) => string
+}) {
+  const totalShared = (sharedExp ?? []).reduce((s, e) => s + e.total_amount, 0)
+  const totalFamilyPersonal = (familyExpenses ?? []).reduce((s, m) => s + m.total, 0)
+  const totalAll = totalFamilyPersonal + totalShared
+
+  return (
+    <>
+      {/* Family KPI Cards */}
+      <div className="grid-kpi mb-5">
+        <div className="bg-card border border-border rounded-xl p-4">
+          <div className="text-[11px] text-muted-foreground mb-1">הוצאות אישיות (כולם)</div>
+          <div className="text-[22px] font-bold text-primary leading-none">{fmt(totalFamilyPersonal)}</div>
+        </div>
+        <div className="bg-card border border-border rounded-xl p-4">
+          <div className="text-[11px] text-muted-foreground mb-1">הוצאות משותפות</div>
+          <div className="text-[22px] font-bold text-[oklch(0.65_0.12_310)] leading-none">{fmt(totalShared)}</div>
+        </div>
+        <div className="bg-card border border-border rounded-xl p-4">
+          <div className="text-[11px] text-muted-foreground mb-1">סה&quot;כ משפחתי</div>
+          <div className="text-[22px] font-bold text-[oklch(0.72_0.18_55)] leading-none">{fmt(totalAll)}</div>
+        </div>
+      </div>
+
+      {/* Per-member breakdown */}
+      <div className="grid-2 items-start">
+        {(familyExpenses ?? []).map(member => {
+          // Group by category
+          const catMap = new Map<string, { name: string; total: number }>()
+          for (const e of member.expenses) {
+            const catName = (e.budget_categories as BudgetCategory)?.name ?? 'כללי'
+            if (!catMap.has(catName)) catMap.set(catName, { name: catName, total: 0 })
+            catMap.get(catName)!.total += e.amount
+          }
+          const catGroups = [...catMap.values()].sort((a, b) => b.total - a.total)
+
+          return (
+            <div key={member.user_id} className="bg-card border border-border rounded-xl p-5">
+              <div className="flex justify-between items-center mb-3">
+                <div className="flex items-center gap-2">
+                  <User size={14} className="text-primary" />
+                  <span className="font-semibold text-sm">{member.display_name}</span>
+                </div>
+                <span className="text-[15px] font-bold text-primary">{fmt(member.total)}</span>
+              </div>
+              {catGroups.length === 0 ? (
+                <div className="text-xs text-muted-foreground text-center py-4">
+                  <Inbox size={24} className="text-[oklch(0.30_0.01_250)] mx-auto mb-1.5" />
+                  אין הוצאות
+                </div>
+              ) : (
+                <div className="flex flex-col gap-0.5">
+                  {catGroups.map(cat => (
+                    <div key={cat.name} className="flex justify-between items-center py-2 border-b border-[oklch(0.20_0.01_250)]">
+                      <span className="text-[12px] text-[oklch(0.75_0.01_250)]">{cat.name}</span>
+                      <span className="text-[12px] font-semibold">{fmt(cat.total)}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )
+        })}
+      </div>
+
+      {/* Shared expenses */}
+      {(sharedExp ?? []).length > 0 && (
+        <div className="bg-card border border-border rounded-xl p-5 mt-4">
+          <div className="flex justify-between items-center mb-3">
+            <div className="flex items-center gap-2">
+              <Users size={14} className="text-[oklch(0.65_0.12_310)]" />
+              <span className="font-semibold text-sm">הוצאות משותפות</span>
+            </div>
+            <span className="text-[15px] font-bold text-[oklch(0.65_0.12_310)]">{fmt(totalShared)}</span>
+          </div>
+          <div className="flex flex-col gap-0.5">
+            {(sharedExp ?? []).map(e => (
+              <div key={e.id} className="flex justify-between items-center py-2 border-b border-[oklch(0.20_0.01_250)]">
+                <span className="text-[12px] text-[oklch(0.75_0.01_250)]">{e.notes || e.category}</span>
+                <span className="text-[12px] font-semibold">{fmt(e.total_amount)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </>
   )
 }
