@@ -175,7 +175,7 @@ export default function ForecastPage() {
       })
       toast.success('ההגדרות נשמרו')
       setShowSettings(false)
-    } catch { toast.error('שגיאה בשמירה') }
+    } catch (e) { console.error('Save forecast settings:', e); toast.error('שגיאה בשמירה') }
   }
 
   async function handleSaveEvent() {
@@ -199,7 +199,7 @@ export default function ForecastPage() {
       toast.success(editingEventId ? 'עודכן' : 'נוסף')
       setEventForm(null)
       setEditingEventId(null)
-    } catch { toast.error('שגיאה') }
+    } catch (e) { console.error('Save forecast event:', e); toast.error('שגיאה') }
   }
 
   async function handleDeleteEvent(ev: ForecastEventRow) {
@@ -208,7 +208,7 @@ export default function ForecastPage() {
     try {
       await deleteEvent.mutateAsync({ id: ev.id, user_id: user.id })
       toast.success('נמחק')
-    } catch { toast.error('שגיאה') }
+    } catch (e) { console.error('Delete forecast event:', e); toast.error('שגיאה') }
   }
 
   function startEditEvent(ev: ForecastEventRow) {

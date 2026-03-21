@@ -576,12 +576,14 @@ export default function AdminPage() {
       {/* ─── Section 6: Test Families (Impersonation) ─── */}
       <div className="bg-[oklch(0.14_0.01_250)] border border-[oklch(0.22_0.01_250)] rounded-xl p-4 mb-6">
         <h2 className="text-[14px] font-semibold text-[oklch(0.75_0.01_250)] mb-1">משפחות לדוגמה</h2>
-        <p className="text-[11px] text-[oklch(0.45_0.01_250)] mb-4">התחבר כמשפחת בדיקה כדי לראות איך האפליקציה נראית עם נתונים שונים</p>
+        <p className="text-[11px] text-[oklch(0.45_0.01_250)] mb-4">התחבר כמשפחת בדיקה כדי לראות איך האפליקציה נראית עם נתונים שונים. הזן את סיסמת הבדיקה ידנית.</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
           {TEST_FAMILIES.map(fam => (
             <button
               key={fam.email}
               onClick={async () => {
+                const pw = prompt('הזן סיסמת בדיקה:')
+                if (!pw) return
                 const sb = createClient()
                 const { data: { user: currentUser } } = await sb.auth.getUser()
                 if (currentUser?.email) {
@@ -589,7 +591,7 @@ export default function AdminPage() {
                 }
                 const { error } = await sb.auth.signInWithPassword({
                   email: fam.email,
-                  password: 'Test123456!',
+                  password: pw,
                 })
                 if (error) {
                   toast.error(`שגיאה בהתחברות: ${error.message}`)

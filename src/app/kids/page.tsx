@@ -560,7 +560,7 @@ function AddKidModal({
       } as Omit<Kid, 'id' | 'created_at' | 'is_active'>)
       toast.success('ילד/ה נוסף/ה!')
       onClose()
-    } catch { toast.error('שגיאה') }
+    } catch (e) { console.error('Add kid:', e); toast.error('שגיאה') }
   }
 
   return (
@@ -620,7 +620,7 @@ function AddActivityModal({
       })
       toast.success('חוג נוסף!')
       onClose()
-    } catch { toast.error('שגיאה') }
+    } catch (e) { console.error('Add activity:', e); toast.error('שגיאה') }
   }
 
   return (
@@ -704,7 +704,7 @@ function AddExpenseModal({
       } as import('@/lib/types').KidExpense)
       toast.success('הוצאה נוספה!')
       onClose()
-    } catch { toast.error('שגיאה') }
+    } catch (e) { console.error('Add kid expense:', e); toast.error('שגיאה') }
   }
 
   return (

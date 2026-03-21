@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { getAuthUser } from '@/lib/supabase/auth'
+import { checkRateLimit } from '@/lib/rate-limit'
 
 const STARTER_CATEGORIES = [
   { name: 'שכירות', type: 'fixed', monthly_target: 5550, sort_order: 1 },
@@ -29,6 +30,9 @@ const STARTER_FUNDS = [
 ]
 
 export async function POST(req: NextRequest) {
+  const limited = checkRateLimit(req, { maxRequests: 5, windowMs: 60_000, prefix: 'setup' })
+  if (limited) return limited
+
   const authUser = await getAuthUser()
   const { userId, familyName, inviteCode, name: requestName } = await req.json()
   if (!userId) return NextResponse.json({ error: 'missing userId' }, { status: 400 })

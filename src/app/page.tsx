@@ -269,7 +269,7 @@ export default function Dashboard() {
               const url = URL.createObjectURL(blob)
               const a = document.createElement('a'); a.href = url; a.download = `סיכום_חודשי_${selectedPeriod?.label ?? 'export'}.xlsx`; a.click()
               URL.revokeObjectURL(url)
-            } catch { /* ignore */ }
+            } catch (e) { console.error('Export monthly summary:', e) }
           }}
           className="flex items-center gap-1.5 bg-[oklch(0.20_0.04_250)] border border-[oklch(0.32_0.08_250)] rounded-lg px-3 py-[7px] text-[oklch(0.65_0.18_250)] text-[13px] font-medium cursor-pointer"
         >

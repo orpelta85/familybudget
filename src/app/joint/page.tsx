@@ -76,7 +76,7 @@ export default function JointPage() {
       queryClient.invalidateQueries({ queryKey: ['joint_pool_expenses', selectedPeriodId] })
       setMyContrib(''); setPartnerContrib('')
       toast.success('הקופה אופסה')
-    } catch { toast.error('שגיאה באיפוס') }
+    } catch (e) { console.error('Reset joint pool:', e); toast.error('שגיאה באיפוס') }
   }
 
   const totalIncome = (Number(myContrib) || 0) + (Number(partnerContrib) || 0)
@@ -90,7 +90,7 @@ export default function JointPage() {
     try {
       await upsertIncome.mutateAsync({ period_id: selectedPeriodId, my_contribution: Number(myContrib) || 0, partner_contribution: Number(partnerContrib) || 0, notes: '', family_id: familyId })
       toast.success('הכנסות נשמרו')
-    } catch { toast.error('שגיאה') }
+    } catch (e) { console.error('Save joint income:', e); toast.error('שגיאה') }
   }
 
   async function addExp(e: React.FormEvent) {
@@ -101,7 +101,7 @@ export default function JointPage() {
       await addExpense.mutateAsync({ period_id: selectedPeriodId, category: expCategory, amount: Number(expAmount), description: expDesc, expense_date: new Date().toISOString().split('T')[0], family_id: familyId })
       setExpAmount(''); setExpDesc('')
       toast.success('הוצאה נוספה')
-    } catch { toast.error('שגיאה') }
+    } catch (e) { console.error('Add joint expense:', e); toast.error('שגיאה') }
   }
 
   return (

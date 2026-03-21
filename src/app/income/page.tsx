@@ -83,7 +83,8 @@ export default function IncomePage() {
         notes,
       })
       toast.success('הכנסה נשמרה')
-    } catch {
+    } catch (e) {
+      console.error('Save income:', e)
       toast.error('שגיאה בשמירה')
     }
   }
@@ -99,7 +100,7 @@ export default function IncomePage() {
       })
       setSalary(''); setBonus(''); setOther(''); setNotes('')
       toast.success('הכנסה אופסה')
-    } catch { toast.error('שגיאה באיפוס') }
+    } catch (e) { console.error('Reset income:', e); toast.error('שגיאה באיפוס') }
   }
 
   const selectedPeriod = periods?.find(p => p.id === selectedPeriodId)

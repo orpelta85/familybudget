@@ -60,6 +60,16 @@ function LoginForm() {
     const sb = createClient()
 
     if (isSignup) {
+      if (password.length < 8) {
+        toast.error('הסיסמה חייבת להכיל לפחות 8 תווים')
+        setLoading(false)
+        return
+      }
+      if (!/\d/.test(password)) {
+        toast.error('הסיסמה חייבת להכיל לפחות ספרה אחת')
+        setLoading(false)
+        return
+      }
       const invite = inviteCode || localStorage.getItem('familyInvite') || ''
       const setupUrl = invite ? `/setup?invite=${invite}` : '/setup'
       const { error } = await sb.auth.signUp({

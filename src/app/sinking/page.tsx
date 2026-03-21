@@ -79,7 +79,7 @@ export default function SinkingPage() {
       queryClient.invalidateQueries({ queryKey: ['all_sinking_transactions'] })
       queryClient.invalidateQueries({ queryKey: ['sinking_transactions'] })
       toast.success('כל היתרות אופסו')
-    } catch { toast.error('שגיאה באיפוס') }
+    } catch (e) { console.error('Reset sinking funds:', e); toast.error('שגיאה באיפוס') }
   }
 
   function getFundBalance(fundId: number) {
@@ -94,7 +94,7 @@ export default function SinkingPage() {
     try {
       await deleteFund.mutateAsync(id)
       toast.success('קרן נמחקה')
-    } catch { toast.error('שגיאה במחיקה') }
+    } catch (e) { console.error('Delete sinking fund:', e); toast.error('שגיאה במחיקה') }
   }
 
   async function handleAddFund() {
@@ -113,7 +113,7 @@ export default function SinkingPage() {
       })
       toast.success('קרן נוספה')
       setNewFund(null)
-    } catch { toast.error('שגיאה בהוספה') }
+    } catch (e) { console.error('Add sinking fund:', e); toast.error('שגיאה בהוספה') }
   }
 
   async function handleEditFund() {
@@ -132,7 +132,7 @@ export default function SinkingPage() {
       })
       toast.success('קרן עודכנה')
       setEditFund(null)
-    } catch { toast.error('שגיאה בעדכון הקרן') }
+    } catch (e) { console.error('Edit sinking fund:', e); toast.error('שגיאה בעדכון הקרן') }
   }
 
   async function handleTxn() {
@@ -144,7 +144,7 @@ export default function SinkingPage() {
       await addTxn.mutateAsync({ fund_id: txModal.fundId, period_id: txPeriodId, amount, description: desc, transaction_date: new Date().toISOString().split('T')[0] })
       toast.success(txModal.type === 'add' ? 'הפקדה נרשמה' : 'הוצאה נרשמה')
       setTxModal(null); setTxAmount(''); setTxDesc('')
-    } catch { toast.error('שגיאה') }
+    } catch (e) { console.error('Sinking fund transaction:', e); toast.error('שגיאה') }
   }
 
   function openEdit(fund: { id: number; name: string; monthly_allocation: number; yearly_target: number; is_shared: boolean }) {

@@ -209,7 +209,7 @@ export default function MortgagePage() {
       })
       toast.success('משכנתא נוספה')
       setShowAddMortgage(false)
-    } catch { toast.error('שגיאה בהוספה') }
+    } catch (e) { console.error('Add mortgage:', e); toast.error('שגיאה בהוספה') }
   }
 
   async function handleAddTrack() {
@@ -238,7 +238,7 @@ export default function MortgagePage() {
       toast.success('מסלול נוסף')
       setShowAddTrack(null)
       setTrackForm(emptyTrackForm)
-    } catch { toast.error('שגיאה') }
+    } catch (e) { console.error('Add mortgage track:', e); toast.error('שגיאה') }
   }
 
   async function handleDeleteMortgage(id: number) {
@@ -246,7 +246,7 @@ export default function MortgagePage() {
     try {
       await deleteMortgage.mutateAsync(id)
       toast.success('נמחק')
-    } catch { toast.error('שגיאה במחיקה') }
+    } catch (e) { console.error('Delete mortgage:', e); toast.error('שגיאה במחיקה') }
   }
 
   async function handleDeleteTrack(id: number) {
@@ -254,7 +254,7 @@ export default function MortgagePage() {
     try {
       await deleteTrack.mutateAsync(id)
       toast.success('מסלול נמחק')
-    } catch { toast.error('שגיאה במחיקה') }
+    } catch (e) { console.error('Delete mortgage track:', e); toast.error('שגיאה במחיקה') }
   }
 
   const chartMax = amortizationData.length > 0 ? Math.max(...amortizationData.map(d => d.principal + d.interest)) : 1

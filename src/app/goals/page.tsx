@@ -301,7 +301,7 @@ function GoalExpandedView({
       } as GoalDeposit)
       toast.success('הפקדה נשמרה!')
       setNotes('')
-    } catch { toast.error('שגיאה בשמירה') }
+    } catch (e) { console.error('Save deposit:', e); toast.error('שגיאה בשמירה') }
   }
 
   async function handleDeleteDeposit(id: number) {
@@ -488,7 +488,7 @@ function GoalModal({
         toast.success('יעד נוצר!')
       }
       onClose()
-    } catch { toast.error('שגיאה בשמירה') }
+    } catch (e) { console.error('Save goal:', e); toast.error('שגיאה בשמירה') }
   }
 
   const isPending = createGoal.isPending || updateGoal.isPending

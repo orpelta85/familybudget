@@ -2,8 +2,12 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { checkRateLimit } from '@/lib/rate-limit'
 
 export async function GET(request: NextRequest) {
+  const limited = checkRateLimit(request, { maxRequests: 10, windowMs: 60_000, prefix: 'auth-callback' })
+  if (limited) return limited
+
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
   const next = searchParams.get('next') ?? '/'

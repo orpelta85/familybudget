@@ -188,7 +188,7 @@ export default function InsurancePage() {
       }
       setShowForm(false)
       setEditId(null)
-    } catch { toast.error('שגיאה בשמירה') }
+    } catch (e) { console.error('Save insurance policy:', e); toast.error('שגיאה בשמירה') }
   }
 
   async function handleDelete(id: number) {
@@ -196,7 +196,7 @@ export default function InsurancePage() {
     try {
       await deletePolicy.mutateAsync(id)
       toast.success('הפוליסה נמחקה')
-    } catch { toast.error('שגיאה במחיקה') }
+    } catch (e) { console.error('Delete insurance policy:', e); toast.error('שגיאה במחיקה') }
   }
 
   if (loading || !user) return <TableSkeleton rows={5} />

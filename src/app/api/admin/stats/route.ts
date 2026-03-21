@@ -1,8 +1,12 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { requireAdmin } from '@/lib/admin-server'
+import { checkRateLimit } from '@/lib/rate-limit'
 
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const limited = checkRateLimit(req, { maxRequests: 30, windowMs: 60_000, prefix: 'admin-stats' })
+  if (limited) return limited
+
   const { error } = await requireAdmin()
   if (error) return error
 

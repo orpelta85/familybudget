@@ -91,7 +91,8 @@ export default function FamilyPage() {
       if (!res.ok) throw new Error('failed')
       toast.success(`הזמנה נשלחה ל-${inviteEmail}`)
       setInviteEmail('')
-    } catch {
+    } catch (e) {
+      console.error('Send family invite:', e)
       toast.error('שגיאה בשליחת ההזמנה')
     }
     setSendingEmail(false)

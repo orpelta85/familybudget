@@ -79,7 +79,8 @@ export function Sidebar() {
       toast.success(`הזמנה נשלחה ל-${inviteEmail}`)
       setInviteEmail('')
       setShowInvite(false)
-    } catch {
+    } catch (e) {
+      console.error('Send invite email:', e)
       toast.error('שגיאה בשליחת ההזמנה')
     }
     setSendingEmail(false)

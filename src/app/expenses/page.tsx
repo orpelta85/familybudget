@@ -224,7 +224,7 @@ export default function ExpensesPage() {
       }
       setAmount(''); setSharedLabel(''); setCustomCat(''); setCategoryId(''); setSharedCategory(''); setDescription('')
       toast.success('הוצאה נוספה')
-    } catch { toast.error('שגיאה בהוספה') }
+    } catch (e) { console.error('Add expense:', e); toast.error('שגיאה בהוספה') }
   }
 
   // ── Delete ──────────────────────────────────────────────────────────────────
@@ -233,7 +233,7 @@ export default function ExpensesPage() {
     try {
       await deleteExpense.mutateAsync({ id: exp.id, period_id: selectedPeriodId!, user_id: user!.id })
       toast.success('נמחק')
-    } catch { toast.error('שגיאה במחיקה') }
+    } catch (e) { console.error('Delete personal expense:', e); toast.error('שגיאה במחיקה') }
   }
 
   async function handleDeleteShared(id: number) {
@@ -241,7 +241,7 @@ export default function ExpensesPage() {
     try {
       await deleteShared.mutateAsync({ id, period_id: selectedPeriodId! })
       toast.success('נמחק')
-    } catch { toast.error('שגיאה במחיקה') }
+    } catch (e) { console.error('Delete shared expense:', e); toast.error('שגיאה במחיקה') }
   }
 
   // ── Excel ───────────────────────────────────────────────────────────────────
@@ -292,7 +292,7 @@ export default function ExpensesPage() {
       if (newCats > 0) msg += ` · ${newCats} קטגוריות חדשות ייווצרו`
       if (newFunds > 0) msg += ` · ${newFunds} קרנות חדשות ייווצרו`
       toast.success(msg)
-    } catch { toast.error('שגיאה בקריאת הקובץ') }
+    } catch (e) { console.error('Read Excel file:', e); toast.error('שגיאה בקריאת הקובץ') }
   }
 
   async function handleExcelUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -347,7 +347,7 @@ export default function ExpensesPage() {
       const a = document.createElement('a'); a.href = url; a.download = `הוצאות_${selectedPeriod?.label ?? 'export'}.xlsx`; a.click()
       URL.revokeObjectURL(url)
       toast.success('הקובץ הורד')
-    } catch { toast.error('שגיאה בייצוא') }
+    } catch (e) { console.error('Export expenses:', e); toast.error('שגיאה בייצוא') }
   }
 
   async function downloadTemplate() {
@@ -534,7 +534,7 @@ export default function ExpensesPage() {
         queryClient.invalidateQueries({ queryKey: ['shared_expenses', selectedPeriodId, familyId] })
       }
       toast.success(`ההוצאות ה${labels[resetTarget]} אופסו`)
-    } catch { toast.error('שגיאה באיפוס') }
+    } catch (e) { console.error('Reset expenses:', e); toast.error('שגיאה באיפוס') }
   }
 
   const isPending = addExpense.isPending || upsertShared.isPending

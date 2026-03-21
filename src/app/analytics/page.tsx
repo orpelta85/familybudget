@@ -163,8 +163,8 @@ export default function AnalyticsPage() {
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a'); a.href = url; a.download = `דוח_שנתי_${yearDef.label}.xlsx`; a.click()
       URL.revokeObjectURL(url)
-    } catch {
-      // fallback: do nothing
+    } catch (e) {
+      console.error('Export annual report:', e)
     }
   }
 

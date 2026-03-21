@@ -158,7 +158,7 @@ export default function BudgetPage() {
       await updateTarget.mutateAsync({ id: catId, monthly_target: val, user_id: user!.id })
       toast.success('יעד עודכן')
       setEditingId(null)
-    } catch { toast.error('שגיאה בעדכון היעד') }
+    } catch (e) { console.error('Update budget target:', e); toast.error('שגיאה בעדכון היעד') }
   }
 
   const fixedPaidCount = fixedCats.filter(c => fixedSpend(c) > 0).length
@@ -199,7 +199,7 @@ export default function BudgetPage() {
       const a = document.createElement('a'); a.href = url; a.download = `תקציב_${selectedPeriod?.label ?? 'export'}.xlsx`; a.click()
       URL.revokeObjectURL(url)
       toast.success('הקובץ הורד')
-    } catch { toast.error('שגיאה בייצוא') }
+    } catch (e) { console.error('Export budget:', e); toast.error('שגיאה בייצוא') }
   }
 
   return (

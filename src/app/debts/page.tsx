@@ -184,7 +184,7 @@ export default function DebtsPage() {
       })
       toast.success('חוב נוסף')
       setNewDebt(null)
-    } catch { toast.error('שגיאה בהוספה') }
+    } catch (e) { console.error('Add debt:', e); toast.error('שגיאה בהוספה') }
   }
 
   async function handleDeleteDebt(id: number, name: string) {
@@ -192,7 +192,7 @@ export default function DebtsPage() {
     try {
       await deleteDebt.mutateAsync({ id, user_id: user!.id })
       toast.success('חוב נמחק')
-    } catch { toast.error('שגיאה במחיקה') }
+    } catch (e) { console.error('Delete debt:', e); toast.error('שגיאה במחיקה') }
   }
 
   function formatMonths(m: number): string {

@@ -240,7 +240,7 @@ export default function NetWorthPage() {
       })
       toast.success('נוסף')
       setNewEntry(null)
-    } catch { toast.error('שגיאה') }
+    } catch (e) { console.error('Add net worth entry:', e); toast.error('שגיאה') }
   }
 
   async function handleSaveEdit(entry: NetWorthEntry) {
@@ -261,7 +261,7 @@ export default function NetWorthPage() {
       })
       toast.success('עודכן')
       setEditingId(null)
-    } catch { toast.error('שגיאה') }
+    } catch (e) { console.error('Edit net worth entry:', e); toast.error('שגיאה') }
   }
 
   async function handleDelete(id: number) {
@@ -270,7 +270,7 @@ export default function NetWorthPage() {
     try {
       await deleteEntry.mutateAsync({ id, user_id: user.id })
       toast.success('נמחק')
-    } catch { toast.error('שגיאה במחיקה') }
+    } catch (e) { console.error('Delete net worth entry:', e); toast.error('שגיאה במחיקה') }
   }
 
   async function handleSync() {
@@ -297,7 +297,7 @@ export default function NetWorthPage() {
         net_worth: ta - tl,
         liquid_total: lt,
       })
-    } catch { toast.error('שגיאה בסנכרון') }
+    } catch (e) { console.error('Sync net worth:', e); toast.error('שגיאה בסנכרון') }
   }
 
   const allCategories = newEntry?.type === 'liability' ? LIABILITY_CATEGORIES : ASSET_CATEGORIES
@@ -436,8 +436,8 @@ export default function NetWorthPage() {
                                 onKeyDown={e => { if (e.key === 'Enter') handleSaveEdit(entry); if (e.key === 'Escape') setEditingId(null) }}
                                 className="w-28 bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-md px-2 py-1 text-inherit text-[13px] ltr text-left"
                               />
-                              <button onClick={() => handleSaveEdit(entry)} className="bg-transparent border-none cursor-pointer p-1 text-[oklch(0.70_0.18_145)]"><Check size={14} /></button>
-                              <button onClick={() => setEditingId(null)} className="bg-transparent border-none cursor-pointer p-1 text-[oklch(0.65_0.01_250)]"><X size={14} /></button>
+                              <button onClick={() => handleSaveEdit(entry)} aria-label="שמור" className="bg-transparent border-none cursor-pointer p-1 text-[oklch(0.70_0.18_145)]"><Check size={14} /></button>
+                              <button onClick={() => setEditingId(null)} aria-label="ביטול" className="bg-transparent border-none cursor-pointer p-1 text-[oklch(0.65_0.01_250)]"><X size={14} /></button>
                             </>
                           ) : (
                             <>
@@ -519,8 +519,8 @@ export default function NetWorthPage() {
                             onKeyDown={e => { if (e.key === 'Enter') handleSaveEdit(entry); if (e.key === 'Escape') setEditingId(null) }}
                             className="w-28 bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-md px-2 py-1 text-inherit text-[13px] ltr text-left"
                           />
-                          <button onClick={() => handleSaveEdit(entry)} className="bg-transparent border-none cursor-pointer p-1 text-[oklch(0.70_0.18_145)]"><Check size={14} /></button>
-                          <button onClick={() => setEditingId(null)} className="bg-transparent border-none cursor-pointer p-1 text-[oklch(0.65_0.01_250)]"><X size={14} /></button>
+                          <button onClick={() => handleSaveEdit(entry)} aria-label="שמור" className="bg-transparent border-none cursor-pointer p-1 text-[oklch(0.70_0.18_145)]"><Check size={14} /></button>
+                          <button onClick={() => setEditingId(null)} aria-label="ביטול" className="bg-transparent border-none cursor-pointer p-1 text-[oklch(0.65_0.01_250)]"><X size={14} /></button>
                         </>
                       ) : (
                         <>

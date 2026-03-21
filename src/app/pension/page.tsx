@@ -228,7 +228,8 @@ export default function PensionPage() {
       toast.success('הדוח נשמר בהצלחה')
       setShowUpload(false)
       resetForm()
-    } catch {
+    } catch (e) {
+      console.error('Save pension report:', e)
       toast.error('שגיאה בשמירת הדוח')
     }
   }

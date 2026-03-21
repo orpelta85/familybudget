@@ -1,8 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { requireAdmin } from '@/lib/admin-server'
+import { checkRateLimit } from '@/lib/rate-limit'
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const limited = checkRateLimit(req, { maxRequests: 10, windowMs: 60_000, prefix: 'admin-plan' })
+  if (limited) return limited
+
   const { error } = await requireAdmin()
   if (error) return error
 

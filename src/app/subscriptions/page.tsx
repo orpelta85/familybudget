@@ -63,7 +63,7 @@ export default function SubscriptionsPage() {
       })
       toast.success('מנוי נוסף')
       setNewSub(null)
-    } catch { toast.error('שגיאה') }
+    } catch (e) { console.error('Add subscription:', e); toast.error('שגיאה') }
   }
 
   async function handleSaveEdit(id: number) {
@@ -80,7 +80,7 @@ export default function SubscriptionsPage() {
       })
       toast.success('מנוי עודכן')
       setEditingId(null)
-    } catch { toast.error('שגיאה') }
+    } catch (e) { console.error('Save edit subscription:', e); toast.error('שגיאה') }
   }
 
   async function handleToggleActive(id: number, isActive: boolean) {
@@ -88,7 +88,7 @@ export default function SubscriptionsPage() {
     try {
       await updateSub.mutateAsync({ id, user_id: user.id, is_active: !isActive })
       toast.success(!isActive ? 'מנוי הופעל' : 'מנוי הושהה')
-    } catch { toast.error('שגיאה בעדכון') }
+    } catch (e) { console.error('Toggle subscription:', e); toast.error('שגיאה בעדכון') }
   }
 
   async function handleDelete(id: number) {
@@ -97,7 +97,7 @@ export default function SubscriptionsPage() {
     try {
       await deleteSub.mutateAsync({ id, user_id: user.id })
       toast.success('נמחק')
-    } catch { toast.error('שגיאה במחיקה') }
+    } catch (e) { console.error('Delete subscription:', e); toast.error('שגיאה במחיקה') }
   }
 
   function startEdit(sub: typeof activeSubs[0]) {
