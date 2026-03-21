@@ -7,7 +7,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import {
-  Users, Copy, Mail, Send, X, Link2, Pencil, Check, Shield, Eye, EyeOff,
+  Users, Copy, Mail, Send, X, Link2, Pencil, Check, Shield, Eye, EyeOff, Sparkles, Key, Trash2,
 } from 'lucide-react'
 import { TableSkeleton } from '@/components/ui/Skeleton'
 import { PageInfo } from '@/components/ui/PageInfo'
@@ -33,6 +33,16 @@ export default function FamilyPage() {
   const [inviteEmail, setInviteEmail] = useState('')
   const [sendingEmail, setSendingEmail] = useState(false)
   const [confirmDeleteId, setConfirmDeleteId] = useState<number | null>(null)
+  const [aiApiKey, setAiApiKey] = useState('')
+  const [aiKeyDraft, setAiKeyDraft] = useState('')
+  const [showAiKeyInput, setShowAiKeyInput] = useState(false)
+
+  // Load stored AI API key
+  useState(() => {
+    if (typeof window !== 'undefined') {
+      setAiApiKey(localStorage.getItem('oren_gemini_api_key') ?? '')
+    }
+  })
 
   const updateName = useMutation({
     mutationFn: async (name: string) => {
@@ -387,6 +397,117 @@ export default function FamilyPage() {
                 myMembership?.show_personal_to_family ? 'end-[3px] start-auto' : 'start-[3px] end-auto'
               }`} />
             </button>
+          </div>
+        </div>
+
+        {/* AI Advisor Settings Card */}
+        <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5">
+          <h2 className="text-sm font-semibold mb-4 mt-0 flex items-center gap-2">
+            <Sparkles size={16} className="text-[oklch(0.75_0.15_145)]" />
+            יועץ AI מתקדם
+          </h2>
+
+          <div className="flex flex-col gap-4">
+            {/* Free tips status */}
+            <div className="flex items-center gap-3">
+              <div className="w-2 h-2 rounded-full bg-[oklch(0.65_0.18_145)]" />
+              <span className="text-[13px] text-[oklch(0.75_0.01_250)]">
+                טיפים בסיסיים: <span className="font-semibold text-[oklch(0.75_0.15_145)]">פעיל (חינם)</span>
+              </span>
+            </div>
+
+            {/* API key status & management */}
+            <div className="flex items-center gap-3">
+              <div className={`w-2 h-2 rounded-full ${aiApiKey ? 'bg-[oklch(0.65_0.18_145)]' : 'bg-[oklch(0.40_0.01_250)]'}`} />
+              <span className="text-[13px] text-[oklch(0.75_0.01_250)]">
+                צ'אט מתקדם: {aiApiKey ? (
+                  <span className="font-semibold text-[oklch(0.75_0.15_145)]">מחובר</span>
+                ) : (
+                  <span className="text-[oklch(0.55_0.01_250)]">לא מחובר</span>
+                )}
+              </span>
+            </div>
+
+            {/* Key input or status */}
+            {aiApiKey ? (
+              <div className="flex items-center justify-between bg-[oklch(0.13_0.01_250)] border border-[oklch(0.22_0.01_250)] rounded-lg px-3 py-2.5">
+                <div className="flex items-center gap-2">
+                  <Key size={13} className="text-[oklch(0.55_0.01_250)]" />
+                  <span className="text-[12px] text-[oklch(0.55_0.01_250)] ltr" dir="ltr">
+                    {aiApiKey.slice(0, 8)}...{aiApiKey.slice(-4)}
+                  </span>
+                </div>
+                <button
+                  onClick={() => {
+                    localStorage.removeItem('oren_gemini_api_key')
+                    setAiApiKey('')
+                    toast.success('API Key הוסר')
+                  }}
+                  className="bg-transparent border-none cursor-pointer text-[oklch(0.55_0.01_250)] p-1 hover:text-[oklch(0.70_0.12_25)]"
+                  aria-label="הסר API Key"
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            ) : showAiKeyInput ? (
+              <div className="flex flex-col gap-2">
+                <div className="flex gap-2">
+                  <input
+                    type="password"
+                    value={aiKeyDraft}
+                    onChange={e => setAiKeyDraft(e.target.value)}
+                    placeholder="AIza..."
+                    className="flex-1 bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-2 text-inherit text-[13px] outline-none ltr"
+                    dir="ltr"
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' && aiKeyDraft.trim()) {
+                        localStorage.setItem('oren_gemini_api_key', aiKeyDraft.trim())
+                        setAiApiKey(aiKeyDraft.trim())
+                        setAiKeyDraft('')
+                        setShowAiKeyInput(false)
+                        toast.success('API Key נשמר בהצלחה')
+                      }
+                    }}
+                  />
+                  <button
+                    onClick={() => {
+                      if (aiKeyDraft.trim()) {
+                        localStorage.setItem('oren_gemini_api_key', aiKeyDraft.trim())
+                        setAiApiKey(aiKeyDraft.trim())
+                        setAiKeyDraft('')
+                        setShowAiKeyInput(false)
+                        toast.success('API Key נשמר בהצלחה')
+                      }
+                    }}
+                    disabled={!aiKeyDraft.trim()}
+                    className="bg-[oklch(0.55_0.18_145)] border-none rounded-lg px-3 py-2 cursor-pointer text-[oklch(0.12_0.01_250)] font-semibold text-[12px] disabled:opacity-50"
+                  >
+                    שמור
+                  </button>
+                </div>
+                <a
+                  href="https://aistudio.google.com/apikey"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-[11px] text-[oklch(0.60_0.12_250)] underline"
+                >
+                  קבל API key בחינם מ-Google AI Studio
+                </a>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowAiKeyInput(true)}
+                className="flex items-center justify-center gap-2 bg-[oklch(0.20_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-4 py-2.5 cursor-pointer text-[oklch(0.70_0.01_250)] text-[13px] font-medium hover:bg-[oklch(0.22_0.01_250)] transition-colors"
+              >
+                <Key size={14} />
+                חבר Google Gemini API Key
+              </button>
+            )}
+
+            <p className="text-[11px] text-[oklch(0.50_0.01_250)] m-0 leading-relaxed">
+              ה-API Key נשמר מקומית בדפדפן שלך בלבד ולא נשלח לשרתים שלנו.
+              הוא משמש לתקשורת ישירה עם Google Gemini.
+            </p>
           </div>
         </div>
       </div>

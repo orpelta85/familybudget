@@ -434,3 +434,18 @@ html { scrollbar-color: oklch(0.30 0.01 250) oklch(0.14 0.01 250); scrollbar-wid
   border: 1px solid oklch(0.28 0.01 250) !important;
   color: oklch(0.90 0.01 250) !important;
 }
+
+/* Oren AI advisor animations */
+@keyframes orenBounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.animate-slideUp {
+  animation: slideUp 200ms ease-out;
+}
