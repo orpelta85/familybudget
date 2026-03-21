@@ -10,7 +10,8 @@ export function formatCurrency(amount: number): string {
     maximumFractionDigits: 0,
   }).format(Math.abs(amount))
   const sign = amount < 0 ? '-' : ''
-  return `${sign}${formatted} ₪`
+  // LRI (Left-to-Right Isolate) + PDI ensures ₪ stays after the number in RTL context
+  return `\u2066${sign}${formatted} ₪\u2069`
 }
 
 export function formatPercent(value: number): string {
