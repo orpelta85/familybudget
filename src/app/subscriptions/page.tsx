@@ -135,6 +135,46 @@ export default function SubscriptionsPage() {
         </div>
       </div>
 
+      {/* 31-day billing calendar strip */}
+      {activeSubs.length > 0 && (
+        <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5 mb-4">
+          <div className="font-bold text-sm mb-3">לוח חיובים חודשי</div>
+          <div className="flex gap-[3px]">
+            {Array.from({ length: 31 }, (_, i) => {
+              const day = i + 1
+              const daySubs = activeSubs.filter(s => s.billing_day === day)
+              const hasCharge = daySubs.length > 0
+              const today = new Date().getDate()
+              const isToday = day === today
+              return (
+                <div key={day} className="flex-1 flex flex-col items-center gap-1" title={hasCharge ? daySubs.map(s => `${s.name}: ${formatCurrency(s.amount)}`).join('\n') : `יום ${day}`}>
+                  <span className={`text-[9px] ${isToday ? 'font-bold text-[var(--accent-blue)]' : 'text-[var(--text-muted)]'}`}>{day}</span>
+                  <div
+                    className={`w-full rounded-sm transition-colors ${isToday ? 'ring-1 ring-[var(--accent-blue)]' : ''}`}
+                    style={{
+                      height: hasCharge ? `${Math.min(8 + daySubs.length * 4, 20)}px` : '4px',
+                      background: hasCharge
+                        ? daySubs.length > 1 ? 'var(--accent-red)' : 'var(--accent-orange)'
+                        : 'var(--c-0-20)',
+                    }}
+                  />
+                </div>
+              )
+            })}
+          </div>
+          <div className="flex gap-4 mt-2.5 text-[10px] text-[var(--text-muted)]">
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 rounded-sm" style={{ background: 'var(--accent-orange)' }} />
+              <span>חיוב יחיד</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 rounded-sm" style={{ background: 'var(--accent-red)' }} />
+              <span>מספר חיובים</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Active subscriptions */}
       <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5 mb-4">
         <div className="font-bold text-sm mb-4">מנויים פעילים</div>

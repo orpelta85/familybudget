@@ -5,7 +5,7 @@ import { usePeriods, useCurrentPeriod } from '@/lib/queries/usePeriods'
 import { useIncome, useAllIncome } from '@/lib/queries/useIncome'
 import { usePersonalExpenses, useBudgetCategories, useAllPersonalExpenses } from '@/lib/queries/useExpenses'
 import { useSharedExpenses, useAllSharedExpenses } from '@/lib/queries/useShared'
-import { useSplitFraction } from '@/lib/queries/useProfile'
+import { useProfile, useSplitFraction } from '@/lib/queries/useProfile'
 import { useSavingsGoals, useAllGoalDeposits } from '@/lib/queries/useGoals'
 import { useSinkingFunds, useAllSinkingTransactions } from '@/lib/queries/useSinking'
 import { usePensionReports } from '@/lib/queries/usePension'
@@ -54,6 +54,7 @@ export default function Dashboard() {
   const { selectedPeriodId, setSelectedPeriodId } = useSharedPeriod()
   const { familyId } = useFamilyContext()
   const splitFrac = useSplitFraction(user?.id)
+  const { data: profile } = useProfile(user?.id)
   const { viewMode } = useFamilyView()
   const { data: familySummary } = useFamilySummary(selectedPeriodId, viewMode !== 'personal')
   const { data: dashboardAlerts } = useAlerts(user?.id)
@@ -231,11 +232,14 @@ export default function Dashboard() {
       <div className="flex justify-between items-start mb-4">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold tracking-tight">דשבורד</h1>
+            <h1 className="text-xl font-bold tracking-tight">
+              {profile?.name ? `שלום, ${profile.name}` : 'דשבורד'}
+            </h1>
             <PageInfo {...PAGE_TIPS.dashboard} />
           </div>
           <p className="text-sm mt-1 text-text-secondary">
-            {selectedPeriod ? periodLabel(selectedPeriod.start_date) : '...'}
+            {new Date().toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+            {selectedPeriod ? ` · ${periodLabel(selectedPeriod.start_date)}` : ''}
           </p>
         </div>
         <button
@@ -332,6 +336,33 @@ export default function Dashboard() {
 
       {/* ── Personal View ────────────────────────────────────────────────── */}
       {viewMode === 'personal' && <>
+
+      {/* ── Empty state for new users ──────────────────────────────────────── */}
+      {!dataLoading && totalIncome === 0 && totalExpenses === 0 && !(categories?.length) && (
+        <div className="bg-card border border-border rounded-xl p-8 mb-5 text-center">
+          <Wallet size={36} className="text-accent-blue mx-auto mb-3 opacity-70" />
+          <h2 className="text-lg font-bold mb-2">ברוכים הבאים לדשבורד</h2>
+          <p className="text-sm text-text-secondary mb-5 max-w-md mx-auto">
+            כדי להתחיל לראות נתונים, הזן את ההכנסה החודשית שלך ואת קטגוריות התקציב.
+          </p>
+          <div className="flex gap-3 justify-center flex-wrap">
+            <Link
+              href="/income"
+              className="flex items-center gap-1.5 bg-accent-blue text-primary-foreground rounded-lg px-4 py-2.5 text-sm font-semibold no-underline"
+            >
+              <Wallet size={14} />
+              הזן הכנסה
+            </Link>
+            <Link
+              href="/budget"
+              className="flex items-center gap-1.5 bg-[var(--c-0-20)] border border-border rounded-lg px-4 py-2.5 text-sm font-medium text-text-heading no-underline"
+            >
+              <Receipt size={14} />
+              הגדר תקציב
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* ── Alert bar ──────────────────────────────────────────────────────── */}
       {showAlert && (

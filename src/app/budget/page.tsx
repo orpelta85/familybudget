@@ -116,6 +116,20 @@ export default function BudgetPage() {
 
   // Split categories by type
   const fixedCats = (categories ?? []).filter(c => c.type === 'fixed')
+  const variableCats = (categories ?? []).filter(c => c.type === 'variable')
+  const sinkingCats = (categories ?? []).filter(c => c.type === 'sinking')
+  const savingsCats = (categories ?? []).filter(c => c.type === 'savings')
+
+  const TYPE_SECTION_LABELS: Record<string, { label: string; color: string }> = {
+    variable: { label: 'הוצאות משתנות', color: 'var(--accent-orange)' },
+    sinking: { label: 'קרנות צבירה', color: 'var(--accent-teal)' },
+    savings: { label: 'חיסכון', color: 'var(--accent-green)' },
+  }
+  const groupedNonFixed = [
+    { type: 'variable', cats: variableCats },
+    { type: 'sinking', cats: sinkingCats },
+    { type: 'savings', cats: savingsCats },
+  ].filter(g => g.cats.length > 0)
 
   const spendByCat = allFamilyExpensesList.reduce<Record<number, number>>((acc, e) => {
     acc[e.category_id] = (acc[e.category_id] ?? 0) + e.amount
@@ -343,13 +357,13 @@ export default function BudgetPage() {
               )}
             </div>
 
-            {/* Left column: Variable expenses — flat list */}
+            {/* Left column: Non-fixed expenses — grouped by type */}
             <div className="card-transition bg-card border border-border rounded-xl p-5">
               <div className="flex justify-between items-center mb-4 pb-3 border-b border-[var(--bg-hover)]">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full" style={{ background: 'var(--accent-orange)' }} />
-                  <span className="font-bold text-sm">הוצאות משתנות</span>
-                  <InfoTooltip body="הוצאות שמשתנות — אוכל, בילויים, קניות. כאן אפשר לחסוך!" />
+                  <span className="font-bold text-sm">הוצאות לא-קבועות</span>
+                  <InfoTooltip body="הוצאות משתנות, קרנות צבירה וחיסכון — מקובצות לפי סוג" />
                   <span className="text-[11px] text-muted-foreground bg-secondary rounded px-1.5 py-px">{allNonFixed.length}</span>
                 </div>
                 <div className="text-[13px]">
@@ -360,62 +374,83 @@ export default function BudgetPage() {
               </div>
 
               {allNonFixed.length === 0 ? (
-                <div className="text-muted-foreground text-sm text-center py-6">אין הוצאות משתנות</div>
+                <div className="text-muted-foreground text-sm text-center py-6">אין הוצאות</div>
               ) : (
-                <div className="space-y-0">
-                  {allNonFixed.map(cat => {
-                    const spent = spendByCat[cat.id] ?? 0
-                    const pct = cat.monthly_target > 0 ? spent / cat.monthly_target : 0
-                    const pctDisplay = Math.round(pct * 100)
-                    const isEditing = editingId === cat.id
-                    const barColor = getBarColor(pct)
-                    const catRemaining = cat.monthly_target - spent
-
+                <div>
+                  {groupedNonFixed.map((group, gi) => {
+                    const section = TYPE_SECTION_LABELS[group.type]
+                    const sectionSpent = group.cats.reduce((s, c) => s + (spendByCat[c.id] ?? 0), 0)
+                    const sectionBudget = group.cats.reduce((s, c) => s + c.monthly_target, 0)
                     return (
-                      <div key={cat.id} className="py-2.5 border-b border-[var(--c-0-18)] last:border-b-0">
-                        {/* Row 1: Name + remaining */}
-                        <div className="flex justify-between items-baseline mb-1">
-                          <span className="font-medium text-[13px] text-[var(--c-0-82)]">{cat.name}</span>
-                          {cat.monthly_target > 0 && (
-                            <span className={`text-[11px] font-medium ${catRemaining >= 0 ? 'text-[var(--accent-green)]' : 'text-[var(--accent-red)]'}`}>
-                              {catRemaining >= 0 ? `נותר ${formatCurrency(catRemaining)}` : `חריגה ${formatCurrency(Math.abs(catRemaining))}`}
-                            </span>
-                          )}
-                        </div>
-                        {/* Row 2: Actual / Target */}
-                        <div className="flex justify-between items-baseline mb-1">
-                          <div className="flex items-baseline gap-1 text-[12px]">
-                            <span className="font-semibold" style={{ color: barColor }}>{formatCurrency(spent)}</span>
-                            <span className="text-muted-foreground">/</span>
-                            {isEditing ? (
-                              <input
-                                autoFocus
-                                type="number"
-                                value={editValue}
-                                onChange={e => setEditValue(e.target.value)}
-                                onBlur={() => saveTarget(cat.id)}
-                                onKeyDown={e => { if (e.key === 'Enter') saveTarget(cat.id); if (e.key === 'Escape') setEditingId(null) }}
-                                className="w-20 bg-[var(--c-0-20)] border border-[var(--c-blue-0-45)] rounded-md px-1.5 py-0.5 text-inherit text-[12px] text-left"
-                              />
-                            ) : (
-                              <span
-                                onClick={() => { setEditingId(cat.id); setEditValue(String(cat.monthly_target)) }}
-                                title="לחץ לעריכה"
-                                className="text-muted-foreground cursor-pointer border-b border-dashed border-[var(--c-0-38)] pb-px transition-colors duration-150 hover:text-[var(--text-body)]"
-                              >
-                                {formatCurrency(cat.monthly_target)}
-                              </span>
-                            )}
+                      <div key={group.type} className={gi > 0 ? 'mt-4 pt-3 border-t border-[var(--bg-hover)]' : ''}>
+                        {/* Section header */}
+                        <div className="flex justify-between items-center mb-2">
+                          <div className="flex items-center gap-2">
+                            <div className="w-1.5 h-1.5 rounded-full" style={{ background: section.color }} />
+                            <span className="text-[12px] font-semibold text-[var(--c-0-65)] uppercase tracking-wide">{section.label}</span>
+                            <span className="text-[10px] text-muted-foreground bg-secondary rounded px-1 py-px">{group.cats.length}</span>
                           </div>
-                          {cat.monthly_target > 0 && (
-                            <span className="text-[10px] font-medium" style={{ color: barColor }}>
-                              {pctDisplay > 200 ? '200%+' : `${pctDisplay}%`}
-                            </span>
-                          )}
+                          <div className="text-[11px] text-muted-foreground">
+                            <span className="font-semibold" style={{ color: section.color }}>{formatCurrency(sectionSpent)}</span>
+                            {sectionBudget > 0 && <> / {formatCurrency(sectionBudget)}</>}
+                          </div>
                         </div>
-                        {/* Row 3: Mini progress bar */}
-                        <div className="h-[3px] rounded-sm bg-[var(--c-0-20)] overflow-hidden">
-                          <div className="h-full rounded-sm transition-[width] duration-400 ease-out" style={{ width: `${Math.min(pct * 100, 100)}%`, background: barColor }} />
+                        {/* Category rows */}
+                        <div className="space-y-0">
+                          {group.cats.map(cat => {
+                            const spent = spendByCat[cat.id] ?? 0
+                            const pct = cat.monthly_target > 0 ? spent / cat.monthly_target : 0
+                            const pctDisplay = Math.round(pct * 100)
+                            const isEditing = editingId === cat.id
+                            const barColor = getBarColor(pct)
+                            const catRemaining = cat.monthly_target - spent
+
+                            return (
+                              <div key={cat.id} className="py-2.5 border-b border-[var(--c-0-18)] last:border-b-0">
+                                <div className="flex justify-between items-baseline mb-1">
+                                  <span className="font-medium text-[13px] text-[var(--c-0-82)]">{cat.name}</span>
+                                  {cat.monthly_target > 0 && (
+                                    <span className={`text-[11px] font-medium ${catRemaining >= 0 ? 'text-[var(--accent-green)]' : 'text-[var(--accent-red)]'}`}>
+                                      {catRemaining >= 0 ? `נותר ${formatCurrency(catRemaining)}` : `חריגה ${formatCurrency(Math.abs(catRemaining))}`}
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="flex justify-between items-baseline mb-1">
+                                  <div className="flex items-baseline gap-1 text-[12px]">
+                                    <span className="font-semibold" style={{ color: barColor }}>{formatCurrency(spent)}</span>
+                                    <span className="text-muted-foreground">/</span>
+                                    {isEditing ? (
+                                      <input
+                                        autoFocus
+                                        type="number"
+                                        value={editValue}
+                                        onChange={e => setEditValue(e.target.value)}
+                                        onBlur={() => saveTarget(cat.id)}
+                                        onKeyDown={e => { if (e.key === 'Enter') saveTarget(cat.id); if (e.key === 'Escape') setEditingId(null) }}
+                                        className="w-20 bg-[var(--c-0-20)] border border-[var(--c-blue-0-45)] rounded-md px-1.5 py-0.5 text-inherit text-[12px] text-left"
+                                      />
+                                    ) : (
+                                      <span
+                                        onClick={() => { setEditingId(cat.id); setEditValue(String(cat.monthly_target)) }}
+                                        title="לחץ לעריכה"
+                                        className="text-muted-foreground cursor-pointer border-b border-dashed border-[var(--c-0-38)] pb-px transition-colors duration-150 hover:text-[var(--text-body)]"
+                                      >
+                                        {formatCurrency(cat.monthly_target)}
+                                      </span>
+                                    )}
+                                  </div>
+                                  {cat.monthly_target > 0 && (
+                                    <span className="text-[10px] font-medium" style={{ color: barColor }}>
+                                      {pctDisplay > 200 ? '200%+' : `${pctDisplay}%`}
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="h-[3px] rounded-sm bg-[var(--c-0-20)] overflow-hidden">
+                                  <div className="h-full rounded-sm transition-[width] duration-400 ease-out" style={{ width: `${Math.min(pct * 100, 100)}%`, background: barColor }} />
+                                </div>
+                              </div>
+                            )
+                          })}
                         </div>
                       </div>
                     )
@@ -423,7 +458,7 @@ export default function BudgetPage() {
                 </div>
               )}
 
-              {/* Variable total bar */}
+              {/* Overall total bar */}
               {allNonFixed.length > 0 && (
                 <div className="flex justify-between items-center mt-3 pt-3 border-t border-[var(--bg-hover)]">
                   <span className="text-[12px] text-muted-foreground">

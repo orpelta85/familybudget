@@ -450,16 +450,21 @@ export default function ForecastPage() {
         )}
       </div>
 
-      {/* No settings warning */}
+      {/* No settings — onboarding card */}
       {!settings && (
-        <div className="bg-[var(--c-orange-0-18)] border border-[var(--c-orange-0-28)] rounded-xl px-5 py-3.5 mb-5 flex items-center gap-3">
-          <AlertTriangle size={18} className="text-[var(--accent-orange)] shrink-0" />
-          <div>
-            <div className="font-semibold text-sm text-[var(--accent-orange)]">הגדר יתרה נוכחית</div>
-            <div className="text-xs text-[var(--text-secondary)]">
-              לחץ על &quot;הגדרות&quot; כדי להזין את יתרת העו&quot;ש הנוכחית לתחזית מדויקת יותר
-            </div>
-          </div>
+        <div className="bg-[var(--bg-card)] border-2 border-dashed border-[var(--accent-blue)] rounded-xl p-6 mb-5 text-center">
+          <CalendarDays size={32} className="text-[var(--accent-blue)] mx-auto mb-3 opacity-70" />
+          <h2 className="font-bold text-base mb-2">הגדר את התחזית שלך</h2>
+          <p className="text-sm text-[var(--text-secondary)] mb-4 max-w-md mx-auto">
+            כדי לקבל תחזית תזרים מדויקת, הזן את יתרת העו&quot;ש הנוכחית ויום המשכורת שלך.
+          </p>
+          <button
+            onClick={() => setShowSettings(true)}
+            className="flex items-center gap-1.5 mx-auto bg-[var(--accent-blue)] border-none rounded-lg px-5 py-2.5 font-semibold text-sm text-[var(--c-0-10)] cursor-pointer"
+          >
+            <Settings size={14} />
+            פתח הגדרות
+          </button>
         </div>
       )}
 
