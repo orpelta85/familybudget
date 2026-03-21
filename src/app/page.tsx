@@ -369,7 +369,7 @@ export default function Dashboard() {
               </div>
               <kpi.Icon size={14} className="opacity-70" style={{ color: kpi.color }} />
             </div>
-            <div className="kpi-value" style={{ color: kpi.color }}>{kpi.value}</div>
+            <div className="kpi-value" dir="ltr" style={{ color: kpi.color }}>{kpi.value}</div>
             {kpi.sub && <div className="kpi-sub" style={{ color: kpi.color }}>{kpi.sub}</div>}
           </div>
         ))}
@@ -690,7 +690,7 @@ function FamilyDashboard({
               <span className="kpi-label">{kpi.label}</span>
               <kpi.Icon size={14} className="opacity-70" style={{ color: kpi.color }} />
             </div>
-            <div className="kpi-value" style={{ color: kpi.color }}>{kpi.value}</div>
+            <div className="kpi-value" dir="ltr" style={{ color: kpi.color }}>{kpi.value}</div>
           </div>
         ))}
       </div>
