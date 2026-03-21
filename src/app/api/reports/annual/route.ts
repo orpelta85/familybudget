@@ -364,7 +364,7 @@ function generateHTML(userName: string, familyName: string, yearNumber: number, 
   </div>
 
   <div class="footer">
-    הופק על ידי My Family Finance — ${new Date().toLocaleDateString('he-IL')}
+    הופק על ידי Family Plan — ${new Date().toLocaleDateString('he-IL')}
   </div>
 </div>
 </body>

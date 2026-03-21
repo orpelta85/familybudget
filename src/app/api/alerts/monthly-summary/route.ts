@@ -137,7 +137,7 @@ export async function GET(req: NextRequest) {
   <div class="container">
     <div class="header">
       <h1>סיכום חודשי — ${periodLabel}</h1>
-      <p>My Family Finance</p>
+      <p>Family Plan</p>
     </div>
 
     <div class="kpi-grid">
@@ -187,7 +187,7 @@ export async function GET(req: NextRequest) {
     </div>` : ''}
 
     <div class="footer">
-      <p>דוח זה נוצר אוטומטית על ידי My Family Finance</p>
+      <p>דוח זה נוצר אוטומטית על ידי Family Plan</p>
     </div>
   </div>
 </body>

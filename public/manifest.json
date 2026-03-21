@@ -1,7 +1,7 @@
 {
-  "name": "My Family Finance",
-  "short_name": "Finance",
-  "description": "ניהול תקציב משפחתי חכם",
+  "name": "Family Plan",
+  "short_name": "FamilyPlan",
+  "description": "סדר בבית, שקט בכיס — ניהול תקציב משפחתי חכם",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0d0d1a",

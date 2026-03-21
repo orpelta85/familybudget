@@ -10,12 +10,16 @@ import { Toaster } from "@/components/ui/sonner";
 import { PwaRegister } from "@/components/PwaRegister";
 
 export const metadata: Metadata = {
-  title: "My Family Finance",
-  description: "ניהול תקציב משפחתי חכם",
+  title: "Family Plan",
+  description: "סדר בבית, שקט בכיס — ניהול תקציב משפחתי חכם",
   icons: {
     icon: "/favicon.svg",
+    apple: "/logo-familyplan.png",
   },
   manifest: "/manifest.json",
+  openGraph: {
+    images: ["/logo-familyplan.png"],
+  },
   other: {
     "apple-mobile-web-app-capable": "yes",
     "apple-mobile-web-app-status-bar-style": "black-translucent",

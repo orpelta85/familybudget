@@ -81,8 +81,11 @@ function LoginForm() {
   return (
     <div className="min-h-screen flex items-center justify-center p-4 ml-0 max-w-[100vw]">
       <div className="w-[380px] bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-8">
-        <h1 className="text-[22px] font-bold mb-1.5">My Family Finance</h1>
-        <p className="text-[oklch(0.60_0.01_250)] text-sm mb-7">
+        <div className="flex flex-col items-center mb-6">
+          <img src="/logo-familyplan.png" alt="Family Plan" style={{ width: 180, height: 'auto' }} />
+          <div className="text-[13px] text-[oklch(0.55_0.01_250)] mt-1.5 tracking-wide">סדר בבית, שקט בכיס.</div>
+        </div>
+        <p className="text-[oklch(0.60_0.01_250)] text-sm mb-7 text-center">
           {inviteFamilyName
             ? `הצטרפות ל${inviteFamilyName}`
             : isSignup ? 'יצירת חשבון חדש' : 'התחברות לחשבון'}

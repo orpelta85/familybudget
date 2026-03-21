@@ -90,10 +90,10 @@ export function Sidebar() {
       {/* Logo + Bell */}
       <div className="px-5 pt-5 pb-4 border-b border-[oklch(0.20_0.01_250)]">
         <div className="flex items-center gap-2 mb-1.5">
-          <img src="/favicon.svg" alt="" width={28} height={28} className="shrink-0" />
-          <span className="text-[13px] font-semibold text-[oklch(0.85_0.01_250)] tracking-tight flex-1">
-            My Family Finance
-          </span>
+          <div className="shrink-0 flex-1">
+            <img src="/logo-familyplan.png" alt="Family Plan" style={{ width: 120, height: 'auto' }} />
+            <div className="text-[10px] text-[oklch(0.55_0.01_250)] mt-0.5 tracking-wide">סדר בבית, שקט בכיס.</div>
+          </div>
           {/* Alert bell */}
           <div ref={alertRef} className="relative">
             <button
