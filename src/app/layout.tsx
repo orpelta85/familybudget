@@ -4,6 +4,7 @@ import { Providers } from "@/components/providers";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { BottomNav } from "@/components/layout/BottomNav";
 import { MemberBanner } from "@/components/layout/MemberBanner";
+import { ImpersonationBanner } from "@/components/layout/ImpersonationBanner";
 import { MobileViewSelector } from "@/components/layout/MobileViewSelector";
 import { Toaster } from "@/components/ui/sonner";
 import { PwaRegister } from "@/components/PwaRegister";
@@ -37,6 +38,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <Sidebar />
             <main className="main-content">
               <MobileViewSelector />
+              <ImpersonationBanner />
               <MemberBanner />
               {children}
             </main>

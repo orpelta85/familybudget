@@ -5,7 +5,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import {
   Users, Activity, TrendingUp, Receipt, Crown,
   Search, ChevronDown, Ban, UserCheck, Download,
-  ShieldCheck, ArrowUpRight, ArrowDownRight, Minus
+  ShieldCheck, ArrowUpRight, ArrowDownRight, Minus,
+  Eye, LogOut
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { PageInfo } from '@/components/ui/PageInfo'
@@ -13,6 +14,8 @@ import { PAGE_TIPS } from '@/lib/page-tips'
 import { toast } from 'sonner'
 import dynamic from 'next/dynamic'
 import { ChartSkeleton } from '@/components/ui/Skeleton'
+import { createClient } from '@/lib/supabase/client'
+import { useUser } from '@/lib/queries/useUser'
 
 const AdminGrowthChart = dynamic(
   () => import('@/components/dashboard/AdminGrowthChart').then(m => ({ default: m.AdminGrowthChart })),
@@ -133,6 +136,17 @@ function useBlockUser() {
     onError: () => toast.error('שגיאה בעדכון משתמש'),
   })
 }
+
+// ─── Test Families for Impersonation ──────────────────────
+const TEST_FAMILIES = [
+  { name: 'משפחת כהן', desc: 'ממוצעת, 4 נפשות, 25K', email: 'avi.cohen@test.com', color: '250' },
+  { name: 'משפחת לוי', desc: 'בגירעון, 5 נפשות, 18K', email: 'dani.levi@test.com', color: '27' },
+  { name: 'עמית זהבי', desc: 'רווק חוסך, 16K', email: 'amit.zahavi@test.com', color: '145' },
+  { name: 'משפחת רחמים', desc: 'מוציאים מעל ההכנסה, 20K', email: 'moshe.rachamim@test.com', color: '330' },
+  { name: 'משפחת ביטון', desc: 'חוסכים לדירה, 22K', email: 'yonatan.biton@test.com', color: '80' },
+  { name: 'משפחת שרון', desc: 'גדולה מסודרת, 6 נפשות, 31K', email: 'gilad.sharon@test.com', color: '200' },
+  { name: 'משפחת אדלר', desc: 'גמלאים, דירה בבעלות, 16K', email: 'yaakov.adler@test.com', color: '55' },
+]
 
 // ─── Helpers ───────────────────────────────────────────────
 const PLAN_LABELS: Record<string, string> = {
@@ -559,7 +573,52 @@ export default function AdminPage() {
         </div>
       </div>
 
-      {/* ─── Section 6: Quick Actions ─── */}
+      {/* ─── Section 6: Test Families (Impersonation) ─── */}
+      <div className="bg-[oklch(0.14_0.01_250)] border border-[oklch(0.22_0.01_250)] rounded-xl p-4 mb-6">
+        <h2 className="text-[14px] font-semibold text-[oklch(0.75_0.01_250)] mb-1">משפחות לדוגמה</h2>
+        <p className="text-[11px] text-[oklch(0.45_0.01_250)] mb-4">התחבר כמשפחת בדיקה כדי לראות איך האפליקציה נראית עם נתונים שונים</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+          {TEST_FAMILIES.map(fam => (
+            <button
+              key={fam.email}
+              onClick={async () => {
+                const sb = createClient()
+                const { data: { user: currentUser } } = await sb.auth.getUser()
+                if (currentUser?.email) {
+                  localStorage.setItem('admin_original_email', currentUser.email)
+                }
+                const { error } = await sb.auth.signInWithPassword({
+                  email: fam.email,
+                  password: 'Test123456!',
+                })
+                if (error) {
+                  toast.error(`שגיאה בהתחברות: ${error.message}`)
+                } else {
+                  toast.success(`מחובר כ: ${fam.name}`)
+                  window.location.href = '/'
+                }
+              }}
+              className={cn(
+                'flex flex-col items-start gap-1.5 p-3 rounded-xl border cursor-pointer transition-all text-right',
+                'bg-[oklch(0.16_0.01_250)] border-[oklch(0.24_0.01_250)]',
+                'hover:bg-[oklch(0.20_0.02_250)] hover:border-[oklch(0.32_0.04_250)]'
+              )}
+            >
+              <div className="flex items-center gap-2 w-full">
+                <div className={`w-2.5 h-2.5 rounded-full bg-[oklch(0.60_0.18_${fam.color})]`} />
+                <span className="text-[13px] font-semibold text-[oklch(0.85_0.01_250)]">{fam.name}</span>
+              </div>
+              <span className="text-[11px] text-[oklch(0.50_0.01_250)]">{fam.desc}</span>
+              <div className="flex items-center gap-1.5 mt-1">
+                <Eye size={12} className="text-[oklch(0.50_0.01_250)]" />
+                <span className="text-[11px] text-[oklch(0.50_0.01_250)]">צפה כמשפחה</span>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ─── Section 7: Quick Actions ─── */}
       <div className="bg-[oklch(0.14_0.01_250)] border border-[oklch(0.22_0.01_250)] rounded-xl p-4">
         <h2 className="text-[14px] font-semibold text-[oklch(0.75_0.01_250)] mb-3">פעולות מהירות</h2>
         <div className="flex flex-wrap gap-2">
