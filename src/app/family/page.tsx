@@ -4,7 +4,7 @@ import { useFamilyContext } from '@/lib/context/FamilyContext'
 import { useUser } from '@/lib/queries/useUser'
 import { createClient } from '@/lib/supabase/client'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import {
   Users, Copy, Mail, Send, X, Link2, Pencil, Check, Shield, Eye, EyeOff, Sparkles, Key, Trash2,
@@ -41,11 +41,9 @@ export default function FamilyPage() {
   const [showAiKeyInput, setShowAiKeyInput] = useState(false)
 
   // Load stored AI API key
-  useState(() => {
-    if (typeof window !== 'undefined') {
-      setAiApiKey(localStorage.getItem('oren_gemini_api_key') ?? '')
-    }
-  })
+  useEffect(() => {
+    setAiApiKey(localStorage.getItem('oren_gemini_api_key') ?? '')
+  }, [])
 
   const updateName = useMutation({
     mutationFn: async (name: string) => {

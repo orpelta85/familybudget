@@ -48,12 +48,8 @@ const nav: NavItem[] = [
 
 export function Sidebar() {
   const pathname = usePathname()
-  const hiddenPages = ['/login', '/setup', '/reset-password', '/auth']
-  const isHidden = hiddenPages.some(p => pathname.startsWith(p))
   const { family, isAdmin } = useFamilyContext()
   const { user } = useUser()
-
-  if (isHidden) return null
   const { data: alerts } = useAlerts(user?.id)
   const { data: unreadCount } = useUnreadAlertCount(user?.id)
   const markRead = useMarkAlertRead()
@@ -62,6 +58,9 @@ export function Sidebar() {
   const [inviteEmail, setInviteEmail] = useState('')
   const [sendingEmail, setSendingEmail] = useState(false)
   const alertRef = useRef<HTMLDivElement>(null)
+
+  const hiddenPages = ['/login', '/setup', '/reset-password', '/auth']
+  const isHidden = hiddenPages.some(p => pathname.startsWith(p))
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -72,6 +71,8 @@ export function Sidebar() {
     if (showAlerts) document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [showAlerts])
+
+  if (isHidden) return null
 
   function copyInviteLink() {
     if (!family) return
