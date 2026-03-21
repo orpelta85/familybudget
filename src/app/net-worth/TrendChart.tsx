@@ -6,7 +6,7 @@ import type { NetWorthSnapshot } from '@/lib/queries/useNetWorth'
 
 export function TrendChart({ snapshots }: { snapshots: NetWorthSnapshot[] }) {
   if (snapshots.length === 0) {
-    return <div className="text-[oklch(0.65_0.01_250)] text-[13px]">אין נתוני היסטוריה</div>
+    return <div className="text-[var(--text-secondary)] text-[13px]">אין נתוני היסטוריה</div>
   }
 
   const data = snapshots.map(s => ({
@@ -21,16 +21,16 @@ export function TrendChart({ snapshots }: { snapshots: NetWorthSnapshot[] }) {
     <div dir="ltr">
     <ResponsiveContainer width="100%" height={220}>
       <LineChart data={data}>
-        <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.22 0.01 250)" />
+        <CartesianGrid strokeDasharray="3 3" stroke="var(--bg-hover)" />
         <XAxis
           dataKey="date"
-          tick={{ fill: 'oklch(0.55 0.01 250)', fontSize: 11 }}
-          axisLine={{ stroke: 'oklch(0.25 0.01 250)' }}
+          tick={{ fill: 'var(--text-muted)', fontSize: 11 }}
+          axisLine={{ stroke: 'var(--border-default)' }}
           tickLine={false}
         />
         <YAxis
           orientation="right"
-          tick={{ fill: 'oklch(0.55 0.01 250)', fontSize: 11 }}
+          tick={{ fill: 'var(--text-muted)', fontSize: 11 }}
           axisLine={false}
           tickLine={false}
           tickFormatter={v => `${(v / 1000).toFixed(0)}k`}
@@ -39,17 +39,17 @@ export function TrendChart({ snapshots }: { snapshots: NetWorthSnapshot[] }) {
         <Tooltip
           formatter={(v: unknown) => formatCurrency(Number(v))}
           contentStyle={{
-            background: 'oklch(0.16 0.01 250)',
-            border: '1px solid oklch(0.28 0.01 250)',
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border-light)',
             borderRadius: 8,
             fontSize: 12,
-            color: 'oklch(0.85 0.01 250)',
+            color: 'var(--c-0-85)',
           }}
-          labelStyle={{ color: 'oklch(0.65 0.01 250)' }}
+          labelStyle={{ color: 'var(--text-secondary)' }}
         />
-        <Line type="monotone" dataKey="netWorth" stroke="oklch(0.70 0.18 145)" strokeWidth={2} dot={false} name="שווי נקי" />
-        <Line type="monotone" dataKey="assets" stroke="oklch(0.65 0.18 250)" strokeWidth={1.5} dot={false} name="נכסים" strokeDasharray="4 4" />
-        <Line type="monotone" dataKey="liquid" stroke="oklch(0.65 0.15 180)" strokeWidth={1.5} dot={false} name="נזיל" strokeDasharray="4 4" />
+        <Line type="monotone" dataKey="netWorth" stroke="var(--accent-green)" strokeWidth={2} dot={false} name="שווי נקי" />
+        <Line type="monotone" dataKey="assets" stroke="var(--accent-blue)" strokeWidth={1.5} dot={false} name="נכסים" strokeDasharray="4 4" />
+        <Line type="monotone" dataKey="liquid" stroke="var(--c-teal-0-65)" strokeWidth={1.5} dot={false} name="נזיל" strokeDasharray="4 4" />
       </LineChart>
     </ResponsiveContainer>
     </div>

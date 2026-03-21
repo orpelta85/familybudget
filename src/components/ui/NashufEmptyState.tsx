@@ -26,7 +26,7 @@ export function NashufEmptyState({ message, submessage }: NashufEmptyStateProps)
           style={{
             fontSize: 16,
             fontWeight: 500,
-            color: 'oklch(0.7 0.01 250)',
+            color: 'var(--c-0-70)',
             margin: 0,
           }}
         >
@@ -36,7 +36,7 @@ export function NashufEmptyState({ message, submessage }: NashufEmptyStateProps)
           <p
             style={{
               fontSize: 13,
-              color: 'oklch(0.5 0.01 250)',
+              color: 'var(--c-0-50)',
               margin: '6px 0 0',
             }}
           >

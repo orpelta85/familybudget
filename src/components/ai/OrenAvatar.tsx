@@ -91,7 +91,7 @@ export function OrenAvatar() {
       {/* Floating avatar button */}
       <button
         onClick={() => setChatOpen(true)}
-        className="fixed left-4 bottom-[76px] md:bottom-6 z-40 w-12 h-12 md:w-14 md:h-14 rounded-full bg-[oklch(0.22_0.06_145)] border-2 border-[oklch(0.35_0.10_145)] shadow-[0_4px_20px_oklch(0_0_0/0.4)] cursor-pointer flex items-center justify-center transition-transform duration-200 hover:scale-110 active:scale-95 overflow-hidden p-0"
+        className="fixed left-4 bottom-[76px] md:bottom-6 z-40 w-12 h-12 md:w-14 md:h-14 rounded-full bg-[var(--c-green-0-22)] border-2 border-[var(--c-green-0-35)] shadow-[0_4px_20px_oklch(0_0_0/0.4)] cursor-pointer flex items-center justify-center transition-transform duration-200 hover:scale-110 active:scale-95 overflow-hidden p-0"
         aria-label="פתח צ'אט עם אורן"
         style={unreadCount > 0 && !chatOpen ? { animation: 'orenBounce 2s ease-in-out infinite' } : {}}
       >
@@ -107,7 +107,7 @@ export function OrenAvatar() {
 
         {/* Unread badge */}
         {unreadCount > 0 && !chatOpen && (
-          <span className="absolute top-[-4px] right-[-4px] w-5 h-5 rounded-full bg-[oklch(0.55_0.20_25)] text-[oklch(0.98_0.01_250)] text-[10px] font-bold flex items-center justify-center border-2 border-[oklch(0.13_0.01_250)]">
+          <span className="absolute top-[-4px] right-[-4px] w-5 h-5 rounded-full bg-[var(--c-red-0-55)] text-[var(--c-0-98)] text-[10px] font-bold flex items-center justify-center border-2 border-[var(--bg-base)]">
             {unreadCount}
           </span>
         )}

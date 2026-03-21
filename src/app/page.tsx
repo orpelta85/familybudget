@@ -165,7 +165,7 @@ export default function Dashboard() {
   }, {})
   if (totalShared > 0) expByType['shared'] = totalShared
   const donutData = Object.entries(expByType).map(([type, value]) => ({
-    name: TYPE_LABELS[type] ?? type, value, color: TYPE_COLORS[type] ?? 'oklch(0.65 0.01 250)',
+    name: TYPE_LABELS[type] ?? type, value, color: TYPE_COLORS[type] ?? 'var(--text-secondary)',
   }))
 
   // ── Sinking balance ───────────────────────────────────────────────────────
@@ -271,7 +271,7 @@ export default function Dashboard() {
               URL.revokeObjectURL(url)
             } catch (e) { console.error('Export monthly summary:', e) }
           }}
-          className="flex items-center gap-1.5 bg-[oklch(0.20_0.04_250)] border border-[oklch(0.32_0.08_250)] rounded-lg px-3 py-[7px] text-[oklch(0.65_0.18_250)] text-[13px] font-medium cursor-pointer"
+          className="flex items-center gap-1.5 bg-[var(--c-blue-0-20)] border border-[var(--c-blue-0-32)] rounded-lg px-3 py-[7px] text-[var(--accent-blue)] text-[13px] font-medium cursor-pointer"
         >
           <Download size={13} /> הורד סיכום חודשי
         </button>
@@ -284,16 +284,16 @@ export default function Dashboard() {
         const unread = (dashboardAlerts ?? []).filter(a => !a.is_read).slice(0, 5)
         if (unread.length === 0) return null
         const severityBorder: Record<string, string> = {
-          danger: 'border-[oklch(0.45_0.18_27)]',
-          warning: 'border-[oklch(0.45_0.15_55)]',
-          success: 'border-[oklch(0.40_0.15_145)]',
-          info: 'border-[oklch(0.40_0.15_250)]',
+          danger: 'border-[var(--c-red-0-45)]',
+          warning: 'border-[var(--c-orange-0-50)]',
+          success: 'border-[var(--c-green-0-40)]',
+          info: 'border-[var(--c-blue-0-40)]',
         }
         const severityBg: Record<string, string> = {
-          danger: 'bg-[oklch(0.16_0.04_27)]',
-          warning: 'bg-[oklch(0.16_0.04_55)]',
-          success: 'bg-[oklch(0.16_0.04_145)]',
-          info: 'bg-[oklch(0.16_0.04_250)]',
+          danger: 'bg-[var(--c-red-0-18)]',
+          warning: 'bg-[var(--c-orange-0-16)]',
+          success: 'bg-[var(--c-green-0-18)]',
+          info: 'bg-[var(--c-blue-0-16)]',
         }
         return (
           <div className="flex flex-col gap-2 mb-4">
@@ -301,13 +301,13 @@ export default function Dashboard() {
               <div key={alert.id} className={`${severityBg[alert.severity] ?? ''} border ${severityBorder[alert.severity] ?? ''} rounded-[10px] px-4 py-[11px] flex items-start gap-2.5`}>
                 <div className="flex-1">
                   <div className="text-[13px] font-semibold mb-0.5">{alert.title}</div>
-                  <div className="text-[12px] text-[oklch(0.70_0.01_250)] leading-relaxed">{alert.message}</div>
+                  <div className="text-[12px] text-[var(--c-0-70)] leading-relaxed">{alert.message}</div>
                 </div>
                 {user && (
                   <button
                     onClick={() => markAlertRead.mutate({ id: alert.id, user_id: user.id })}
                     aria-label="סגור התראה"
-                    className="bg-transparent border-none cursor-pointer text-[oklch(0.50_0.01_250)] p-1 shrink-0"
+                    className="bg-transparent border-none cursor-pointer text-[var(--c-0-50)] p-1 shrink-0"
                   >
                     <X size={14} />
                   </button>

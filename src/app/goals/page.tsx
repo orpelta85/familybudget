@@ -23,14 +23,14 @@ import type { SavingsGoal, GoalDeposit, Period } from '@/lib/types'
 
 const ICON_OPTIONS = ['🎯', '🏠', '🚗', '✈️', '💍', '🎓', '💻', '📱', '🏖️', '💰', '🎁', '🏥']
 const COLOR_OPTIONS = [
-  'oklch(0.65 0.18 250)',
-  'oklch(0.70 0.18 145)',
-  'oklch(0.72 0.18 55)',
-  'oklch(0.70 0.15 185)',
-  'oklch(0.68 0.18 295)',
-  'oklch(0.62 0.22 27)',
-  'oklch(0.68 0.12 310)',
-  'oklch(0.75 0.18 80)',
+  'var(--accent-blue)',
+  'var(--accent-green)',
+  'var(--accent-orange)',
+  'var(--accent-teal)',
+  'var(--accent-purple)',
+  'var(--accent-red)',
+  'var(--accent-shared)',
+  'var(--c-orange-0-75)',
 ]
 
 export default function GoalsPage() {
@@ -214,7 +214,7 @@ function GoalCard({
           <div className="flex items-center gap-2 mb-1">
             <span className="font-semibold text-sm">{goal.name}</span>
             {goal.is_shared && (
-              <span className="text-[10px] bg-[oklch(0.22_0.02_250)] rounded px-1.5 py-0.5 text-text-secondary">משותף</span>
+              <span className="text-[10px] bg-[var(--c-blue-0-22)] rounded px-1.5 py-0.5 text-text-secondary">משותף</span>
             )}
           </div>
           <div className="flex gap-4 text-xs text-text-secondary">
@@ -315,9 +315,9 @@ function GoalExpandedView({
   const periodMap = new Map(periods?.map(p => [p.id, p.label]))
 
   return (
-    <div className="mt-5 pt-5 border-t border-t-[oklch(0.22_0.01_250)]">
+    <div className="mt-5 pt-5 border-t border-t-[var(--bg-hover)]">
       {/* Progress hero */}
-      <div className="bg-[oklch(0.13_0.01_250)] rounded-xl p-4 mb-5">
+      <div className="bg-[var(--bg-base)] rounded-xl p-4 mb-5">
         <div className="flex justify-between items-start mb-4">
           <div>
             <div className="text-[13px] text-text-secondary mb-1">נחסך עד כה</div>
@@ -345,7 +345,7 @@ function GoalExpandedView({
             { label: 'הפקדה חודשית', value: formatCurrency(goal.monthly_deposit) },
             { label: monthsRemaining !== null && monthsRemaining > 0 ? 'חודשים נותרים' : 'הושלם', value: monthsRemaining !== null && monthsRemaining > 0 ? monthsRemaining : '✓' },
           ].map(s => (
-            <div key={s.label} className="bg-[oklch(0.16_0.01_250)] rounded-lg px-3 py-2.5 text-center">
+            <div key={s.label} className="bg-[var(--bg-card)] rounded-lg px-3 py-2.5 text-center">
               <div className="text-lg font-bold text-text-heading">{s.value}</div>
               <div className="text-[11px] text-text-secondary mt-0.5">{s.label}</div>
             </div>
@@ -375,7 +375,7 @@ function GoalExpandedView({
               className="input-field w-full" placeholder="אופציונלי" />
           </div>
           <button onClick={handleDeposit} disabled={addDeposit.isPending}
-            className="w-full border-none rounded-lg py-[11px] font-semibold text-sm cursor-pointer text-[oklch(0.10_0.02_250)]"
+            className="w-full border-none rounded-lg py-[11px] font-semibold text-sm cursor-pointer text-[var(--c-0-10)]"
             style={{ background: goal.color }}>
             {addDeposit.isPending ? '...' : 'שמור הפקדה'}
           </button>
@@ -389,7 +389,7 @@ function GoalExpandedView({
           ) : (
             <div className="flex flex-col gap-1">
               {deposits.map(d => (
-                <div key={d.id} className="flex justify-between items-center py-2 px-2 rounded-lg hover:bg-[oklch(0.18_0.01_250)] transition-colors text-[13px]">
+                <div key={d.id} className="flex justify-between items-center py-2 px-2 rounded-lg hover:bg-[var(--c-0-18)] transition-colors text-[13px]">
                   <div>
                     <span className="text-text-heading">{periodMap.get(d.period_id) ?? `#${d.period_id}`}</span>
                     {d.notes && <span className="text-text-secondary mr-2 text-[11px]">— {d.notes}</span>}
@@ -410,7 +410,7 @@ function GoalExpandedView({
 
       {/* Projection */}
       {monthsRemaining !== null && monthsRemaining > 0 && goal.monthly_deposit > 0 && (
-        <div className="bg-[oklch(0.15_0.02_250)] border border-[oklch(0.25_0.02_250)] rounded-xl p-4 mt-5 text-[13px]">
+        <div className="bg-[var(--c-0-15)] border border-[var(--c-blue-0-25)] rounded-xl p-4 mt-5 text-[13px]">
           <div className="flex items-center gap-2 mb-2">
             <TrendingUp size={14} style={{ color: goal.color }} />
             <span className="font-semibold">תחזית</span>
@@ -495,7 +495,7 @@ function GoalModal({
 
   return (
     <div className="fixed inset-0 bg-black/70 z-[1000] flex items-center justify-center p-4">
-      <div className="bg-[oklch(0.14_0.01_250)] rounded-2xl p-6 w-full max-w-[420px] border border-[oklch(0.25_0.01_250)] max-h-[90vh] overflow-y-auto">
+      <div className="bg-[var(--c-0-14)] rounded-2xl p-6 w-full max-w-[420px] border border-[var(--border-default)] max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-5">
           <h3 className="text-base font-bold">{goal ? 'ערוך יעד' : 'הוסף יעד חדש'}</h3>
           <button onClick={onClose} aria-label="סגור"
@@ -542,7 +542,7 @@ function GoalModal({
               {ICON_OPTIONS.map(i => (
                 <button key={i} onClick={() => setIcon(i)}
                   className={`w-9 h-9 rounded-lg border cursor-pointer text-lg flex items-center justify-center transition-colors ${
-                    icon === i ? 'border-accent-blue bg-[oklch(0.22_0.02_250)]' : 'border-[oklch(0.25_0.01_250)] bg-transparent'
+                    icon === i ? 'border-accent-blue bg-[var(--c-blue-0-22)]' : 'border-[var(--border-default)] bg-transparent'
                   }`}>
                   {i}
                 </button>

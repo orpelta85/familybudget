@@ -48,7 +48,7 @@ export function BottomNav() {
   const isMoreActive = moreLinks.some(l => pathname === l.href)
 
   return (
-    <nav className="flex md:hidden fixed bottom-0 inset-x-0 h-[60px] bg-[oklch(0.14_0.01_250)] border-t border-[oklch(0.22_0.01_250)] items-center z-40">
+    <nav className="flex md:hidden fixed bottom-0 inset-x-0 h-[60px] bg-[var(--c-0-14)] border-t border-[var(--bg-hover)] items-center z-40">
       {nav.map(item => {
         const active = pathname === item.href
         const Icon = item.icon
@@ -58,7 +58,7 @@ export function BottomNav() {
             href={item.href}
             className={cn(
               'flex-1 flex flex-col items-center gap-1 py-2 no-underline transition-colors duration-150 text-[10px]',
-              active ? 'text-[oklch(0.65_0.18_250)]' : 'text-[oklch(0.65_0.01_250)]'
+              active ? 'text-[var(--accent-blue)]' : 'text-[var(--text-secondary)]'
             )}
           >
             <Icon size={18} />
@@ -73,7 +73,7 @@ export function BottomNav() {
           onClick={() => setShowMore(v => !v)}
           className={cn(
             'w-full flex flex-col items-center gap-1 py-2 bg-transparent border-none cursor-pointer transition-colors duration-150 text-[10px]',
-            isMoreActive ? 'text-[oklch(0.65_0.18_250)]' : 'text-[oklch(0.65_0.01_250)]'
+            isMoreActive ? 'text-[var(--accent-blue)]' : 'text-[var(--text-secondary)]'
           )}
         >
           <Menu size={18} />
@@ -81,7 +81,7 @@ export function BottomNav() {
         </button>
 
         {showMore && (
-          <div className="absolute bottom-[60px] left-1/2 -translate-x-1/2 bg-[oklch(0.18_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-xl p-1.5 min-w-[160px] shadow-[0_-4px_20px_oklch(0_0_0/0.4)] z-50">
+          <div className="absolute bottom-[60px] left-1/2 -translate-x-1/2 bg-[var(--c-0-18)] border border-[var(--border-light)] rounded-xl p-1.5 min-w-[160px] shadow-[0_-4px_20px_oklch(0_0_0/0.4)] z-50">
             {moreLinks.map(item => {
               const active = pathname === item.href
               const Icon = item.icon
@@ -93,8 +93,8 @@ export function BottomNav() {
                   className={cn(
                     'flex items-center gap-2.5 py-2.5 px-3.5 rounded-lg no-underline text-[13px] transition-colors duration-150',
                     active
-                      ? 'text-[oklch(0.65_0.18_250)] bg-[oklch(0.22_0.02_250)] font-semibold'
-                      : 'text-[oklch(0.82_0.01_250)] bg-transparent font-normal'
+                      ? 'text-[var(--accent-blue)] bg-[var(--c-blue-0-22)] font-semibold'
+                      : 'text-[var(--c-0-82)] bg-transparent font-normal'
                   )}
                 >
                   <Icon size={15} />

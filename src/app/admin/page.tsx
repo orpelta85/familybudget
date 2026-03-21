@@ -157,10 +157,10 @@ const PLAN_LABELS: Record<string, string> = {
 }
 
 const PLAN_COLORS: Record<string, string> = {
-  free: 'bg-[oklch(0.22_0.01_250)] text-[oklch(0.65_0.01_250)]',
-  premium: 'bg-[oklch(0.25_0.08_290)] text-[oklch(0.80_0.16_290)]',
-  family: 'bg-[oklch(0.25_0.08_145)] text-[oklch(0.75_0.16_145)]',
-  business: 'bg-[oklch(0.25_0.08_55)] text-[oklch(0.80_0.16_55)]',
+  free: 'bg-[var(--bg-hover)] text-[var(--text-secondary)]',
+  premium: 'bg-[var(--c-purple-0-25)] text-[var(--c-purple-0-80)]',
+  family: 'bg-[var(--c-green-0-25)] text-[var(--c-green-0-75)]',
+  business: 'bg-[var(--c-orange-0-25)] text-[var(--c-orange-0-80)]',
 }
 
 const HE_MONTHS = ['ינו', 'פבר', 'מרץ', 'אפר', 'מאי', 'יונ', 'יול', 'אוג', 'ספט', 'אוק', 'נוב', 'דצמ']
@@ -274,12 +274,12 @@ export default function AdminPage() {
     return (
       <div className="p-6 max-w-[1200px] mx-auto">
         <div className="flex items-center gap-3 mb-8">
-          <ShieldCheck size={22} className="text-[oklch(0.65_0.18_290)]" />
+          <ShieldCheck size={22} className="text-[var(--c-purple-0-65)]" />
           <h1 className="text-xl font-bold tracking-tight">פאנל ניהול</h1>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           {[1, 2, 3, 4, 5].map(i => (
-            <div key={i} className="h-[100px] rounded-xl bg-[oklch(0.16_0.01_250)] animate-pulse" />
+            <div key={i} className="h-[100px] rounded-xl bg-[var(--bg-card)] animate-pulse" />
           ))}
         </div>
       </div>
@@ -294,7 +294,7 @@ export default function AdminPage() {
     <div className="p-4 md:p-6 max-w-[1200px] mx-auto pb-24">
       {/* Header */}
       <div className="flex items-center gap-3 mb-6">
-        <ShieldCheck size={22} className="text-[oklch(0.65_0.18_290)]" />
+        <ShieldCheck size={22} className="text-[var(--c-purple-0-65)]" />
         <h1 className="text-xl font-bold tracking-tight flex-1">פאנל ניהול</h1>
         <PageInfo title={tip.title} description={tip.description} tips={tip.tips} />
       </div>
@@ -338,26 +338,26 @@ export default function AdminPage() {
       </div>
 
       {/* ─── Section 2: Growth Chart ─── */}
-      <div className="bg-[oklch(0.14_0.01_250)] border border-[oklch(0.22_0.01_250)] rounded-xl p-4 mb-6">
-        <h2 className="text-[14px] font-semibold text-[oklch(0.75_0.01_250)] mb-4">הרשמות חודשיות</h2>
+      <div className="bg-[var(--c-0-14)] border border-[var(--bg-hover)] rounded-xl p-4 mb-6">
+        <h2 className="text-[14px] font-semibold text-[var(--text-body)] mb-4">הרשמות חודשיות</h2>
         <div className="h-[200px]" dir="ltr">
           <AdminGrowthChart data={chartData} />
         </div>
       </div>
 
       {/* ─── Section 3: Users Table ─── */}
-      <div className="bg-[oklch(0.14_0.01_250)] border border-[oklch(0.22_0.01_250)] rounded-xl p-4 mb-6">
+      <div className="bg-[var(--c-0-14)] border border-[var(--bg-hover)] rounded-xl p-4 mb-6">
         <div className="flex flex-wrap items-center gap-3 mb-4">
-          <h2 className="text-[14px] font-semibold text-[oklch(0.75_0.01_250)] flex-1">משתמשים</h2>
+          <h2 className="text-[14px] font-semibold text-[var(--text-body)] flex-1">משתמשים</h2>
 
           {/* Search */}
           <div className="relative">
-            <Search size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[oklch(0.45_0.01_250)]" />
+            <Search size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--c-0-45)]" />
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="חיפוש..."
-              className="bg-[oklch(0.18_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-lg py-1.5 pr-8 pl-3 text-[12px] text-inherit w-[180px]"
+              className="bg-[var(--c-0-18)] border border-[var(--border-default)] rounded-lg py-1.5 pr-8 pl-3 text-[12px] text-inherit w-[180px]"
             />
           </div>
 
@@ -365,7 +365,7 @@ export default function AdminPage() {
           <select
             value={planFilter}
             onChange={e => setPlanFilter(e.target.value)}
-            className="bg-[oklch(0.18_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-lg py-1.5 px-2.5 text-[12px] text-inherit cursor-pointer"
+            className="bg-[var(--c-0-18)] border border-[var(--border-default)] rounded-lg py-1.5 px-2.5 text-[12px] text-inherit cursor-pointer"
           >
             <option value="all">כל התוכניות</option>
             <option value="free">חינם</option>
@@ -377,7 +377,7 @@ export default function AdminPage() {
           <select
             value={statusFilter}
             onChange={e => setStatusFilter(e.target.value)}
-            className="bg-[oklch(0.18_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-lg py-1.5 px-2.5 text-[12px] text-inherit cursor-pointer"
+            className="bg-[var(--c-0-18)] border border-[var(--border-default)] rounded-lg py-1.5 px-2.5 text-[12px] text-inherit cursor-pointer"
           >
             <option value="all">כל הסטטוסים</option>
             <option value="active">פעיל</option>
@@ -387,7 +387,7 @@ export default function AdminPage() {
           <select
             value={familyFilter}
             onChange={e => setFamilyFilter(e.target.value)}
-            className="bg-[oklch(0.18_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-lg py-1.5 px-2.5 text-[12px] text-inherit cursor-pointer"
+            className="bg-[var(--c-0-18)] border border-[var(--border-default)] rounded-lg py-1.5 px-2.5 text-[12px] text-inherit cursor-pointer"
           >
             <option value="all">כל המשתמשים</option>
             <option value="has">עם משפחה</option>
@@ -397,7 +397,7 @@ export default function AdminPage() {
           {/* Export */}
           <button
             onClick={() => users && exportUsersCSV(users)}
-            className="flex items-center gap-1.5 bg-[oklch(0.18_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-lg py-1.5 px-3 text-[12px] text-[oklch(0.65_0.01_250)] cursor-pointer hover:bg-[oklch(0.22_0.01_250)] transition-colors"
+            className="flex items-center gap-1.5 bg-[var(--c-0-18)] border border-[var(--border-default)] rounded-lg py-1.5 px-3 text-[12px] text-[var(--text-secondary)] cursor-pointer hover:bg-[var(--bg-hover)] transition-colors"
           >
             <Download size={13} />
             CSV
@@ -408,7 +408,7 @@ export default function AdminPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-[12px]">
             <thead>
-              <tr className="text-[oklch(0.50_0.01_250)] text-right">
+              <tr className="text-[var(--c-0-50)] text-right">
                 <th className="py-2 px-2 font-medium">משתמש</th>
                 <th className="py-2 px-2 font-medium cursor-pointer select-none" onClick={() => toggleSort('created_at')}>
                   <span className="flex items-center gap-1">הרשמה {sortBy === 'created_at' && <ChevronDown size={12} className={sortDir === 'asc' ? 'rotate-180' : ''} />}</span>
@@ -427,32 +427,32 @@ export default function AdminPage() {
             </thead>
             <tbody>
               {filteredUsers.map(u => (
-                <tr key={u.id} className="border-t border-[oklch(0.20_0.01_250)] hover:bg-[oklch(0.16_0.01_250)] transition-colors">
+                <tr key={u.id} className="border-t border-[var(--c-0-20)] hover:bg-[var(--bg-card)] transition-colors">
                   {/* User */}
                   <td className="py-2.5 px-2">
                     <div className="flex items-center gap-2.5">
-                      <div className="w-7 h-7 rounded-full bg-[oklch(0.25_0.08_290)] text-[oklch(0.80_0.16_290)] flex items-center justify-center text-[11px] font-bold shrink-0">
+                      <div className="w-7 h-7 rounded-full bg-[var(--c-purple-0-25)] text-[var(--c-purple-0-80)] flex items-center justify-center text-[11px] font-bold shrink-0">
                         {(u.name ?? u.email)?.[0]?.toUpperCase()}
                       </div>
                       <div>
-                        <div className="font-medium text-[oklch(0.85_0.01_250)]">{u.name ?? 'ללא שם'}</div>
-                        <div className="text-[11px] text-[oklch(0.50_0.01_250)]" dir="ltr">{u.email}</div>
+                        <div className="font-medium text-[var(--c-0-85)]">{u.name ?? 'ללא שם'}</div>
+                        <div className="text-[11px] text-[var(--c-0-50)]" dir="ltr">{u.email}</div>
                       </div>
                     </div>
                   </td>
                   {/* Registration */}
-                  <td className="py-2.5 px-2 text-[oklch(0.65_0.01_250)]">{formatDate(u.created_at)}</td>
+                  <td className="py-2.5 px-2 text-[var(--text-secondary)]">{formatDate(u.created_at)}</td>
                   {/* Last login */}
-                  <td className="py-2.5 px-2 text-[oklch(0.65_0.01_250)]">{relativeTime(u.last_sign_in_at)}</td>
+                  <td className="py-2.5 px-2 text-[var(--text-secondary)]">{relativeTime(u.last_sign_in_at)}</td>
                   {/* Family */}
-                  <td className="py-2.5 px-2 text-[oklch(0.65_0.01_250)]">
+                  <td className="py-2.5 px-2 text-[var(--text-secondary)]">
                     {u.has_family ? (
                       <div>
                         <div className="flex items-center gap-1">
-                          <span className="text-[oklch(0.85_0.01_250)] font-medium">{u.family_name ?? 'משפחה'}</span>
-                          {u.is_family_creator && <span className="text-[9px] bg-[oklch(0.35_0.15_250)] text-[oklch(0.85_0.15_250)] px-1.5 py-0.5 rounded-full">מנהל</span>}
+                          <span className="text-[var(--c-0-85)] font-medium">{u.family_name ?? 'משפחה'}</span>
+                          {u.is_family_creator && <span className="text-[9px] bg-[var(--c-blue-0-35)] text-[var(--c-blue-0-85)] px-1.5 py-0.5 rounded-full">מנהל</span>}
                         </div>
-                        <div className="text-[10px] text-[oklch(0.55_0.01_250)]">
+                        <div className="text-[10px] text-[var(--text-muted)]">
                           {u.family_member_names.join(', ')}
                           {u.family_kids.length > 0 && (
                             <span> + {u.family_kids.length} ילדים ({u.family_kids.map(k => k.name).join(', ')})</span>
@@ -460,7 +460,7 @@ export default function AdminPage() {
                         </div>
                       </div>
                     ) : (
-                      <span className="text-[oklch(0.45_0.01_250)]">יחיד</span>
+                      <span className="text-[var(--c-0-45)]">יחיד</span>
                     )}
                   </td>
                   {/* Plan */}
@@ -470,12 +470,12 @@ export default function AdminPage() {
                     </span>
                   </td>
                   {/* Expense count */}
-                  <td className="py-2.5 px-2 text-[oklch(0.65_0.01_250)]">{u.expense_count.toLocaleString()}</td>
+                  <td className="py-2.5 px-2 text-[var(--text-secondary)]">{u.expense_count.toLocaleString()}</td>
                   {/* Status */}
                   <td className="py-2.5 px-2">
                     <div className="flex items-center gap-1.5">
-                      <div className={cn('w-2 h-2 rounded-full', u.is_banned ? 'bg-[oklch(0.55_0.22_27)]' : u.status === 'active' ? 'bg-[oklch(0.65_0.20_145)]' : 'bg-[oklch(0.40_0.01_250)]')} />
-                      <span className="text-[oklch(0.60_0.01_250)]">
+                      <div className={cn('w-2 h-2 rounded-full', u.is_banned ? 'bg-[var(--c-red-0-55)]' : u.status === 'active' ? 'bg-[var(--c-green-0-65)]' : 'bg-[var(--c-0-40)]')} />
+                      <span className="text-[var(--c-0-60)]">
                         {u.is_banned ? 'חסום' : u.status === 'active' ? 'פעיל' : 'לא פעיל'}
                       </span>
                     </div>
@@ -487,20 +487,20 @@ export default function AdminPage() {
                       <div className="relative">
                         <button
                           onClick={() => setPlanMenuUser(planMenuUser === u.id ? null : u.id)}
-                          className="bg-[oklch(0.20_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-md px-2 py-1 text-[11px] text-[oklch(0.65_0.01_250)] cursor-pointer hover:bg-[oklch(0.24_0.01_250)] transition-colors"
+                          className="bg-[var(--c-0-20)] border border-[var(--border-light)] rounded-md px-2 py-1 text-[11px] text-[var(--text-secondary)] cursor-pointer hover:bg-[var(--c-0-24)] transition-colors"
                           title="שנה תוכנית"
                         >
                           <Crown size={12} />
                         </button>
                         {planMenuUser === u.id && (
-                          <div className="absolute top-full left-0 mt-1 bg-[oklch(0.18_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg p-1 min-w-[120px] z-30 shadow-[0_4px_16px_oklch(0_0_0/0.4)]">
+                          <div className="absolute top-full left-0 mt-1 bg-[var(--c-0-18)] border border-[var(--border-light)] rounded-lg p-1 min-w-[120px] z-30 shadow-[0_4px_16px_oklch(0_0_0/0.4)]">
                             {['free', 'premium', 'family', 'business'].map(p => (
                               <button
                                 key={p}
                                 onClick={() => { changePlan.mutate({ userId: u.id, plan: p }); setPlanMenuUser(null) }}
                                 className={cn(
                                   'block w-full text-right px-3 py-1.5 rounded-md text-[12px] bg-transparent border-none cursor-pointer transition-colors',
-                                  u.plan === p ? 'text-[oklch(0.80_0.16_290)] bg-[oklch(0.22_0.03_290)]' : 'text-[oklch(0.70_0.01_250)] hover:bg-[oklch(0.22_0.01_250)]'
+                                  u.plan === p ? 'text-[var(--c-purple-0-80)] bg-[var(--c-purple-0-22)]' : 'text-[var(--c-0-70)] hover:bg-[var(--bg-hover)]'
                                 )}
                               >
                                 {PLAN_LABELS[p]}
@@ -515,8 +515,8 @@ export default function AdminPage() {
                         className={cn(
                           'border rounded-md px-2 py-1 text-[11px] cursor-pointer transition-colors',
                           u.is_banned
-                            ? 'bg-[oklch(0.22_0.04_145)] border-[oklch(0.30_0.06_145)] text-[oklch(0.70_0.16_145)] hover:bg-[oklch(0.26_0.06_145)]'
-                            : 'bg-[oklch(0.20_0.01_250)] border-[oklch(0.28_0.01_250)] text-[oklch(0.55_0.01_250)] hover:bg-[oklch(0.22_0.03_27)] hover:text-[oklch(0.65_0.18_27)] hover:border-[oklch(0.30_0.06_27)]'
+                            ? 'bg-[var(--c-green-0-22)] border-[var(--c-green-0-30)] text-[var(--accent-green)] hover:bg-[var(--c-green-0-26)]'
+                            : 'bg-[var(--c-0-20)] border-[var(--border-light)] text-[var(--text-muted)] hover:bg-[var(--c-red-0-22)] hover:text-[var(--c-red-0-65)] hover:border-[var(--c-red-0-30)]'
                         )}
                         title={u.is_banned ? 'שחרר חסימה' : 'חסום משתמש'}
                       >
@@ -529,39 +529,39 @@ export default function AdminPage() {
             </tbody>
           </table>
           {filteredUsers.length === 0 && (
-            <div className="text-center py-8 text-[oklch(0.45_0.01_250)] text-[13px]">לא נמצאו משתמשים</div>
+            <div className="text-center py-8 text-[var(--c-0-45)] text-[13px]">לא נמצאו משתמשים</div>
           )}
         </div>
       </div>
 
       {/* ─── Section 4: Activity Feed ─── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <div className="bg-[oklch(0.14_0.01_250)] border border-[oklch(0.22_0.01_250)] rounded-xl p-4">
-          <h2 className="text-[14px] font-semibold text-[oklch(0.75_0.01_250)] mb-3">פעילות אחרונה</h2>
+        <div className="bg-[var(--c-0-14)] border border-[var(--bg-hover)] rounded-xl p-4">
+          <h2 className="text-[14px] font-semibold text-[var(--text-body)] mb-3">פעילות אחרונה</h2>
           <div className="flex flex-col gap-1.5 max-h-[300px] overflow-y-auto">
             {(activity ?? []).map((a, i) => (
-              <div key={i} className="flex items-start gap-2.5 py-2 px-2.5 rounded-lg hover:bg-[oklch(0.16_0.01_250)] transition-colors">
+              <div key={i} className="flex items-start gap-2.5 py-2 px-2.5 rounded-lg hover:bg-[var(--bg-card)] transition-colors">
                 <div className={cn(
                   'w-2 h-2 rounded-full mt-1.5 shrink-0',
-                  a.type === 'expense' ? 'bg-[oklch(0.65_0.18_27)]' :
-                  a.type === 'goal' ? 'bg-[oklch(0.65_0.18_145)]' :
-                  'bg-[oklch(0.65_0.18_290)]'
+                  a.type === 'expense' ? 'bg-[var(--c-red-0-65)]' :
+                  a.type === 'goal' ? 'bg-[var(--c-green-0-65)]' :
+                  'bg-[var(--c-purple-0-65)]'
                 )} />
                 <div className="flex-1 min-w-0">
-                  <div className="text-[12px] text-[oklch(0.78_0.01_250)]">{a.message}</div>
-                  <div className="text-[11px] text-[oklch(0.45_0.01_250)] mt-0.5">{relativeTime(a.created_at)}</div>
+                  <div className="text-[12px] text-[var(--c-0-78)]">{a.message}</div>
+                  <div className="text-[11px] text-[var(--c-0-45)] mt-0.5">{relativeTime(a.created_at)}</div>
                 </div>
               </div>
             ))}
             {!activity?.length && (
-              <div className="text-[12px] text-[oklch(0.45_0.01_250)] text-center py-4">אין פעילות</div>
+              <div className="text-[12px] text-[var(--c-0-45)] text-center py-4">אין פעילות</div>
             )}
           </div>
         </div>
 
         {/* ─── Section 5: Platform Health ─── */}
-        <div className="bg-[oklch(0.14_0.01_250)] border border-[oklch(0.22_0.01_250)] rounded-xl p-4">
-          <h2 className="text-[14px] font-semibold text-[oklch(0.75_0.01_250)] mb-3">בריאות הפלטפורמה</h2>
+        <div className="bg-[var(--c-0-14)] border border-[var(--bg-hover)] rounded-xl p-4">
+          <h2 className="text-[14px] font-semibold text-[var(--text-body)] mb-3">בריאות הפלטפורמה</h2>
           <div className="flex flex-col gap-2">
             <HealthRow label="סה״כ רשומות הוצאות" value={(stats?.totalExpenses ?? 0).toLocaleString()} />
             <HealthRow label="סה״כ רשומות הכנסה" value={(stats?.totalIncome ?? 0).toLocaleString()} />
@@ -574,9 +574,9 @@ export default function AdminPage() {
       </div>
 
       {/* ─── Section 6: Test Families (Impersonation) ─── */}
-      <div className="bg-[oklch(0.14_0.01_250)] border border-[oklch(0.22_0.01_250)] rounded-xl p-4 mb-6">
-        <h2 className="text-[14px] font-semibold text-[oklch(0.75_0.01_250)] mb-1">משפחות לדוגמה</h2>
-        <p className="text-[11px] text-[oklch(0.45_0.01_250)] mb-4">התחבר כמשפחת בדיקה כדי לראות איך האפליקציה נראית עם נתונים שונים. הזן את סיסמת הבדיקה ידנית.</p>
+      <div className="bg-[var(--c-0-14)] border border-[var(--bg-hover)] rounded-xl p-4 mb-6">
+        <h2 className="text-[14px] font-semibold text-[var(--text-body)] mb-1">משפחות לדוגמה</h2>
+        <p className="text-[11px] text-[var(--c-0-45)] mb-4">התחבר כמשפחת בדיקה כדי לראות איך האפליקציה נראית עם נתונים שונים. הזן את סיסמת הבדיקה ידנית.</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
           {TEST_FAMILIES.map(fam => (
             <button
@@ -602,18 +602,18 @@ export default function AdminPage() {
               }}
               className={cn(
                 'flex flex-col items-start gap-1.5 p-3 rounded-xl border cursor-pointer transition-all text-right',
-                'bg-[oklch(0.16_0.01_250)] border-[oklch(0.24_0.01_250)]',
-                'hover:bg-[oklch(0.20_0.02_250)] hover:border-[oklch(0.32_0.04_250)]'
+                'bg-[var(--bg-card)] border-[var(--c-0-24)]',
+                'hover:bg-[var(--c-blue-0-20)] hover:border-[var(--c-blue-0-32)]'
               )}
             >
               <div className="flex items-center gap-2 w-full">
                 <div className={`w-2.5 h-2.5 rounded-full bg-[oklch(0.60_0.18_${fam.color})]`} />
-                <span className="text-[13px] font-semibold text-[oklch(0.85_0.01_250)]">{fam.name}</span>
+                <span className="text-[13px] font-semibold text-[var(--c-0-85)]">{fam.name}</span>
               </div>
-              <span className="text-[11px] text-[oklch(0.50_0.01_250)]">{fam.desc}</span>
+              <span className="text-[11px] text-[var(--c-0-50)]">{fam.desc}</span>
               <div className="flex items-center gap-1.5 mt-1">
-                <Eye size={12} className="text-[oklch(0.50_0.01_250)]" />
-                <span className="text-[11px] text-[oklch(0.50_0.01_250)]">צפה כמשפחה</span>
+                <Eye size={12} className="text-[var(--c-0-50)]" />
+                <span className="text-[11px] text-[var(--c-0-50)]">צפה כמשפחה</span>
               </div>
             </button>
           ))}
@@ -621,12 +621,12 @@ export default function AdminPage() {
       </div>
 
       {/* ─── Section 7: Quick Actions ─── */}
-      <div className="bg-[oklch(0.14_0.01_250)] border border-[oklch(0.22_0.01_250)] rounded-xl p-4">
-        <h2 className="text-[14px] font-semibold text-[oklch(0.75_0.01_250)] mb-3">פעולות מהירות</h2>
+      <div className="bg-[var(--c-0-14)] border border-[var(--bg-hover)] rounded-xl p-4">
+        <h2 className="text-[14px] font-semibold text-[var(--text-body)] mb-3">פעולות מהירות</h2>
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => users && exportUsersCSV(users)}
-            className="flex items-center gap-2 bg-[oklch(0.20_0.02_290)] border border-[oklch(0.28_0.04_290)] rounded-lg py-2 px-4 text-[13px] text-[oklch(0.80_0.14_290)] cursor-pointer hover:bg-[oklch(0.24_0.04_290)] transition-colors"
+            className="flex items-center gap-2 bg-[var(--c-purple-0-20)] border border-[var(--c-purple-0-28)] rounded-lg py-2 px-4 text-[13px] text-[var(--c-purple-0-80)] cursor-pointer hover:bg-[var(--c-purple-0-24)] transition-colors"
           >
             <Download size={15} />
             ייצוא כל המשתמשים ל-CSV
@@ -652,26 +652,26 @@ function KPICard({ label, value, sub, trend, icon, color }: {
     : null
 
   return (
-    <div className={`bg-[oklch(0.14_0.01_250)] border border-[oklch(0.22_0.01_250)] rounded-xl p-4`}>
+    <div className={`bg-[var(--c-0-14)] border border-[var(--bg-hover)] rounded-xl p-4`}>
       <div className="flex items-center gap-2 mb-2">
         <div className={`text-[oklch(0.65_0.18_${color})]`}>
           {icon}
         </div>
-        <span className="text-[11px] text-[oklch(0.50_0.01_250)] font-medium">{label}</span>
+        <span className="text-[11px] text-[var(--c-0-50)] font-medium">{label}</span>
       </div>
-      <div className="text-[22px] font-bold text-[oklch(0.90_0.01_250)] tracking-tight">
+      <div className="text-[22px] font-bold text-[var(--c-0-90)] tracking-tight">
         {value.toLocaleString()}
       </div>
       {(sub || TrendIcon) && (
         <div className="flex items-center gap-1.5 mt-1">
           {TrendIcon && (
             <TrendIcon size={12} className={
-              (trend ?? 0) > 0 ? 'text-[oklch(0.65_0.18_145)]' :
-              (trend ?? 0) < 0 ? 'text-[oklch(0.65_0.18_27)]' :
-              'text-[oklch(0.50_0.01_250)]'
+              (trend ?? 0) > 0 ? 'text-[var(--c-green-0-65)]' :
+              (trend ?? 0) < 0 ? 'text-[var(--c-red-0-65)]' :
+              'text-[var(--c-0-50)]'
             } />
           )}
-          {sub && <span className="text-[11px] text-[oklch(0.50_0.01_250)]">{sub}</span>}
+          {sub && <span className="text-[11px] text-[var(--c-0-50)]">{sub}</span>}
         </div>
       )}
     </div>
@@ -680,9 +680,9 @@ function KPICard({ label, value, sub, trend, icon, color }: {
 
 function HealthRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-center justify-between py-2 px-2.5 rounded-lg bg-[oklch(0.16_0.01_250)]">
-      <span className="text-[12px] text-[oklch(0.60_0.01_250)]">{label}</span>
-      <span className="text-[12px] font-semibold text-[oklch(0.80_0.01_250)]">{value}</span>
+    <div className="flex items-center justify-between py-2 px-2.5 rounded-lg bg-[var(--bg-card)]">
+      <span className="text-[12px] text-[var(--c-0-60)]">{label}</span>
+      <span className="text-[12px] font-semibold text-[var(--text-heading)]">{value}</span>
     </div>
   )
 }

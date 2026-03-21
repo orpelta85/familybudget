@@ -16,7 +16,7 @@ export function PeriodSelector({ periods, selectedId, onChange }: Props) {
         value={selectedId ?? ''}
         onChange={e => onChange(Number(e.target.value))}
         aria-label="בחר תקופה"
-        className="bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg py-2 px-3 text-inherit text-[13px] cursor-pointer"
+        className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-inherit text-[13px] cursor-pointer"
         dir="rtl"
       >
         {periods.map(p => (

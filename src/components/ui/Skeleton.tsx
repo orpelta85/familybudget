@@ -1,7 +1,7 @@
 'use client'
 
 const shimmerStyle: React.CSSProperties = {
-  background: 'linear-gradient(90deg, oklch(0.18 0.01 250) 25%, oklch(0.22 0.01 250) 50%, oklch(0.18 0.01 250) 75%)',
+  background: 'linear-gradient(90deg, var(--c-0-18) 25%, var(--bg-hover) 50%, var(--c-0-18) 75%)',
   backgroundSize: '200% 100%',
   animation: 'skeleton-shimmer 1.8s ease-in-out infinite',
   borderRadius: 8,
@@ -26,7 +26,7 @@ export function Skeleton({
       width: width ?? '100%',
       height: height ?? 100,
       borderRadius: 12,
-      border: '1px solid oklch(0.22 0.01 250)',
+      border: '1px solid var(--bg-hover)',
     },
     circle: {
       width: width ?? 40,
@@ -37,7 +37,7 @@ export function Skeleton({
       width: width ?? '100%',
       height: height ?? 180,
       borderRadius: 12,
-      border: '1px solid oklch(0.22 0.01 250)',
+      border: '1px solid var(--bg-hover)',
     },
   }
 
@@ -63,8 +63,8 @@ export function DashboardSkeleton() {
       <div className="grid-kpi">
         {Array.from({ length: 6 }).map((_, i) => (
           <div key={i} style={{
-            background: 'oklch(0.16 0.01 250)',
-            border: '1px solid oklch(0.25 0.01 250)',
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border-default)',
             borderRadius: 12,
             padding: 16,
           }}>
@@ -104,8 +104,8 @@ export function TableSkeleton({ rows = 6 }: { rows?: number }) {
       <div className="grid-kpi" style={{ marginBottom: 16 }}>
         {Array.from({ length: 3 }).map((_, i) => (
           <div key={i} style={{
-            background: 'oklch(0.16 0.01 250)',
-            border: '1px solid oklch(0.25 0.01 250)',
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border-default)',
             borderRadius: 12,
             padding: 16,
           }}>
@@ -117,8 +117,8 @@ export function TableSkeleton({ rows = 6 }: { rows?: number }) {
 
       {/* Table rows */}
       <div style={{
-        background: 'oklch(0.16 0.01 250)',
-        border: '1px solid oklch(0.25 0.01 250)',
+        background: 'var(--bg-card)',
+        border: '1px solid var(--border-default)',
         borderRadius: 12,
         overflow: 'hidden',
       }}>
@@ -128,7 +128,7 @@ export function TableSkeleton({ rows = 6 }: { rows?: number }) {
             alignItems: 'center',
             gap: 12,
             padding: '14px 16px',
-            borderBottom: i < rows - 1 ? '1px solid oklch(0.22 0.01 250)' : 'none',
+            borderBottom: i < rows - 1 ? '1px solid var(--bg-hover)' : 'none',
           }}>
             <Skeleton variant="circle" width={32} height={32} />
             <div style={{ flex: 1 }}>

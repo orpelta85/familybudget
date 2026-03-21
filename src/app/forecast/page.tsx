@@ -228,42 +228,42 @@ export default function ForecastPage() {
     <div>
       <div className="flex items-center justify-between mb-1.5">
         <div className="flex items-center gap-2">
-          <CalendarDays size={18} className="text-[oklch(0.65_0.18_250)]" />
+          <CalendarDays size={18} className="text-[var(--accent-blue)]" />
           <h1 className="text-xl font-bold tracking-tight">תחזית תזרים</h1>
           <PageInfo {...PAGE_TIPS.forecast} />
         </div>
         <button
           onClick={() => setShowSettings(!showSettings)}
-          className="flex items-center gap-1.5 bg-[oklch(0.20_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-2 text-[oklch(0.65_0.01_250)] text-xs font-medium cursor-pointer"
+          className="flex items-center gap-1.5 bg-[var(--c-0-20)] border border-[var(--border-light)] rounded-lg px-3 py-2 text-[var(--text-secondary)] text-xs font-medium cursor-pointer"
         >
           <Settings size={13} />
           הגדרות
           {showSettings ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
         </button>
       </div>
-      <p className="text-[oklch(0.65_0.01_250)] text-[13px] mb-5">צפי יתרה ל-90 הימים הקרובים</p>
+      <p className="text-[var(--text-secondary)] text-[13px] mb-5">צפי יתרה ל-90 הימים הקרובים</p>
 
       {/* Settings section */}
       {showSettings && (
-        <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5 mb-5">
+        <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5 mb-5">
           <h2 className="font-semibold text-sm mb-4">הגדרות תחזית</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
-              <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">יתרת עו&quot;ש נוכחית (₪)</label>
+              <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">יתרת עו&quot;ש נוכחית (₪)</label>
               <input
                 type="number"
                 value={settingsForm.current_balance}
                 onChange={e => setSettingsForm(prev => ({ ...prev, current_balance: e.target.value }))}
                 placeholder="0"
-                className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-sm ltr text-left"
+                className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-sm ltr text-left"
               />
             </div>
             <div>
-              <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">יום משכורת</label>
+              <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">יום משכורת</label>
               <select
                 value={settingsForm.payday}
                 onChange={e => setSettingsForm(prev => ({ ...prev, payday: e.target.value }))}
-                className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-sm"
+                className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-sm"
               >
                 {dayOptions.map(d => <option key={d} value={d}>{d}</option>)}
               </select>
@@ -272,7 +272,7 @@ export default function ForecastPage() {
           <button
             onClick={handleSaveSettings}
             disabled={upsertSettings.isPending}
-            className={`bg-[oklch(0.70_0.15_185)] border-none rounded-lg px-6 py-[9px] font-semibold text-sm text-[oklch(0.10_0.01_250)] ${upsertSettings.isPending ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+            className={`bg-[var(--accent-teal)] border-none rounded-lg px-6 py-[9px] font-semibold text-sm text-[var(--c-0-10)] ${upsertSettings.isPending ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
           >
             {upsertSettings.isPending ? '...' : 'שמור הגדרות'}
           </button>
@@ -280,16 +280,16 @@ export default function ForecastPage() {
       )}
 
       {/* Manual recurring events section */}
-      <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5 mb-5">
+      <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5 mb-5">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <Repeat size={14} className="text-[oklch(0.65_0.18_250)]" />
+            <Repeat size={14} className="text-[var(--accent-blue)]" />
             <h2 className="font-semibold text-sm">אירועים חוזרים</h2>
           </div>
           {!eventForm && (
             <button
               onClick={() => { setEventForm({ ...emptyEventForm }); setEditingEventId(null) }}
-              className="flex items-center gap-1.5 bg-transparent border border-[oklch(0.25_0.01_250)] rounded-lg px-3 py-1.5 text-[oklch(0.65_0.01_250)] text-xs cursor-pointer"
+              className="flex items-center gap-1.5 bg-transparent border border-[var(--border-default)] rounded-lg px-3 py-1.5 text-[var(--text-secondary)] text-xs cursor-pointer"
             >
               <Plus size={12} /> הוסף אירוע
             </button>
@@ -298,41 +298,41 @@ export default function ForecastPage() {
 
         {/* Event list */}
         {(manualEvents ?? []).length === 0 && !eventForm ? (
-          <div className="text-xs text-[oklch(0.65_0.01_250)] text-center py-6">
-            <Inbox size={24} className="text-[oklch(0.30_0.01_250)] mx-auto mb-2" />
+          <div className="text-xs text-[var(--text-secondary)] text-center py-6">
+            <Inbox size={24} className="text-[var(--c-0-30)] mx-auto mb-2" />
             <div>אין אירועים חוזרים</div>
-            <div className="mt-1 text-[oklch(0.50_0.01_250)]">הוסף אירועים כמו שכירות, ביטוח, חיוב אשראי</div>
+            <div className="mt-1 text-[var(--c-0-50)]">הוסף אירועים כמו שכירות, ביטוח, חיוב אשראי</div>
           </div>
         ) : (
           <div className="flex flex-col gap-0">
             {(manualEvents ?? []).map(ev => (
-              <div key={ev.id} className="flex items-center justify-between py-2.5 border-b border-[oklch(0.20_0.01_250)] last:border-b-0">
+              <div key={ev.id} className="flex items-center justify-between py-2.5 border-b border-[var(--c-0-20)] last:border-b-0">
                 <div className="flex items-center gap-3">
                   {ev.type === 'income' ? (
-                    <ArrowDownCircle size={14} className="text-[oklch(0.70_0.18_145)]" />
+                    <ArrowDownCircle size={14} className="text-[var(--accent-green)]" />
                   ) : (
-                    <ArrowUpCircle size={14} className="text-[oklch(0.62_0.22_27)]" />
+                    <ArrowUpCircle size={14} className="text-[var(--accent-red)]" />
                   )}
                   <div>
                     <div className="text-[13px] font-medium">{ev.name}</div>
-                    <div className="text-[11px] text-[oklch(0.50_0.01_250)]">
+                    <div className="text-[11px] text-[var(--c-0-50)]">
                       יום {ev.day_of_month} בחודש
                       {ev.amount_mode === 'average' && (
-                        <span className="text-[oklch(0.65_0.15_250)] mr-2">ממוצע 3 חודשים</span>
+                        <span className="text-[var(--accent-blue)] mr-2">ממוצע 3 חודשים</span>
                       )}
-                      {!ev.is_active && <span className="text-[oklch(0.55_0.15_55)] mr-2">מושבת</span>}
+                      {!ev.is_active && <span className="text-[var(--c-orange-0-55)] mr-2">מושבת</span>}
                     </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className={`text-[13px] font-semibold ${ev.type === 'income' ? 'text-[oklch(0.70_0.18_145)]' : 'text-[oklch(0.62_0.22_27)]'}`}>
+                  <span className={`text-[13px] font-semibold ${ev.type === 'income' ? 'text-[var(--accent-green)]' : 'text-[var(--accent-red)]'}`}>
                     {ev.amount_mode === 'average'
                       ? `~${formatCurrency(avgMonthlyExpenses)}`
                       : `${ev.type === 'income' ? '+' : '-'}${formatCurrency(Number(ev.amount))}`
                     }
                   </span>
-                  <button onClick={() => startEditEvent(ev)} aria-label="ערוך" className="bg-transparent border-none cursor-pointer p-1.5 text-[oklch(0.45_0.01_250)]"><Pencil size={11} /></button>
-                  <button onClick={() => handleDeleteEvent(ev)} aria-label="מחק" className="bg-transparent border-none cursor-pointer p-1.5 text-[oklch(0.45_0.01_250)]"><Trash2 size={11} /></button>
+                  <button onClick={() => startEditEvent(ev)} aria-label="ערוך" className="bg-transparent border-none cursor-pointer p-1.5 text-[var(--c-0-45)]"><Pencil size={11} /></button>
+                  <button onClick={() => handleDeleteEvent(ev)} aria-label="מחק" className="bg-transparent border-none cursor-pointer p-1.5 text-[var(--c-0-45)]"><Trash2 size={11} /></button>
                 </div>
               </div>
             ))}
@@ -341,22 +341,22 @@ export default function ForecastPage() {
 
         {/* Inline add/edit form */}
         {eventForm && (
-          <div className="mt-4 pt-4 border-t border-[oklch(0.22_0.01_250)]">
+          <div className="mt-4 pt-4 border-t border-[var(--bg-hover)]">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
               <div>
-                <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">שם</label>
+                <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">שם</label>
                 <input
                   type="text"
                   value={eventForm.name}
                   onChange={e => setEventForm(prev => prev && { ...prev, name: e.target.value })}
                   placeholder='לדוגמה: "שכירות" / "חיוב אשראי"'
                   autoFocus
-                  className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-sm"
+                  className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-sm"
                 />
               </div>
               <div>
-                <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">סוג</label>
-                <div className="flex border border-[oklch(0.25_0.01_250)] rounded-lg overflow-hidden h-[38px]">
+                <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">סוג</label>
+                <div className="flex border border-[var(--border-default)] rounded-lg overflow-hidden h-[38px]">
                   {([
                     { key: 'expense' as const, label: 'הוצאה' },
                     { key: 'income' as const, label: 'הכנסה' },
@@ -367,9 +367,9 @@ export default function ForecastPage() {
                       className={`flex-1 px-3 text-[13px] font-medium cursor-pointer border-none ${
                         eventForm.type === opt.key
                           ? opt.key === 'income'
-                            ? 'bg-[oklch(0.22_0.02_145)] text-[oklch(0.70_0.18_145)]'
-                            : 'bg-[oklch(0.22_0.02_27)] text-[oklch(0.62_0.22_27)]'
-                          : 'bg-transparent text-[oklch(0.65_0.01_250)]'
+                            ? 'bg-[var(--c-green-0-22)] text-[var(--accent-green)]'
+                            : 'bg-[var(--c-red-0-22)] text-[var(--accent-red)]'
+                          : 'bg-transparent text-[var(--text-secondary)]'
                       }`}
                     >
                       {opt.label}
@@ -380,8 +380,8 @@ export default function ForecastPage() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
               <div>
-                <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">אופן חישוב</label>
-                <div className="flex border border-[oklch(0.25_0.01_250)] rounded-lg overflow-hidden h-[38px]">
+                <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">אופן חישוב</label>
+                <div className="flex border border-[var(--border-default)] rounded-lg overflow-hidden h-[38px]">
                   {([
                     { key: 'fixed' as const, label: 'סכום קבוע' },
                     { key: 'average' as const, label: 'ממוצע 3 חודשים' },
@@ -391,8 +391,8 @@ export default function ForecastPage() {
                       onClick={() => setEventForm(prev => prev && { ...prev, amount_mode: opt.key })}
                       className={`flex-1 px-3 text-[13px] font-medium cursor-pointer border-none ${
                         eventForm.amount_mode === opt.key
-                          ? 'bg-[oklch(0.22_0.02_250)] text-[oklch(0.70_0.18_250)]'
-                          : 'bg-transparent text-[oklch(0.65_0.01_250)]'
+                          ? 'bg-[var(--c-blue-0-22)] text-[var(--c-blue-0-70)]'
+                          : 'bg-transparent text-[var(--text-secondary)]'
                       }`}
                     >
                       {opt.label}
@@ -402,29 +402,29 @@ export default function ForecastPage() {
               </div>
               {eventForm.amount_mode === 'fixed' ? (
                 <div>
-                  <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">סכום (₪)</label>
+                  <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">סכום (₪)</label>
                   <input
                     type="number"
                     value={eventForm.amount}
                     onChange={e => setEventForm(prev => prev && { ...prev, amount: e.target.value })}
                     placeholder="0"
-                    className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-sm ltr text-left"
+                    className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-sm ltr text-left"
                   />
                 </div>
               ) : (
                 <div>
-                  <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">סכום (חישוב אוטומטי)</label>
-                  <div className="w-full bg-[oklch(0.19_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-lg px-3 py-[9px] text-[oklch(0.55_0.01_250)] text-sm ltr text-left">
+                  <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">סכום (חישוב אוטומטי)</label>
+                  <div className="w-full bg-[var(--c-0-19)] border border-[var(--border-default)] rounded-lg px-3 py-[9px] text-[var(--text-muted)] text-sm ltr text-left">
                     ~{formatCurrency(avgMonthlyExpenses)}
                   </div>
                 </div>
               )}
               <div>
-                <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">יום בחודש</label>
+                <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">יום בחודש</label>
                 <select
                   value={eventForm.day_of_month}
                   onChange={e => setEventForm(prev => prev && { ...prev, day_of_month: e.target.value })}
-                  className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-sm"
+                  className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-sm"
                 >
                   {dayOptions.map(d => <option key={d} value={d}>{d}</option>)}
                 </select>
@@ -434,14 +434,14 @@ export default function ForecastPage() {
               <button
                 onClick={handleSaveEvent}
                 disabled={upsertEvent.isPending}
-                className={`flex items-center gap-1.5 bg-[oklch(0.70_0.15_185)] border-none rounded-lg px-4 py-2 font-semibold text-sm text-[oklch(0.10_0.01_250)] ${upsertEvent.isPending ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+                className={`flex items-center gap-1.5 bg-[var(--accent-teal)] border-none rounded-lg px-4 py-2 font-semibold text-sm text-[var(--c-0-10)] ${upsertEvent.isPending ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
               >
                 <Check size={13} />
                 {editingEventId ? 'עדכן' : 'הוסף'}
               </button>
               <button
                 onClick={() => { setEventForm(null); setEditingEventId(null) }}
-                className="flex items-center gap-1.5 bg-transparent border border-[oklch(0.25_0.01_250)] rounded-lg px-4 py-2 text-[oklch(0.65_0.01_250)] text-sm cursor-pointer"
+                className="flex items-center gap-1.5 bg-transparent border border-[var(--border-default)] rounded-lg px-4 py-2 text-[var(--text-secondary)] text-sm cursor-pointer"
               >
                 <X size={13} /> ביטול
               </button>
@@ -452,11 +452,11 @@ export default function ForecastPage() {
 
       {/* No settings warning */}
       {!settings && (
-        <div className="bg-[oklch(0.18_0.04_55)] border border-[oklch(0.28_0.08_55)] rounded-xl px-5 py-3.5 mb-5 flex items-center gap-3">
-          <AlertTriangle size={18} className="text-[oklch(0.72_0.18_55)] shrink-0" />
+        <div className="bg-[var(--c-orange-0-18)] border border-[var(--c-orange-0-28)] rounded-xl px-5 py-3.5 mb-5 flex items-center gap-3">
+          <AlertTriangle size={18} className="text-[var(--accent-orange)] shrink-0" />
           <div>
-            <div className="font-semibold text-sm text-[oklch(0.72_0.18_55)]">הגדר יתרה נוכחית</div>
-            <div className="text-xs text-[oklch(0.65_0.01_250)]">
+            <div className="font-semibold text-sm text-[var(--accent-orange)]">הגדר יתרה נוכחית</div>
+            <div className="text-xs text-[var(--text-secondary)]">
               לחץ על &quot;הגדרות&quot; כדי להזין את יתרת העו&quot;ש הנוכחית לתחזית מדויקת יותר
             </div>
           </div>
@@ -465,11 +465,11 @@ export default function ForecastPage() {
 
       {/* Alerts */}
       {lowDays.length > 0 && (
-        <div className="bg-[oklch(0.18_0.04_27)] border border-[oklch(0.28_0.08_27)] rounded-xl px-5 py-3.5 mb-5 flex items-center gap-3">
-          <AlertTriangle size={18} className="text-[oklch(0.62_0.22_27)] shrink-0" />
+        <div className="bg-[var(--c-red-0-18)] border border-[var(--c-red-0-28)] rounded-xl px-5 py-3.5 mb-5 flex items-center gap-3">
+          <AlertTriangle size={18} className="text-[var(--accent-red)] shrink-0" />
           <div>
-            <div className="font-semibold text-sm text-[oklch(0.62_0.22_27)]">יתרה צפויה שלילית</div>
-            <div className="text-xs text-[oklch(0.65_0.01_250)]">
+            <div className="font-semibold text-sm text-[var(--accent-red)]">יתרה צפויה שלילית</div>
+            <div className="text-xs text-[var(--text-secondary)]">
               ב-{lowDays[0].label} צפויה יתרה של {formatCurrency(lowDays[0].balance)}
             </div>
           </div>
@@ -478,43 +478,43 @@ export default function ForecastPage() {
 
       {/* KPIs */}
       <div className="grid grid-cols-3 gap-3 mb-6">
-        <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5">
-          <div className="text-[11px] text-[oklch(0.65_0.01_250)] mb-1.5 tracking-wide">יתרה נמוכה ביותר</div>
-          <div className={`text-2xl font-bold ${(minDay?.balance ?? 0) >= 0 ? 'text-[oklch(0.70_0.18_145)]' : 'text-[oklch(0.62_0.22_27)]'}`}>
+        <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5">
+          <div className="text-[11px] text-[var(--text-secondary)] mb-1.5 tracking-wide">יתרה נמוכה ביותר</div>
+          <div className={`text-2xl font-bold ${(minDay?.balance ?? 0) >= 0 ? 'text-[var(--accent-green)]' : 'text-[var(--accent-red)]'}`}>
             {formatCurrency(minDay?.balance ?? 0)}
           </div>
           {minDay && (
-            <div className="text-[11px] text-[oklch(0.50_0.01_250)] mt-1">{minDay.label}</div>
+            <div className="text-[11px] text-[var(--c-0-50)] mt-1">{minDay.label}</div>
           )}
         </div>
-        <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5">
-          <div className="text-[11px] text-[oklch(0.65_0.01_250)] mb-1.5 tracking-wide">יתרה גבוהה ביותר</div>
-          <div className="text-2xl font-bold text-[oklch(0.70_0.18_145)]">{formatCurrency(maxDay?.balance ?? 0)}</div>
+        <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5">
+          <div className="text-[11px] text-[var(--text-secondary)] mb-1.5 tracking-wide">יתרה גבוהה ביותר</div>
+          <div className="text-2xl font-bold text-[var(--accent-green)]">{formatCurrency(maxDay?.balance ?? 0)}</div>
           {maxDay && (
-            <div className="text-[11px] text-[oklch(0.50_0.01_250)] mt-1">{maxDay.label}</div>
+            <div className="text-[11px] text-[var(--c-0-50)] mt-1">{maxDay.label}</div>
           )}
         </div>
-        <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5">
-          <div className="text-[11px] text-[oklch(0.65_0.01_250)] mb-1.5 tracking-wide">ימים במינוס</div>
-          <div className={`text-2xl font-bold ${lowDays.length > 0 ? 'text-[oklch(0.62_0.22_27)]' : 'text-[oklch(0.70_0.18_145)]'}`}>{lowDays.length}</div>
+        <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5">
+          <div className="text-[11px] text-[var(--text-secondary)] mb-1.5 tracking-wide">ימים במינוס</div>
+          <div className={`text-2xl font-bold ${lowDays.length > 0 ? 'text-[var(--accent-red)]' : 'text-[var(--accent-green)]'}`}>{lowDays.length}</div>
         </div>
       </div>
 
       {/* Timeline chart */}
-      <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5 mb-5">
+      <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5 mb-5">
         <div className="flex items-center gap-2 mb-4">
-          <TrendingUp size={14} className="text-[oklch(0.65_0.18_250)]" />
+          <TrendingUp size={14} className="text-[var(--accent-blue)]" />
           <span className="font-semibold text-sm">גרף יתרה צפויה — 90 ימים</span>
         </div>
         <ForecastChart forecast={forecast} payday={settings?.payday ?? 10} />
       </div>
 
       {/* Event list — all events chronological */}
-      <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5">
+      <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5">
         <h2 className="font-semibold text-sm mb-4">אירועים צפויים</h2>
         {upcomingEvents.length === 0 ? (
-          <div className="text-xs text-[oklch(0.65_0.01_250)] text-center py-6">
-            <Inbox size={24} className="text-[oklch(0.30_0.01_250)] mx-auto mb-2" />
+          <div className="text-xs text-[var(--text-secondary)] text-center py-6">
+            <Inbox size={24} className="text-[var(--c-0-30)] mx-auto mb-2" />
             אין אירועים צפויים — הוסף נתוני הכנסה או אירועים חוזרים
           </div>
         ) : (
@@ -524,19 +524,19 @@ export default function ForecastPage() {
                 : ev.amount > 0 ? ArrowDownCircle : ArrowUpCircle
               const isPositive = ev.amount > 0
               return (
-                <div key={i} className="flex items-center justify-between py-2.5 border-b border-[oklch(0.20_0.01_250)] last:border-b-0">
+                <div key={i} className="flex items-center justify-between py-2.5 border-b border-[var(--c-0-20)] last:border-b-0">
                   <div className="flex items-center gap-3">
-                    <EventIcon size={14} className={isPositive ? 'text-[oklch(0.70_0.18_145)]' : 'text-[oklch(0.62_0.22_27)]'} />
+                    <EventIcon size={14} className={isPositive ? 'text-[var(--accent-green)]' : 'text-[var(--accent-red)]'} />
                     <div>
                       <div className="text-[13px] font-medium">{ev.description}</div>
-                      <div className="text-[11px] text-[oklch(0.50_0.01_250)]">{ev.label}</div>
+                      <div className="text-[11px] text-[var(--c-0-50)]">{ev.label}</div>
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className={`text-[13px] font-semibold ${isPositive ? 'text-[oklch(0.70_0.18_145)]' : 'text-[oklch(0.62_0.22_27)]'}`}>
+                    <div className={`text-[13px] font-semibold ${isPositive ? 'text-[var(--accent-green)]' : 'text-[var(--accent-red)]'}`}>
                       {isPositive ? '+' : ''}{formatCurrency(ev.amount)}
                     </div>
-                    <div className="text-[11px] text-[oklch(0.50_0.01_250)]">
+                    <div className="text-[11px] text-[var(--c-0-50)]">
                       יתרה: {formatCurrency(ev.balanceAfter)}
                     </div>
                   </div>

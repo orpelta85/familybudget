@@ -52,15 +52,15 @@ export function ImpersonationBanner() {
   }
 
   return (
-    <div className="flex items-center gap-2 px-4 py-2.5 mb-4 rounded-xl bg-[oklch(0.20_0.06_290)] border border-[oklch(0.30_0.10_290)]">
-      <Eye size={14} className="shrink-0 text-[oklch(0.75_0.18_290)]" />
-      <span className="text-[12px] font-medium text-[oklch(0.80_0.01_250)] flex-1">
-        צופה כ: <span className="text-[oklch(0.80_0.18_290)] font-bold">{familyName}</span>
-        <span className="text-[oklch(0.55_0.01_250)] mr-2">({currentEmail})</span>
+    <div className="flex items-center gap-2 px-4 py-2.5 mb-4 rounded-xl bg-[var(--c-purple-0-20)] border border-[var(--c-purple-0-30)]">
+      <Eye size={14} className="shrink-0 text-[var(--c-purple-0-75)]" />
+      <span className="text-[12px] font-medium text-[var(--text-heading)] flex-1">
+        צופה כ: <span className="text-[var(--c-purple-0-80)] font-bold">{familyName}</span>
+        <span className="text-[var(--text-muted)] mr-2">({currentEmail})</span>
       </span>
       <button
         onClick={handleReturn}
-        className="flex items-center gap-1.5 bg-[oklch(0.16_0.01_250)] border border-[oklch(0.28_0.04_290)] rounded-lg py-1.5 px-3 text-[11px] text-[oklch(0.80_0.14_290)] cursor-pointer hover:bg-[oklch(0.22_0.04_290)] transition-colors"
+        className="flex items-center gap-1.5 bg-[var(--bg-card)] border border-[var(--c-purple-0-28)] rounded-lg py-1.5 px-3 text-[11px] text-[var(--c-purple-0-80)] cursor-pointer hover:bg-[var(--c-purple-0-22)] transition-colors"
       >
         <ArrowRight size={12} />
         חזור לחשבון שלי

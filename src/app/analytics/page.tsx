@@ -215,7 +215,7 @@ export default function AnalyticsPage() {
     <div>
       <div className="flex justify-between items-start mb-1.5">
         <div className="flex items-center gap-2">
-          <BarChart3 size={18} className="text-[oklch(0.65_0.18_250)]" />
+          <BarChart3 size={18} className="text-[var(--accent-blue)]" />
           <h1 className="text-xl font-bold tracking-tight">ניתוח שנתי</h1>
           <PageInfo {...PAGE_TIPS.analytics} />
         </div>
@@ -223,15 +223,15 @@ export default function AnalyticsPage() {
           <button onClick={() => {
             const yearNum = selectedYearIdx === 0 ? 2 : selectedYearIdx
             window.open(`/api/reports/annual?year=${yearNum}`, '_blank')
-          }} className="flex items-center gap-1.5 bg-[oklch(0.20_0.04_310)] border border-[oklch(0.32_0.08_310)] rounded-lg px-3.5 py-[7px] text-[oklch(0.70_0.15_310)] text-[13px] font-medium cursor-pointer">
+          }} className="flex items-center gap-1.5 bg-[var(--c-shared-0-20)] border border-[var(--c-shared-0-32)] rounded-lg px-3.5 py-[7px] text-[var(--c-shared-0-70)] text-[13px] font-medium cursor-pointer">
             <Download size={13} /> דוח שנתי PDF
           </button>
-          <button onClick={handleDownloadReport} className="flex items-center gap-1.5 bg-[oklch(0.20_0.04_250)] border border-[oklch(0.32_0.08_250)] rounded-lg px-3.5 py-[7px] text-[oklch(0.65_0.18_250)] text-[13px] font-medium cursor-pointer">
+          <button onClick={handleDownloadReport} className="flex items-center gap-1.5 bg-[var(--c-blue-0-20)] border border-[var(--c-blue-0-32)] rounded-lg px-3.5 py-[7px] text-[var(--accent-blue)] text-[13px] font-medium cursor-pointer">
             <FileText size={13} /> הורד Excel
           </button>
         </div>
       </div>
-      <p className="text-[oklch(0.65_0.01_250)] text-[13px] mb-5">
+      <p className="text-[var(--text-secondary)] text-[13px] mb-5">
         סיכום הכנסות, הוצאות וחיסכון לאורך השנה
       </p>
 
@@ -241,8 +241,8 @@ export default function AnalyticsPage() {
           <button key={i} onClick={() => setSelectedYearIdx(i)}
             className={`py-[7px] px-4 rounded-lg text-[13px] font-medium cursor-pointer border ${
               selectedYearIdx === i
-                ? 'bg-[oklch(0.65_0.18_250)] border-[oklch(0.65_0.18_250)] text-[oklch(0.10_0.01_250)]'
-                : 'bg-[oklch(0.20_0.01_250)] border-[oklch(0.28_0.01_250)] text-[oklch(0.70_0.01_250)]'
+                ? 'bg-[var(--accent-blue)] border-[var(--accent-blue)] text-[var(--c-0-10)]'
+                : 'bg-[var(--c-0-20)] border-[var(--border-light)] text-[var(--c-0-70)]'
             }`}>
             {y.label}
           </button>
@@ -252,37 +252,37 @@ export default function AnalyticsPage() {
       {/* Annual KPI cards */}
       <div className="grid-kpi mb-5">
         {[
-          { label: 'הכנסות', value: formatCurrency(yearIncome), color: 'oklch(0.65_0.18_250)' },
-          { label: 'הוצאות', value: formatCurrency(yearExpenses), color: 'oklch(0.72_0.18_55)' },
-          { label: 'תזרים נקי', value: formatCurrency(yearNet), color: yearNet >= 0 ? 'oklch(0.70_0.18_145)' : 'oklch(0.62_0.22_27)' },
-          { label: '% חיסכון ממוצע', value: `${avgSavingsPct.toFixed(1)}%`, color: 'oklch(0.70_0.15_185)' },
-          { label: 'חיסכון לדירה', value: formatCurrency(yearSaved), color: 'oklch(0.70_0.18_145)' },
+          { label: 'הכנסות', value: formatCurrency(yearIncome), color: 'var(--accent-blue)' },
+          { label: 'הוצאות', value: formatCurrency(yearExpenses), color: 'var(--accent-orange)' },
+          { label: 'תזרים נקי', value: formatCurrency(yearNet), color: yearNet >= 0 ? 'var(--accent-green)' : 'var(--accent-red)' },
+          { label: '% חיסכון ממוצע', value: `${avgSavingsPct.toFixed(1)}%`, color: 'var(--accent-teal)' },
+          { label: 'חיסכון לדירה', value: formatCurrency(yearSaved), color: 'var(--accent-green)' },
         ].map(kpi => (
-          <div key={kpi.label} className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-4">
-            <div className="text-[11px] text-[oklch(0.65_0.01_250)] mb-1.5 uppercase tracking-wide">{kpi.label}</div>
+          <div key={kpi.label} className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-4">
+            <div className="text-[11px] text-[var(--text-secondary)] mb-1.5 uppercase tracking-wide">{kpi.label}</div>
             <div className={`text-xl font-bold tracking-tight text-[${kpi.color}]`}>{kpi.value}</div>
           </div>
         ))}
       </div>
 
       {/* Income vs Expenses bar chart */}
-      <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5 mb-4">
+      <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5 mb-4">
         <div className="font-semibold text-sm mb-4 flex items-center gap-2">
           הכנסות מול הוצאות — לפי מחזור
         </div>
         <IncomeVsExpensesChart data={chartData} />
         <div className="flex gap-4 justify-center mt-2">
-          <span className="text-xs text-[oklch(0.65_0.01_250)] flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-sm bg-[oklch(0.65_0.18_250)] inline-block" /> הכנסות
+          <span className="text-xs text-[var(--text-secondary)] flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-sm bg-[var(--accent-blue)] inline-block" /> הכנסות
           </span>
-          <span className="text-xs text-[oklch(0.65_0.01_250)] flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-sm bg-[oklch(0.72_0.18_55)] inline-block" /> הוצאות
+          <span className="text-xs text-[var(--text-secondary)] flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-sm bg-[var(--accent-orange)] inline-block" /> הוצאות
           </span>
         </div>
       </div>
 
       {/* Net flow line chart */}
-      <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5 mb-4">
+      <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5 mb-4">
         <div className="font-semibold text-sm mb-4">תזרים נקי לאורך השנה</div>
         <NetFlowChart data={chartData} />
       </div>
@@ -303,7 +303,7 @@ export default function AnalyticsPage() {
         const maxCat = sorted[0]?.[1] ?? 1
 
         return (
-          <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5 mb-4">
+          <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5 mb-4">
             <div className="font-semibold text-sm mb-4">זרימת כסף — הכנסה → קטגוריות</div>
             <div className="flex flex-col gap-2">
               {sorted.map(([name, amount]) => {
@@ -311,24 +311,24 @@ export default function AnalyticsPage() {
                 const width = Math.max(2, (amount / maxCat) * 100)
                 return (
                   <div key={name} className="flex items-center gap-3">
-                    <span className="text-[12px] text-[oklch(0.70_0.01_250)] w-24 text-right truncate shrink-0">{name}</span>
-                    <div className="flex-1 h-5 rounded-sm bg-[oklch(0.20_0.01_250)] overflow-hidden">
-                      <div className="h-full rounded-sm bg-[oklch(0.50_0.18_250)] transition-[width] duration-500" style={{ width: `${width}%` }} />
+                    <span className="text-[12px] text-[var(--c-0-70)] w-24 text-right truncate shrink-0">{name}</span>
+                    <div className="flex-1 h-5 rounded-sm bg-[var(--c-0-20)] overflow-hidden">
+                      <div className="h-full rounded-sm bg-[var(--c-blue-0-50)] transition-[width] duration-500" style={{ width: `${width}%` }} />
                     </div>
-                    <span className="text-[11px] text-[oklch(0.65_0.01_250)] w-16 text-right shrink-0">{formatCurrency(amount)}</span>
-                    <span className="text-[10px] text-[oklch(0.55_0.01_250)] w-10 text-right shrink-0">{pct.toFixed(1)}%</span>
+                    <span className="text-[11px] text-[var(--text-secondary)] w-16 text-right shrink-0">{formatCurrency(amount)}</span>
+                    <span className="text-[10px] text-[var(--text-muted)] w-10 text-right shrink-0">{pct.toFixed(1)}%</span>
                   </div>
                 )
               })}
             </div>
             {yearNet > 0 && (
-              <div className="flex items-center gap-3 mt-3 pt-3 border-t border-[oklch(0.22_0.01_250)]">
-                <span className="text-[12px] text-[oklch(0.70_0.18_145)] w-24 text-right shrink-0 font-semibold">חיסכון</span>
-                <div className="flex-1 h-5 rounded-sm bg-[oklch(0.20_0.01_250)] overflow-hidden">
-                  <div className="h-full rounded-sm bg-[oklch(0.50_0.18_145)] transition-[width] duration-500" style={{ width: `${Math.max(2, (yearNet / maxCat) * 100)}%` }} />
+              <div className="flex items-center gap-3 mt-3 pt-3 border-t border-[var(--bg-hover)]">
+                <span className="text-[12px] text-[var(--accent-green)] w-24 text-right shrink-0 font-semibold">חיסכון</span>
+                <div className="flex-1 h-5 rounded-sm bg-[var(--c-0-20)] overflow-hidden">
+                  <div className="h-full rounded-sm bg-[var(--c-green-0-50)] transition-[width] duration-500" style={{ width: `${Math.max(2, (yearNet / maxCat) * 100)}%` }} />
                 </div>
-                <span className="text-[11px] text-[oklch(0.70_0.18_145)] w-16 text-right shrink-0 font-semibold">{formatCurrency(yearNet)}</span>
-                <span className="text-[10px] text-[oklch(0.55_0.01_250)] w-10 text-right shrink-0">{((yearNet / yearIncome) * 100).toFixed(1)}%</span>
+                <span className="text-[11px] text-[var(--accent-green)] w-16 text-right shrink-0 font-semibold">{formatCurrency(yearNet)}</span>
+                <span className="text-[10px] text-[var(--text-muted)] w-10 text-right shrink-0">{((yearNet / yearIncome) * 100).toFixed(1)}%</span>
               </div>
             )}
           </div>
@@ -336,14 +336,14 @@ export default function AnalyticsPage() {
       })()}
 
       {/* Monthly breakdown table */}
-      <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5">
+      <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5">
         <div className="font-semibold text-sm mb-3.5">פירוט חודשי</div>
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-[13px]">
             <thead>
-              <tr className="border-b border-[oklch(0.22_0.01_250)]">
+              <tr className="border-b border-[var(--bg-hover)]">
                 {['מחזור', 'הכנסות', 'אישי', 'משותף', 'סה"כ הוצ׳', 'תזרים', 'דירה'].map(h => (
-                  <th key={h} className="py-2 px-3 text-right text-[oklch(0.65_0.01_250)] font-medium text-[11px] uppercase tracking-wide">{h}</th>
+                  <th key={h} className="py-2 px-3 text-right text-[var(--text-secondary)] font-medium text-[11px] uppercase tracking-wide">{h}</th>
                 ))}
               </tr>
             </thead>
@@ -351,28 +351,28 @@ export default function AnalyticsPage() {
               {chartData.map((row, i) => {
                 const hasData = row.income > 0 || row.expenses > 0
                 return (
-                  <tr key={i} className={`border-b border-[oklch(0.20_0.01_250)] ${hasData ? 'opacity-100' : 'opacity-35'}`}>
-                    <td className="py-2 px-3 text-[oklch(0.75_0.01_250)]">{row.name}</td>
-                    <td className="py-2 px-3 text-right text-[oklch(0.65_0.18_250)] font-medium">{row.income > 0 ? formatCurrency(row.income) : '—'}</td>
+                  <tr key={i} className={`border-b border-[var(--c-0-20)] ${hasData ? 'opacity-100' : 'opacity-35'}`}>
+                    <td className="py-2 px-3 text-[var(--text-body)]">{row.name}</td>
+                    <td className="py-2 px-3 text-right text-[var(--accent-blue)] font-medium">{row.income > 0 ? formatCurrency(row.income) : '—'}</td>
                     <td className="py-2 px-3 text-right">{row.personal > 0 ? formatCurrency(row.personal) : '—'}</td>
                     <td className="py-2 px-3 text-right">{row.shared > 0 ? formatCurrency(row.shared) : '—'}</td>
-                    <td className="py-2 px-3 text-right text-[oklch(0.72_0.18_55)]">{row.expenses > 0 ? formatCurrency(row.expenses) : '—'}</td>
-                    <td className={`py-2 px-3 text-right font-semibold ${row.net >= 0 ? 'text-[oklch(0.70_0.18_145)]' : 'text-[oklch(0.62_0.22_27)]'}`}>
+                    <td className="py-2 px-3 text-right text-[var(--accent-orange)]">{row.expenses > 0 ? formatCurrency(row.expenses) : '—'}</td>
+                    <td className={`py-2 px-3 text-right font-semibold ${row.net >= 0 ? 'text-[var(--accent-green)]' : 'text-[var(--accent-red)]'}`}>
                       {row.income > 0 ? formatCurrency(row.net) : '—'}
                     </td>
-                    <td className="py-2 px-3 text-right text-[oklch(0.70_0.18_145)]">{row.saved > 0 ? formatCurrency(row.saved) : '—'}</td>
+                    <td className="py-2 px-3 text-right text-[var(--accent-green)]">{row.saved > 0 ? formatCurrency(row.saved) : '—'}</td>
                   </tr>
                 )
               })}
             </tbody>
             <tfoot>
-              <tr className="border-t-2 border-[oklch(0.25_0.01_250)]">
-                <td className="py-2.5 px-3 font-semibold text-[oklch(0.75_0.01_250)]">סה&quot;כ שנתי</td>
-                <td className="py-2.5 px-3 text-right font-bold text-[oklch(0.65_0.18_250)]">{formatCurrency(yearIncome)}</td>
+              <tr className="border-t-2 border-[var(--border-default)]">
+                <td className="py-2.5 px-3 font-semibold text-[var(--text-body)]">סה&quot;כ שנתי</td>
+                <td className="py-2.5 px-3 text-right font-bold text-[var(--accent-blue)]">{formatCurrency(yearIncome)}</td>
                 <td colSpan={2} />
-                <td className="py-2.5 px-3 text-right font-bold text-[oklch(0.72_0.18_55)]">{formatCurrency(yearExpenses)}</td>
-                <td className={`py-2.5 px-3 text-right font-bold ${yearNet >= 0 ? 'text-[oklch(0.70_0.18_145)]' : 'text-[oklch(0.62_0.22_27)]'}`}>{formatCurrency(yearNet)}</td>
-                <td className="py-2.5 px-3 text-right font-bold text-[oklch(0.70_0.18_145)]">{formatCurrency(yearSaved)}</td>
+                <td className="py-2.5 px-3 text-right font-bold text-[var(--accent-orange)]">{formatCurrency(yearExpenses)}</td>
+                <td className={`py-2.5 px-3 text-right font-bold ${yearNet >= 0 ? 'text-[var(--accent-green)]' : 'text-[var(--accent-red)]'}`}>{formatCurrency(yearNet)}</td>
+                <td className="py-2.5 px-3 text-right font-bold text-[var(--accent-green)]">{formatCurrency(yearSaved)}</td>
               </tr>
             </tfoot>
           </table>

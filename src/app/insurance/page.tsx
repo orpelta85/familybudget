@@ -30,13 +30,13 @@ const TYPE_OPTIONS: { value: string; label: string }[] = [
 ]
 
 const TYPE_COLORS: Record<string, string> = {
-  health: 'oklch(0.70 0.18 145)',
-  life: 'oklch(0.65 0.18 250)',
-  car: 'oklch(0.72 0.18 55)',
-  home: 'oklch(0.70 0.15 185)',
-  travel: 'oklch(0.68 0.18 295)',
-  dental: 'oklch(0.75 0.18 80)',
-  other: 'oklch(0.65 0.01 250)',
+  health: 'var(--accent-green)',
+  life: 'var(--accent-blue)',
+  car: 'var(--accent-orange)',
+  home: 'var(--accent-teal)',
+  travel: 'var(--accent-purple)',
+  dental: 'var(--c-orange-0-75)',
+  other: 'var(--text-secondary)',
 }
 
 const TYPE_ICONS: Record<string, string> = {
@@ -59,11 +59,11 @@ function daysUntil(dateStr: string | null): number | null {
 }
 
 function renewalColor(days: number | null): string {
-  if (days === null) return 'oklch(0.50 0.01 250)'
-  if (days < 0) return 'oklch(0.62 0.22 27)'
-  if (days <= 30) return 'oklch(0.62 0.22 27)'
-  if (days <= 90) return 'oklch(0.72 0.18 55)'
-  return 'oklch(0.70 0.18 145)'
+  if (days === null) return 'var(--c-0-50)'
+  if (days < 0) return 'var(--accent-red)'
+  if (days <= 30) return 'var(--accent-red)'
+  if (days <= 90) return 'var(--accent-orange)'
+  return 'var(--accent-green)'
 }
 
 function renewalLabel(days: number | null): string {
@@ -207,15 +207,15 @@ export default function InsurancePage() {
       <div className="flex justify-between items-start mb-5">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <Shield size={18} className="text-[oklch(0.65_0.18_250)]" />
+            <Shield size={18} className="text-[var(--accent-blue)]" />
             <h1 className="text-xl font-bold tracking-tight">ביטוחים</h1>
             <PageInfo {...PAGE_TIPS.insurance} />
           </div>
-          <p className="text-[oklch(0.65_0.01_250)] text-[13px]">ניהול פוליסות ביטוח ומעקב חידושים</p>
+          <p className="text-[var(--text-secondary)] text-[13px]">ניהול פוליסות ביטוח ומעקב חידושים</p>
         </div>
         <button
           onClick={openAdd}
-          className="flex items-center gap-1.5 bg-[oklch(0.65_0.18_250)] border-none rounded-lg px-3.5 py-[7px] text-[oklch(0.10_0.01_250)] text-[13px] font-semibold cursor-pointer"
+          className="flex items-center gap-1.5 bg-[var(--accent-blue)] border-none rounded-lg px-3.5 py-[7px] text-[var(--c-0-10)] text-[13px] font-semibold cursor-pointer"
         >
           <Plus size={14} /> הוסף פוליסה
         </button>
@@ -223,35 +223,35 @@ export default function InsurancePage() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-        <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.22_0.01_250)] rounded-xl p-4">
-          <div className="text-[11px] text-[oklch(0.65_0.01_250)] mb-1">עלות חודשית</div>
+        <div className="bg-[var(--bg-card)] border border-[var(--bg-hover)] rounded-xl p-4">
+          <div className="text-[11px] text-[var(--text-secondary)] mb-1">עלות חודשית</div>
           <div className="text-lg font-bold">{formatCurrency(totalMonthly)}</div>
         </div>
-        <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.22_0.01_250)] rounded-xl p-4">
-          <div className="text-[11px] text-[oklch(0.65_0.01_250)] mb-1">עלות שנתית</div>
+        <div className="bg-[var(--bg-card)] border border-[var(--bg-hover)] rounded-xl p-4">
+          <div className="text-[11px] text-[var(--text-secondary)] mb-1">עלות שנתית</div>
           <div className="text-lg font-bold">{formatCurrency(totalAnnual)}</div>
         </div>
-        <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.22_0.01_250)] rounded-xl p-4">
-          <div className="text-[11px] text-[oklch(0.65_0.01_250)] mb-1 flex items-center gap-1">חידוש הבא <InfoTooltip body="היום שבו הפוליסה מתחדשת — ההזדמנות לעבור לביטוח זול יותר" /></div>
+        <div className="bg-[var(--bg-card)] border border-[var(--bg-hover)] rounded-xl p-4">
+          <div className="text-[11px] text-[var(--text-secondary)] mb-1 flex items-center gap-1">חידוש הבא <InfoTooltip body="היום שבו הפוליסה מתחדשת — ההזדמנות לעבור לביטוח זול יותר" /></div>
           <div className="text-lg font-bold" style={{ color: nextRenewal ? renewalColor(daysUntil(nextRenewal.renewal_date)) : undefined }}>
             {nextRenewal ? renewalLabel(daysUntil(nextRenewal.renewal_date)) : 'אין'}
           </div>
-          {nextRenewal && <div className="text-[11px] text-[oklch(0.55_0.01_250)] mt-0.5">{nextRenewal.name}</div>}
+          {nextRenewal && <div className="text-[11px] text-[var(--text-muted)] mt-0.5">{nextRenewal.name}</div>}
         </div>
-        <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.22_0.01_250)] rounded-xl p-4">
-          <div className="text-[11px] text-[oklch(0.65_0.01_250)] mb-1">פוליסות פעילות</div>
+        <div className="bg-[var(--bg-card)] border border-[var(--bg-hover)] rounded-xl p-4">
+          <div className="text-[11px] text-[var(--text-secondary)] mb-1">פוליסות פעילות</div>
           <div className="text-lg font-bold">{policyCount}</div>
         </div>
       </div>
 
       {/* Policy List by Type */}
       {isLoading ? (
-        <div className="text-center py-10 text-[oklch(0.50_0.01_250)]">טוען...</div>
+        <div className="text-center py-10 text-[var(--c-0-50)]">טוען...</div>
       ) : grouped.length === 0 ? (
         <div className="text-center py-16">
-          <Shield size={32} className="mx-auto mb-3 text-[oklch(0.35_0.01_250)]" />
-          <div className="text-[oklch(0.55_0.01_250)] text-[13px]">אין פוליסות ביטוח</div>
-          <button onClick={openAdd} className="mt-3 text-[oklch(0.65_0.18_250)] text-[13px] cursor-pointer bg-transparent border-none underline">
+          <Shield size={32} className="mx-auto mb-3 text-[var(--c-0-35)]" />
+          <div className="text-[var(--text-muted)] text-[13px]">אין פוליסות ביטוח</div>
+          <button onClick={openAdd} className="mt-3 text-[var(--accent-blue)] text-[13px] cursor-pointer bg-transparent border-none underline">
             הוסף פוליסה ראשונה
           </button>
         </div>
@@ -261,11 +261,11 @@ export default function InsurancePage() {
             <div key={type}>
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-base">{TYPE_ICONS[type] ?? '📋'}</span>
-                <h2 className="text-[14px] font-semibold text-[oklch(0.80_0.01_250)] flex items-center gap-1">
+                <h2 className="text-[14px] font-semibold text-[var(--text-heading)] flex items-center gap-1">
                   {POLICY_TYPE_LABELS[type] ?? type}
                   {type === 'life' && <InfoTooltip body="משלם לשארים במקרה פטירה. חשוב במיוחד להורים עם ילדים" />}
                 </h2>
-                <span className="text-[11px] text-[oklch(0.50_0.01_250)]">({items.length})</span>
+                <span className="text-[11px] text-[var(--c-0-50)]">({items.length})</span>
               </div>
               <div className="flex flex-col gap-2">
                 {items.map(p => {
@@ -273,7 +273,7 @@ export default function InsurancePage() {
                   return (
                     <div
                       key={p.id}
-                      className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.22_0.01_250)] rounded-xl p-4 flex items-center gap-4"
+                      className="bg-[var(--bg-card)] border border-[var(--bg-hover)] rounded-xl p-4 flex items-center gap-4"
                     >
                       {/* Color indicator */}
                       <div
@@ -285,14 +285,14 @@ export default function InsurancePage() {
                         <div className="flex items-center gap-2 mb-1">
                           <span className="text-[13px] font-semibold">{p.name}</span>
                           {p.provider && (
-                            <span className="text-[11px] text-[oklch(0.55_0.01_250)]">{p.provider}</span>
+                            <span className="text-[11px] text-[var(--text-muted)]">{p.provider}</span>
                           )}
                           {p.is_shared && (
-                            <span className="text-[10px] bg-[oklch(0.22_0.05_295)] text-[oklch(0.75_0.15_295)] px-1.5 py-0.5 rounded font-medium">משותף</span>
+                            <span className="text-[10px] bg-[var(--c-purple-0-22)] text-[var(--c-purple-0-75)] px-1.5 py-0.5 rounded font-medium">משותף</span>
                           )}
                         </div>
-                        <div className="flex items-center gap-4 text-[12px] text-[oklch(0.60_0.01_250)]">
-                          <span className="font-semibold text-[oklch(0.80_0.01_250)]">{formatCurrency(Number(p.monthly_cost))}/חודש</span>
+                        <div className="flex items-center gap-4 text-[12px] text-[var(--c-0-60)]">
+                          <span className="font-semibold text-[var(--text-heading)]">{formatCurrency(Number(p.monthly_cost))}/חודש</span>
                           {p.annual_cost && (
                             <span>{formatCurrency(Number(p.annual_cost))}/שנה</span>
                           )}
@@ -305,7 +305,7 @@ export default function InsurancePage() {
                           )}
                         </div>
                         {p.notes && (
-                          <div className="text-[11px] text-[oklch(0.50_0.01_250)] mt-1">{p.notes}</div>
+                          <div className="text-[11px] text-[var(--c-0-50)] mt-1">{p.notes}</div>
                         )}
                       </div>
                       {/* Actions */}
@@ -313,14 +313,14 @@ export default function InsurancePage() {
                         <button
                           onClick={() => openEdit(p)}
                           aria-label="עריכה"
-                          className="bg-transparent border-none cursor-pointer text-[oklch(0.55_0.01_250)] p-1.5 rounded hover:bg-[oklch(0.20_0.01_250)]"
+                          className="bg-transparent border-none cursor-pointer text-[var(--text-muted)] p-1.5 rounded hover:bg-[var(--c-0-20)]"
                         >
                           <Pencil size={13} />
                         </button>
                         <button
                           onClick={() => handleDelete(p.id)}
                           aria-label="מחיקה"
-                          className="bg-transparent border-none cursor-pointer text-[oklch(0.55_0.01_250)] p-1.5 rounded hover:bg-[oklch(0.20_0.01_250)]"
+                          className="bg-transparent border-none cursor-pointer text-[var(--text-muted)] p-1.5 rounded hover:bg-[var(--c-0-20)]"
                         >
                           <Trash2 size={13} />
                         </button>
@@ -337,11 +337,11 @@ export default function InsurancePage() {
       {/* Renewal Timeline */}
       {filtered.filter(p => p.renewal_date).length > 0 && (
         <div className="mt-8">
-          <h2 className="text-[14px] font-semibold text-[oklch(0.80_0.01_250)] mb-3 flex items-center gap-2">
-            <Calendar size={14} className="text-[oklch(0.65_0.18_250)]" />
+          <h2 className="text-[14px] font-semibold text-[var(--text-heading)] mb-3 flex items-center gap-2">
+            <Calendar size={14} className="text-[var(--accent-blue)]" />
             לוח חידושים
           </h2>
-          <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.22_0.01_250)] rounded-xl p-4">
+          <div className="bg-[var(--bg-card)] border border-[var(--bg-hover)] rounded-xl p-4">
             <div className="flex flex-col gap-2">
               {filtered
                 .filter(p => p.renewal_date)
@@ -352,16 +352,16 @@ export default function InsurancePage() {
                   const HE_MONTHS = ['ינו','פבר','מרץ','אפר','מאי','יונ','יול','אוג','ספט','אוק','נוב','דצמ']
                   const dateLabel = `${date.getDate()} ${HE_MONTHS[date.getMonth()]} ${date.getFullYear()}`
                   return (
-                    <div key={p.id} className="flex items-center gap-3 py-2 border-b border-[oklch(0.20_0.01_250)] last:border-b-0">
+                    <div key={p.id} className="flex items-center gap-3 py-2 border-b border-[var(--c-0-20)] last:border-b-0">
                       <div
                         className="w-3 h-3 rounded-full shrink-0"
                         style={{ backgroundColor: renewalColor(days) }}
                       />
                       <div className="flex-1">
                         <span className="text-[13px] font-medium">{p.name}</span>
-                        {p.provider && <span className="text-[11px] text-[oklch(0.50_0.01_250)] mr-2">{p.provider}</span>}
+                        {p.provider && <span className="text-[11px] text-[var(--c-0-50)] mr-2">{p.provider}</span>}
                       </div>
-                      <div className="text-[12px] text-[oklch(0.60_0.01_250)]">{dateLabel}</div>
+                      <div className="text-[12px] text-[var(--c-0-60)]">{dateLabel}</div>
                       <div className="text-[12px] font-semibold" style={{ color: renewalColor(days) }}>
                         {renewalLabel(days)}
                       </div>
@@ -376,74 +376,74 @@ export default function InsurancePage() {
       {/* Add/Edit Modal */}
       {showForm && (
         <div className="fixed inset-0 bg-black/70 z-[1000] flex items-center justify-center">
-          <div className="bg-[oklch(0.14_0.01_250)] rounded-2xl p-6 w-[440px] max-h-[90vh] overflow-y-auto border border-[oklch(0.25_0.01_250)]">
+          <div className="bg-[var(--c-0-14)] rounded-2xl p-6 w-[440px] max-h-[90vh] overflow-y-auto border border-[var(--border-default)]">
             <div className="flex justify-between items-center mb-5">
               <h3 className="text-base font-bold">{editId ? 'עריכת פוליסה' : 'הוספת פוליסה'}</h3>
               <button onClick={() => { setShowForm(false); setEditId(null) }} aria-label="סגור"
-                className="bg-transparent border-none cursor-pointer text-[oklch(0.65_0.01_250)] p-2">
+                className="bg-transparent border-none cursor-pointer text-[var(--text-secondary)] p-2">
                 <X size={18} />
               </button>
             </div>
             <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
               <div>
-                <label className="text-[12px] text-[oklch(0.65_0.01_250)] mb-1 block">שם הפוליסה *</label>
+                <label className="text-[12px] text-[var(--text-secondary)] mb-1 block">שם הפוליסה *</label>
                 <input
                   value={form.name}
                   onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                  className="w-full bg-[oklch(0.20_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg py-2 px-3 text-[13px] text-inherit"
+                  className="w-full bg-[var(--c-0-20)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-[13px] text-inherit"
                   placeholder="ביטוח בריאות"
                 />
               </div>
               <div>
-                <label className="text-[12px] text-[oklch(0.65_0.01_250)] mb-1 block">חברת ביטוח</label>
+                <label className="text-[12px] text-[var(--text-secondary)] mb-1 block">חברת ביטוח</label>
                 <input
                   value={form.provider}
                   onChange={e => setForm(f => ({ ...f, provider: e.target.value }))}
-                  className="w-full bg-[oklch(0.20_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg py-2 px-3 text-[13px] text-inherit"
+                  className="w-full bg-[var(--c-0-20)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-[13px] text-inherit"
                   placeholder="מנורה, הראל..."
                 />
               </div>
               <div>
-                <label className="text-[12px] text-[oklch(0.65_0.01_250)] mb-1 block">סוג ביטוח</label>
+                <label className="text-[12px] text-[var(--text-secondary)] mb-1 block">סוג ביטוח</label>
                 <select
                   value={form.policy_type}
                   onChange={e => setForm(f => ({ ...f, policy_type: e.target.value }))}
-                  className="w-full bg-[oklch(0.20_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg py-2 px-3 text-[13px] text-inherit cursor-pointer"
+                  className="w-full bg-[var(--c-0-20)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-[13px] text-inherit cursor-pointer"
                 >
                   {TYPE_OPTIONS.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                 </select>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[12px] text-[oklch(0.65_0.01_250)] mb-1 block">עלות חודשית *</label>
+                  <label className="text-[12px] text-[var(--text-secondary)] mb-1 block">עלות חודשית *</label>
                   <input
                     type="number"
                     value={form.monthly_cost}
                     onChange={e => setForm(f => ({ ...f, monthly_cost: e.target.value }))}
-                    className="w-full bg-[oklch(0.20_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg py-2 px-3 text-[13px] text-inherit"
+                    className="w-full bg-[var(--c-0-20)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-[13px] text-inherit"
                     placeholder="258"
                     dir="ltr"
                   />
                 </div>
                 <div>
-                  <label className="text-[12px] text-[oklch(0.65_0.01_250)] mb-1 block">עלות שנתית</label>
+                  <label className="text-[12px] text-[var(--text-secondary)] mb-1 block">עלות שנתית</label>
                   <input
                     type="number"
                     value={form.annual_cost}
                     onChange={e => setForm(f => ({ ...f, annual_cost: e.target.value }))}
-                    className="w-full bg-[oklch(0.20_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg py-2 px-3 text-[13px] text-inherit"
+                    className="w-full bg-[var(--c-0-20)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-[13px] text-inherit"
                     placeholder="3096"
                     dir="ltr"
                   />
                 </div>
               </div>
               <div>
-                <label className="text-[12px] text-[oklch(0.65_0.01_250)] mb-1 block">תאריך חידוש</label>
+                <label className="text-[12px] text-[var(--text-secondary)] mb-1 block">תאריך חידוש</label>
                 <input
                   type="date"
                   value={form.renewal_date}
                   onChange={e => setForm(f => ({ ...f, renewal_date: e.target.value }))}
-                  className="w-full bg-[oklch(0.20_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg py-2 px-3 text-[13px] text-inherit"
+                  className="w-full bg-[var(--c-0-20)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-[13px] text-inherit"
                   dir="ltr"
                 />
               </div>
@@ -458,11 +458,11 @@ export default function InsurancePage() {
                 <label htmlFor="is_shared" className="text-[13px] cursor-pointer">פוליסה משותפת (משפחתית)</label>
               </div>
               <div>
-                <label className="text-[12px] text-[oklch(0.65_0.01_250)] mb-1 block">הערות</label>
+                <label className="text-[12px] text-[var(--text-secondary)] mb-1 block">הערות</label>
                 <textarea
                   value={form.notes}
                   onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
-                  className="w-full bg-[oklch(0.20_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg py-2 px-3 text-[13px] text-inherit resize-none"
+                  className="w-full bg-[var(--c-0-20)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-[13px] text-inherit resize-none"
                   rows={2}
                   placeholder="פרטים נוספים..."
                 />
@@ -470,7 +470,7 @@ export default function InsurancePage() {
               <button
                 type="submit"
                 disabled={addPolicy.isPending || updatePolicy.isPending}
-                className="bg-[oklch(0.65_0.18_250)] border-none rounded-lg py-2.5 text-[oklch(0.10_0.01_250)] font-semibold text-[13px] cursor-pointer mt-1"
+                className="bg-[var(--accent-blue)] border-none rounded-lg py-2.5 text-[var(--c-0-10)] font-semibold text-[13px] cursor-pointer mt-1"
               >
                 {editId ? 'עדכן' : 'הוסף'}
               </button>

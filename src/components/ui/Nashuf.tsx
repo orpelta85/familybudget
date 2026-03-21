@@ -27,12 +27,12 @@ export function Nashuf({ mood = 'normal', size = 64, message, className }: Nashu
       {message && (
         <div
           style={{
-            background: 'oklch(0.2 0.01 250)',
-            border: '1px solid oklch(0.28 0.01 250)',
+            background: 'var(--c-0-20)',
+            border: '1px solid var(--border-light)',
             borderRadius: 12,
             padding: '6px 12px',
             fontSize: Math.max(11, size * 0.18),
-            color: 'oklch(0.75 0.01 250)',
+            color: 'var(--text-body)',
             direction: 'rtl',
             maxWidth: size * 3,
             textAlign: 'center',
@@ -49,9 +49,9 @@ export function Nashuf({ mood = 'normal', size = 64, message, className }: Nashu
               transform: 'translateX(-50%) rotate(45deg)',
               width: 10,
               height: 10,
-              background: 'oklch(0.2 0.01 250)',
-              borderRight: '1px solid oklch(0.28 0.01 250)',
-              borderBottom: '1px solid oklch(0.28 0.01 250)',
+              background: 'var(--c-0-20)',
+              borderRight: '1px solid var(--border-light)',
+              borderBottom: '1px solid var(--border-light)',
             }}
           />
         </div>

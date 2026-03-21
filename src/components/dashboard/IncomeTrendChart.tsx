@@ -11,22 +11,22 @@ interface TrendEntry {
 
 export function IncomeTrendChart({ data }: { data: TrendEntry[] }) {
   if (data.length < 2) {
-    return <div className="text-[oklch(0.65_0.01_250)] text-[13px]">אין מספיק נתונים היסטוריים</div>
+    return <div className="text-[var(--text-secondary)] text-[13px]">אין מספיק נתונים היסטוריים</div>
   }
 
   return (
     <div dir="ltr">
     <ResponsiveContainer width="100%" height={200}>
       <BarChart data={data} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
-        <XAxis dataKey="label" tick={{ fill: 'oklch(0.65 0.01 250)', fontSize: 11 }} axisLine={false} tickLine={false} />
+        <XAxis dataKey="label" tick={{ fill: 'var(--text-secondary)', fontSize: 11 }} axisLine={false} tickLine={false} />
         <YAxis hide />
         <Tooltip
           formatter={(v: unknown) => formatCurrency(Number(v))}
-          contentStyle={{ background: 'oklch(0.16 0.01 250)', border: '1px solid oklch(0.28 0.01 250)', borderRadius: 8, fontSize: 12, color: 'oklch(0.85 0.01 250)' }}
+          contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border-light)', borderRadius: 8, fontSize: 12, color: 'var(--c-0-85)' }}
         />
         <Bar dataKey="total" radius={[4, 4, 0, 0]}>
           {data.map((entry, i) => (
-            <Cell key={i} fill={entry.isCurrent ? 'oklch(0.65 0.18 250)' : 'oklch(0.30 0.01 250)'} />
+            <Cell key={i} fill={entry.isCurrent ? 'var(--accent-blue)' : 'var(--c-0-30)'} />
           ))}
         </Bar>
       </BarChart>

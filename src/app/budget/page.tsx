@@ -21,9 +21,9 @@ import { PeriodSelector } from '@/components/layout/PeriodSelector'
 import type { BudgetCategory } from '@/lib/types'
 
 function getBarColor(pct: number): string {
-  if (pct > 0.9) return 'oklch(0.62 0.22 27)'
-  if (pct > 0.7) return 'oklch(0.72 0.18 55)'
-  return 'oklch(0.65 0.18 250)'
+  if (pct > 0.9) return 'var(--accent-red)'
+  if (pct > 0.7) return 'var(--accent-orange)'
+  return 'var(--accent-blue)'
 }
 
 // Shared category enum → fixed budget category name mapping
@@ -210,7 +210,7 @@ export default function BudgetPage() {
           <h1 className="text-xl font-bold tracking-tight">תקציב משפחתי</h1>
           <PageInfo {...PAGE_TIPS.budget} />
         </div>
-        <button onClick={handleExportBudget} className="flex items-center gap-1.5 bg-[oklch(0.20_0.04_250)] border border-[oklch(0.32_0.08_250)] rounded-lg px-3 py-[7px] text-[oklch(0.65_0.18_250)] text-[13px] font-medium cursor-pointer">
+        <button onClick={handleExportBudget} className="flex items-center gap-1.5 bg-[var(--c-blue-0-20)] border border-[var(--c-blue-0-32)] rounded-lg px-3 py-[7px] text-[var(--accent-blue)] text-[13px] font-medium cursor-pointer">
           <Download size={13} /> הורד לאקסל
         </button>
       </div>
@@ -228,11 +228,11 @@ export default function BudgetPage() {
         </div>
         <div className="bg-card border border-border rounded-xl p-4">
           <div className="text-[11px] text-muted-foreground mb-1 uppercase tracking-wide">סה״כ קבועות</div>
-          <div className="text-[22px] font-bold text-[oklch(0.65_0.18_250)] leading-none">{formatCurrency(totalFixed)}</div>
+          <div className="text-[22px] font-bold text-[var(--accent-blue)] leading-none">{formatCurrency(totalFixed)}</div>
         </div>
         <div className="bg-card border border-border rounded-xl p-4">
           <div className="text-[11px] text-muted-foreground mb-1 uppercase tracking-wide">סה״כ משתנות בפועל</div>
-          <div className="text-[22px] font-bold text-[oklch(0.72_0.18_55)] leading-none">{formatCurrency(totalVariableActual)}</div>
+          <div className="text-[22px] font-bold text-[var(--accent-orange)] leading-none">{formatCurrency(totalVariableActual)}</div>
           {totalVariableBudget > 0 && (
             <div className="text-[11px] text-muted-foreground mt-1.5">
               מתוך {formatCurrency(totalVariableBudget)} תקציב
@@ -241,7 +241,7 @@ export default function BudgetPage() {
         </div>
         <div className="bg-card border border-border rounded-xl p-4">
           <div className="text-[11px] text-muted-foreground mb-1 uppercase tracking-wide flex items-center gap-1">נשאר פנוי <InfoTooltip body="הכנסה פחות הוצאות (קבועות + משתנות). זה מה שנשאר לחיסכון" /></div>
-          <div className={`text-[22px] font-bold leading-none ${remaining >= 0 ? 'text-[oklch(0.70_0.18_145)]' : 'text-[oklch(0.62_0.22_27)]'}`}>
+          <div className={`text-[22px] font-bold leading-none ${remaining >= 0 ? 'text-[var(--accent-green)]' : 'text-[var(--accent-red)]'}`}>
             {formatCurrency(remaining)}
           </div>
           {totalIncome > 0 && (
@@ -256,7 +256,7 @@ export default function BudgetPage() {
       {!categories?.length
         ? (
           <div className="bg-card border border-border rounded-xl text-center p-10">
-            <Inbox size={36} className="text-[oklch(0.30_0.01_250)] mx-auto mb-2.5" />
+            <Inbox size={36} className="text-[var(--c-0-30)] mx-auto mb-2.5" />
             <div className="text-muted-foreground text-sm">אין קטגוריות תקציב</div>
           </div>
         )
@@ -264,14 +264,14 @@ export default function BudgetPage() {
           <div className="grid-2" style={{ alignItems: 'start' }}>
             {/* Right column: Fixed expenses */}
             <div className="card-transition bg-card border border-border rounded-xl p-5">
-              <div className="flex justify-between items-center mb-4 pb-3 border-b border-[oklch(0.22_0.01_250)]">
+              <div className="flex justify-between items-center mb-4 pb-3 border-b border-[var(--bg-hover)]">
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full" style={{ background: 'oklch(0.65 0.18 250)' }} />
+                  <div className="w-2 h-2 rounded-full" style={{ background: 'var(--accent-blue)' }} />
                   <span className="font-bold text-sm">הוצאות קבועות</span>
                   <InfoTooltip body="הוצאות שלא משתנות מחודש לחודש — שכירות, ביטוח, הלוואות" />
                   <span className="text-[11px] text-muted-foreground bg-secondary rounded px-1.5 py-px">{fixedCats.length}</span>
                 </div>
-                <div className="text-[13px] font-bold text-[oklch(0.80_0.01_250)]">
+                <div className="text-[13px] font-bold text-[var(--text-heading)]">
                   {formatCurrency(totalFixed)}
                 </div>
               </div>
@@ -288,23 +288,23 @@ export default function BudgetPage() {
                     return (
                       <div
                         key={cat.id}
-                        className="flex justify-between items-center py-2.5 px-2 rounded-lg hover:bg-[oklch(0.18_0.01_250)] transition-colors duration-150"
+                        className="flex justify-between items-center py-2.5 px-2 rounded-lg hover:bg-[var(--c-0-18)] transition-colors duration-150"
                       >
                         <div className="flex items-center gap-2.5">
-                          <div className={`w-5 h-5 rounded-full flex items-center justify-center ${isPaid ? 'bg-[oklch(0.70_0.18_145)]' : 'bg-[oklch(0.25_0.01_250)]'}`}>
+                          <div className={`w-5 h-5 rounded-full flex items-center justify-center ${isPaid ? 'bg-[var(--accent-green)]' : 'bg-[var(--border-default)]'}`}>
                             {isPaid
-                              ? <Check size={12} className="text-[oklch(0.15_0_0)]" />
-                              : <Clock size={12} className="text-[oklch(0.45_0.01_250)]" />
+                              ? <Check size={12} className="text-[var(--c-0-15)]" />
+                              : <Clock size={12} className="text-[var(--c-0-45)]" />
                             }
                           </div>
-                          <span className={`text-[13px] font-medium ${isPaid ? 'text-[oklch(0.82_0.01_250)]' : 'text-[oklch(0.50_0.01_250)]'}`}>
+                          <span className={`text-[13px] font-medium ${isPaid ? 'text-[var(--c-0-82)]' : 'text-[var(--c-0-50)]'}`}>
                             {cat.name}
                           </span>
                           {hasShared && (
-                            <Users size={11} className="text-[oklch(0.50_0.01_250)]" />
+                            <Users size={11} className="text-[var(--c-0-50)]" />
                           )}
                         </div>
-                        <span className={`text-[13px] font-semibold ${isPaid ? 'text-[oklch(0.82_0.01_250)]' : 'text-[oklch(0.40_0.01_250)]'}`}>
+                        <span className={`text-[13px] font-semibold ${isPaid ? 'text-[var(--c-0-82)]' : 'text-[var(--c-0-40)]'}`}>
                           {isPaid ? formatCurrency(spent) : '—'}
                         </span>
                       </div>
@@ -313,16 +313,16 @@ export default function BudgetPage() {
 
                   {/* Unmatched shared expenses */}
                   {unmatchedSharedTotal > 0 && (
-                    <div className="flex justify-between items-center py-2.5 px-2 rounded-lg hover:bg-[oklch(0.18_0.01_250)] transition-colors duration-150">
+                    <div className="flex justify-between items-center py-2.5 px-2 rounded-lg hover:bg-[var(--c-0-18)] transition-colors duration-150">
                       <div className="flex items-center gap-2.5">
-                        <div className="w-5 h-5 rounded-full flex items-center justify-center bg-[oklch(0.70_0.18_145)]">
-                          <Users size={12} className="text-[oklch(0.15_0_0)]" />
+                        <div className="w-5 h-5 rounded-full flex items-center justify-center bg-[var(--accent-green)]">
+                          <Users size={12} className="text-[var(--c-0-15)]" />
                         </div>
-                        <span className="text-[13px] font-medium text-[oklch(0.82_0.01_250)]">
+                        <span className="text-[13px] font-medium text-[var(--c-0-82)]">
                           הוצאות משותפות
                         </span>
                       </div>
-                      <span className="text-[13px] font-semibold text-[oklch(0.82_0.01_250)]">
+                      <span className="text-[13px] font-semibold text-[var(--c-0-82)]">
                         {formatCurrency(unmatchedSharedTotal)}
                       </span>
                     </div>
@@ -332,11 +332,11 @@ export default function BudgetPage() {
 
               {/* Fixed total bar */}
               {(fixedCats.length > 0 || unmatchedSharedTotal > 0) && (
-                <div className="flex justify-between items-center mt-4 pt-3 border-t border-[oklch(0.22_0.01_250)]">
+                <div className="flex justify-between items-center mt-4 pt-3 border-t border-[var(--bg-hover)]">
                   <span className="text-[12px] text-muted-foreground">
                     {fixedPaidCount}/{fixedCats.length} שולמו
                   </span>
-                  <span className="text-[14px] font-bold text-[oklch(0.65_0.18_250)]">
+                  <span className="text-[14px] font-bold text-[var(--accent-blue)]">
                     {formatCurrency(totalFixed)}
                   </span>
                 </div>
@@ -345,15 +345,15 @@ export default function BudgetPage() {
 
             {/* Left column: Variable expenses — flat list */}
             <div className="card-transition bg-card border border-border rounded-xl p-5">
-              <div className="flex justify-between items-center mb-4 pb-3 border-b border-[oklch(0.22_0.01_250)]">
+              <div className="flex justify-between items-center mb-4 pb-3 border-b border-[var(--bg-hover)]">
                 <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full" style={{ background: 'oklch(0.72 0.18 55)' }} />
+                  <div className="w-2 h-2 rounded-full" style={{ background: 'var(--accent-orange)' }} />
                   <span className="font-bold text-sm">הוצאות משתנות</span>
                   <InfoTooltip body="הוצאות שמשתנות — אוכל, בילויים, קניות. כאן אפשר לחסוך!" />
                   <span className="text-[11px] text-muted-foreground bg-secondary rounded px-1.5 py-px">{allNonFixed.length}</span>
                 </div>
                 <div className="text-[13px]">
-                  <span className="font-bold text-[oklch(0.80_0.01_250)]">{formatCurrency(totalVariableActual)}</span>
+                  <span className="font-bold text-[var(--text-heading)]">{formatCurrency(totalVariableActual)}</span>
                   <span className="text-muted-foreground mx-1">/</span>
                   <span className="text-muted-foreground">{formatCurrency(totalVariableBudget)}</span>
                 </div>
@@ -372,12 +372,12 @@ export default function BudgetPage() {
                     const catRemaining = cat.monthly_target - spent
 
                     return (
-                      <div key={cat.id} className="py-2.5 border-b border-[oklch(0.18_0.005_250)] last:border-b-0">
+                      <div key={cat.id} className="py-2.5 border-b border-[var(--c-0-18)] last:border-b-0">
                         {/* Row 1: Name + remaining */}
                         <div className="flex justify-between items-baseline mb-1">
-                          <span className="font-medium text-[13px] text-[oklch(0.82_0.01_250)]">{cat.name}</span>
+                          <span className="font-medium text-[13px] text-[var(--c-0-82)]">{cat.name}</span>
                           {cat.monthly_target > 0 && (
-                            <span className={`text-[11px] font-medium ${catRemaining >= 0 ? 'text-[oklch(0.70_0.18_145)]' : 'text-[oklch(0.62_0.22_27)]'}`}>
+                            <span className={`text-[11px] font-medium ${catRemaining >= 0 ? 'text-[var(--accent-green)]' : 'text-[var(--accent-red)]'}`}>
                               {catRemaining >= 0 ? `נותר ${formatCurrency(catRemaining)}` : `חריגה ${formatCurrency(Math.abs(catRemaining))}`}
                             </span>
                           )}
@@ -395,13 +395,13 @@ export default function BudgetPage() {
                                 onChange={e => setEditValue(e.target.value)}
                                 onBlur={() => saveTarget(cat.id)}
                                 onKeyDown={e => { if (e.key === 'Enter') saveTarget(cat.id); if (e.key === 'Escape') setEditingId(null) }}
-                                className="w-20 bg-[oklch(0.20_0.01_250)] border border-[oklch(0.45_0.18_250)] rounded-md px-1.5 py-0.5 text-inherit text-[12px] text-left"
+                                className="w-20 bg-[var(--c-0-20)] border border-[var(--c-blue-0-45)] rounded-md px-1.5 py-0.5 text-inherit text-[12px] text-left"
                               />
                             ) : (
                               <span
                                 onClick={() => { setEditingId(cat.id); setEditValue(String(cat.monthly_target)) }}
                                 title="לחץ לעריכה"
-                                className="text-muted-foreground cursor-pointer border-b border-dashed border-[oklch(0.38_0.01_250)] pb-px transition-colors duration-150 hover:text-[oklch(0.75_0.01_250)]"
+                                className="text-muted-foreground cursor-pointer border-b border-dashed border-[var(--c-0-38)] pb-px transition-colors duration-150 hover:text-[var(--text-body)]"
                               >
                                 {formatCurrency(cat.monthly_target)}
                               </span>
@@ -414,7 +414,7 @@ export default function BudgetPage() {
                           )}
                         </div>
                         {/* Row 3: Mini progress bar */}
-                        <div className="h-[3px] rounded-sm bg-[oklch(0.20_0.01_250)] overflow-hidden">
+                        <div className="h-[3px] rounded-sm bg-[var(--c-0-20)] overflow-hidden">
                           <div className="h-full rounded-sm transition-[width] duration-400 ease-out" style={{ width: `${Math.min(pct * 100, 100)}%`, background: barColor }} />
                         </div>
                       </div>
@@ -425,12 +425,12 @@ export default function BudgetPage() {
 
               {/* Variable total bar */}
               {allNonFixed.length > 0 && (
-                <div className="flex justify-between items-center mt-3 pt-3 border-t border-[oklch(0.22_0.01_250)]">
+                <div className="flex justify-between items-center mt-3 pt-3 border-t border-[var(--bg-hover)]">
                   <span className="text-[12px] text-muted-foreground">
                     {totalVariableBudget > 0 ? `${Math.round((totalVariableActual / totalVariableBudget) * 100)}% מהתקציב` : ''}
                   </span>
                   <div className="text-[14px]">
-                    <span className="font-bold text-[oklch(0.80_0.01_250)]">{formatCurrency(totalVariableActual)}</span>
+                    <span className="font-bold text-[var(--text-heading)]">{formatCurrency(totalVariableActual)}</span>
                     <span className="text-muted-foreground mx-1">/</span>
                     <span className="text-muted-foreground">{formatCurrency(totalVariableBudget)}</span>
                   </div>

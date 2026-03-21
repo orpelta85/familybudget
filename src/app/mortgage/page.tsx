@@ -272,61 +272,61 @@ export default function MortgagePage() {
       {/* Header */}
       <div className="flex justify-between items-start mb-1.5">
         <div className="flex items-center gap-2">
-          <Home size={18} className="text-[oklch(0.70_0.15_185)]" />
+          <Home size={18} className="text-[var(--accent-teal)]" />
           <h1 className="text-xl font-bold tracking-tight">משכנתא</h1>
           <PageInfo {...PAGE_TIPS.mortgage} />
         </div>
         <button
           onClick={() => setShowAddMortgage(true)}
-          className="btn-hover flex items-center gap-1.5 bg-[oklch(0.20_0.04_185)] border border-[oklch(0.32_0.08_185)] rounded-lg px-3.5 py-[7px] text-[oklch(0.70_0.15_185)] text-[13px] font-medium cursor-pointer"
+          className="btn-hover flex items-center gap-1.5 bg-[var(--c-teal-0-20)] border border-[var(--c-teal-0-32)] rounded-lg px-3.5 py-[7px] text-[var(--accent-teal)] text-[13px] font-medium cursor-pointer"
         >
           <Plus size={13} /> הוסף משכנתא
         </button>
       </div>
-      <p className="text-[oklch(0.65_0.01_250)] text-[13px] mb-5">
+      <p className="text-[var(--text-secondary)] text-[13px] mb-5">
         מעקב מסלולים, תשלומים וסימולציות פירעון מוקדם
       </p>
 
       {isLoading ? <TableSkeleton rows={4} /> : !filtered.length ? (
-        <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-10 text-center">
-          <Inbox size={36} className="text-[oklch(0.30_0.01_250)] mx-auto mb-2.5" />
-          <div className="text-[oklch(0.65_0.01_250)] text-sm">אין משכנתאות — לחץ &quot;הוסף משכנתא&quot;</div>
+        <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-10 text-center">
+          <Inbox size={36} className="text-[var(--c-0-30)] mx-auto mb-2.5" />
+          <div className="text-[var(--text-secondary)] text-sm">אין משכנתאות — לחץ &quot;הוסף משכנתא&quot;</div>
         </div>
       ) : (
         <>
           {/* KPI Cards */}
           <div className="grid-kpi mb-5">
-            <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-4">
-              <div className="text-[11px] text-[oklch(0.65_0.01_250)] mb-1.5 uppercase tracking-wide">סכום מקורי</div>
-              <div className="text-xl font-bold tracking-tight text-[oklch(0.65_0.18_250)]">{formatCurrency(totalOriginal)}</div>
+            <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-4">
+              <div className="text-[11px] text-[var(--text-secondary)] mb-1.5 uppercase tracking-wide">סכום מקורי</div>
+              <div className="text-xl font-bold tracking-tight text-[var(--accent-blue)]">{formatCurrency(totalOriginal)}</div>
             </div>
-            <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-4">
-              <div className="text-[11px] text-[oklch(0.65_0.01_250)] mb-1.5 uppercase tracking-wide">יתרה נוכחית</div>
-              <div className="text-xl font-bold tracking-tight text-[oklch(0.72_0.18_55)]">{formatCurrency(totalRemaining)}</div>
+            <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-4">
+              <div className="text-[11px] text-[var(--text-secondary)] mb-1.5 uppercase tracking-wide">יתרה נוכחית</div>
+              <div className="text-xl font-bold tracking-tight text-[var(--accent-orange)]">{formatCurrency(totalRemaining)}</div>
             </div>
-            <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-4">
-              <div className="text-[11px] text-[oklch(0.65_0.01_250)] mb-1.5 uppercase tracking-wide">שולם</div>
-              <div className="text-xl font-bold tracking-tight text-[oklch(0.70_0.18_145)]">{formatCurrency(totalPaid)}</div>
+            <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-4">
+              <div className="text-[11px] text-[var(--text-secondary)] mb-1.5 uppercase tracking-wide">שולם</div>
+              <div className="text-xl font-bold tracking-tight text-[var(--accent-green)]">{formatCurrency(totalPaid)}</div>
             </div>
-            <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-4">
-              <div className="text-[11px] text-[oklch(0.65_0.01_250)] mb-1.5 uppercase tracking-wide">תשלום חודשי</div>
-              <div className="text-xl font-bold tracking-tight text-[oklch(0.72_0.18_55)]">{formatCurrency(totalMonthlyPayment)}</div>
+            <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-4">
+              <div className="text-[11px] text-[var(--text-secondary)] mb-1.5 uppercase tracking-wide">תשלום חודשי</div>
+              <div className="text-xl font-bold tracking-tight text-[var(--accent-orange)]">{formatCurrency(totalMonthlyPayment)}</div>
             </div>
-            <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-4">
-              <div className="text-[11px] text-[oklch(0.65_0.01_250)] mb-1.5 uppercase tracking-wide">חודשים שנותרו</div>
-              <div className="text-xl font-bold tracking-tight text-[oklch(0.65_0.18_250)]">{formatMonths(maxMonthsLeft)}</div>
+            <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-4">
+              <div className="text-[11px] text-[var(--text-secondary)] mb-1.5 uppercase tracking-wide">חודשים שנותרו</div>
+              <div className="text-xl font-bold tracking-tight text-[var(--accent-blue)]">{formatMonths(maxMonthsLeft)}</div>
             </div>
           </div>
 
           {/* Progress Bar */}
-          <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5 mb-4">
+          <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5 mb-4">
             <div className="flex justify-between text-[13px] mb-2">
-              <span className="text-[oklch(0.70_0.18_145)] font-semibold">שולם {paidPct.toFixed(1)}%</span>
-              <span className="text-[oklch(0.65_0.01_250)]">{formatCurrency(totalPaid)} מתוך {formatCurrency(totalOriginal)}</span>
+              <span className="text-[var(--accent-green)] font-semibold">שולם {paidPct.toFixed(1)}%</span>
+              <span className="text-[var(--text-secondary)]">{formatCurrency(totalPaid)} מתוך {formatCurrency(totalOriginal)}</span>
             </div>
-            <div className="h-3 rounded-full bg-[oklch(0.22_0.01_250)] overflow-hidden">
+            <div className="h-3 rounded-full bg-[var(--bg-hover)] overflow-hidden">
               <div
-                className="h-full rounded-full bg-[oklch(0.70_0.18_145)] transition-[width] duration-500"
+                className="h-full rounded-full bg-[var(--accent-green)] transition-[width] duration-500"
                 style={{ width: `${Math.min(paidPct, 100)}%` }}
               />
             </div>
@@ -334,26 +334,26 @@ export default function MortgagePage() {
 
           {/* Tracks breakdown per mortgage */}
           {filtered.map(mortgage => (
-            <div key={mortgage.id} className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5 mb-4">
+            <div key={mortgage.id} className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5 mb-4">
               <div className="flex justify-between items-center mb-4">
                 <div className="flex items-center gap-2">
-                  <Home size={14} className="text-[oklch(0.70_0.15_185)]" />
+                  <Home size={14} className="text-[var(--accent-teal)]" />
                   <span className="font-semibold text-sm">{mortgage.name}</span>
                   {mortgage.is_shared && (
-                    <span className="text-[10px] bg-[oklch(0.22_0.05_295)] text-[oklch(0.75_0.15_295)] px-1.5 py-0.5 rounded font-medium">משותף</span>
+                    <span className="text-[10px] bg-[var(--c-purple-0-22)] text-[var(--c-purple-0-75)] px-1.5 py-0.5 rounded font-medium">משותף</span>
                   )}
                 </div>
                 <div className="flex gap-1.5">
                   <button
                     onClick={() => { setShowAddTrack(mortgage.id); setTrackForm(emptyTrackForm) }}
-                    className="flex items-center gap-1 bg-transparent border border-[oklch(0.25_0.01_250)] rounded-lg px-2.5 py-1.5 text-[oklch(0.65_0.01_250)] text-xs cursor-pointer"
+                    className="flex items-center gap-1 bg-transparent border border-[var(--border-default)] rounded-lg px-2.5 py-1.5 text-[var(--text-secondary)] text-xs cursor-pointer"
                   >
                     <Plus size={11} /> מסלול
                   </button>
                   <button
                     onClick={() => handleDeleteMortgage(mortgage.id)}
                     aria-label="מחק"
-                    className="flex items-center justify-center bg-[oklch(0.18_0.03_15)] border border-[oklch(0.28_0.06_15)] rounded-lg p-1.5 text-[oklch(0.60_0.18_15)] cursor-pointer"
+                    className="flex items-center justify-center bg-[var(--c-red-0-18)] border border-[var(--c-red-0-28)] rounded-lg p-1.5 text-[var(--c-red-0-62)] cursor-pointer"
                   >
                     <Trash2 size={12} />
                   </button>
@@ -362,7 +362,7 @@ export default function MortgagePage() {
 
               {/* Track cards */}
               {!(mortgage.mortgage_tracks?.length) ? (
-                <div className="text-xs text-[oklch(0.65_0.01_250)] text-center py-4">אין מסלולים — הוסף מסלול</div>
+                <div className="text-xs text-[var(--text-secondary)] text-center py-4">אין מסלולים — הוסף מסלול</div>
               ) : (
                 <div className="flex flex-col gap-2">
                   {mortgage.mortgage_tracks.map(track => {
@@ -370,45 +370,45 @@ export default function MortgagePage() {
                       ? ((track.original_amount - track.remaining_amount) / track.original_amount) * 100
                       : 0
                     return (
-                      <div key={track.id} className="bg-[oklch(0.14_0.01_250)] border border-[oklch(0.22_0.01_250)] rounded-lg p-4">
+                      <div key={track.id} className="bg-[var(--c-0-14)] border border-[var(--bg-hover)] rounded-lg p-4">
                         <div className="flex justify-between items-start mb-2">
                           <div>
                             <div className="flex items-center gap-2 mb-0.5">
                               <span className="font-medium text-[13px]">{track.track_name}</span>
-                              <span className="text-[10px] bg-[oklch(0.20_0.04_250)] border border-[oklch(0.30_0.06_250)] px-1.5 py-0.5 rounded text-[oklch(0.65_0.15_250)]">
+                              <span className="text-[10px] bg-[var(--c-blue-0-20)] border border-[var(--c-blue-0-30)] px-1.5 py-0.5 rounded text-[var(--accent-blue)]">
                                 {TRACK_TYPE_LABELS[track.track_type] ?? track.track_type}
                               </span>
                               {track.cpi_linked && (
-                                <span className="text-[10px] bg-[oklch(0.20_0.04_55)] border border-[oklch(0.30_0.06_55)] px-1.5 py-0.5 rounded text-[oklch(0.72_0.18_55)]">צמוד</span>
+                                <span className="text-[10px] bg-[var(--c-orange-0-20)] border border-[var(--c-orange-0-30)] px-1.5 py-0.5 rounded text-[var(--accent-orange)]">צמוד</span>
                               )}
                             </div>
-                            <div className="text-[11px] text-[oklch(0.55_0.01_250)] flex gap-3">
+                            <div className="text-[11px] text-[var(--text-muted)] flex gap-3">
                               <span>ריבית: {track.interest_rate}%</span>
                               <span>תשלום: {formatCurrency(track.monthly_payment)}/חודש</span>
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
                             <div className="text-right">
-                              <div className="text-[13px] font-bold text-[oklch(0.80_0.01_250)]">{formatCurrency(track.remaining_amount)}</div>
-                              <div className="text-[10px] text-[oklch(0.55_0.01_250)]">מתוך {formatCurrency(track.original_amount)}</div>
+                              <div className="text-[13px] font-bold text-[var(--text-heading)]">{formatCurrency(track.remaining_amount)}</div>
+                              <div className="text-[10px] text-[var(--text-muted)]">מתוך {formatCurrency(track.original_amount)}</div>
                             </div>
                             <button
                               onClick={() => handleDeleteTrack(track.id)}
                               aria-label="מחק מסלול"
-                              className="bg-transparent border-none cursor-pointer p-1 text-[oklch(0.45_0.01_250)]"
+                              className="bg-transparent border-none cursor-pointer p-1 text-[var(--c-0-45)]"
                             >
                               <Trash2 size={11} />
                             </button>
                           </div>
                         </div>
                         {/* Track progress */}
-                        <div className="h-1.5 rounded-full bg-[oklch(0.20_0.01_250)] overflow-hidden">
+                        <div className="h-1.5 rounded-full bg-[var(--c-0-20)] overflow-hidden">
                           <div
-                            className="h-full rounded-full bg-[oklch(0.65_0.18_250)] transition-[width] duration-500"
+                            className="h-full rounded-full bg-[var(--accent-blue)] transition-[width] duration-500"
                             style={{ width: `${Math.min(trackPaidPct, 100)}%` }}
                           />
                         </div>
-                        <div className="text-[10px] text-[oklch(0.55_0.01_250)] mt-1 text-left">{trackPaidPct.toFixed(1)}% שולם</div>
+                        <div className="text-[10px] text-[var(--text-muted)] mt-1 text-left">{trackPaidPct.toFixed(1)}% שולם</div>
                       </div>
                     )
                   })}
@@ -419,9 +419,9 @@ export default function MortgagePage() {
 
           {/* Amortization Chart */}
           {amortizationData.length > 1 && (
-            <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5 mb-4">
+            <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5 mb-4">
               <div className="font-semibold text-sm mb-4 flex items-center gap-2">
-                <TrendingDown size={14} className="text-[oklch(0.70_0.18_145)]" />
+                <TrendingDown size={14} className="text-[var(--accent-green)]" />
                 לוח סילוקין — קרן מול ריבית
               </div>
               <div className="relative h-48 flex items-end gap-px">
@@ -430,27 +430,27 @@ export default function MortgagePage() {
                   const interestH = chartMax > 0 ? (d.interest / chartMax) * 100 : 0
                   return (
                     <div key={i} className="flex-1 flex flex-col-reverse" style={{ height: '100%' }}>
-                      <div style={{ height: `${principalH}%`, background: 'oklch(0.65 0.18 250)', opacity: 0.8 }} />
-                      <div style={{ height: `${interestH}%`, background: 'oklch(0.62 0.22 27)', opacity: 0.7 }} />
+                      <div style={{ height: `${principalH}%`, background: 'var(--accent-blue)', opacity: 0.8 }} />
+                      <div style={{ height: `${interestH}%`, background: 'var(--accent-red)', opacity: 0.7 }} />
                     </div>
                   )
                 })}
               </div>
               <div className="flex gap-4 justify-center mt-3">
-                <span className="text-xs text-[oklch(0.65_0.01_250)] flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-sm bg-[oklch(0.65_0.18_250)] inline-block" /> קרן
+                <span className="text-xs text-[var(--text-secondary)] flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-sm bg-[var(--accent-blue)] inline-block" /> קרן
                 </span>
-                <span className="text-xs text-[oklch(0.65_0.01_250)] flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-sm bg-[oklch(0.62_0.22_27)] inline-block" /> ריבית
+                <span className="text-xs text-[var(--text-secondary)] flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-sm bg-[var(--accent-red)] inline-block" /> ריבית
                 </span>
               </div>
             </div>
           )}
 
           {/* What-if Calculator */}
-          <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5 mb-4">
+          <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5 mb-4">
             <div className="font-semibold text-sm mb-4 flex items-center gap-2">
-              <Calculator size={14} className="text-[oklch(0.72_0.18_55)]" />
+              <Calculator size={14} className="text-[var(--accent-orange)]" />
               מה קורה אם מוסיפים תשלום חודשי?
             </div>
             <div className="flex items-center gap-3 mb-4">
@@ -459,27 +459,27 @@ export default function MortgagePage() {
                 inputMode="numeric"
                 value={extraPayment}
                 onChange={e => setExtraPayment(e.target.value.replace(/[^\d]/g, ''))}
-                className="w-32 bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left"
+                className="w-32 bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left"
               />
-              <span className="text-[oklch(0.65_0.01_250)] text-sm">₪ נוספים לחודש</span>
+              <span className="text-[var(--text-secondary)] text-sm">₪ נוספים לחודש</span>
             </div>
             {whatIfResults && extra > 0 && (
               <div className="grid grid-cols-3 gap-3">
-                <div className="bg-[oklch(0.14_0.01_250)] border border-[oklch(0.22_0.01_250)] rounded-lg p-3">
-                  <div className="text-[10px] text-[oklch(0.65_0.01_250)] mb-1">חיסכון בזמן</div>
-                  <div className="text-base font-bold text-[oklch(0.70_0.18_145)]">{formatMonths(whatIfResults.savedMonths)}</div>
-                  <div className="text-[10px] text-[oklch(0.55_0.01_250)]">
+                <div className="bg-[var(--c-0-14)] border border-[var(--bg-hover)] rounded-lg p-3">
+                  <div className="text-[10px] text-[var(--text-secondary)] mb-1">חיסכון בזמן</div>
+                  <div className="text-base font-bold text-[var(--accent-green)]">{formatMonths(whatIfResults.savedMonths)}</div>
+                  <div className="text-[10px] text-[var(--text-muted)]">
                     {formatMonths(whatIfResults.currentMonths)} → {formatMonths(whatIfResults.extraMonths)}
                   </div>
                 </div>
-                <div className="bg-[oklch(0.14_0.01_250)] border border-[oklch(0.22_0.01_250)] rounded-lg p-3">
-                  <div className="text-[10px] text-[oklch(0.65_0.01_250)] mb-1">חיסכון בריבית</div>
-                  <div className="text-base font-bold text-[oklch(0.70_0.18_145)]">{formatCurrency(whatIfResults.savedInterest)}</div>
+                <div className="bg-[var(--c-0-14)] border border-[var(--bg-hover)] rounded-lg p-3">
+                  <div className="text-[10px] text-[var(--text-secondary)] mb-1">חיסכון בריבית</div>
+                  <div className="text-base font-bold text-[var(--accent-green)]">{formatCurrency(whatIfResults.savedInterest)}</div>
                 </div>
-                <div className="bg-[oklch(0.14_0.01_250)] border border-[oklch(0.22_0.01_250)] rounded-lg p-3">
-                  <div className="text-[10px] text-[oklch(0.65_0.01_250)] mb-1">סה&quot;כ ריבית חדש</div>
-                  <div className="text-base font-bold text-[oklch(0.72_0.18_55)]">{formatCurrency(whatIfResults.extraInterest)}</div>
-                  <div className="text-[10px] text-[oklch(0.55_0.01_250)]">
+                <div className="bg-[var(--c-0-14)] border border-[var(--bg-hover)] rounded-lg p-3">
+                  <div className="text-[10px] text-[var(--text-secondary)] mb-1">סה&quot;כ ריבית חדש</div>
+                  <div className="text-base font-bold text-[var(--accent-orange)]">{formatCurrency(whatIfResults.extraInterest)}</div>
+                  <div className="text-[10px] text-[var(--text-muted)]">
                     במקום {formatCurrency(whatIfResults.currentInterest)}
                   </div>
                 </div>
@@ -492,45 +492,45 @@ export default function MortgagePage() {
       {/* Add Mortgage Modal */}
       {showAddMortgage && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-[oklch(0.18_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-[14px] p-7 w-[400px]">
+          <div className="bg-[var(--c-0-18)] border border-[var(--border-light)] rounded-[14px] p-7 w-[400px]">
             <div className="flex justify-between items-center mb-5">
               <span className="font-semibold text-[15px]">הוסף משכנתא</span>
-              <button onClick={() => setShowAddMortgage(false)} aria-label="סגור" className="bg-transparent border-none text-[oklch(0.65_0.01_250)] cursor-pointer p-2"><X size={18} /></button>
+              <button onClick={() => setShowAddMortgage(false)} aria-label="סגור" className="bg-transparent border-none text-[var(--text-secondary)] cursor-pointer p-2"><X size={18} /></button>
             </div>
             <div className="flex flex-col gap-3.5 mb-4">
               <div>
-                <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">שם</label>
-                <input type="text" value={mortgageForm.name} onChange={e => setMortgageForm(f => ({ ...f, name: e.target.value }))} className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-sm" />
+                <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">שם</label>
+                <input type="text" value={mortgageForm.name} onChange={e => setMortgageForm(f => ({ ...f, name: e.target.value }))} className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-sm" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">סכום מקורי (₪)</label>
-                  <input type="text" inputMode="numeric" value={mortgageForm.totalAmount} onChange={e => setMortgageForm(f => ({ ...f, totalAmount: e.target.value.replace(/[^\d]/g, '') }))} placeholder="0" className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left" />
+                  <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">סכום מקורי (₪)</label>
+                  <input type="text" inputMode="numeric" value={mortgageForm.totalAmount} onChange={e => setMortgageForm(f => ({ ...f, totalAmount: e.target.value.replace(/[^\d]/g, '') }))} placeholder="0" className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left" />
                 </div>
                 <div>
-                  <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">יתרה נוכחית (₪)</label>
-                  <input type="text" inputMode="numeric" value={mortgageForm.remainingBalance} onChange={e => setMortgageForm(f => ({ ...f, remainingBalance: e.target.value.replace(/[^\d]/g, '') }))} placeholder="0" className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left" />
+                  <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">יתרה נוכחית (₪)</label>
+                  <input type="text" inputMode="numeric" value={mortgageForm.remainingBalance} onChange={e => setMortgageForm(f => ({ ...f, remainingBalance: e.target.value.replace(/[^\d]/g, '') }))} placeholder="0" className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">תאריך התחלה</label>
-                  <input type="date" value={mortgageForm.startDate} onChange={e => setMortgageForm(f => ({ ...f, startDate: e.target.value }))} className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-sm" dir="ltr" />
+                  <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">תאריך התחלה</label>
+                  <input type="date" value={mortgageForm.startDate} onChange={e => setMortgageForm(f => ({ ...f, startDate: e.target.value }))} className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-sm" dir="ltr" />
                 </div>
                 <div>
-                  <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">תאריך סיום</label>
-                  <input type="date" value={mortgageForm.endDate} onChange={e => setMortgageForm(f => ({ ...f, endDate: e.target.value }))} className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-sm" dir="ltr" />
+                  <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">תאריך סיום</label>
+                  <input type="date" value={mortgageForm.endDate} onChange={e => setMortgageForm(f => ({ ...f, endDate: e.target.value }))} className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-sm" dir="ltr" />
                 </div>
               </div>
               <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" checked={mortgageForm.isShared} onChange={e => setMortgageForm(f => ({ ...f, isShared: e.target.checked }))} className="w-4 h-4 rounded accent-[oklch(0.70_0.15_185)]" />
-                <span className="text-[13px] text-[oklch(0.70_0.01_250)]">משכנתא משותפת (משפחתית)</span>
+                <input type="checkbox" checked={mortgageForm.isShared} onChange={e => setMortgageForm(f => ({ ...f, isShared: e.target.checked }))} className="w-4 h-4 rounded accent-[var(--accent-teal)]" />
+                <span className="text-[13px] text-[var(--c-0-70)]">משכנתא משותפת (משפחתית)</span>
               </label>
             </div>
             <button
               onClick={handleAddMortgage}
               disabled={addMortgage.isPending}
-              className={`w-full bg-[oklch(0.70_0.15_185)] border-none rounded-lg py-[11px] font-semibold text-sm text-[oklch(0.10_0.01_250)] ${addMortgage.isPending ? 'cursor-not-allowed opacity-50' : 'cursor-pointer opacity-100'}`}
+              className={`w-full bg-[var(--accent-teal)] border-none rounded-lg py-[11px] font-semibold text-sm text-[var(--c-0-10)] ${addMortgage.isPending ? 'cursor-not-allowed opacity-50' : 'cursor-pointer opacity-100'}`}
             >
               {addMortgage.isPending ? '...' : 'הוסף'}
             </button>
@@ -541,22 +541,22 @@ export default function MortgagePage() {
       {/* Add Track Modal */}
       {showAddTrack && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-[oklch(0.18_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-[14px] p-7 w-[420px]">
+          <div className="bg-[var(--c-0-18)] border border-[var(--border-light)] rounded-[14px] p-7 w-[420px]">
             <div className="flex justify-between items-center mb-5">
               <span className="font-semibold text-[15px]">הוסף מסלול</span>
-              <button onClick={() => setShowAddTrack(null)} aria-label="סגור" className="bg-transparent border-none text-[oklch(0.65_0.01_250)] cursor-pointer p-2"><X size={18} /></button>
+              <button onClick={() => setShowAddTrack(null)} aria-label="סגור" className="bg-transparent border-none text-[var(--text-secondary)] cursor-pointer p-2"><X size={18} /></button>
             </div>
             <div className="flex flex-col gap-3.5 mb-4">
               <div>
-                <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">שם מסלול</label>
-                <input type="text" value={trackForm.trackName} onChange={e => setTrackForm(f => ({ ...f, trackName: e.target.value }))} placeholder="פריים, קבועה..." className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-sm" />
+                <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">שם מסלול</label>
+                <input type="text" value={trackForm.trackName} onChange={e => setTrackForm(f => ({ ...f, trackName: e.target.value }))} placeholder="פריים, קבועה..." className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-sm" />
               </div>
               <div>
-                <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">סוג</label>
+                <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">סוג</label>
                 <div className="flex gap-2">
                   {(['prime', 'fixed', 'cpi_linked', 'variable'] as const).map(t => (
                     <button key={t} type="button" onClick={() => setTrackForm(f => ({ ...f, trackType: t, cpiLinked: t === 'cpi_linked' }))}
-                      className={`flex-1 rounded-lg py-[8px] text-[11px] cursor-pointer ${trackForm.trackType === t ? 'bg-[oklch(0.24_0.06_250)] border border-[oklch(0.40_0.10_250)] text-[oklch(0.75_0.15_250)] font-semibold' : 'bg-[oklch(0.20_0.01_250)] border border-[oklch(0.28_0.01_250)] text-[oklch(0.65_0.01_250)] font-normal'}`}>
+                      className={`flex-1 rounded-lg py-[8px] text-[11px] cursor-pointer ${trackForm.trackType === t ? 'bg-[var(--c-blue-0-24)] border border-[var(--c-blue-0-40)] text-[var(--c-blue-0-75)] font-semibold' : 'bg-[var(--c-0-20)] border border-[var(--border-light)] text-[var(--text-secondary)] font-normal'}`}>
                       {TRACK_TYPE_LABELS[t]}
                     </button>
                   ))}
@@ -564,39 +564,39 @@ export default function MortgagePage() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">סכום מקורי (₪)</label>
-                  <input type="text" inputMode="numeric" value={trackForm.originalAmount} onChange={e => setTrackForm(f => ({ ...f, originalAmount: e.target.value.replace(/[^\d]/g, '') }))} placeholder="0" className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left" />
+                  <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">סכום מקורי (₪)</label>
+                  <input type="text" inputMode="numeric" value={trackForm.originalAmount} onChange={e => setTrackForm(f => ({ ...f, originalAmount: e.target.value.replace(/[^\d]/g, '') }))} placeholder="0" className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left" />
                 </div>
                 <div>
-                  <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">יתרה נוכחית (₪)</label>
-                  <input type="text" inputMode="numeric" value={trackForm.remainingAmount} onChange={e => setTrackForm(f => ({ ...f, remainingAmount: e.target.value.replace(/[^\d]/g, '') }))} placeholder="0" className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left" />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">ריבית שנתית (%)</label>
-                  <input type="text" inputMode="decimal" value={trackForm.interestRate} onChange={e => setTrackForm(f => ({ ...f, interestRate: e.target.value.replace(/[^\d.]/g, '') }))} placeholder="0" className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left" />
-                </div>
-                <div>
-                  <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">תשלום חודשי (₪)</label>
-                  <input type="text" inputMode="numeric" value={trackForm.monthlyPayment} onChange={e => setTrackForm(f => ({ ...f, monthlyPayment: e.target.value.replace(/[^\d]/g, '') }))} placeholder="0" className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left" />
+                  <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">יתרה נוכחית (₪)</label>
+                  <input type="text" inputMode="numeric" value={trackForm.remainingAmount} onChange={e => setTrackForm(f => ({ ...f, remainingAmount: e.target.value.replace(/[^\d]/g, '') }))} placeholder="0" className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">תאריך התחלה</label>
-                  <input type="date" value={trackForm.startDate} onChange={e => setTrackForm(f => ({ ...f, startDate: e.target.value }))} className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-sm" dir="ltr" />
+                  <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">ריבית שנתית (%)</label>
+                  <input type="text" inputMode="decimal" value={trackForm.interestRate} onChange={e => setTrackForm(f => ({ ...f, interestRate: e.target.value.replace(/[^\d.]/g, '') }))} placeholder="0" className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left" />
                 </div>
                 <div>
-                  <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">תאריך סיום</label>
-                  <input type="date" value={trackForm.endDate} onChange={e => setTrackForm(f => ({ ...f, endDate: e.target.value }))} className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-sm" dir="ltr" />
+                  <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">תשלום חודשי (₪)</label>
+                  <input type="text" inputMode="numeric" value={trackForm.monthlyPayment} onChange={e => setTrackForm(f => ({ ...f, monthlyPayment: e.target.value.replace(/[^\d]/g, '') }))} placeholder="0" className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">תאריך התחלה</label>
+                  <input type="date" value={trackForm.startDate} onChange={e => setTrackForm(f => ({ ...f, startDate: e.target.value }))} className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-sm" dir="ltr" />
+                </div>
+                <div>
+                  <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">תאריך סיום</label>
+                  <input type="date" value={trackForm.endDate} onChange={e => setTrackForm(f => ({ ...f, endDate: e.target.value }))} className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-sm" dir="ltr" />
                 </div>
               </div>
             </div>
             <button
               onClick={handleAddTrack}
               disabled={addTrack.isPending}
-              className={`w-full bg-[oklch(0.70_0.15_185)] border-none rounded-lg py-[11px] font-semibold text-sm text-[oklch(0.10_0.01_250)] ${addTrack.isPending ? 'cursor-not-allowed opacity-50' : 'cursor-pointer opacity-100'}`}
+              className={`w-full bg-[var(--accent-teal)] border-none rounded-lg py-[11px] font-semibold text-sm text-[var(--c-0-10)] ${addTrack.isPending ? 'cursor-not-allowed opacity-50' : 'cursor-pointer opacity-100'}`}
             >
               {addTrack.isPending ? '...' : 'הוסף מסלול'}
             </button>

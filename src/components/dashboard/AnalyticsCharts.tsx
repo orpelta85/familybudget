@@ -14,14 +14,14 @@ interface ChartEntry {
 
 const tooltipStyle = {
   contentStyle: {
-    background: 'oklch(0.18 0.01 250)',
-    border: '1px solid oklch(0.28 0.01 250)',
+    background: 'var(--c-0-18)',
+    border: '1px solid var(--border-light)',
     borderRadius: 8,
     fontSize: 12,
     direction: 'rtl' as const,
   },
-  labelStyle: { color: 'oklch(0.75 0.01 250)', fontWeight: 600 },
-  itemStyle: { color: 'oklch(0.65 0.01 250)' },
+  labelStyle: { color: 'var(--text-body)', fontWeight: 600 },
+  itemStyle: { color: 'var(--text-secondary)' },
 }
 
 export function IncomeVsExpensesChart({ data }: { data: ChartEntry[] }) {
@@ -29,8 +29,8 @@ export function IncomeVsExpensesChart({ data }: { data: ChartEntry[] }) {
     <div dir="ltr">
     <ResponsiveContainer width="100%" height={220}>
       <BarChart data={data} barGap={2}>
-        <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'oklch(0.65 0.01 250)' }} axisLine={false} tickLine={false} />
-        <YAxis orientation="right" tick={{ fontSize: 11, fill: 'oklch(0.65 0.01 250)' }} axisLine={false} tickLine={false}
+        <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'var(--text-secondary)' }} axisLine={false} tickLine={false} />
+        <YAxis orientation="right" tick={{ fontSize: 11, fill: 'var(--text-secondary)' }} axisLine={false} tickLine={false}
           tickFormatter={v => v === 0 ? '0' : `${(v / 1000).toFixed(0)}K`} />
         <Tooltip
           {...tooltipStyle}
@@ -40,8 +40,8 @@ export function IncomeVsExpensesChart({ data }: { data: ChartEntry[] }) {
           ]}
           labelFormatter={(label) => data.find(d => d.name === label)?.label ?? label}
         />
-        <Bar dataKey="income" name="income" fill="oklch(0.65 0.18 250)" radius={[4, 4, 0, 0]} maxBarSize={28} />
-        <Bar dataKey="expenses" name="expenses" fill="oklch(0.72 0.18 55)" radius={[4, 4, 0, 0]} maxBarSize={28} />
+        <Bar dataKey="income" name="income" fill="var(--accent-blue)" radius={[4, 4, 0, 0]} maxBarSize={28} />
+        <Bar dataKey="expenses" name="expenses" fill="var(--accent-orange)" radius={[4, 4, 0, 0]} maxBarSize={28} />
       </BarChart>
     </ResponsiveContainer>
     </div>
@@ -53,8 +53,8 @@ export function NetFlowChart({ data }: { data: ChartEntry[] }) {
     <div dir="ltr">
     <ResponsiveContainer width="100%" height={180}>
       <LineChart data={data}>
-        <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'oklch(0.65 0.01 250)' }} axisLine={false} tickLine={false} />
-        <YAxis orientation="right" tick={{ fontSize: 11, fill: 'oklch(0.65 0.01 250)' }} axisLine={false} tickLine={false}
+        <XAxis dataKey="name" tick={{ fontSize: 11, fill: 'var(--text-secondary)' }} axisLine={false} tickLine={false} />
+        <YAxis orientation="right" tick={{ fontSize: 11, fill: 'var(--text-secondary)' }} axisLine={false} tickLine={false}
           tickFormatter={v => v === 0 ? '0' : `${(v / 1000).toFixed(0)}K`} />
         <Tooltip
           {...tooltipStyle}
@@ -62,8 +62,8 @@ export function NetFlowChart({ data }: { data: ChartEntry[] }) {
           labelFormatter={(label) => data.find(d => d.name === label)?.label ?? label}
         />
         <Line
-          type="monotone" dataKey="net" stroke="oklch(0.70 0.18 145)" strokeWidth={2}
-          dot={{ r: 3, fill: 'oklch(0.70 0.18 145)', strokeWidth: 0 }}
+          type="monotone" dataKey="net" stroke="var(--accent-green)" strokeWidth={2}
+          dot={{ r: 3, fill: 'var(--accent-green)', strokeWidth: 0 }}
           activeDot={{ r: 5 }}
         />
       </LineChart>

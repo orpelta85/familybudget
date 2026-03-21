@@ -344,20 +344,20 @@ function KidExpandedView({
   }
 
   return (
-    <div className="mt-5 pt-5 border-t border-t-[oklch(0.22_0.01_250)]">
+    <div className="mt-5 pt-5 border-t border-t-[var(--bg-hover)]">
       {/* Monthly summary */}
-      <div className="bg-[oklch(0.13_0.01_250)] rounded-xl p-4 mb-5">
+      <div className="bg-[var(--bg-base)] rounded-xl p-4 mb-5">
         <div className="font-semibold text-sm mb-3">סיכום חודשי</div>
         <div className="grid-3 mb-0">
-          <div className="bg-[oklch(0.16_0.01_250)] rounded-lg px-3 py-2.5 text-center">
+          <div className="bg-[var(--bg-card)] rounded-lg px-3 py-2.5 text-center">
             <div className="text-lg font-bold text-accent-orange">{formatCurrency(monthlyCost)}</div>
             <div className="text-[11px] text-text-secondary mt-0.5">חוגים</div>
           </div>
-          <div className="bg-[oklch(0.16_0.01_250)] rounded-lg px-3 py-2.5 text-center">
+          <div className="bg-[var(--bg-card)] rounded-lg px-3 py-2.5 text-center">
             <div className="text-lg font-bold text-accent-red">{formatCurrency(currentMonthExpenses)}</div>
             <div className="text-[11px] text-text-secondary mt-0.5">הוצאות</div>
           </div>
-          <div className="bg-[oklch(0.16_0.01_250)] rounded-lg px-3 py-2.5 text-center">
+          <div className="bg-[var(--bg-card)] rounded-lg px-3 py-2.5 text-center">
             <div className="text-lg font-bold text-accent-purple">{formatCurrency(totalMonthly)}</div>
             <div className="text-[11px] text-text-secondary mt-0.5">סה"כ</div>
           </div>
@@ -366,7 +366,7 @@ function KidExpandedView({
 
       {/* Personal savings */}
       {age !== null && (
-        <div className="bg-[oklch(0.13_0.02_280)] border border-[oklch(0.25_0.04_280)] rounded-xl p-4 mb-5">
+        <div className="bg-[var(--c-purple-0-15)] border border-[var(--c-purple-0-25)] rounded-xl p-4 mb-5">
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <PiggyBank size={14} className="text-accent-purple" />
@@ -406,11 +406,11 @@ function KidExpandedView({
             </div>
           ) : (
             <div className="grid-2 !mb-0">
-              <div className="bg-[oklch(0.16_0.02_280)] rounded-lg px-3 py-2.5 text-center">
+              <div className="bg-[var(--c-purple-0-18)] rounded-lg px-3 py-2.5 text-center">
                 <div className="text-lg font-bold text-accent-purple">{formatCurrency(monthlySavings)}</div>
                 <div className="text-[11px] text-text-secondary mt-0.5">חיסכון חודשי</div>
               </div>
-              <div className="bg-[oklch(0.16_0.02_280)] rounded-lg px-3 py-2.5 text-center">
+              <div className="bg-[var(--c-purple-0-18)] rounded-lg px-3 py-2.5 text-center">
                 <div className="text-lg font-bold text-accent-purple">{formatCurrency(projectedSavings)}</div>
                 <div className="text-[11px] text-text-secondary mt-0.5">תחזית לגיל {targetAge}</div>
               </div>
@@ -426,7 +426,7 @@ function KidExpandedView({
 
       {/* Bituach Leumi savings */}
       {age !== null && (
-        <div className="bg-[oklch(0.15_0.02_185)] border border-[oklch(0.25_0.05_185)] rounded-xl p-4 mb-5 text-[13px]">
+        <div className="bg-[var(--c-teal-0-18)] border border-[var(--c-teal-0-25)] rounded-xl p-4 mb-5 text-[13px]">
           <div className="flex items-center gap-2 mb-2">
             <TrendingUp size={14} className="text-accent-teal" />
             <span className="font-semibold">חיסכון ביטוח לאומי</span>
@@ -452,7 +452,7 @@ function KidExpandedView({
           ) : (
             <div className="flex flex-col gap-1.5">
               {activities.map(a => (
-                <div key={a.id} className="flex justify-between items-center py-2 px-2 rounded-lg hover:bg-[oklch(0.18_0.01_250)] transition-colors text-[13px]">
+                <div key={a.id} className="flex justify-between items-center py-2 px-2 rounded-lg hover:bg-[var(--c-0-18)] transition-colors text-[13px]">
                   <div>
                     <span className="text-text-heading">{a.name}</span>
                     <div className="flex gap-3 text-[11px] text-text-secondary mt-0.5">
@@ -485,7 +485,7 @@ function KidExpandedView({
             <>
               <div className="flex flex-col gap-1.5">
                 {currentExpenses.map(e => (
-                  <div key={e.id} className="flex justify-between items-center py-2 px-2 rounded-lg hover:bg-[oklch(0.18_0.01_250)] transition-colors text-[13px]">
+                  <div key={e.id} className="flex justify-between items-center py-2 px-2 rounded-lg hover:bg-[var(--c-0-18)] transition-colors text-[13px]">
                     <div>
                       <span className="text-text-heading">{e.description || e.category}</span>
                       <div className="text-[11px] text-text-secondary mt-0.5">{e.category}</div>
@@ -500,7 +500,7 @@ function KidExpandedView({
                   </div>
                 ))}
               </div>
-              <div className="flex justify-between items-center mt-3 pt-3 border-t border-t-[oklch(0.22_0.01_250)] text-sm">
+              <div className="flex justify-between items-center mt-3 pt-3 border-t border-t-[var(--bg-hover)] text-sm">
                 <span className="font-semibold text-text-secondary">סה"כ חודשי</span>
                 <span className="font-bold text-accent-red">{formatCurrency(currentMonthExpenses)}</span>
               </div>
@@ -565,7 +565,7 @@ function AddKidModal({
 
   return (
     <div className="fixed inset-0 bg-black/70 z-[1000] flex items-center justify-center p-4">
-      <div className="bg-[oklch(0.14_0.01_250)] rounded-2xl p-6 w-full max-w-[380px] border border-[oklch(0.25_0.01_250)]">
+      <div className="bg-[var(--c-0-14)] rounded-2xl p-6 w-full max-w-[380px] border border-[var(--border-default)]">
         <div className="flex justify-between items-center mb-5">
           <h3 className="text-base font-bold">הוסף ילד/ה</h3>
           <button onClick={onClose} aria-label="סגור"
@@ -625,7 +625,7 @@ function AddActivityModal({
 
   return (
     <div className="fixed inset-0 bg-black/70 z-[1000] flex items-center justify-center p-4">
-      <div className="bg-[oklch(0.14_0.01_250)] rounded-2xl p-6 w-full max-w-[380px] border border-[oklch(0.25_0.01_250)]">
+      <div className="bg-[var(--c-0-14)] rounded-2xl p-6 w-full max-w-[380px] border border-[var(--border-default)]">
         <div className="flex justify-between items-center mb-5">
           <h3 className="text-base font-bold">הוסף חוג / פעילות</h3>
           <button onClick={onClose} aria-label="סגור"
@@ -709,7 +709,7 @@ function AddExpenseModal({
 
   return (
     <div className="fixed inset-0 bg-black/70 z-[1000] flex items-center justify-center p-4">
-      <div className="bg-[oklch(0.14_0.01_250)] rounded-2xl p-6 w-full max-w-[380px] border border-[oklch(0.25_0.01_250)]">
+      <div className="bg-[var(--c-0-14)] rounded-2xl p-6 w-full max-w-[380px] border border-[var(--border-default)]">
         <div className="flex justify-between items-center mb-5">
           <h3 className="text-base font-bold">הוסף הוצאה</h3>
           <button onClick={onClose} aria-label="סגור"

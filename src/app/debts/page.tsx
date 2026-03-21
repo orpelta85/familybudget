@@ -119,11 +119,11 @@ const DEBT_TYPE_LABELS: Record<DebtType, string> = {
 }
 
 const COLORS = [
-  'oklch(0.65 0.18 250)',
-  'oklch(0.72 0.18 55)',
-  'oklch(0.70 0.18 145)',
-  'oklch(0.68 0.18 295)',
-  'oklch(0.62 0.22 27)',
+  'var(--accent-blue)',
+  'var(--accent-orange)',
+  'var(--accent-green)',
+  'var(--accent-purple)',
+  'var(--accent-red)',
 ]
 
 export default function DebtsPage() {
@@ -214,26 +214,26 @@ export default function DebtsPage() {
       {/* Header */}
       <div className="flex justify-between items-start mb-1.5">
         <div className="flex items-center gap-2">
-          <Calculator size={18} className="text-[oklch(0.72_0.18_55)]" />
+          <Calculator size={18} className="text-[var(--accent-orange)]" />
           <h1 className="text-xl font-bold tracking-tight">מחשבון חובות</h1>
           <PageInfo {...PAGE_TIPS.debts} />
         </div>
         <button
           onClick={() => setNewDebt({ name: '', balance: '', interestRate: '', minimumPayment: '', debtType: 'fixed', earlyPayoffPenalty: false })}
-          className="btn-hover flex items-center gap-1.5 bg-[oklch(0.20_0.04_55)] border border-[oklch(0.32_0.08_55)] rounded-lg px-3.5 py-[7px] text-[oklch(0.72_0.18_55)] text-[13px] font-medium cursor-pointer"
+          className="btn-hover flex items-center gap-1.5 bg-[var(--c-orange-0-20)] border border-[var(--c-orange-0-32)] rounded-lg px-3.5 py-[7px] text-[var(--accent-orange)] text-[13px] font-medium cursor-pointer"
         >
           <Plus size={13} /> הוסף חוב
         </button>
       </div>
-      <p className="text-[oklch(0.65_0.01_250)] text-[13px] mb-5">
+      <p className="text-[var(--text-secondary)] text-[13px] mb-5">
         השווה בין שיטות פירעון — Snowball מול Avalanche
       </p>
 
       {/* Debt list */}
       {!debts?.length ? (
-        <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-10 text-center mb-5">
-          <Inbox size={36} className="text-[oklch(0.30_0.01_250)] mx-auto mb-2.5" />
-          <div className="text-[oklch(0.65_0.01_250)] text-sm">אין חובות — לחץ &quot;הוסף חוב&quot; להתחיל</div>
+        <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-10 text-center mb-5">
+          <Inbox size={36} className="text-[var(--c-0-30)] mx-auto mb-2.5" />
+          <div className="text-[var(--text-secondary)] text-sm">אין חובות — לחץ &quot;הוסף חוב&quot; להתחיל</div>
         </div>
       ) : (
         <>
@@ -260,31 +260,31 @@ export default function DebtsPage() {
           {/* Debt cards */}
           <div className="flex flex-col gap-2 mb-5">
             {(debts ?? []).map((debt, i) => (
-              <div key={debt.id} className="card-hover card-transition bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl px-[18px] py-3.5">
+              <div key={debt.id} className="card-hover card-transition bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl px-[18px] py-3.5">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="w-3 h-3 rounded-full shrink-0" style={{ background: COLORS[i % COLORS.length] }} />
                     <div>
                       <div className="font-semibold text-sm">{debt.name}</div>
-                      <div className="text-xs text-[oklch(0.65_0.01_250)] flex gap-3 mt-0.5">
+                      <div className="text-xs text-[var(--text-secondary)] flex gap-3 mt-0.5">
                         <span className="flex items-center gap-0.5">{DEBT_TYPE_LABELS[debt.debt_type as DebtType] ?? debt.debt_type}
                           {debt.debt_type === 'prime' && <InfoTooltip body="ריבית בסיס של בנק ישראל + 1.5%. משתנה כל כמה חודשים" />}
                           {debt.debt_type === 'cpi_linked' && <InfoTooltip body="הקרן עולה עם האינפלציה. ריבית נמוכה יותר אבל הקרן גדלה" />}
                         </span>
                         <span>{Number(debt.interest_rate)}% ריבית</span>
-                        {debt.early_payoff_penalty && <span className="text-[oklch(0.72_0.18_55)]">קנס פירעון מוקדם</span>}
+                        {debt.early_payoff_penalty && <span className="text-[var(--accent-orange)]">קנס פירעון מוקדם</span>}
                       </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="text-right">
-                      <div className="text-base font-bold text-[oklch(0.88_0.01_250)]">{formatCurrency(Number(debt.balance))}</div>
-                      <div className="text-xs text-[oklch(0.65_0.01_250)]">מינימום: {formatCurrency(Number(debt.minimum_payment))}</div>
+                      <div className="text-base font-bold text-[var(--c-0-88)]">{formatCurrency(Number(debt.balance))}</div>
+                      <div className="text-xs text-[var(--text-secondary)]">מינימום: {formatCurrency(Number(debt.minimum_payment))}</div>
                     </div>
                     <button
                       onClick={() => handleDeleteDebt(debt.id, debt.name)}
                       aria-label="מחק חוב"
-                      className="flex items-center justify-center bg-[oklch(0.18_0.03_15)] border border-[oklch(0.28_0.06_15)] rounded-[7px] p-2 min-w-9 min-h-9 text-[oklch(0.60_0.18_15)] text-xs cursor-pointer"
+                      className="flex items-center justify-center bg-[var(--c-red-0-18)] border border-[var(--c-red-0-28)] rounded-[7px] p-2 min-w-9 min-h-9 text-[var(--c-red-0-62)] text-xs cursor-pointer"
                     >
                       <Trash2 size={12} />
                     </button>
@@ -303,9 +303,9 @@ export default function DebtsPage() {
                 inputMode="numeric"
                 value={extraMonthly}
                 onChange={e => setExtraMonthly(e.target.value.replace(/[^\d]/g, ''))}
-                className="w-32 bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left"
+                className="w-32 bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left"
               />
-              <span className="text-[oklch(0.65_0.01_250)] text-sm">₪ לחודש</span>
+              <span className="text-[var(--text-secondary)] text-sm">₪ לחודש</span>
             </div>
           </div>
 
@@ -315,39 +315,39 @@ export default function DebtsPage() {
             <div className="overflow-x-auto">
               <table className="w-full text-[13px] border-collapse">
                 <thead>
-                  <tr className="border-b border-[oklch(0.22_0.01_250)]">
-                    <th className="py-2 px-3 text-right text-[oklch(0.65_0.01_250)] font-medium text-[11px]">שיטה</th>
-                    <th className="py-2 px-3 text-right text-[oklch(0.65_0.01_250)] font-medium text-[11px]">זמן פירעון</th>
-                    <th className="py-2 px-3 text-right text-[oklch(0.65_0.01_250)] font-medium text-[11px]">ריבית כוללת</th>
-                    <th className="py-2 px-3 text-right text-[oklch(0.65_0.01_250)] font-medium text-[11px]">חיסכון</th>
+                  <tr className="border-b border-[var(--bg-hover)]">
+                    <th className="py-2 px-3 text-right text-[var(--text-secondary)] font-medium text-[11px]">שיטה</th>
+                    <th className="py-2 px-3 text-right text-[var(--text-secondary)] font-medium text-[11px]">זמן פירעון</th>
+                    <th className="py-2 px-3 text-right text-[var(--text-secondary)] font-medium text-[11px]">ריבית כוללת</th>
+                    <th className="py-2 px-3 text-right text-[var(--text-secondary)] font-medium text-[11px]">חיסכון</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr className="border-b border-[oklch(0.20_0.01_250)] opacity-60">
+                  <tr className="border-b border-[var(--c-0-20)] opacity-60">
                     <td className="py-2.5 px-3 font-medium">מינימום בלבד</td>
                     <td className="py-2.5 px-3">{formatMonths(minimumResult.months)}</td>
-                    <td className="py-2.5 px-3 text-[oklch(0.72_0.18_55)]">{formatCurrency(minimumResult.totalInterest)}</td>
+                    <td className="py-2.5 px-3 text-[var(--accent-orange)]">{formatCurrency(minimumResult.totalInterest)}</td>
                     <td className="py-2.5 px-3">—</td>
                   </tr>
-                  <tr className={`border-b border-[oklch(0.20_0.01_250)] ${method === 'snowball' ? 'bg-[oklch(0.18_0.02_250)]' : ''}`}>
+                  <tr className={`border-b border-[var(--c-0-20)] ${method === 'snowball' ? 'bg-[var(--c-blue-0-18)]' : ''}`}>
                     <td className="py-2.5 px-3">
-                      <button onClick={() => setMethod('snowball')} className={`bg-transparent border-none cursor-pointer text-inherit font-medium ${method === 'snowball' ? 'text-[oklch(0.70_0.18_145)]' : ''}`}>
+                      <button onClick={() => setMethod('snowball')} className={`bg-transparent border-none cursor-pointer text-inherit font-medium ${method === 'snowball' ? 'text-[var(--accent-green)]' : ''}`}>
                         Snowball (מהקטן לגדול) <InfoTooltip body="שיטה שבה סוגרים קודם את החוב הקטן ביותר — נותן מוטיבציה" />
                       </button>
                     </td>
                     <td className="py-2.5 px-3">{formatMonths(snowballResult.months)}</td>
-                    <td className="py-2.5 px-3 text-[oklch(0.72_0.18_55)]">{formatCurrency(snowballResult.totalInterest)}</td>
-                    <td className="py-2.5 px-3 text-[oklch(0.70_0.18_145)] font-semibold">{formatCurrency(minimumResult.totalInterest - snowballResult.totalInterest)}</td>
+                    <td className="py-2.5 px-3 text-[var(--accent-orange)]">{formatCurrency(snowballResult.totalInterest)}</td>
+                    <td className="py-2.5 px-3 text-[var(--accent-green)] font-semibold">{formatCurrency(minimumResult.totalInterest - snowballResult.totalInterest)}</td>
                   </tr>
-                  <tr className={`${method === 'avalanche' ? 'bg-[oklch(0.18_0.02_250)]' : ''}`}>
+                  <tr className={`${method === 'avalanche' ? 'bg-[var(--c-blue-0-18)]' : ''}`}>
                     <td className="py-2.5 px-3">
-                      <button onClick={() => setMethod('avalanche')} className={`bg-transparent border-none cursor-pointer text-inherit font-medium ${method === 'avalanche' ? 'text-[oklch(0.70_0.18_145)]' : ''}`}>
+                      <button onClick={() => setMethod('avalanche')} className={`bg-transparent border-none cursor-pointer text-inherit font-medium ${method === 'avalanche' ? 'text-[var(--accent-green)]' : ''}`}>
                         Avalanche (מהיקר לזול) <InfoTooltip body="שיטה שבה סוגרים קודם את החוב עם הריבית הגבוהה — חוסך הכי הרבה כסף" />
                       </button>
                     </td>
                     <td className="py-2.5 px-3">{formatMonths(avalancheResult.months)}</td>
-                    <td className="py-2.5 px-3 text-[oklch(0.72_0.18_55)]">{formatCurrency(avalancheResult.totalInterest)}</td>
-                    <td className="py-2.5 px-3 text-[oklch(0.70_0.18_145)] font-semibold">{formatCurrency(minimumResult.totalInterest - avalancheResult.totalInterest)}</td>
+                    <td className="py-2.5 px-3 text-[var(--accent-orange)]">{formatCurrency(avalancheResult.totalInterest)}</td>
+                    <td className="py-2.5 px-3 text-[var(--accent-green)] font-semibold">{formatCurrency(minimumResult.totalInterest - avalancheResult.totalInterest)}</td>
                   </tr>
                 </tbody>
               </table>
@@ -362,8 +362,8 @@ export default function DebtsPage() {
                 onClick={() => setMethod(m)}
                 className={`flex-1 rounded-lg py-2.5 text-[13px] cursor-pointer font-medium ${
                   method === m
-                    ? 'bg-[oklch(0.24_0.06_250)] border border-[oklch(0.40_0.10_250)] text-[oklch(0.75_0.15_250)]'
-                    : 'bg-[oklch(0.20_0.01_250)] border border-[oklch(0.28_0.01_250)] text-[oklch(0.65_0.01_250)]'
+                    ? 'bg-[var(--c-blue-0-24)] border border-[var(--c-blue-0-40)] text-[var(--c-blue-0-75)]'
+                    : 'bg-[var(--c-0-20)] border border-[var(--border-light)] text-[var(--text-secondary)]'
                 }`}
               >
                 {m === 'snowball' ? 'Snowball (מהקטן)' : 'Avalanche (מהיקר)'}
@@ -375,7 +375,7 @@ export default function DebtsPage() {
           {chartData.length > 1 && (
             <div className="card mb-5">
               <h2 className="font-semibold text-sm mb-4 flex items-center gap-2">
-                <TrendingDown size={14} className="text-[oklch(0.70_0.18_145)]" />
+                <TrendingDown size={14} className="text-[var(--accent-green)]" />
                 ירידת יתרות לאורך זמן ({method === 'snowball' ? 'Snowball' : 'Avalanche'})
               </h2>
               <div className="relative h-48 flex items-end gap-px">
@@ -402,7 +402,7 @@ export default function DebtsPage() {
               {/* Legend */}
               <div className="flex flex-wrap gap-3 mt-3">
                 {debtList.map((d, i) => (
-                  <div key={i} className="flex items-center gap-1.5 text-xs text-[oklch(0.70_0.01_250)]">
+                  <div key={i} className="flex items-center gap-1.5 text-xs text-[var(--c-0-70)]">
                     <div className="w-2.5 h-2.5 rounded-sm" style={{ background: COLORS[i % COLORS.length] }} />
                     {d.name}
                   </div>
@@ -415,17 +415,17 @@ export default function DebtsPage() {
           {activeResult.payoffOrder.length > 0 && (
             <div className="card mb-5">
               <h2 className="font-semibold text-sm mb-4 flex items-center gap-2">
-                <ArrowDown size={14} className="text-[oklch(0.65_0.18_250)]" />
+                <ArrowDown size={14} className="text-[var(--accent-blue)]" />
                 סדר פירעון ({method === 'snowball' ? 'Snowball' : 'Avalanche'})
               </h2>
               <div className="flex flex-col gap-2">
                 {activeResult.payoffOrder.map((name, i) => (
-                  <div key={i} className="flex items-center gap-3 py-2 border-b border-[oklch(0.20_0.01_250)] last:border-b-0">
-                    <div className="w-6 h-6 rounded-full bg-[oklch(0.22_0.01_250)] flex items-center justify-center text-[11px] font-bold text-[oklch(0.70_0.18_145)]">
+                  <div key={i} className="flex items-center gap-3 py-2 border-b border-[var(--c-0-20)] last:border-b-0">
+                    <div className="w-6 h-6 rounded-full bg-[var(--bg-hover)] flex items-center justify-center text-[11px] font-bold text-[var(--accent-green)]">
                       {i + 1}
                     </div>
                     <span className="text-[13px] font-medium">{name}</span>
-                    <span className="text-[11px] text-[oklch(0.65_0.01_250)]">נפרע — התשלום שלו מתגלגל לבא</span>
+                    <span className="text-[11px] text-[var(--text-secondary)]">נפרע — התשלום שלו מתגלגל לבא</span>
                   </div>
                 ))}
               </div>
@@ -438,13 +438,13 @@ export default function DebtsPage() {
               <h2 className="font-semibold text-sm mb-4">לוח תשלומים חודשי</h2>
               <div className="overflow-x-auto max-h-[400px] overflow-y-auto">
                 <table className="w-full text-[12px] border-collapse">
-                  <thead className="sticky top-0 bg-[oklch(0.16_0.01_250)]">
-                    <tr className="border-b border-[oklch(0.22_0.01_250)]">
-                      <th className="py-2 px-2 text-right text-[oklch(0.65_0.01_250)] font-medium text-[11px]">חודש</th>
+                  <thead className="sticky top-0 bg-[var(--bg-card)]">
+                    <tr className="border-b border-[var(--bg-hover)]">
+                      <th className="py-2 px-2 text-right text-[var(--text-secondary)] font-medium text-[11px]">חודש</th>
                       {debtList.map((d, i) => (
                         <th key={i} className="py-2 px-2 text-right font-medium text-[11px]" style={{ color: COLORS[i % COLORS.length] }}>{d.name}</th>
                       ))}
-                      <th className="py-2 px-2 text-right text-[oklch(0.65_0.01_250)] font-medium text-[11px]">סה&quot;כ</th>
+                      <th className="py-2 px-2 text-right text-[var(--text-secondary)] font-medium text-[11px]">סה&quot;כ</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -452,14 +452,14 @@ export default function DebtsPage() {
                       const monthNum = activeResult.balanceHistory.indexOf(row)
                       const total = row.reduce((s, v) => s + v, 0)
                       return (
-                        <tr key={rowIdx} className="border-b border-[oklch(0.18_0.01_250)]">
-                          <td className="py-1.5 px-2 text-[oklch(0.65_0.01_250)]">{monthNum}</td>
+                        <tr key={rowIdx} className="border-b border-[var(--c-0-18)]">
+                          <td className="py-1.5 px-2 text-[var(--text-secondary)]">{monthNum}</td>
                           {row.map((val, i) => (
-                            <td key={i} className="py-1.5 px-2" style={{ color: val > 0 ? COLORS[i % COLORS.length] : 'oklch(0.40 0.01 250)' }}>
+                            <td key={i} className="py-1.5 px-2" style={{ color: val > 0 ? COLORS[i % COLORS.length] : 'var(--c-0-40)' }}>
                               {val > 0 ? formatCurrency(Math.round(val)) : '0 ₪'}
                             </td>
                           ))}
-                          <td className="py-1.5 px-2 font-semibold text-[oklch(0.80_0.01_250)]">{formatCurrency(Math.round(total))}</td>
+                          <td className="py-1.5 px-2 font-semibold text-[var(--text-heading)]">{formatCurrency(Math.round(total))}</td>
                         </tr>
                       )
                     })}
@@ -474,52 +474,52 @@ export default function DebtsPage() {
       {/* Add Debt Modal */}
       {newDebt && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-[oklch(0.18_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-[14px] p-7 w-[400px]">
+          <div className="bg-[var(--c-0-18)] border border-[var(--border-light)] rounded-[14px] p-7 w-[400px]">
             <div className="flex justify-between items-center mb-5">
               <span className="font-semibold text-[15px]">הוסף חוב</span>
-              <button onClick={() => setNewDebt(null)} aria-label="סגור" className="bg-transparent border-none text-[oklch(0.65_0.01_250)] cursor-pointer p-2 min-w-9 min-h-9 flex items-center justify-center">
+              <button onClick={() => setNewDebt(null)} aria-label="סגור" className="bg-transparent border-none text-[var(--text-secondary)] cursor-pointer p-2 min-w-9 min-h-9 flex items-center justify-center">
                 <X size={18} />
               </button>
             </div>
             <div className="flex flex-col gap-3.5 mb-4">
               <div>
-                <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">שם</label>
+                <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">שם</label>
                 <input type="text" autoFocus value={newDebt.name}
                   onChange={e => setNewDebt(p => p && { ...p, name: e.target.value })}
                   placeholder="למשל: הלוואת רכב, אשראי..."
-                  className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-sm" />
+                  className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-sm" />
               </div>
               <div>
-                <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">יתרה (₪)</label>
+                <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">יתרה (₪)</label>
                 <input type="text" inputMode="numeric" value={newDebt.balance}
                   onChange={e => setNewDebt(p => p && { ...p, balance: e.target.value.replace(/[^\d]/g, '') })}
                   placeholder="0"
-                  className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left" />
+                  className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left" />
               </div>
               <div>
-                <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">ריבית שנתית (%)</label>
+                <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">ריבית שנתית (%)</label>
                 <input type="text" inputMode="decimal" value={newDebt.interestRate}
                   onChange={e => setNewDebt(p => p && { ...p, interestRate: e.target.value.replace(/[^\d.]/g, '') })}
                   placeholder="0"
-                  className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left" />
+                  className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left" />
               </div>
               <div>
-                <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">תשלום מינימלי חודשי (₪)</label>
+                <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">תשלום מינימלי חודשי (₪)</label>
                 <input type="text" inputMode="numeric" value={newDebt.minimumPayment}
                   onChange={e => setNewDebt(p => p && { ...p, minimumPayment: e.target.value.replace(/[^\d]/g, '') })}
                   placeholder="0"
-                  className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left" />
+                  className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left" />
               </div>
               <div>
-                <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">סוג הלוואה</label>
+                <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">סוג הלוואה</label>
                 <div className="flex gap-2">
                   {(['fixed', 'prime', 'cpi_linked'] as const).map(t => (
                     <button key={t} type="button"
                       onClick={() => setNewDebt(p => p && { ...p, debtType: t })}
                       className={`flex-1 rounded-lg py-[9px] text-[12px] cursor-pointer ${
                         newDebt.debtType === t
-                          ? 'bg-[oklch(0.24_0.06_250)] border border-[oklch(0.40_0.10_250)] text-[oklch(0.75_0.15_250)] font-semibold'
-                          : 'bg-[oklch(0.20_0.01_250)] border border-[oklch(0.28_0.01_250)] text-[oklch(0.65_0.01_250)] font-normal'
+                          ? 'bg-[var(--c-blue-0-24)] border border-[var(--c-blue-0-40)] text-[var(--c-blue-0-75)] font-semibold'
+                          : 'bg-[var(--c-0-20)] border border-[var(--border-light)] text-[var(--text-secondary)] font-normal'
                       }`}>
                       {DEBT_TYPE_LABELS[t]}
                     </button>
@@ -529,14 +529,14 @@ export default function DebtsPage() {
               <label className="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" checked={newDebt.earlyPayoffPenalty}
                   onChange={e => setNewDebt(p => p && { ...p, earlyPayoffPenalty: e.target.checked })}
-                  className="w-4 h-4 rounded accent-[oklch(0.72_0.18_55)]" />
-                <span className="text-[13px] text-[oklch(0.70_0.01_250)]">קנס פירעון מוקדם</span>
+                  className="w-4 h-4 rounded accent-[var(--accent-orange)]" />
+                <span className="text-[13px] text-[var(--c-0-70)]">קנס פירעון מוקדם</span>
               </label>
             </div>
             <button
               onClick={handleAddDebt}
               disabled={addDebt.isPending || !newDebt.name.trim() || Number(newDebt.balance) <= 0}
-              className={`w-full bg-[oklch(0.72_0.18_55)] border-none rounded-lg py-[11px] font-semibold text-sm text-[oklch(0.10_0.01_250)] ${
+              className={`w-full bg-[var(--accent-orange)] border-none rounded-lg py-[11px] font-semibold text-sm text-[var(--c-0-10)] ${
                 addDebt.isPending || !newDebt.name.trim() || Number(newDebt.balance) <= 0 ? 'cursor-not-allowed opacity-50' : 'cursor-pointer opacity-100'
               }`}
             >

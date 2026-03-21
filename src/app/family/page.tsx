@@ -8,7 +8,9 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import {
   Users, Copy, Mail, Send, X, Link2, Pencil, Check, Shield, Eye, EyeOff, Sparkles, Key, Trash2,
+  Sun, Moon,
 } from 'lucide-react'
+import { useTheme } from '@/contexts/ThemeContext'
 import { TableSkeleton } from '@/components/ui/Skeleton'
 import { PageInfo } from '@/components/ui/PageInfo'
 import { PAGE_TIPS } from '@/lib/page-tips'
@@ -27,6 +29,7 @@ export default function FamilyPage() {
   const { family, members, myMembership, isAdmin, loading, familyId } = useFamilyContext()
   const { user } = useUser()
   const qc = useQueryClient()
+  const { theme, setTheme } = useTheme()
 
   const [editingName, setEditingName] = useState(false)
   const [nameValue, setNameValue] = useState('')
@@ -122,7 +125,7 @@ export default function FamilyPage() {
   if (!family) {
     return (
       <div className="flex justify-center items-center min-h-[50vh]">
-        <div className="text-[oklch(0.65_0.01_250)] text-sm">לא נמצאה משפחה</div>
+        <div className="text-[var(--text-secondary)] text-sm">לא נמצאה משפחה</div>
       </div>
     )
   }
@@ -132,20 +135,20 @@ export default function FamilyPage() {
       {/* Header */}
       <div className="mb-7">
         <div className="flex items-center gap-2.5 mb-1">
-          <Users size={20} className="text-[oklch(0.65_0.18_250)]" />
+          <Users size={20} className="text-[var(--accent-blue)]" />
           <h1 className="text-[22px] font-bold tracking-tight m-0">
             הגדרות משפחה
           </h1>
           <PageInfo {...PAGE_TIPS.family} />
         </div>
-        <p className="text-[13px] text-[oklch(0.65_0.01_250)] m-0">
+        <p className="text-[13px] text-[var(--text-secondary)] m-0">
           {family.name}
         </p>
       </div>
 
       <div className="flex flex-col gap-4">
         {/* Family Info Card */}
-        <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5">
+        <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5">
           <h2 className="text-sm font-semibold mb-4 mt-0">
             פרטי המשפחה
           </h2>
@@ -153,13 +156,13 @@ export default function FamilyPage() {
           <div className="flex flex-col gap-3.5">
             {/* Family Name */}
             <div>
-              <div className="text-[11px] text-[oklch(0.65_0.01_250)] block mb-1 font-medium">שם משפחה</div>
+              <div className="text-[11px] text-[var(--text-secondary)] block mb-1 font-medium">שם משפחה</div>
               {editingName ? (
                 <div className="flex gap-2">
                   <input
                     value={nameValue}
                     onChange={e => setNameValue(e.target.value)}
-                    className="flex-1 bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-2 text-inherit text-[13px] outline-none"
+                    className="flex-1 bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-2 text-inherit text-[13px] outline-none"
                     autoFocus
                     onKeyDown={e => {
                       if (e.key === 'Enter' && nameValue.trim()) updateName.mutate(nameValue.trim())
@@ -169,14 +172,14 @@ export default function FamilyPage() {
                   <button
                     onClick={() => nameValue.trim() && updateName.mutate(nameValue.trim())}
                     disabled={updateName.isPending}
-                    className="bg-[oklch(0.65_0.18_250)] border-none rounded-lg px-3 py-2 cursor-pointer text-[oklch(0.12_0.01_250)] font-semibold text-[13px] flex items-center gap-1.5"
+                    className="bg-[var(--accent-blue)] border-none rounded-lg px-3 py-2 cursor-pointer text-[var(--c-0-10)] font-semibold text-[13px] flex items-center gap-1.5"
                     aria-label="שמור"
                   >
                     <Check size={14} />
                   </button>
                   <button
                     onClick={() => setEditingName(false)}
-                    className="bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-2 py-2 cursor-pointer text-[oklch(0.70_0.01_250)] text-xs flex items-center gap-1"
+                    className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-2 py-2 cursor-pointer text-[var(--c-0-70)] text-xs flex items-center gap-1"
                     aria-label="ביטול"
                   >
                     <X size={14} />
@@ -188,7 +191,7 @@ export default function FamilyPage() {
                   {isAdmin && (
                     <button
                       onClick={() => { setNameValue(family.name); setEditingName(true) }}
-                      className="bg-transparent border-none cursor-pointer text-[oklch(0.65_0.01_250)] p-1"
+                      className="bg-transparent border-none cursor-pointer text-[var(--text-secondary)] p-1"
                       aria-label="ערוך שם"
                     >
                       <Pencil size={13} />
@@ -200,16 +203,16 @@ export default function FamilyPage() {
 
             {/* Invite Code */}
             <div>
-              <div className="text-[11px] text-[oklch(0.65_0.01_250)] block mb-1 font-medium">קוד הזמנה</div>
-              <span className="text-[13px] font-mono tracking-[0.05em] text-[oklch(0.65_0.18_250)] ltr inline-block">
+              <div className="text-[11px] text-[var(--text-secondary)] block mb-1 font-medium">קוד הזמנה</div>
+              <span className="text-[13px] font-mono tracking-[0.05em] text-[var(--accent-blue)] ltr inline-block">
                 {family.invite_code}
               </span>
             </div>
 
             {/* Created Date */}
             <div>
-              <div className="text-[11px] text-[oklch(0.65_0.01_250)] block mb-1 font-medium">תאריך יצירה</div>
-              <span className="text-[13px] text-[oklch(0.65_0.01_250)]">
+              <div className="text-[11px] text-[var(--text-secondary)] block mb-1 font-medium">תאריך יצירה</div>
+              <span className="text-[13px] text-[var(--text-secondary)]">
                 {formatDate(family.created_at)}
               </span>
             </div>
@@ -217,7 +220,7 @@ export default function FamilyPage() {
         </div>
 
         {/* Members List Card */}
-        <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5">
+        <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5">
           <h2 className="text-sm font-semibold mb-4 mt-0">
             חברי משפחה
           </h2>
@@ -231,15 +234,15 @@ export default function FamilyPage() {
                   key={member.id}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-lg ${
                     isMe
-                      ? 'bg-[oklch(0.20_0.02_250)] border border-[oklch(0.30_0.04_250)]'
-                      : 'bg-[oklch(0.13_0.01_250)] border border-[oklch(0.22_0.01_250)]'
+                      ? 'bg-[var(--c-blue-0-20)] border border-[var(--c-blue-0-30)]'
+                      : 'bg-[var(--bg-base)] border border-[var(--bg-hover)]'
                   }`}
                 >
                   {/* Avatar placeholder */}
                   <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                    isMemberAdmin ? 'bg-[oklch(0.25_0.06_145)]' : 'bg-[oklch(0.25_0.04_250)]'
+                    isMemberAdmin ? 'bg-[var(--c-green-0-25)]' : 'bg-[var(--c-blue-0-25)]'
                   }`}>
-                    <Users size={14} className={isMemberAdmin ? 'text-[oklch(0.70_0.15_145)]' : 'text-[oklch(0.65_0.12_250)]'} />
+                    <Users size={14} className={isMemberAdmin ? 'text-[var(--c-green-0-70)]' : 'text-[var(--accent-blue)]'} />
                   </div>
 
                   {/* Info */}
@@ -248,20 +251,20 @@ export default function FamilyPage() {
                       <span className="text-[13px] font-medium">
                         {member.user_id.slice(0, 8)}...
                         {isMe && (
-                          <span className="text-[oklch(0.65_0.01_250)] font-normal"> (את/ה)</span>
+                          <span className="text-[var(--text-secondary)] font-normal"> (את/ה)</span>
                         )}
                       </span>
                       <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold border ${
                         isMemberAdmin
-                          ? 'bg-[oklch(0.20_0.03_145)] text-[oklch(0.75_0.15_145)] border-[oklch(0.30_0.05_145)]'
-                          : 'bg-[oklch(0.20_0.03_250)] text-[oklch(0.75_0.15_250)] border-[oklch(0.30_0.05_250)]'
+                          ? 'bg-[var(--c-green-0-20)] text-[var(--c-green-0-75)] border-[var(--c-green-0-30)]'
+                          : 'bg-[var(--c-blue-0-20)] text-[var(--c-blue-0-75)] border-[var(--c-blue-0-30)]'
                       }`}>
                         {isMemberAdmin ? (
                           <><Shield size={10} /> מנהל</>
                         ) : 'חבר'}
                       </span>
                     </div>
-                    <div className="text-[11px] text-[oklch(0.65_0.01_250)] mt-0.5">
+                    <div className="text-[11px] text-[var(--text-secondary)] mt-0.5">
                       הצטרף/ה {formatDate(member.joined_at)}
                     </div>
                   </div>
@@ -274,13 +277,13 @@ export default function FamilyPage() {
                           <button
                             onClick={() => removeMember.mutate(member.id)}
                             disabled={removeMember.isPending}
-                            className="bg-[oklch(0.25_0.08_25)] border border-[oklch(0.35_0.10_25)] rounded-md px-2.5 py-1 text-[oklch(0.75_0.15_25)] text-[11px] font-semibold cursor-pointer"
+                            className="bg-[var(--c-red-0-25)] border border-[var(--c-red-0-35)] rounded-md px-2.5 py-1 text-[var(--c-red-0-75)] text-[11px] font-semibold cursor-pointer"
                           >
                             אישור
                           </button>
                           <button
                             onClick={() => setConfirmDeleteId(null)}
-                            className="bg-transparent border border-[oklch(0.25_0.01_250)] rounded-md px-2 py-1 text-[oklch(0.65_0.01_250)] text-[11px] cursor-pointer"
+                            className="bg-transparent border border-[var(--border-default)] rounded-md px-2 py-1 text-[var(--text-secondary)] text-[11px] cursor-pointer"
                           >
                             ביטול
                           </button>
@@ -288,7 +291,7 @@ export default function FamilyPage() {
                       ) : (
                         <button
                           onClick={() => setConfirmDeleteId(member.id)}
-                          className="bg-transparent border-none cursor-pointer text-[oklch(0.65_0.01_250)] p-1.5"
+                          className="bg-transparent border-none cursor-pointer text-[var(--text-secondary)] p-1.5"
                           aria-label="הסר חבר"
                         >
                           <X size={15} />
@@ -303,7 +306,7 @@ export default function FamilyPage() {
         </div>
 
         {/* Invite Section Card */}
-        <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5">
+        <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5">
           <h2 className="text-sm font-semibold mb-4 mt-0">
             הזמנת חברי משפחה
           </h2>
@@ -311,16 +314,16 @@ export default function FamilyPage() {
           {/* Copy Link */}
           <div className="mb-5">
             <div className="text-[13px] font-semibold mb-2 flex items-center gap-1.5">
-              <Link2 size={14} className="text-[oklch(0.65_0.18_250)]" />
+              <Link2 size={14} className="text-[var(--accent-blue)]" />
               שתף לינק הזמנה
             </div>
             <div className="flex gap-2">
               <input
                 readOnly
                 value={`${typeof window !== 'undefined' ? window.location.origin : ''}/login?invite=${family.invite_code}`}
-                className="flex-1 bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-2 text-inherit text-xs outline-none ltr text-[oklch(0.70_0.01_250)]"
+                className="flex-1 bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-2 text-inherit text-xs outline-none ltr text-[var(--c-0-70)]"
               />
-              <button onClick={copyInviteLink} className="bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-2 cursor-pointer text-[oklch(0.70_0.01_250)] text-xs flex items-center gap-1">
+              <button onClick={copyInviteLink} className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-2 cursor-pointer text-[var(--c-0-70)] text-xs flex items-center gap-1">
                 <Copy size={13} /> העתק
               </button>
             </div>
@@ -328,15 +331,15 @@ export default function FamilyPage() {
 
           {/* Divider */}
           <div className="flex items-center gap-3 mb-5">
-            <div className="flex-1 h-px bg-[oklch(0.25_0.01_250)]" />
-            <span className="text-[11px] text-[oklch(0.65_0.01_250)]">או</span>
-            <div className="flex-1 h-px bg-[oklch(0.25_0.01_250)]" />
+            <div className="flex-1 h-px bg-[var(--border-default)]" />
+            <span className="text-[11px] text-[var(--text-secondary)]">או</span>
+            <div className="flex-1 h-px bg-[var(--border-default)]" />
           </div>
 
           {/* Email Invite */}
           <div>
             <div className="text-[13px] font-semibold mb-2 flex items-center gap-1.5">
-              <Mail size={14} className="text-[oklch(0.70_0.18_145)]" />
+              <Mail size={14} className="text-[var(--accent-green)]" />
               שלח הזמנה במייל
             </div>
             <div className="flex gap-2">
@@ -345,13 +348,13 @@ export default function FamilyPage() {
                 value={inviteEmail}
                 onChange={e => setInviteEmail(e.target.value)}
                 placeholder="email@example.com"
-                className="flex-1 bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-2 text-inherit text-[13px] outline-none ltr"
+                className="flex-1 bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-2 text-inherit text-[13px] outline-none ltr"
                 onKeyDown={e => { if (e.key === 'Enter') sendInviteEmail() }}
               />
               <button
                 onClick={sendInviteEmail}
                 disabled={!inviteEmail || sendingEmail}
-                className={`bg-[oklch(0.65_0.18_250)] border-none rounded-lg px-4 py-2 font-semibold text-[13px] text-[oklch(0.12_0.01_250)] flex items-center gap-1.5 ${!inviteEmail || sendingEmail ? 'opacity-50' : 'opacity-100'} ${sendingEmail ? 'cursor-wait' : 'cursor-pointer'}`}
+                className={`bg-[var(--accent-blue)] border-none rounded-lg px-4 py-2 font-semibold text-[13px] text-[var(--c-0-10)] flex items-center gap-1.5 ${!inviteEmail || sendingEmail ? 'opacity-50' : 'opacity-100'} ${sendingEmail ? 'cursor-wait' : 'cursor-pointer'}`}
               >
                 <Send size={13} /> שלח
               </button>
@@ -360,7 +363,7 @@ export default function FamilyPage() {
         </div>
 
         {/* Privacy Setting Card */}
-        <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5">
+        <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5">
           <h2 className="text-sm font-semibold mb-4 mt-0">
             פרטיות
           </h2>
@@ -369,13 +372,13 @@ export default function FamilyPage() {
             <div className="flex-1">
               <div className="text-[13px] font-medium mb-1 flex items-center gap-1.5">
                 {myMembership?.show_personal_to_family ? (
-                  <Eye size={14} className="text-[oklch(0.70_0.15_145)]" />
+                  <Eye size={14} className="text-[var(--c-green-0-70)]" />
                 ) : (
-                  <EyeOff size={14} className="text-[oklch(0.65_0.01_250)]" />
+                  <EyeOff size={14} className="text-[var(--text-secondary)]" />
                 )}
                 הצג הוצאות אישיות למשפחה
               </div>
-              <p className="text-[11px] text-[oklch(0.65_0.01_250)] m-0 leading-relaxed">
+              <p className="text-[11px] text-[var(--text-secondary)] m-0 leading-relaxed">
                 כאשר מופעל, חברי המשפחה האחרים יוכלו לראות את ההוצאות האישיות שלך בדשבורד המשפחתי.
               </p>
             </div>
@@ -386,54 +389,86 @@ export default function FamilyPage() {
               disabled={togglePrivacy.isPending}
               className={`w-11 h-6 rounded-xl border-none cursor-pointer relative shrink-0 transition-colors duration-200 ${
                 myMembership?.show_personal_to_family
-                  ? 'bg-[oklch(0.55_0.18_145)]'
-                  : 'bg-[oklch(0.25_0.01_250)]'
+                  ? 'bg-[var(--c-green-0-55)]'
+                  : 'bg-[var(--border-default)]'
               }`}
               aria-label="הצג הוצאות אישיות למשפחה"
               role="switch"
               aria-checked={myMembership?.show_personal_to_family ?? false}
             >
-              <div className={`w-[18px] h-[18px] rounded-full bg-[oklch(0.92_0.01_250)] absolute top-[3px] transition-all duration-200 ${
-                myMembership?.show_personal_to_family ? 'end-[3px] start-auto' : 'start-[3px] end-auto'
+              <div className={`w-[18px] h-[18px] rounded-full bg-[var(--c-0-92)] absolute top-[3px] transition-all duration-200 ${
+                myMembership?.show_personal_to_family ? 'left-[3px] right-auto' : 'right-[3px] left-auto'
               }`} />
             </button>
           </div>
         </div>
 
+        {/* Theme Toggle Card */}
+        <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5">
+          <h2 className="text-sm font-semibold mb-4 mt-0">
+            מצב תצוגה
+          </h2>
+
+          <div className="flex gap-2">
+            <button
+              onClick={() => setTheme('light')}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-[13px] font-medium transition-colors cursor-pointer border ${
+                theme === 'light'
+                  ? 'bg-[var(--accent-blue)] text-white border-[var(--accent-blue)]'
+                  : 'bg-[var(--c-0-20)] text-[var(--text-secondary)] border-[var(--border-default)] hover:bg-[var(--bg-hover)]'
+              }`}
+            >
+              <Sun size={15} />
+              בהיר
+            </button>
+            <button
+              onClick={() => setTheme('dark')}
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-[13px] font-medium transition-colors cursor-pointer border ${
+                theme === 'dark'
+                  ? 'bg-[var(--accent-blue)] text-white border-[var(--accent-blue)]'
+                  : 'bg-[var(--c-0-20)] text-[var(--text-secondary)] border-[var(--border-default)] hover:bg-[var(--bg-hover)]'
+              }`}
+            >
+              <Moon size={15} />
+              כהה
+            </button>
+          </div>
+        </div>
+
         {/* AI Advisor Settings Card */}
-        <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5">
+        <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5">
           <h2 className="text-sm font-semibold mb-4 mt-0 flex items-center gap-2">
-            <Sparkles size={16} className="text-[oklch(0.75_0.15_145)]" />
+            <Sparkles size={16} className="text-[var(--c-green-0-75)]" />
             יועץ AI מתקדם
           </h2>
 
           <div className="flex flex-col gap-4">
             {/* Free tips status */}
             <div className="flex items-center gap-3">
-              <div className="w-2 h-2 rounded-full bg-[oklch(0.65_0.18_145)]" />
-              <span className="text-[13px] text-[oklch(0.75_0.01_250)]">
-                טיפים בסיסיים: <span className="font-semibold text-[oklch(0.75_0.15_145)]">פעיל (חינם)</span>
+              <div className="w-2 h-2 rounded-full bg-[var(--c-green-0-65)]" />
+              <span className="text-[13px] text-[var(--text-body)]">
+                טיפים בסיסיים: <span className="font-semibold text-[var(--c-green-0-75)]">פעיל (חינם)</span>
               </span>
             </div>
 
             {/* API key status & management */}
             <div className="flex items-center gap-3">
-              <div className={`w-2 h-2 rounded-full ${aiApiKey ? 'bg-[oklch(0.65_0.18_145)]' : 'bg-[oklch(0.40_0.01_250)]'}`} />
-              <span className="text-[13px] text-[oklch(0.75_0.01_250)]">
+              <div className={`w-2 h-2 rounded-full ${aiApiKey ? 'bg-[var(--c-green-0-65)]' : 'bg-[var(--c-0-40)]'}`} />
+              <span className="text-[13px] text-[var(--text-body)]">
                 צ'אט מתקדם: {aiApiKey ? (
-                  <span className="font-semibold text-[oklch(0.75_0.15_145)]">מחובר</span>
+                  <span className="font-semibold text-[var(--c-green-0-75)]">מחובר</span>
                 ) : (
-                  <span className="text-[oklch(0.55_0.01_250)]">לא מחובר</span>
+                  <span className="text-[var(--text-muted)]">לא מחובר</span>
                 )}
               </span>
             </div>
 
             {/* Key input or status */}
             {aiApiKey ? (
-              <div className="flex items-center justify-between bg-[oklch(0.13_0.01_250)] border border-[oklch(0.22_0.01_250)] rounded-lg px-3 py-2.5">
+              <div className="flex items-center justify-between bg-[var(--bg-base)] border border-[var(--bg-hover)] rounded-lg px-3 py-2.5">
                 <div className="flex items-center gap-2">
-                  <Key size={13} className="text-[oklch(0.55_0.01_250)]" />
-                  <span className="text-[12px] text-[oklch(0.55_0.01_250)] ltr" dir="ltr">
+                  <Key size={13} className="text-[var(--text-muted)]" />
+                  <span className="text-[12px] text-[var(--text-muted)] ltr" dir="ltr">
                     {aiApiKey.slice(0, 8)}...{aiApiKey.slice(-4)}
                   </span>
                 </div>
@@ -443,7 +478,7 @@ export default function FamilyPage() {
                     setAiApiKey('')
                     toast.success('API Key הוסר')
                   }}
-                  className="bg-transparent border-none cursor-pointer text-[oklch(0.55_0.01_250)] p-1 hover:text-[oklch(0.70_0.12_25)]"
+                  className="bg-transparent border-none cursor-pointer text-[var(--text-muted)] p-1 hover:text-[var(--c-red-0-70)]"
                   aria-label="הסר API Key"
                 >
                   <Trash2 size={14} />
@@ -457,7 +492,7 @@ export default function FamilyPage() {
                     value={aiKeyDraft}
                     onChange={e => setAiKeyDraft(e.target.value)}
                     placeholder="AIza..."
-                    className="flex-1 bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-2 text-inherit text-[13px] outline-none ltr"
+                    className="flex-1 bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-2 text-inherit text-[13px] outline-none ltr"
                     dir="ltr"
                     onKeyDown={e => {
                       if (e.key === 'Enter' && aiKeyDraft.trim()) {
@@ -480,7 +515,7 @@ export default function FamilyPage() {
                       }
                     }}
                     disabled={!aiKeyDraft.trim()}
-                    className="bg-[oklch(0.55_0.18_145)] border-none rounded-lg px-3 py-2 cursor-pointer text-[oklch(0.12_0.01_250)] font-semibold text-[12px] disabled:opacity-50"
+                    className="bg-[var(--c-green-0-55)] border-none rounded-lg px-3 py-2 cursor-pointer text-[var(--c-0-10)] font-semibold text-[12px] disabled:opacity-50"
                   >
                     שמור
                   </button>
@@ -489,7 +524,7 @@ export default function FamilyPage() {
                   href="https://aistudio.google.com/apikey"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-[11px] text-[oklch(0.60_0.12_250)] underline"
+                  className="text-[11px] text-[var(--c-blue-0-60)] underline"
                 >
                   קבל API key בחינם מ-Google AI Studio
                 </a>
@@ -497,14 +532,14 @@ export default function FamilyPage() {
             ) : (
               <button
                 onClick={() => setShowAiKeyInput(true)}
-                className="flex items-center justify-center gap-2 bg-[oklch(0.20_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-4 py-2.5 cursor-pointer text-[oklch(0.70_0.01_250)] text-[13px] font-medium hover:bg-[oklch(0.22_0.01_250)] transition-colors"
+                className="flex items-center justify-center gap-2 bg-[var(--c-0-20)] border border-[var(--border-light)] rounded-lg px-4 py-2.5 cursor-pointer text-[var(--c-0-70)] text-[13px] font-medium hover:bg-[var(--bg-hover)] transition-colors"
               >
                 <Key size={14} />
                 חבר Google Gemini API Key
               </button>
             )}
 
-            <p className="text-[11px] text-[oklch(0.50_0.01_250)] m-0 leading-relaxed">
+            <p className="text-[11px] text-[var(--c-0-50)] m-0 leading-relaxed">
               ה-API Key נשמר מקומית בדפדפן שלך בלבד ולא נשלח לשרתים שלנו.
               הוא משמש לתקשורת ישירה עם Google Gemini.
             </p>

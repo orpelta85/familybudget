@@ -30,7 +30,7 @@ export function PageInfo({ title, description, steps, tips }: PageInfoProps) {
         className="bg-transparent border-none cursor-pointer p-0 flex items-center justify-center shrink-0"
         aria-label={`מידע על ${title}`}
       >
-        <Info size={18} style={{ color: 'oklch(0.55 0.01 250)' }} />
+        <Info size={18} style={{ color: 'var(--text-muted)' }} />
       </button>
 
       {open && (
@@ -52,8 +52,8 @@ export function PageInfo({ title, description, steps, tips }: PageInfoProps) {
             className="fixed top-0 right-0 z-50 h-full overflow-y-auto"
             style={{
               width: 'min(380px, 90vw)',
-              background: 'oklch(0.15 0.01 250)',
-              borderLeft: '1px solid oklch(0.25 0.01 250)',
+              background: 'var(--c-0-15)',
+              borderLeft: '1px solid var(--border-default)',
               boxShadow: '-8px 0 32px rgba(0,0,0,0.4)',
               animation: 'slideInRight 0.2s ease-out forwards',
             }}
@@ -63,12 +63,12 @@ export function PageInfo({ title, description, steps, tips }: PageInfoProps) {
               className="flex justify-between items-center"
               style={{
                 padding: '20px 20px 16px',
-                borderBottom: '1px solid oklch(0.22 0.01 250)',
+                borderBottom: '1px solid var(--bg-hover)',
               }}
             >
               <div className="flex items-center gap-2">
-                <Info size={18} style={{ color: 'oklch(0.65 0.18 250)' }} />
-                <h2 className="text-[16px] font-bold m-0" style={{ color: 'oklch(0.88 0.01 250)' }}>
+                <Info size={18} style={{ color: 'var(--accent-blue)' }} />
+                <h2 className="text-[16px] font-bold m-0" style={{ color: 'var(--c-0-88)' }}>
                   {title}
                 </h2>
               </div>
@@ -76,7 +76,7 @@ export function PageInfo({ title, description, steps, tips }: PageInfoProps) {
                 type="button"
                 onClick={() => setOpen(false)}
                 className="bg-transparent border-none cursor-pointer p-1.5 rounded-lg"
-                style={{ color: 'oklch(0.55 0.01 250)' }}
+                style={{ color: 'var(--text-muted)' }}
                 aria-label="סגור"
               >
                 <X size={18} />
@@ -89,13 +89,13 @@ export function PageInfo({ title, description, steps, tips }: PageInfoProps) {
               <div style={{ marginBottom: 24 }}>
                 <h3
                   className="text-[13px] font-semibold uppercase tracking-wide m-0"
-                  style={{ color: 'oklch(0.55 0.01 250)', marginBottom: 8 }}
+                  style={{ color: 'var(--text-muted)', marginBottom: 8 }}
                 >
                   מה זה?
                 </h3>
                 <p
                   className="text-[13px] leading-relaxed m-0"
-                  style={{ color: 'oklch(0.75 0.01 250)' }}
+                  style={{ color: 'var(--text-body)' }}
                 >
                   {description}
                 </p>
@@ -106,7 +106,7 @@ export function PageInfo({ title, description, steps, tips }: PageInfoProps) {
                 <div style={{ marginBottom: 24 }}>
                   <h3
                     className="text-[13px] font-semibold uppercase tracking-wide m-0"
-                    style={{ color: 'oklch(0.55 0.01 250)', marginBottom: 8 }}
+                    style={{ color: 'var(--text-muted)', marginBottom: 8 }}
                   >
                     איך להשתמש?
                   </h3>
@@ -119,15 +119,15 @@ export function PageInfo({ title, description, steps, tips }: PageInfoProps) {
                             width: 20,
                             height: 20,
                             borderRadius: 6,
-                            background: 'oklch(0.22 0.04 250)',
-                            color: 'oklch(0.65 0.18 250)',
+                            background: 'var(--c-blue-0-22)',
+                            color: 'var(--accent-blue)',
                           }}
                         >
                           {i + 1}
                         </span>
                         <span
                           className="text-[13px] leading-relaxed"
-                          style={{ color: 'oklch(0.72 0.01 250)' }}
+                          style={{ color: 'var(--c-0-72)' }}
                         >
                           {step}
                         </span>
@@ -141,7 +141,7 @@ export function PageInfo({ title, description, steps, tips }: PageInfoProps) {
               <div>
                 <h3
                   className="text-[13px] font-semibold uppercase tracking-wide m-0"
-                  style={{ color: 'oklch(0.55 0.01 250)', marginBottom: 8 }}
+                  style={{ color: 'var(--text-muted)', marginBottom: 8 }}
                 >
                   טיפים ונתונים
                 </h3>
@@ -153,9 +153,9 @@ export function PageInfo({ title, description, steps, tips }: PageInfoProps) {
                       style={{
                         padding: '10px 12px',
                         borderRadius: 10,
-                        background: 'oklch(0.19 0.01 250)',
-                        border: '1px solid oklch(0.24 0.01 250)',
-                        color: 'oklch(0.75 0.01 250)',
+                        background: 'var(--c-0-19)',
+                        border: '1px solid var(--c-0-24)',
+                        color: 'var(--text-body)',
                       }}
                     >
                       {tip}

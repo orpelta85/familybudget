@@ -11,7 +11,7 @@ interface DonutEntry {
 
 export function ExpenseDonut({ data }: { data: DonutEntry[] }) {
   if (data.length === 0) {
-    return <div className="text-[oklch(0.65_0.01_250)] text-[13px]">אין נתונים</div>
+    return <div className="text-[var(--text-secondary)] text-[13px]">אין נתונים</div>
   }
 
   return (
@@ -24,7 +24,7 @@ export function ExpenseDonut({ data }: { data: DonutEntry[] }) {
           </Pie>
           <Tooltip
             formatter={(v: unknown) => formatCurrency(Number(v))}
-            contentStyle={{ background: 'oklch(0.16 0.01 250)', border: '1px solid oklch(0.28 0.01 250)', borderRadius: 8, fontSize: 12, color: 'oklch(0.85 0.01 250)' }}
+            contentStyle={{ background: 'var(--bg-card)', border: '1px solid var(--border-light)', borderRadius: 8, fontSize: 12, color: 'var(--c-0-85)' }}
           />
         </PieChart>
       </ResponsiveContainer>
@@ -33,8 +33,8 @@ export function ExpenseDonut({ data }: { data: DonutEntry[] }) {
         {data.map(d => (
           <div key={d.name} className="flex items-center gap-[5px] text-xs">
             <div className="w-[7px] h-[7px] rounded-full shrink-0" style={{ background: d.color }} />
-            <span className="text-[oklch(0.70_0.01_250)]">{d.name}</span>
-            <span className="text-[oklch(0.65_0.01_250)]">{formatCurrency(d.value)}</span>
+            <span className="text-[var(--c-0-70)]">{d.name}</span>
+            <span className="text-[var(--text-secondary)]">{formatCurrency(d.value)}</span>
           </div>
         ))}
       </div>

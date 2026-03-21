@@ -164,25 +164,25 @@ export default function SinkingPage() {
       {/* Header */}
       <div className="flex justify-between items-start mb-1.5">
         <div className="flex items-center gap-2">
-          <Target size={18} className="text-[oklch(0.70_0.15_185)]" />
+          <Target size={18} className="text-[var(--accent-teal)]" />
           <h1 className="text-xl font-bold tracking-tight">קרנות שנתיות</h1>
           <PageInfo {...PAGE_TIPS.sinking} />
         </div>
         <div className="flex gap-2">
-          <button onClick={handleResetBalances} className="flex items-center gap-1.5 bg-transparent border border-[oklch(0.25_0.01_250)] rounded-lg px-3.5 py-[7px] text-[oklch(0.65_0.01_250)] text-xs font-medium cursor-pointer">
+          <button onClick={handleResetBalances} className="flex items-center gap-1.5 bg-transparent border border-[var(--border-default)] rounded-lg px-3.5 py-[7px] text-[var(--text-secondary)] text-xs font-medium cursor-pointer">
             <Trash2 size={13} /> אפס יתרות
           </button>
           <button
             onClick={() => setNewFund({ name: '', totalAnnual: '', isShared: false })}
-            className="btn-hover flex items-center gap-1.5 bg-[oklch(0.20_0.04_185)] border border-[oklch(0.32_0.08_185)] rounded-lg px-3.5 py-[7px] text-[oklch(0.70_0.15_185)] text-[13px] font-medium cursor-pointer"
+            className="btn-hover flex items-center gap-1.5 bg-[var(--c-teal-0-20)] border border-[var(--c-teal-0-32)] rounded-lg px-3.5 py-[7px] text-[var(--accent-teal)] text-[13px] font-medium cursor-pointer"
           >
             <Plus size={13} /> קרן חדשה
           </button>
         </div>
       </div>
-      <p className="text-[oklch(0.65_0.01_250)] text-[13px] mb-5">
-        סה&quot;כ הפרשה חודשית <InfoTooltip body="הסכום שמפרישים כל חודש לקרן. נקבע לפי היעד השנתי חלקי 12" />: <span className="inline-block font-semibold text-[oklch(0.70_0.15_185)]">{formatCurrency(totalMonthly)}</span>
-        <span className="mr-2 text-[oklch(0.65_0.01_250)] text-xs">
+      <p className="text-[var(--text-secondary)] text-[13px] mb-5">
+        סה&quot;כ הפרשה חודשית <InfoTooltip body="הסכום שמפרישים כל חודש לקרן. נקבע לפי היעד השנתי חלקי 12" />: <span className="inline-block font-semibold text-[var(--accent-teal)]">{formatCurrency(totalMonthly)}</span>
+        <span className="mr-2 text-[var(--text-secondary)] text-xs">
           (יעד שנתי: {formatCurrency((funds ?? []).reduce((s, f) => s + (f.yearly_target || f.monthly_allocation * 12), 0))})
         </span>
       </p>
@@ -190,9 +190,9 @@ export default function SinkingPage() {
       {/* Fund list */}
       {!funds?.length
         ? (
-          <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-10 text-center">
-            <Inbox size={36} className="text-[oklch(0.30_0.01_250)] mx-auto mb-2.5" />
-            <div className="text-[oklch(0.65_0.01_250)] text-sm">אין קרנות -- לחץ &quot;קרן חדשה&quot; להתחיל</div>
+          <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-10 text-center">
+            <Inbox size={36} className="text-[var(--c-0-30)] mx-auto mb-2.5" />
+            <div className="text-[var(--text-secondary)] text-sm">אין קרנות -- לחץ &quot;קרן חדשה&quot; להתחיל</div>
           </div>
         )
         : (
@@ -205,7 +205,7 @@ export default function SinkingPage() {
               const pct = totalAnnual > 0 ? Math.min((balance / totalAnnual) * 100, 100) : 0
 
               return (
-                <div key={fund.id} className="card-hover card-transition bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl px-[18px] py-3.5">
+                <div key={fund.id} className="card-hover card-transition bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl px-[18px] py-3.5">
                   <div className="flex items-center gap-2.5">
                     {/* Name + type */}
                     <div className="flex-1 min-w-0">
@@ -213,8 +213,8 @@ export default function SinkingPage() {
                         <span className="font-semibold text-sm">{fund.name}</span>
                         <span className={`inline-flex items-center gap-[3px] rounded-[20px] px-2 py-0.5 text-[11px] ${
                           shared
-                            ? 'bg-[oklch(0.20_0.04_250)] border border-[oklch(0.32_0.08_250)] text-[oklch(0.65_0.15_250)]'
-                            : 'bg-[oklch(0.20_0.04_185)] border border-[oklch(0.32_0.08_185)] text-[oklch(0.65_0.15_185)]'
+                            ? 'bg-[var(--c-blue-0-20)] border border-[var(--c-blue-0-32)] text-[var(--accent-blue)]'
+                            : 'bg-[var(--c-teal-0-20)] border border-[var(--c-teal-0-32)] text-[var(--c-teal-0-65)]'
                         }`}>
                           {shared ? <Users size={10} /> : <User size={10} />}
                           {shared ? 'משותף' : 'אישי'}
@@ -222,18 +222,18 @@ export default function SinkingPage() {
                       </div>
                       {/* Progress bar */}
                       {balance > 0 && (
-                        <div className="mt-1.5 h-1 rounded-sm bg-[oklch(0.22_0.01_250)] overflow-hidden max-w-[240px]">
-                          <div className="h-full rounded-sm bg-[oklch(0.70_0.15_185)] transition-[width] duration-[400ms] ease-out" style={{ width: `${Math.max(0, pct)}%` }} />
+                        <div className="mt-1.5 h-1 rounded-sm bg-[var(--bg-hover)] overflow-hidden max-w-[240px]">
+                          <div className="h-full rounded-sm bg-[var(--accent-teal)] transition-[width] duration-[400ms] ease-out" style={{ width: `${Math.max(0, pct)}%` }} />
                         </div>
                       )}
                     </div>
 
                     {/* Amounts */}
                     <div className="text-right shrink-0">
-                      <div className="text-base font-bold text-[oklch(0.88_0.01_250)]">{formatCurrency(fund.monthly_allocation)}<span className="text-[11px] font-normal text-[oklch(0.65_0.01_250)] mr-[3px]">/חודש</span></div>
-                      <div className="text-xs text-[oklch(0.65_0.01_250)]">
+                      <div className="text-base font-bold text-[var(--c-0-88)]">{formatCurrency(fund.monthly_allocation)}<span className="text-[11px] font-normal text-[var(--text-secondary)] mr-[3px]">/חודש</span></div>
+                      <div className="text-xs text-[var(--text-secondary)]">
                         יעד שנתי: {formatCurrency(totalAnnual)}
-                        {shared && <span className="mr-1 text-[oklch(0.65_0.01_250)]">(חלקי: {formatCurrency(fund.monthly_allocation * 12)})</span>}
+                        {shared && <span className="mr-1 text-[var(--text-secondary)]">(חלקי: {formatCurrency(fund.monthly_allocation * 12)})</span>}
                       </div>
                     </div>
 
@@ -241,21 +241,21 @@ export default function SinkingPage() {
                     <div className="flex gap-1.5 shrink-0">
                       <button
                         onClick={() => { setTxModal({ fundId: fund.id, fundName: fund.name, type: 'use' }); setTxAmount('') }}
-                        className="flex items-center justify-center gap-1 bg-[oklch(0.20_0.02_55)] border border-[oklch(0.28_0.06_55)] rounded-[7px] px-2.5 py-2 min-h-9 text-[oklch(0.72_0.18_55)] text-xs cursor-pointer"
+                        className="flex items-center justify-center gap-1 bg-[var(--c-orange-0-20)] border border-[var(--c-orange-0-28)] rounded-[7px] px-2.5 py-2 min-h-9 text-[var(--accent-orange)] text-xs cursor-pointer"
                       >
                         <X size={11} /> הוצאה
                       </button>
                       <button
                         onClick={() => openEdit(fund)}
                         aria-label="ערוך קרן"
-                        className="flex items-center justify-center bg-[oklch(0.20_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-[7px] p-2 min-w-9 min-h-9 text-[oklch(0.65_0.01_250)] text-xs cursor-pointer"
+                        className="flex items-center justify-center bg-[var(--c-0-20)] border border-[var(--border-light)] rounded-[7px] p-2 min-w-9 min-h-9 text-[var(--text-secondary)] text-xs cursor-pointer"
                       >
                         <Pencil size={12} />
                       </button>
                       <button
                         onClick={() => handleDeleteFund(fund.id, fund.name)}
                         aria-label="מחק קרן"
-                        className="flex items-center justify-center bg-[oklch(0.18_0.03_15)] border border-[oklch(0.28_0.06_15)] rounded-[7px] p-2 min-w-9 min-h-9 text-[oklch(0.60_0.18_15)] text-xs cursor-pointer"
+                        className="flex items-center justify-center bg-[var(--c-red-0-18)] border border-[var(--c-red-0-28)] rounded-[7px] p-2 min-w-9 min-h-9 text-[var(--c-red-0-62)] text-xs cursor-pointer"
                       >
                         <Trash2 size={12} />
                       </button>
@@ -268,17 +268,17 @@ export default function SinkingPage() {
                     const remaining = totalAnnual - balance
                     // For sinking funds: balance > 0 means saved money still available = GREEN
                     // balance < 0 means overspent = RED
-                    const balanceColor = balance > 0 ? 'text-[oklch(0.70_0.18_145)]' : 'text-[oklch(0.62_0.22_27)]'
+                    const balanceColor = balance > 0 ? 'text-[var(--accent-green)]' : 'text-[var(--accent-red)]'
                     const currentMonth = new Date().getMonth() + 1
                     const expectedPct = (currentMonth / 12) * 100
                     const trackStatus = pct >= expectedPct
-                      ? { text: 'בזמן ✓', color: 'text-[oklch(0.70_0.18_145)]' }
+                      ? { text: 'בזמן ✓', color: 'text-[var(--accent-green)]' }
                       : pct >= expectedPct * 0.8
-                        ? { text: 'קצת מאחור', color: 'text-[oklch(0.72_0.18_55)]' }
-                        : { text: 'מאחור', color: 'text-[oklch(0.62_0.22_27)]' }
+                        ? { text: 'קצת מאחור', color: 'text-[var(--accent-orange)]' }
+                        : { text: 'מאחור', color: 'text-[var(--accent-red)]' }
                     return (
-                      <div className="mt-2 text-xs text-[oklch(0.65_0.01_250)] flex justify-between pt-2 border-t border-[oklch(0.20_0.01_250)]">
-                        <span>צבור <InfoTooltip body="כמה צברתם עד עכשיו. ירוק = לא חרגתם, אדום = הוצאתם יותר ממה שצברתם" />: <span className={`${balanceColor} font-semibold inline-block`}>{formatCurrency(balance)}</span>{balance < 0 && <span className="text-[11px] text-[oklch(0.65_0.01_250)] mr-1">(הוצאה גדולה מהצבירה)</span>}</span>
+                      <div className="mt-2 text-xs text-[var(--text-secondary)] flex justify-between pt-2 border-t border-[var(--c-0-20)]">
+                        <span>צבור <InfoTooltip body="כמה צברתם עד עכשיו. ירוק = לא חרגתם, אדום = הוצאתם יותר ממה שצברתם" />: <span className={`${balanceColor} font-semibold inline-block`}>{formatCurrency(balance)}</span>{balance < 0 && <span className="text-[11px] text-[var(--text-secondary)] mr-1">(הוצאה גדולה מהצבירה)</span>}</span>
                         <span className="flex items-center gap-2">
                           {pct.toFixed(0)}% מהיעד השנתי
                           <span className={`text-[11px] font-medium ${trackStatus.color}`}>{trackStatus.text}</span>
@@ -296,13 +296,13 @@ export default function SinkingPage() {
       {/* Add Fund Modal */}
       {newFund && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-[oklch(0.18_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-[14px] p-7 w-[360px]">
+          <div className="bg-[var(--c-0-18)] border border-[var(--border-light)] rounded-[14px] p-7 w-[360px]">
             <ModalHeader title="קרן שנתית חדשה" onClose={() => setNewFund(null)} />
             <FundFormFields form={newFund} onChange={setNewFund} splitFrac={splitFrac} />
             <button
               onClick={handleAddFund}
               disabled={addFund.isPending || !newFund.name.trim() || Number(newFund.totalAnnual) < 0}
-              className={`w-full bg-[oklch(0.70_0.15_185)] border-none rounded-lg py-[11px] font-semibold text-sm text-[oklch(0.10_0.01_250)] ${addFund.isPending || !newFund.name.trim() || Number(newFund.totalAnnual) < 0 ? 'cursor-not-allowed opacity-50' : 'cursor-pointer opacity-100'}`}
+              className={`w-full bg-[var(--accent-teal)] border-none rounded-lg py-[11px] font-semibold text-sm text-[var(--c-0-10)] ${addFund.isPending || !newFund.name.trim() || Number(newFund.totalAnnual) < 0 ? 'cursor-not-allowed opacity-50' : 'cursor-pointer opacity-100'}`}
             >
               {addFund.isPending ? '...' : 'הוסף קרן'}
             </button>
@@ -313,13 +313,13 @@ export default function SinkingPage() {
       {/* Edit Fund Modal */}
       {editFund && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-[oklch(0.18_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-[14px] p-7 w-[360px]">
+          <div className="bg-[var(--c-0-18)] border border-[var(--border-light)] rounded-[14px] p-7 w-[360px]">
             <ModalHeader title="עריכת קרן" onClose={() => setEditFund(null)} />
             <FundFormFields form={editFund} onChange={f => setEditFund(prev => prev && { ...prev, ...f })} splitFrac={splitFrac} />
             <button
               onClick={handleEditFund}
               disabled={updateFund.isPending || !editFund.name.trim() || Number(editFund.totalAnnual) < 0}
-              className={`w-full bg-[oklch(0.70_0.15_185)] border-none rounded-lg py-[11px] font-semibold text-sm text-[oklch(0.10_0.01_250)] ${updateFund.isPending || !editFund.name.trim() || Number(editFund.totalAnnual) < 0 ? 'cursor-not-allowed opacity-50' : 'cursor-pointer opacity-100'}`}
+              className={`w-full bg-[var(--accent-teal)] border-none rounded-lg py-[11px] font-semibold text-sm text-[var(--c-0-10)] ${updateFund.isPending || !editFund.name.trim() || Number(editFund.totalAnnual) < 0 ? 'cursor-not-allowed opacity-50' : 'cursor-pointer opacity-100'}`}
             >
               {updateFund.isPending ? '...' : 'שמור'}
             </button>
@@ -330,45 +330,45 @@ export default function SinkingPage() {
       {/* Log Transaction Modal */}
       {txModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-[oklch(0.18_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-[14px] p-7 w-[360px]">
+          <div className="bg-[var(--c-0-18)] border border-[var(--border-light)] rounded-[14px] p-7 w-[360px]">
             <ModalHeader title={`${txModal.fundName} — הוצאה`} onClose={() => setTxModal(null)} />
             <div className="flex flex-col gap-3">
               <div>
-                <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">מחזור</label>
+                <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">מחזור</label>
                 <select value={txPeriodId ?? ''} onChange={e => setTxPeriodId(Number(e.target.value))}
                   aria-label="מחזור"
-                  className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-sm">
+                  className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-sm">
                   {periods?.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
                 </select>
               </div>
               <div>
-                <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">סכום (₪)</label>
+                <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">סכום (₪)</label>
                 <input type="number" value={txAmount} onChange={e => setTxAmount(e.target.value)}
                   placeholder="0" min="0" autoFocus
-                  className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left" />
+                  className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left" />
               </div>
               <div>
-                <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">תיאור (אופציונלי)</label>
+                <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">תיאור (אופציונלי)</label>
                 <input type="text" value={txDesc} onChange={e => setTxDesc(e.target.value)}
                   placeholder="לדוגמה: כרטיסי טיסה, מוצר..."
-                  className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-sm" />
+                  className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-sm" />
               </div>
               <div className="flex gap-2">
                 <button
                   onClick={() => { setTxModal({ ...txModal, type: 'use' }) }}
-                  className={`flex-1 rounded-lg py-2 text-[13px] cursor-pointer ${txModal.type === 'use' ? 'bg-[oklch(0.72_0.18_55)] border border-[oklch(0.72_0.18_55)] text-[oklch(0.10_0.01_250)] font-semibold' : 'bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] text-[oklch(0.70_0.01_250)] font-normal'}`}
+                  className={`flex-1 rounded-lg py-2 text-[13px] cursor-pointer ${txModal.type === 'use' ? 'bg-[var(--accent-orange)] border border-[var(--accent-orange)] text-[var(--c-0-10)] font-semibold' : 'bg-[var(--bg-hover)] border border-[var(--border-light)] text-[var(--c-0-70)] font-normal'}`}
                 >
                   הוצאה
                 </button>
                 <button
                   onClick={() => { setTxModal({ ...txModal, type: 'add' }) }}
-                  className={`flex-1 rounded-lg py-2 text-[13px] cursor-pointer ${txModal.type === 'add' ? 'bg-[oklch(0.70_0.15_185)] border border-[oklch(0.70_0.15_185)] text-[oklch(0.10_0.01_250)] font-semibold' : 'bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] text-[oklch(0.70_0.01_250)] font-normal'}`}
+                  className={`flex-1 rounded-lg py-2 text-[13px] cursor-pointer ${txModal.type === 'add' ? 'bg-[var(--accent-teal)] border border-[var(--accent-teal)] text-[var(--c-0-10)] font-semibold' : 'bg-[var(--bg-hover)] border border-[var(--border-light)] text-[var(--c-0-70)] font-normal'}`}
                 >
                   הפקדה
                 </button>
               </div>
               <button onClick={handleTxn} disabled={addTxn.isPending || !txAmount}
-                className={`w-full bg-[oklch(0.70_0.15_185)] border-none rounded-lg py-[11px] font-semibold text-sm text-[oklch(0.10_0.01_250)] ${addTxn.isPending || !txAmount ? 'cursor-not-allowed opacity-50' : 'cursor-pointer opacity-100'}`}>
+                className={`w-full bg-[var(--accent-teal)] border-none rounded-lg py-[11px] font-semibold text-sm text-[var(--c-0-10)] ${addTxn.isPending || !txAmount ? 'cursor-not-allowed opacity-50' : 'cursor-pointer opacity-100'}`}>
                 {addTxn.isPending ? '...' : 'רשום'}
               </button>
             </div>
@@ -385,7 +385,7 @@ function ModalHeader({ title, onClose }: { title: string; onClose: () => void })
   return (
     <div className="flex justify-between items-center mb-5">
       <span className="font-semibold text-[15px]">{title}</span>
-      <button onClick={onClose} aria-label="סגור" className="bg-transparent border-none text-[oklch(0.65_0.01_250)] cursor-pointer p-2 min-w-9 min-h-9 flex items-center justify-center"><X size={18} /></button>
+      <button onClick={onClose} aria-label="סגור" className="bg-transparent border-none text-[var(--text-secondary)] cursor-pointer p-2 min-w-9 min-h-9 flex items-center justify-center"><X size={18} /></button>
     </div>
   )
 }
@@ -397,22 +397,22 @@ function FundFormFields({ form, onChange, splitFrac }: { form: FundForm; onChang
   return (
     <div className="flex flex-col gap-3.5 mb-4">
       <div>
-        <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">שם הקרן</label>
+        <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">שם הקרן</label>
         <input type="text" autoFocus value={form.name}
           onChange={e => onChange({ ...form, name: e.target.value })}
           placeholder="למשל: טיולים, חתונה, רכב..."
-          className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-sm" />
+          className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-sm" />
       </div>
       <div>
-        <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">יעד שנתי כולל (₪) — כמה תוציאו על זה בשנה?</label>
+        <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">יעד שנתי כולל (₪) — כמה תוציאו על זה בשנה?</label>
         <input type="text" inputMode="numeric" value={form.totalAnnual}
           onChange={e => onChange({ ...form, totalAnnual: e.target.value.replace(/[^\d]/g, '') })}
           placeholder="0"
-          className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left" />
+          className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left" />
       </div>
       {/* Personal / Shared toggle */}
       <div>
-        <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">סוג</label>
+        <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">סוג</label>
         <div className="flex gap-2">
           {([false, true] as const).map(shared => (
             <button key={String(shared)} type="button"
@@ -420,9 +420,9 @@ function FundFormFields({ form, onChange, splitFrac }: { form: FundForm; onChang
               className={`flex-1 flex items-center justify-center gap-1.5 rounded-lg py-[9px] text-[13px] cursor-pointer ${
                 form.isShared === shared
                   ? shared
-                    ? 'bg-[oklch(0.24_0.06_250)] border border-[oklch(0.40_0.10_250)] text-[oklch(0.75_0.15_250)] font-semibold'
-                    : 'bg-[oklch(0.24_0.06_185)] border border-[oklch(0.40_0.10_185)] text-[oklch(0.75_0.15_185)] font-semibold'
-                  : 'bg-[oklch(0.20_0.01_250)] border border-[oklch(0.28_0.01_250)] text-[oklch(0.65_0.01_250)] font-normal'
+                    ? 'bg-[var(--c-blue-0-24)] border border-[var(--c-blue-0-40)] text-[var(--c-blue-0-75)] font-semibold'
+                    : 'bg-[var(--c-teal-0-24)] border border-[var(--c-teal-0-50)] text-[var(--c-teal-0-75)] font-semibold'
+                  : 'bg-[var(--c-0-20)] border border-[var(--border-light)] text-[var(--text-secondary)] font-normal'
               }`}>
               {shared ? <><Users size={13} /> משותף</> : <><User size={13} /> אישי</>}
             </button>
@@ -430,13 +430,13 @@ function FundFormFields({ form, onChange, splitFrac }: { form: FundForm; onChang
         </div>
       </div>
       {monthly > 0 && (
-        <div className="bg-[oklch(0.20_0.02_185)] rounded-lg px-3.5 py-2.5 text-[13px] text-[oklch(0.70_0.15_185)]">
+        <div className="bg-[var(--c-teal-0-20)] rounded-lg px-3.5 py-2.5 text-[13px] text-[var(--accent-teal)]">
           <div className="text-right">
             חלקך: <strong>{formatCurrency(monthly)}</strong> לחודש
-            {form.isShared && <span className="text-[oklch(0.65_0.01_250)] mr-1.5">({formatCurrency(monthly * 12)} לשנה)</span>}
+            {form.isShared && <span className="text-[var(--text-secondary)] mr-1.5">({formatCurrency(monthly * 12)} לשנה)</span>}
           </div>
           {form.isShared && (
-            <div className="text-[11px] text-[oklch(0.65_0.01_250)] mt-[3px] text-right">
+            <div className="text-[11px] text-[var(--text-secondary)] mt-[3px] text-right">
               יעד כולל: {formatCurrency(Number(form.totalAnnual))} × {Math.round(splitFrac * 100)}% ÷ 12
             </div>
           )}

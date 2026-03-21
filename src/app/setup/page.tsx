@@ -43,18 +43,18 @@ export default function SetupPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-6 ml-0">
-      <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-[14px] p-8 max-w-[440px] w-full">
+      <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[14px] p-8 max-w-[440px] w-full">
         <div className="mb-6">
           <h1 className="text-[22px] font-bold mb-2">ברוך הבא ל-Family Plan</h1>
-          <p className="text-[oklch(0.60_0.01_250)] text-sm leading-relaxed">
+          <p className="text-[var(--c-0-60)] text-sm leading-relaxed">
             אתחל את החשבון שלך עם ברירות מחדל מוכנות. תוכל לשנות הכל אחר כך.
           </p>
         </div>
 
         <div className="mb-7 flex flex-col gap-2.5">
           {items.map(item => (
-            <div key={item} className="flex items-center gap-2.5 text-sm text-[oklch(0.75_0.01_250)]">
-              <CheckCircle size={15} className="text-[oklch(0.70_0.18_145)] shrink-0" />
+            <div key={item} className="flex items-center gap-2.5 text-sm text-[var(--text-body)]">
+              <CheckCircle size={15} className="text-[var(--accent-green)] shrink-0" />
               {item}
             </div>
           ))}
@@ -63,7 +63,7 @@ export default function SetupPage() {
         <button
           onClick={handleSetup}
           disabled={runSetup.isPending}
-          className={`w-full bg-[oklch(0.65_0.18_250)] border-none rounded-[9px] py-[13px] font-semibold text-[15px] text-[oklch(0.10_0.01_250)] flex items-center justify-center gap-2 ${runSetup.isPending ? 'cursor-not-allowed opacity-70' : 'cursor-pointer opacity-100'}`}
+          className={`w-full bg-[var(--accent-blue)] border-none rounded-[9px] py-[13px] font-semibold text-[15px] text-[var(--c-0-10)] flex items-center justify-center gap-2 ${runSetup.isPending ? 'cursor-not-allowed opacity-70' : 'cursor-pointer opacity-100'}`}
         >
           {runSetup.isPending
             ? <><Loader size={16} className="animate-spin" /> מאתחל...</>

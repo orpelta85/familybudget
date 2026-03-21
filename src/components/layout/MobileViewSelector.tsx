@@ -44,8 +44,8 @@ export function MobileViewSelector() {
         onClick={() => setViewMode('personal')}
         className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-medium cursor-pointer border-none transition-all duration-150 ${
           viewMode === 'personal'
-            ? 'bg-[oklch(0.22_0.02_250)] text-[oklch(0.65_0.18_250)] shadow-[inset_0_0_0_1px_oklch(0.35_0.10_250)]'
-            : 'bg-transparent text-[oklch(0.55_0.01_250)]'
+            ? 'bg-[var(--c-blue-0-22)] text-[var(--accent-blue)] shadow-[inset_0_0_0_1px_var(--c-blue-0-35)]'
+            : 'bg-transparent text-[var(--text-muted)]'
         }`}
       >
         <User size={11} />
@@ -55,8 +55,8 @@ export function MobileViewSelector() {
         onClick={() => setViewMode('family')}
         className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-medium cursor-pointer border-none transition-all duration-150 ${
           viewMode === 'family'
-            ? 'bg-[oklch(0.22_0.02_250)] text-[oklch(0.65_0.18_250)] shadow-[inset_0_0_0_1px_oklch(0.35_0.10_250)]'
-            : 'bg-transparent text-[oklch(0.55_0.01_250)]'
+            ? 'bg-[var(--c-blue-0-22)] text-[var(--accent-blue)] shadow-[inset_0_0_0_1px_var(--c-blue-0-35)]'
+            : 'bg-transparent text-[var(--text-muted)]'
         }`}
       >
         <Users size={11} />
@@ -69,22 +69,22 @@ export function MobileViewSelector() {
             onClick={() => setShowDropdown(v => !v)}
             className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-medium cursor-pointer border-none transition-all duration-150 ${
               viewMode === 'member'
-                ? 'bg-[oklch(0.22_0.02_250)] text-[oklch(0.65_0.18_250)] shadow-[inset_0_0_0_1px_oklch(0.35_0.10_250)]'
-                : 'bg-transparent text-[oklch(0.55_0.01_250)]'
+                ? 'bg-[var(--c-blue-0-22)] text-[var(--accent-blue)] shadow-[inset_0_0_0_1px_var(--c-blue-0-35)]'
+                : 'bg-transparent text-[var(--text-muted)]'
             }`}
           >
             <span>{viewMode === 'member' && selectedMemberName ? selectedMemberName : 'חבר'}</span>
             <ChevronDown size={10} />
           </button>
           {showDropdown && (
-            <div className="absolute top-full right-0 mt-1 bg-[oklch(0.16_0.01_250)] border border-[oklch(0.26_0.01_250)] rounded-xl p-1 min-w-[140px] shadow-[0_4px_16px_oklch(0_0_0/0.5)] z-50">
+            <div className="absolute top-full right-0 mt-1 bg-[var(--bg-card)] border border-[var(--c-0-26)] rounded-xl p-1 min-w-[140px] shadow-[0_4px_16px_oklch(0_0_0/0.5)] z-50">
               {otherMembers.map(m => (
                 <button
                   key={m.user_id}
                   onClick={() => { selectMember(m.user_id, m.name); setShowDropdown(false) }}
-                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[12px] cursor-pointer border-none text-right bg-transparent text-[oklch(0.75_0.01_250)] hover:bg-[oklch(0.20_0.01_250)] transition-colors duration-100"
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[12px] cursor-pointer border-none text-right bg-transparent text-[var(--text-body)] hover:bg-[var(--c-0-20)] transition-colors duration-100"
                 >
-                  <User size={11} className="shrink-0 text-[oklch(0.55_0.01_250)]" />
+                  <User size={11} className="shrink-0 text-[var(--text-muted)]" />
                   {m.name}
                 </button>
               ))}
@@ -92,9 +92,9 @@ export function MobileViewSelector() {
                 <button
                   key={`kid-${kid.id}`}
                   onClick={() => { selectMember(`kid-${kid.id}`, kid.name); setShowDropdown(false) }}
-                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[12px] cursor-pointer border-none text-right bg-transparent text-[oklch(0.75_0.01_250)] hover:bg-[oklch(0.20_0.01_250)] transition-colors duration-100"
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[12px] cursor-pointer border-none text-right bg-transparent text-[var(--text-body)] hover:bg-[var(--c-0-20)] transition-colors duration-100"
                 >
-                  <Users size={11} className="shrink-0 text-[oklch(0.55_0.01_250)]" />
+                  <Users size={11} className="shrink-0 text-[var(--text-muted)]" />
                   {kid.name}
                 </button>
               ))}

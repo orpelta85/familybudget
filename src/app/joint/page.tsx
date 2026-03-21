@@ -109,35 +109,35 @@ export default function JointPage() {
       <div className="flex justify-between items-start mb-1.5">
         <div>
           <div className="flex items-center gap-2">
-            <PiggyBank size={18} className="text-[oklch(0.68_0.18_295)]" />
+            <PiggyBank size={18} className="text-[var(--accent-purple)]" />
             <h1 className="text-xl font-bold tracking-tight">קופה קטנה</h1>
             <PageInfo {...PAGE_TIPS.joint} />
           </div>
-          <p className="text-sm text-[oklch(0.65_0.01_250)] mt-1">מזומן, שוברים, מתנות והוצאות/הכנסות קטנות שלא נכנסים לתקציב הגדול</p>
+          <p className="text-sm text-[var(--text-secondary)] mt-1">מזומן, שוברים, מתנות והוצאות/הכנסות קטנות שלא נכנסים לתקציב הגדול</p>
         </div>
-        <button onClick={handleResetPool} className="flex items-center gap-1.5 bg-transparent border border-[oklch(0.25_0.01_250)] rounded-lg px-3.5 py-[7px] text-[oklch(0.65_0.01_250)] text-xs font-medium cursor-pointer">
+        <button onClick={handleResetPool} className="flex items-center gap-1.5 bg-transparent border border-[var(--border-default)] rounded-lg px-3.5 py-[7px] text-[var(--text-secondary)] text-xs font-medium cursor-pointer">
           <Trash2 size={13} /> אפס קופה
         </button>
       </div>
-      <p className="text-[oklch(0.65_0.01_250)] text-[13px] mb-5">{selectedPeriod?.label ?? '...'}</p>
+      <p className="text-[var(--text-secondary)] text-[13px] mb-5">{selectedPeriod?.label ?? '...'}</p>
 
       {periods && <PeriodSelector periods={periods} selectedId={selectedPeriodId} onChange={setSelectedPeriodId} />}
 
       {/* Balance hero */}
-      <div className={`rounded-xl p-5 mb-5 border ${balance >= 0 ? 'bg-[oklch(0.15_0.02_295)] border-[oklch(0.25_0.05_295)]' : 'bg-[oklch(0.15_0.02_27)] border-[oklch(0.25_0.05_27)]'}`}>
+      <div className={`rounded-xl p-5 mb-5 border ${balance >= 0 ? 'bg-[var(--c-purple-0-15)] border-[var(--c-purple-0-25)]' : 'bg-[var(--c-red-0-15)] border-[var(--c-red-0-25)]'}`}>
         <div className="flex justify-between items-center">
           <div>
-            <div className="text-xs text-[oklch(0.60_0.08_295)] mb-1 uppercase tracking-[0.04em]">יתרת הקופה</div>
-            <div className={`text-4xl font-extrabold tracking-[-0.04em] ${balance >= 0 ? 'text-[oklch(0.80_0.12_295)]' : 'text-[oklch(0.75_0.15_27)]'}`}>{formatCurrency(balance)}</div>
+            <div className="text-xs text-[var(--c-purple-0-60)] mb-1 uppercase tracking-[0.04em]">יתרת הקופה</div>
+            <div className={`text-4xl font-extrabold tracking-[-0.04em] ${balance >= 0 ? 'text-[var(--c-purple-0-80)]' : 'text-[var(--c-red-0-75)]'}`}>{formatCurrency(balance)}</div>
           </div>
           <div className="flex gap-6">
             <div className="text-center">
-              <div className="text-lg font-bold text-[oklch(0.70_0.18_145)]">{formatCurrency(totalIncome)}</div>
-              <div className="text-[11px] text-[oklch(0.65_0.01_250)]">הכנסות</div>
+              <div className="text-lg font-bold text-[var(--accent-green)]">{formatCurrency(totalIncome)}</div>
+              <div className="text-[11px] text-[var(--text-secondary)]">הכנסות</div>
             </div>
             <div className="text-center">
-              <div className="text-lg font-bold text-[oklch(0.72_0.18_55)]">{formatCurrency(totalExpenses)}</div>
-              <div className="text-[11px] text-[oklch(0.65_0.01_250)]">הוצאות</div>
+              <div className="text-lg font-bold text-[var(--accent-orange)]">{formatCurrency(totalExpenses)}</div>
+              <div className="text-[11px] text-[var(--text-secondary)]">הוצאות</div>
             </div>
           </div>
         </div>
@@ -145,38 +145,38 @@ export default function JointPage() {
 
       <div className="grid-2 gap-4 mb-4">
         {/* Income */}
-        <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5">
+        <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5">
           <div className="font-semibold mb-3.5 text-sm">הכנסות לקופה</div>
           {[
             { label: 'החלק שלי', val: myContrib, set: setMyContrib },
             { label: 'החלק של סנדרה', val: partnerContrib, set: setPartnerContrib },
           ].map(f => (
             <div key={f.label} className="mb-3">
-              <label className="text-xs text-[oklch(0.60_0.01_250)] block mb-[5px]">{f.label}</label>
+              <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">{f.label}</label>
               <input type="number" value={f.val} onChange={e => f.set(e.target.value)} placeholder="0"
-                className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-[15px] ltr text-left" />
+                className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-[15px] ltr text-left" />
             </div>
           ))}
           <button onClick={saveIncome} disabled={upsertIncome.isPending}
-            className="btn-hover w-full bg-[oklch(0.68_0.18_295)] border-none rounded-lg py-2.5 font-semibold text-[13px] text-[oklch(0.10_0.02_295)] cursor-pointer">
+            className="btn-hover w-full bg-[var(--accent-purple)] border-none rounded-lg py-2.5 font-semibold text-[13px] text-[var(--c-purple-0-15)] cursor-pointer">
             שמור הכנסות
           </button>
         </div>
 
         {/* Add expense */}
-        <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5">
+        <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5">
           <div className="font-semibold mb-3.5 text-sm">הוצאה משותפת</div>
           <form onSubmit={addExp} className="flex flex-col gap-3">
             <select value={expCategory} onChange={e => setExpCategory(e.target.value as PoolCategory)}
               aria-label="קטגוריית הוצאה"
-              className="bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-[13px]">
+              className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-[13px]">
               {POOL_CATEGORIES.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
             </select>
             <input type="number" value={expAmount} onChange={e => setExpAmount(e.target.value)} placeholder="סכום (₪)" required min="0"
-              className="bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-[15px] ltr text-left" />
+              className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-[15px] ltr text-left" />
             <input type="text" value={expDesc} onChange={e => setExpDesc(e.target.value)} placeholder="תיאור (אופציונלי)"
-              className="bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-[9px] text-inherit text-[13px]" />
-            <button type="submit" className="btn-hover bg-[oklch(0.72_0.18_55)] border-none rounded-lg py-2.5 font-semibold text-[13px] text-[oklch(0.10_0.01_250)] cursor-pointer">
+              className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-[13px]" />
+            <button type="submit" className="btn-hover bg-[var(--accent-orange)] border-none rounded-lg py-2.5 font-semibold text-[13px] text-[var(--c-0-10)] cursor-pointer">
               + הוסף הוצאה
             </button>
           </form>
@@ -184,20 +184,20 @@ export default function JointPage() {
       </div>
 
       {/* Expense list */}
-      <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5">
+      <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5">
         <div className="font-semibold mb-3.5 text-sm">הוצאות המחזור</div>
         {poolExpenses?.length ? poolExpenses.map(e => (
-          <div key={e.id} className="flex justify-between py-[9px] border-b border-[oklch(0.20_0.01_250)] text-[13px]">
+          <div key={e.id} className="flex justify-between py-[9px] border-b border-[var(--c-0-20)] text-[13px]">
             <div>
               <span className="font-medium">{POOL_CATEGORIES.find(c => c.key === e.category)?.label ?? e.category}</span>
-              {e.description && <span className="text-[oklch(0.65_0.01_250)] mr-2">· {e.description}</span>}
+              {e.description && <span className="text-[var(--text-secondary)] mr-2">· {e.description}</span>}
             </div>
-            <span className="font-semibold text-[oklch(0.72_0.18_55)]">{formatCurrency(e.amount)}</span>
+            <span className="font-semibold text-[var(--accent-orange)]">{formatCurrency(e.amount)}</span>
           </div>
         )) : (
           <div className="text-center py-6">
-            <Inbox size={32} className="text-[oklch(0.30_0.01_250)] mx-auto mb-2" />
-            <div className="text-xs text-[oklch(0.65_0.01_250)]">אין הוצאות עדיין</div>
+            <Inbox size={32} className="text-[var(--c-0-30)] mx-auto mb-2" />
+            <div className="text-xs text-[var(--text-secondary)]">אין הוצאות עדיין</div>
           </div>
         )}
       </div>

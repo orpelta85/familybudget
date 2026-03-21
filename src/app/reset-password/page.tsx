@@ -23,26 +23,26 @@ export default function ResetPasswordPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4" style={{ marginRight: 0, maxWidth: '100vw' }}>
-      <div style={{ width: 380, background: 'oklch(0.16 0.01 250)', border: '1px solid oklch(0.25 0.01 250)', borderRadius: 12, padding: 32 }}>
+      <div style={{ width: 380, background: 'var(--bg-card)', border: '1px solid var(--border-default)', borderRadius: 12, padding: 32 }}>
         <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 6 }}>איפוס סיסמה</h1>
-        <p style={{ color: 'oklch(0.60 0.01 250)', fontSize: 14, marginBottom: 28 }}>הזן סיסמה חדשה</p>
+        <p style={{ color: 'var(--c-0-60)', fontSize: 14, marginBottom: 28 }}>הזן סיסמה חדשה</p>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
-            <label style={{ fontSize: 13, display: 'block', marginBottom: 6, color: 'oklch(0.75 0.01 250)' }}>סיסמה חדשה</label>
+            <label style={{ fontSize: 13, display: 'block', marginBottom: 6, color: 'var(--text-body)' }}>סיסמה חדשה</label>
             <input
               type="password"
               value={password}
               onChange={e => setPassword(e.target.value)}
               required
               minLength={6}
-              style={{ width: '100%', background: 'oklch(0.22 0.01 250)', border: '1px solid oklch(0.28 0.01 250)', borderRadius: 8, padding: '10px 12px', color: 'inherit', fontSize: 14, direction: 'ltr' }}
+              style={{ width: '100%', background: 'var(--bg-hover)', border: '1px solid var(--border-light)', borderRadius: 8, padding: '10px 12px', color: 'inherit', fontSize: 14, direction: 'ltr' }}
             />
           </div>
           <button
             type="submit"
             disabled={loading}
-            style={{ width: '100%', background: 'oklch(0.65 0.18 250)', color: 'oklch(0.12 0.01 250)', border: 'none', borderRadius: 8, padding: '11px 0', fontWeight: 600, fontSize: 15, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1 }}
+            style={{ width: '100%', background: 'var(--accent-blue)', color: 'var(--c-0-10)', border: 'none', borderRadius: 8, padding: '11px 0', fontWeight: 600, fontSize: 15, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1 }}
           >
             {loading ? '...' : 'עדכן סיסמה'}
           </button>

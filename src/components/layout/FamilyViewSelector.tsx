@@ -47,8 +47,8 @@ export function FamilyViewSelector() {
           onClick={() => setViewMode('personal')}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium cursor-pointer border-none transition-all duration-150 ${
             viewMode === 'personal'
-              ? 'bg-[oklch(0.22_0.02_250)] text-[oklch(0.65_0.18_250)] shadow-[inset_0_0_0_1px_oklch(0.35_0.10_250)]'
-              : 'bg-transparent text-[oklch(0.55_0.01_250)] hover:bg-[oklch(0.18_0.01_250)]'
+              ? 'bg-[var(--c-blue-0-22)] text-[var(--accent-blue)] shadow-[inset_0_0_0_1px_var(--c-blue-0-35)]'
+              : 'bg-transparent text-[var(--text-muted)] hover:bg-[var(--c-0-18)]'
           }`}
         >
           <User size={12} />
@@ -60,8 +60,8 @@ export function FamilyViewSelector() {
           onClick={() => setViewMode('family')}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium cursor-pointer border-none transition-all duration-150 ${
             viewMode === 'family'
-              ? 'bg-[oklch(0.22_0.02_250)] text-[oklch(0.65_0.18_250)] shadow-[inset_0_0_0_1px_oklch(0.35_0.10_250)]'
-              : 'bg-transparent text-[oklch(0.55_0.01_250)] hover:bg-[oklch(0.18_0.01_250)]'
+              ? 'bg-[var(--c-blue-0-22)] text-[var(--accent-blue)] shadow-[inset_0_0_0_1px_var(--c-blue-0-35)]'
+              : 'bg-transparent text-[var(--text-muted)] hover:bg-[var(--c-0-18)]'
           }`}
         >
           <Users size={12} />
@@ -75,8 +75,8 @@ export function FamilyViewSelector() {
               onClick={() => setShowDropdown(v => !v)}
               className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-medium cursor-pointer border-none transition-all duration-150 ${
                 viewMode === 'member'
-                  ? 'bg-[oklch(0.22_0.02_250)] text-[oklch(0.65_0.18_250)] shadow-[inset_0_0_0_1px_oklch(0.35_0.10_250)]'
-                  : 'bg-transparent text-[oklch(0.55_0.01_250)] hover:bg-[oklch(0.18_0.01_250)]'
+                  ? 'bg-[var(--c-blue-0-22)] text-[var(--accent-blue)] shadow-[inset_0_0_0_1px_var(--c-blue-0-35)]'
+                  : 'bg-transparent text-[var(--text-muted)] hover:bg-[var(--c-0-18)]'
               }`}
             >
               <span>{viewMode === 'member' && selectedMemberName ? selectedMemberName : 'חבר'}</span>
@@ -84,10 +84,10 @@ export function FamilyViewSelector() {
             </button>
 
             {showDropdown && (
-              <div className="absolute top-full right-0 mt-1 bg-[oklch(0.16_0.01_250)] border border-[oklch(0.26_0.01_250)] rounded-xl p-1 min-w-[140px] shadow-[0_4px_16px_oklch(0_0_0/0.5)] z-50">
+              <div className="absolute top-full right-0 mt-1 bg-[var(--bg-card)] border border-[var(--c-0-26)] rounded-xl p-1 min-w-[140px] shadow-[0_4px_16px_oklch(0_0_0/0.5)] z-50">
                 {/* Family members (other than current user) */}
                 {otherMembers.length > 0 && (
-                  <div className="px-2 py-1 text-[10px] font-semibold text-[oklch(0.50_0.01_250)] tracking-wide">
+                  <div className="px-2 py-1 text-[10px] font-semibold text-[var(--c-0-50)] tracking-wide">
                     בני משפחה
                   </div>
                 )}
@@ -97,11 +97,11 @@ export function FamilyViewSelector() {
                     onClick={() => { selectMember(m.user_id, m.name); setShowDropdown(false) }}
                     className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[12px] cursor-pointer border-none text-right transition-colors duration-100 ${
                       viewMode === 'member' && m.user_id === selectedMemberId
-                        ? 'bg-[oklch(0.22_0.02_250)] text-[oklch(0.90_0.01_250)]'
-                        : 'bg-transparent text-[oklch(0.75_0.01_250)] hover:bg-[oklch(0.20_0.01_250)]'
+                        ? 'bg-[var(--c-blue-0-22)] text-[var(--c-0-90)]'
+                        : 'bg-transparent text-[var(--text-body)] hover:bg-[var(--c-0-20)]'
                     }`}
                   >
-                    <User size={12} className="shrink-0 text-[oklch(0.55_0.01_250)]" />
+                    <User size={12} className="shrink-0 text-[var(--text-muted)]" />
                     {m.name}
                   </button>
                 ))}
@@ -109,7 +109,7 @@ export function FamilyViewSelector() {
                 {/* Kids */}
                 {(kids ?? []).length > 0 && (
                   <>
-                    <div className="px-2 py-1 mt-1 text-[10px] font-semibold text-[oklch(0.50_0.01_250)] tracking-wide">
+                    <div className="px-2 py-1 mt-1 text-[10px] font-semibold text-[var(--c-0-50)] tracking-wide">
                       ילדים
                     </div>
                     {(kids ?? []).map(kid => (
@@ -118,11 +118,11 @@ export function FamilyViewSelector() {
                         onClick={() => { selectMember(`kid-${kid.id}`, kid.name); setShowDropdown(false) }}
                         className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg text-[12px] cursor-pointer border-none text-right transition-colors duration-100 ${
                           viewMode === 'member' && selectedMemberId === `kid-${kid.id}`
-                            ? 'bg-[oklch(0.22_0.02_250)] text-[oklch(0.90_0.01_250)]'
-                            : 'bg-transparent text-[oklch(0.75_0.01_250)] hover:bg-[oklch(0.20_0.01_250)]'
+                            ? 'bg-[var(--c-blue-0-22)] text-[var(--c-0-90)]'
+                            : 'bg-transparent text-[var(--text-body)] hover:bg-[var(--c-0-20)]'
                         }`}
                       >
-                        <Users size={12} className="shrink-0 text-[oklch(0.55_0.01_250)]" />
+                        <Users size={12} className="shrink-0 text-[var(--text-muted)]" />
                         {kid.name}
                       </button>
                     ))}

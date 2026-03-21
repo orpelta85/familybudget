@@ -25,19 +25,19 @@ interface Tip {
 
 function getIcon(type: Tip['icon']) {
   switch (type) {
-    case 'saving': return <PiggyBank size={16} className="text-[oklch(0.70_0.18_145)]" />
-    case 'spending': return <TrendingDown size={16} className="text-[oklch(0.72_0.18_55)]" />
-    case 'fund': return <Lightbulb size={16} className="text-[oklch(0.65_0.18_250)]" />
-    case 'alert': return <AlertTriangle size={16} className="text-[oklch(0.62_0.22_27)]" />
-    case 'growth': return <TrendingUp size={16} className="text-[oklch(0.70_0.18_145)]" />
+    case 'saving': return <PiggyBank size={16} className="text-[var(--accent-green)]" />
+    case 'spending': return <TrendingDown size={16} className="text-[var(--accent-orange)]" />
+    case 'fund': return <Lightbulb size={16} className="text-[var(--accent-blue)]" />
+    case 'alert': return <AlertTriangle size={16} className="text-[var(--accent-red)]" />
+    case 'growth': return <TrendingUp size={16} className="text-[var(--accent-green)]" />
   }
 }
 
 function getPriorityBorder(p: Tip['priority']) {
   switch (p) {
-    case 'high': return 'border-r-[oklch(0.62_0.22_27)]'
-    case 'medium': return 'border-r-[oklch(0.72_0.18_55)]'
-    case 'low': return 'border-r-[oklch(0.65_0.18_250)]'
+    case 'high': return 'border-r-[var(--accent-red)]'
+    case 'medium': return 'border-r-[var(--accent-orange)]'
+    case 'low': return 'border-r-[var(--accent-blue)]'
   }
 }
 
@@ -187,37 +187,37 @@ export default function AdvisorPage() {
     <div>
       <div className="flex justify-between items-start mb-1.5">
         <div className="flex items-center gap-2">
-          <Sparkles size={18} className="text-[oklch(0.72_0.18_55)]" />
+          <Sparkles size={18} className="text-[var(--accent-orange)]" />
           <h1 className="text-xl font-bold tracking-tight">יועץ פיננסי</h1>
           <PageInfo {...PAGE_TIPS.advisor} />
         </div>
-        <button onClick={generateTips} disabled={generating} className="flex items-center gap-1.5 bg-[oklch(0.20_0.04_55)] border border-[oklch(0.32_0.08_55)] rounded-lg px-3.5 py-[7px] text-[oklch(0.72_0.18_55)] text-[13px] font-medium cursor-pointer">
+        <button onClick={generateTips} disabled={generating} className="flex items-center gap-1.5 bg-[var(--c-orange-0-20)] border border-[var(--c-orange-0-32)] rounded-lg px-3.5 py-[7px] text-[var(--accent-orange)] text-[13px] font-medium cursor-pointer">
           <RefreshCw size={13} className={generating ? 'animate-spin' : ''} /> רענן
         </button>
       </div>
-      <p className="text-[oklch(0.65_0.01_250)] text-[13px] mb-5">המלצות מותאמות אישית על בסיס הנתונים הפיננסיים שלך</p>
+      <p className="text-[var(--text-secondary)] text-[13px] mb-5">המלצות מותאמות אישית על בסיס הנתונים הפיננסיים שלך</p>
 
       {viewMode === 'family' && (
-        <div className="bg-[oklch(0.18_0.04_250)] border border-[oklch(0.28_0.08_250)] rounded-xl px-5 py-3.5 mb-5 flex items-center gap-3">
-          <Info size={18} className="text-[oklch(0.65_0.18_250)] shrink-0" />
+        <div className="bg-[var(--c-blue-0-18)] border border-[var(--c-blue-0-28)] rounded-xl px-5 py-3.5 mb-5 flex items-center gap-3">
+          <Info size={18} className="text-[var(--accent-blue)] shrink-0" />
           <div>
-            <div className="font-semibold text-sm text-[oklch(0.65_0.18_250)]">היועץ מנתח נתונים אישיים</div>
-            <div className="text-xs text-[oklch(0.65_0.01_250)]">עבור לתצוגה אישית לקבלת המלצות מותאמות</div>
+            <div className="font-semibold text-sm text-[var(--accent-blue)]">היועץ מנתח נתונים אישיים</div>
+            <div className="text-xs text-[var(--text-secondary)]">עבור לתצוגה אישית לקבלת המלצות מותאמות</div>
           </div>
         </div>
       )}
 
       {!tips.length
-        ? <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-10 text-center text-[oklch(0.65_0.01_250)] text-sm">טוען המלצות...</div>
+        ? <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-10 text-center text-[var(--text-secondary)] text-sm">טוען המלצות...</div>
         : (
           <div className="flex flex-col gap-3">
             {tips.map((tip, i) => (
-              <div key={i} className={`bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] border-r-2 ${getPriorityBorder(tip.priority)} rounded-xl px-5 py-4`}>
+              <div key={i} className={`bg-[var(--bg-card)] border border-[var(--border-default)] border-r-2 ${getPriorityBorder(tip.priority)} rounded-xl px-5 py-4`}>
                 <div className="flex items-center gap-2 mb-2">
                   {getIcon(tip.icon)}
                   <span className="font-semibold text-sm">{tip.title}</span>
                 </div>
-                <p className="text-[13px] text-[oklch(0.70_0.01_250)] leading-relaxed m-0">{tip.body}</p>
+                <p className="text-[13px] text-[var(--c-0-70)] leading-relaxed m-0">{tip.body}</p>
               </div>
             ))}
           </div>

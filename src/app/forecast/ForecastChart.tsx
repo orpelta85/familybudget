@@ -14,7 +14,7 @@ interface Props {
 
 export default function ForecastChart({ forecast, payday }: Props) {
   if (forecast.length === 0) {
-    return <div className="text-[oklch(0.65_0.01_250)] text-[13px] text-center py-8">אין נתונים להצגה</div>
+    return <div className="text-[var(--text-secondary)] text-[13px] text-center py-8">אין נתונים להצגה</div>
   }
 
   const data = forecast.map(d => ({
@@ -35,25 +35,25 @@ export default function ForecastChart({ forecast, payday }: Props) {
       <AreaChart data={data} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
         <defs>
           <linearGradient id="balanceGreen" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="oklch(0.70 0.18 145)" stopOpacity={0.3} />
-            <stop offset="100%" stopColor="oklch(0.70 0.18 145)" stopOpacity={0.02} />
+            <stop offset="0%" stopColor="var(--accent-green)" stopOpacity={0.3} />
+            <stop offset="100%" stopColor="var(--accent-green)" stopOpacity={0.02} />
           </linearGradient>
           <linearGradient id="balanceRed" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="oklch(0.62 0.22 27)" stopOpacity={0.3} />
-            <stop offset="100%" stopColor="oklch(0.62 0.22 27)" stopOpacity={0.02} />
+            <stop offset="0%" stopColor="var(--accent-red)" stopOpacity={0.3} />
+            <stop offset="100%" stopColor="var(--accent-red)" stopOpacity={0.02} />
           </linearGradient>
         </defs>
-        <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.22 0.01 250)" />
+        <CartesianGrid strokeDasharray="3 3" stroke="var(--bg-hover)" />
         <XAxis
           dataKey="date"
-          tick={{ fill: 'oklch(0.55 0.01 250)', fontSize: 10 }}
-          axisLine={{ stroke: 'oklch(0.25 0.01 250)' }}
+          tick={{ fill: 'var(--text-muted)', fontSize: 10 }}
+          axisLine={{ stroke: 'var(--border-default)' }}
           tickLine={false}
           interval={6}
         />
         <YAxis
           orientation="right"
-          tick={{ fill: 'oklch(0.55 0.01 250)', fontSize: 11 }}
+          tick={{ fill: 'var(--text-muted)', fontSize: 11 }}
           axisLine={false}
           tickLine={false}
           tickFormatter={v => `${(v / 1000).toFixed(0)}k`}
@@ -62,37 +62,37 @@ export default function ForecastChart({ forecast, payday }: Props) {
         <Tooltip
           formatter={(v: unknown) => [formatCurrency(Number(v)), 'יתרה']}
           contentStyle={{
-            background: 'oklch(0.16 0.01 250)',
-            border: '1px solid oklch(0.28 0.01 250)',
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border-light)',
             borderRadius: 8,
             fontSize: 12,
-            color: 'oklch(0.85 0.01 250)',
+            color: 'var(--c-0-85)',
           }}
-          labelStyle={{ color: 'oklch(0.65 0.01 250)' }}
+          labelStyle={{ color: 'var(--text-secondary)' }}
         />
         {/* Zero line */}
-        <ReferenceLine y={0} stroke="oklch(0.40 0.01 250)" strokeDasharray="4 4" />
+        <ReferenceLine y={0} stroke="var(--c-0-40)" strokeDasharray="4 4" />
 
         {/* Payday markers */}
         {paydays.map(idx => (
           <ReferenceLine
             key={`pay-${idx}`}
             x={data[idx]?.date}
-            stroke="oklch(0.70 0.18 145)"
+            stroke="var(--accent-green)"
             strokeDasharray="2 4"
             strokeOpacity={0.5}
-            label={{ value: 'M', fill: 'oklch(0.70 0.18 145)', fontSize: 9, position: 'top' }}
+            label={{ value: 'M', fill: 'var(--accent-green)', fontSize: 9, position: 'top' }}
           />
         ))}
 
         <Area
           type="monotone"
           dataKey="balance"
-          stroke="oklch(0.65 0.18 250)"
+          stroke="var(--accent-blue)"
           strokeWidth={2}
           fill="url(#balanceGreen)"
           dot={false}
-          activeDot={{ r: 4, fill: 'oklch(0.65 0.18 250)' }}
+          activeDot={{ r: 4, fill: 'var(--accent-blue)' }}
         />
       </AreaChart>
     </ResponsiveContainer>

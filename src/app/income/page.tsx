@@ -134,17 +134,17 @@ export default function IncomePage() {
     <div>
       <div className="flex justify-between items-start mb-1.5">
         <div className="flex items-center gap-2">
-          <Wallet size={18} className="text-[oklch(0.65_0.18_250)]" />
+          <Wallet size={18} className="text-[var(--accent-blue)]" />
           <h1 className="text-xl font-bold tracking-tight">הכנסה</h1>
           <PageInfo {...PAGE_TIPS.income} />
         </div>
         <div className="flex items-center gap-3">
-          <button onClick={handleResetIncome} className="flex items-center gap-1.5 bg-transparent border border-[oklch(0.25_0.01_250)] rounded-lg px-3.5 py-[7px] text-[oklch(0.65_0.01_250)] text-xs font-medium cursor-pointer">
+          <button onClick={handleResetIncome} className="flex items-center gap-1.5 bg-transparent border border-[var(--border-default)] rounded-lg px-3.5 py-[7px] text-[var(--text-secondary)] text-xs font-medium cursor-pointer">
             <Trash2 size={13} /> אפס הכנסה
           </button>
         </div>
       </div>
-      <p className="text-[oklch(0.60_0.01_250)] text-sm mb-5">
+      <p className="text-[var(--c-0-60)] text-sm mb-5">
         {selectedPeriod ? periodLabel(selectedPeriod.start_date) : '...'}
       </p>
 
@@ -156,10 +156,10 @@ export default function IncomePage() {
           {/* Family total KPI */}
           <div className="bg-card border border-border rounded-xl p-5 mb-4">
             <div className="flex items-center gap-2 mb-3">
-              <Users size={16} className="text-[oklch(0.65_0.18_250)]" />
+              <Users size={16} className="text-[var(--accent-blue)]" />
               <span className="font-semibold text-sm">הכנסה משפחתית כוללת</span>
             </div>
-            <div className="text-[28px] font-bold text-[oklch(0.65_0.18_250)] mb-4">
+            <div className="text-[28px] font-bold text-[var(--accent-blue)] mb-4">
               {formatCurrency(familyTotal)}
             </div>
           </div>
@@ -167,38 +167,38 @@ export default function IncomePage() {
           {/* Per-member breakdown */}
           <div className="grid-2 items-start">
             {(familyIncome ?? []).map(member => (
-              <div key={member.user_id} className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5">
+              <div key={member.user_id} className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5">
                 <div className="flex justify-between items-center mb-3">
                   <span className="font-semibold text-sm">{member.display_name}</span>
-                  <span className="text-[18px] font-bold text-[oklch(0.65_0.18_250)]">{formatCurrency(member.total)}</span>
+                  <span className="text-[18px] font-bold text-[var(--accent-blue)]">{formatCurrency(member.total)}</span>
                 </div>
                 <div className="flex flex-col gap-2 text-[13px]">
                   <div className="flex justify-between">
-                    <span className="text-[oklch(0.65_0.01_250)]">משכורת</span>
+                    <span className="text-[var(--text-secondary)]">משכורת</span>
                     <span className="font-medium">{formatCurrency(member.salary)}</span>
                   </div>
                   {member.bonus > 0 && (
                     <div className="flex justify-between">
-                      <span className="text-[oklch(0.65_0.01_250)]">בונוס</span>
-                      <span className="font-medium text-[oklch(0.70_0.18_145)]">{formatCurrency(member.bonus)}</span>
+                      <span className="text-[var(--text-secondary)]">בונוס</span>
+                      <span className="font-medium text-[var(--accent-green)]">{formatCurrency(member.bonus)}</span>
                     </div>
                   )}
                   {member.other > 0 && (
                     <div className="flex justify-between">
-                      <span className="text-[oklch(0.65_0.01_250)]">אחר</span>
+                      <span className="text-[var(--text-secondary)]">אחר</span>
                       <span className="font-medium">{formatCurrency(member.other)}</span>
                     </div>
                   )}
                 </div>
                 {/* Contribution percentage */}
                 {familyTotal > 0 && (
-                  <div className="mt-3 pt-2 border-t border-[oklch(0.22_0.01_250)]">
+                  <div className="mt-3 pt-2 border-t border-[var(--bg-hover)]">
                     <div className="flex justify-between items-center text-[12px]">
-                      <span className="text-[oklch(0.55_0.01_250)]">תרומה להכנסה משפחתית</span>
-                      <span className="font-semibold text-[oklch(0.65_0.18_250)]">{Math.round((member.total / familyTotal) * 100)}%</span>
+                      <span className="text-[var(--text-muted)]">תרומה להכנסה משפחתית</span>
+                      <span className="font-semibold text-[var(--accent-blue)]">{Math.round((member.total / familyTotal) * 100)}%</span>
                     </div>
-                    <div className="h-[3px] rounded-sm bg-[oklch(0.20_0.01_250)] overflow-hidden mt-1.5">
-                      <div className="h-full rounded-sm bg-[oklch(0.65_0.18_250)]" style={{ width: `${Math.round((member.total / familyTotal) * 100)}%` }} />
+                    <div className="h-[3px] rounded-sm bg-[var(--c-0-20)] overflow-hidden mt-1.5">
+                      <div className="h-full rounded-sm bg-[var(--accent-blue)]" style={{ width: `${Math.round((member.total / familyTotal) * 100)}%` }} />
                     </div>
                   </div>
                 )}
@@ -213,7 +213,7 @@ export default function IncomePage() {
       <div className="grid-2 items-start">
 
         {/* Input form */}
-        <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5">
+        <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5">
           <div className="mb-[18px] font-semibold text-sm">הזנת הכנסה למחזור</div>
 
           {[
@@ -222,7 +222,7 @@ export default function IncomePage() {
             { label: 'הכנסה אחרת', val: other, set: setOther, placeholder: '0' },
           ].map(field => (
             <div key={field.label} className="mb-3.5">
-              <label className="text-[13px] block mb-[5px] text-[oklch(0.75_0.01_250)]">
+              <label className="text-[13px] block mb-[5px] text-[var(--text-body)]">
                 {field.label}
               </label>
               <div className="relative">
@@ -231,36 +231,36 @@ export default function IncomePage() {
                   value={field.val}
                   onChange={e => field.set(e.target.value)}
                   placeholder={field.placeholder}
-                  className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg py-2.5 pr-3 pl-10 text-inherit text-[15px] text-right" style={{ direction: 'ltr' }}
+                  className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg py-2.5 pr-3 pl-10 text-inherit text-[15px] text-right" style={{ direction: 'ltr' }}
                 />
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[oklch(0.65_0.01_250)] text-[13px]">₪</span>
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] text-[13px]">₪</span>
               </div>
             </div>
           ))}
 
           <div className="mb-3.5">
-            <label className="text-[13px] block mb-[5px] text-[oklch(0.75_0.01_250)]">הערות</label>
+            <label className="text-[13px] block mb-[5px] text-[var(--text-body)]">הערות</label>
             <input
               type="text"
               value={notes}
               onChange={e => setNotes(e.target.value)}
               placeholder="הערה אופציונלית..."
-              className="w-full bg-[oklch(0.22_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg py-2.5 px-3 text-inherit text-sm"
+              className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg py-2.5 px-3 text-inherit text-sm"
             />
           </div>
 
-          <div className="flex justify-between items-center py-3.5 border-t border-[oklch(0.22_0.01_250)]">
+          <div className="flex justify-between items-center py-3.5 border-t border-[var(--bg-hover)]">
             <span className="font-semibold">סה&quot;כ הכנסה</span>
-            <span className="text-[22px] font-bold text-[oklch(0.65_0.18_250)]">
+            <span className="text-[22px] font-bold text-[var(--accent-blue)]">
               {formatCurrency(total)}
             </span>
           </div>
 
           {avgIncome > 0 && total > 0 && (
-            <div className="text-xs text-[oklch(0.65_0.01_250)] mb-3 text-center">
+            <div className="text-xs text-[var(--text-secondary)] mb-3 text-center">
               ממוצע 3 חודשים: {formatCurrency(avgIncome)}
               {' '}
-              <span className={total >= avgIncome ? 'text-[oklch(0.70_0.18_145)]' : 'text-[oklch(0.62_0.22_27)]'}>
+              <span className={total >= avgIncome ? 'text-[var(--accent-green)]' : 'text-[var(--accent-red)]'}>
                 ({total >= avgIncome ? '↑' : '↓'}{Math.abs(Math.round(((total - avgIncome) / avgIncome) * 100))}%)
               </span>
             </div>
@@ -269,16 +269,16 @@ export default function IncomePage() {
           <button
             onClick={handleSave}
             disabled={upsert.isPending}
-            className={`btn-hover w-full bg-[oklch(0.65_0.18_250)] text-[oklch(0.12_0.01_250)] border-none rounded-lg py-3 font-semibold text-[15px] cursor-pointer ${upsert.isPending ? 'opacity-70' : 'opacity-100'}`}
+            className={`btn-hover w-full bg-[var(--accent-blue)] text-[var(--c-0-10)] border-none rounded-lg py-3 font-semibold text-[15px] cursor-pointer ${upsert.isPending ? 'opacity-70' : 'opacity-100'}`}
           >
             {upsert.isPending ? 'שומר...' : 'שמור הכנסה'}
           </button>
         </div>
 
         {/* Trend chart */}
-        <div className="bg-[oklch(0.16_0.01_250)] border border-[oklch(0.25_0.01_250)] rounded-xl p-5">
+        <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5">
           <div className="flex items-center gap-[7px] font-semibold text-sm mb-4">
-            <TrendingUp size={14} className="text-[oklch(0.65_0.18_250)]" />
+            <TrendingUp size={14} className="text-[var(--accent-blue)]" />
             מגמת הכנסה
           </div>
           <IncomeTrendChart data={trendData} />
@@ -286,10 +286,10 @@ export default function IncomePage() {
           {/* Last 6 periods summary */}
           {trendData.length > 0 && (
             <div className="mt-4">
-              <div className="text-xs text-[oklch(0.65_0.01_250)] mb-2">סיכום לפי מחזור</div>
+              <div className="text-xs text-[var(--text-secondary)] mb-2">סיכום לפי מחזור</div>
               {[...trendData].reverse().map(d => (
-                <div key={d.label} className="flex justify-between text-xs py-[5px] border-b border-[oklch(0.20_0.01_250)]">
-                  <span className={`${d.isCurrent ? 'text-[oklch(0.92_0.01_250)] font-semibold' : 'text-[oklch(0.65_0.01_250)] font-normal'}`}>
+                <div key={d.label} className="flex justify-between text-xs py-[5px] border-b border-[var(--c-0-20)]">
+                  <span className={`${d.isCurrent ? 'text-[var(--c-0-92)] font-semibold' : 'text-[var(--text-secondary)] font-normal'}`}>
                     {d.label}{d.isCurrent ? ' ✦' : ''}
                   </span>
                   <span className={`${d.isCurrent ? 'font-semibold' : 'font-normal'}`}>{formatCurrency(d.total)}</span>

@@ -29,28 +29,28 @@ const tipIcons: Record<OrenTip['type'], typeof AlertTriangle> = {
 
 const tipColors: Record<OrenTip['type'], { bg: string; border: string; text: string; icon: string }> = {
   warning: {
-    bg: 'bg-[oklch(0.18_0.04_60)]',
-    border: 'border-[oklch(0.30_0.08_60)]',
-    text: 'text-[oklch(0.80_0.12_60)]',
-    icon: 'text-[oklch(0.75_0.15_60)]',
+    bg: 'bg-[var(--c-orange-0-18)]',
+    border: 'border-[var(--c-orange-0-30)]',
+    text: 'text-[var(--c-orange-0-80)]',
+    icon: 'text-[var(--c-orange-0-75)]',
   },
   success: {
-    bg: 'bg-[oklch(0.18_0.04_145)]',
-    border: 'border-[oklch(0.30_0.08_145)]',
-    text: 'text-[oklch(0.80_0.12_145)]',
-    icon: 'text-[oklch(0.75_0.15_145)]',
+    bg: 'bg-[var(--c-green-0-18)]',
+    border: 'border-[var(--c-green-0-30)]',
+    text: 'text-[var(--c-green-0-80)]',
+    icon: 'text-[var(--c-green-0-75)]',
   },
   info: {
-    bg: 'bg-[oklch(0.18_0.04_250)]',
-    border: 'border-[oklch(0.30_0.08_250)]',
-    text: 'text-[oklch(0.80_0.12_250)]',
-    icon: 'text-[oklch(0.75_0.15_250)]',
+    bg: 'bg-[var(--c-blue-0-18)]',
+    border: 'border-[var(--c-blue-0-30)]',
+    text: 'text-[var(--c-blue-0-80)]',
+    icon: 'text-[var(--c-blue-0-75)]',
   },
   suggestion: {
-    bg: 'bg-[oklch(0.18_0.04_290)]',
-    border: 'border-[oklch(0.30_0.08_290)]',
-    text: 'text-[oklch(0.80_0.12_290)]',
-    icon: 'text-[oklch(0.75_0.15_290)]',
+    bg: 'bg-[var(--c-purple-0-18)]',
+    border: 'border-[var(--c-purple-0-30)]',
+    text: 'text-[var(--c-purple-0-80)]',
+    icon: 'text-[var(--c-purple-0-75)]',
   },
 }
 
@@ -65,7 +65,7 @@ const tipPosePosition: Record<OrenTip['type'], string> = {
 
 function OrenMiniAvatar({ className }: { className?: string }) {
   return (
-    <div className={`w-7 h-7 rounded-full overflow-hidden shrink-0 mt-0.5 border border-[oklch(0.35_0.10_145)] ${className ?? ''}`}>
+    <div className={`w-7 h-7 rounded-full overflow-hidden shrink-0 mt-0.5 border border-[var(--c-green-0-35)] ${className ?? ''}`}>
       <Image
         src="/mascot/oren-poses.png"
         alt="אורן"
@@ -80,7 +80,7 @@ function OrenMiniAvatar({ className }: { className?: string }) {
 
 function OrenTipPose({ type }: { type: OrenTip['type'] }) {
   return (
-    <div className="w-7 h-7 rounded-full overflow-hidden shrink-0 mt-0.5 border border-[oklch(0.35_0.10_145)]">
+    <div className="w-7 h-7 rounded-full overflow-hidden shrink-0 mt-0.5 border border-[var(--c-green-0-35)]">
       <Image
         src="/mascot/oren-poses.png"
         alt="אורן"
@@ -200,13 +200,13 @@ export function OrenChat({ open, onClose, tips, onTipSeen, financialContext }: O
 
       {/* Panel */}
       <div
-        className="relative w-full md:w-[400px] md:max-w-[90vw] h-[85vh] md:h-[600px] md:max-h-[80vh] md:mr-4 md:mb-0 bg-[oklch(0.13_0.01_250)] md:rounded-xl rounded-t-xl overflow-hidden flex flex-col shadow-[0_-4px_40px_oklch(0_0_0/0.5)] animate-slideUp md:ml-4"
+        className="relative w-full md:w-[400px] md:max-w-[90vw] h-[85vh] md:h-[600px] md:max-h-[80vh] md:mr-4 md:mb-0 bg-[var(--bg-base)] md:rounded-xl rounded-t-xl overflow-hidden flex flex-col shadow-[0_-4px_40px_oklch(0_0_0/0.5)] animate-slideUp md:ml-4"
         style={{ animationDuration: '200ms' }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[oklch(0.22_0.01_250)] bg-[oklch(0.15_0.01_250)] shrink-0">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-[var(--bg-hover)] bg-[var(--c-0-15)] shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-full overflow-hidden border border-[oklch(0.35_0.10_145)]">
+            <div className="w-9 h-9 rounded-full overflow-hidden border border-[var(--c-green-0-35)]">
               <Image
                 src="/mascot/oren-poses.png"
                 alt="אורן"
@@ -218,12 +218,12 @@ export function OrenChat({ open, onClose, tips, onTipSeen, financialContext }: O
             </div>
             <div>
               <div className="text-sm font-semibold">אורן</div>
-              <div className="text-[10px] text-[oklch(0.55_0.01_250)]">היועץ הפיננסי שלך</div>
+              <div className="text-[10px] text-[var(--text-muted)]">היועץ הפיננסי שלך</div>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="bg-transparent border-none cursor-pointer text-[oklch(0.55_0.01_250)] p-1.5 rounded-lg hover:bg-[oklch(0.20_0.01_250)] transition-colors"
+            className="bg-transparent border-none cursor-pointer text-[var(--text-muted)] p-1.5 rounded-lg hover:bg-[var(--c-0-20)] transition-colors"
             aria-label="סגור צ'אט"
           >
             <X size={18} />
@@ -235,8 +235,8 @@ export function OrenChat({ open, onClose, tips, onTipSeen, financialContext }: O
           {/* Welcome message with happy Oren */}
           <div className="flex gap-2.5 items-start">
             <OrenMiniAvatar />
-            <div className="bg-[oklch(0.18_0.03_145)] border border-[oklch(0.25_0.05_145)] rounded-xl rounded-tr-sm px-3.5 py-2.5 max-w-[85%]">
-              <p className="text-[13px] leading-relaxed m-0 text-[oklch(0.85_0.03_145)]">
+            <div className="bg-[var(--c-green-0-18)] border border-[var(--c-green-0-25)] rounded-xl rounded-tr-sm px-3.5 py-2.5 max-w-[85%]">
+              <p className="text-[13px] leading-relaxed m-0 text-[var(--c-green-0-80)]">
                 שלום! אני אורן, היועץ הפיננסי שלך.
                 <br />
                 אני כאן כדי לעזור לך לנהל את הכסף בצורה חכמה!
@@ -275,14 +275,14 @@ export function OrenChat({ open, onClose, tips, onTipSeen, financialContext }: O
               <div
                 className={`rounded-xl px-3.5 py-2.5 max-w-[85%] ${
                   msg.role === 'user'
-                    ? 'bg-[oklch(0.25_0.06_250)] border border-[oklch(0.32_0.08_250)] rounded-tl-sm'
-                    : 'bg-[oklch(0.18_0.03_145)] border border-[oklch(0.25_0.05_145)] rounded-tr-sm'
+                    ? 'bg-[var(--c-blue-0-25)] border border-[var(--c-blue-0-32)] rounded-tl-sm'
+                    : 'bg-[var(--c-green-0-18)] border border-[var(--c-green-0-25)] rounded-tr-sm'
                 }`}
               >
                 <p className={`text-[13px] leading-relaxed m-0 whitespace-pre-wrap ${
                   msg.role === 'user'
-                    ? 'text-[oklch(0.88_0.04_250)]'
-                    : 'text-[oklch(0.85_0.03_145)]'
+                    ? 'text-[var(--c-0-88)]'
+                    : 'text-[var(--c-green-0-80)]'
                 }`}>
                   {msg.content}
                 </p>
@@ -294,11 +294,11 @@ export function OrenChat({ open, onClose, tips, onTipSeen, financialContext }: O
           {sending && (
             <div className="flex gap-2.5 items-start">
               <OrenMiniAvatar />
-              <div className="bg-[oklch(0.18_0.03_145)] border border-[oklch(0.25_0.05_145)] rounded-xl rounded-tr-sm px-4 py-3">
+              <div className="bg-[var(--c-green-0-18)] border border-[var(--c-green-0-25)] rounded-xl rounded-tr-sm px-4 py-3">
                 <div className="flex gap-1.5">
-                  <div className="w-2 h-2 rounded-full bg-[oklch(0.55_0.08_145)] animate-bounce" style={{ animationDelay: '0ms' }} />
-                  <div className="w-2 h-2 rounded-full bg-[oklch(0.55_0.08_145)] animate-bounce" style={{ animationDelay: '150ms' }} />
-                  <div className="w-2 h-2 rounded-full bg-[oklch(0.55_0.08_145)] animate-bounce" style={{ animationDelay: '300ms' }} />
+                  <div className="w-2 h-2 rounded-full bg-[var(--c-green-0-55)] animate-bounce" style={{ animationDelay: '0ms' }} />
+                  <div className="w-2 h-2 rounded-full bg-[var(--c-green-0-55)] animate-bounce" style={{ animationDelay: '150ms' }} />
+                  <div className="w-2 h-2 rounded-full bg-[var(--c-green-0-55)] animate-bounce" style={{ animationDelay: '300ms' }} />
                 </div>
               </div>
             </div>
@@ -308,12 +308,12 @@ export function OrenChat({ open, onClose, tips, onTipSeen, financialContext }: O
         </div>
 
         {/* API Key prompt or input area */}
-        <div className="shrink-0 border-t border-[oklch(0.22_0.01_250)] bg-[oklch(0.14_0.01_250)]">
+        <div className="shrink-0 border-t border-[var(--bg-hover)] bg-[var(--c-0-14)]">
           {!apiKey ? (
             <div className="p-4">
               {showKeyInput ? (
                 <div className="flex flex-col gap-2">
-                  <div className="text-[12px] text-[oklch(0.65_0.01_250)]">
+                  <div className="text-[12px] text-[var(--text-secondary)]">
                     הזן Google Gemini API Key:
                   </div>
                   <div className="flex gap-2">
@@ -322,14 +322,14 @@ export function OrenChat({ open, onClose, tips, onTipSeen, financialContext }: O
                       value={keyDraft}
                       onChange={e => setKeyDraft(e.target.value)}
                       placeholder="AIza..."
-                      className="flex-1 bg-[oklch(0.20_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3 py-2 text-[13px] text-inherit outline-none ltr"
+                      className="flex-1 bg-[var(--c-0-20)] border border-[var(--border-light)] rounded-lg px-3 py-2 text-[13px] text-inherit outline-none ltr"
                       dir="ltr"
                       onKeyDown={e => { if (e.key === 'Enter') saveApiKey() }}
                     />
                     <button
                       onClick={saveApiKey}
                       disabled={!keyDraft.trim()}
-                      className="bg-[oklch(0.55_0.18_145)] border-none rounded-lg px-3 py-2 text-[oklch(0.12_0.01_250)] font-semibold text-[12px] cursor-pointer disabled:opacity-50"
+                      className="bg-[var(--c-green-0-55)] border-none rounded-lg px-3 py-2 text-[var(--c-0-10)] font-semibold text-[12px] cursor-pointer disabled:opacity-50"
                     >
                       שמור
                     </button>
@@ -338,7 +338,7 @@ export function OrenChat({ open, onClose, tips, onTipSeen, financialContext }: O
                     href="https://aistudio.google.com/apikey"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-[11px] text-[oklch(0.60_0.12_250)] underline"
+                    className="text-[11px] text-[var(--c-blue-0-60)] underline"
                   >
                     קבל API key בחינם מ-Google AI Studio
                   </a>
@@ -346,7 +346,7 @@ export function OrenChat({ open, onClose, tips, onTipSeen, financialContext }: O
               ) : (
                 <button
                   onClick={() => setShowKeyInput(true)}
-                  className="w-full flex items-center justify-center gap-2 bg-[oklch(0.20_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-4 py-3 cursor-pointer text-[oklch(0.70_0.01_250)] text-[13px] font-medium hover:bg-[oklch(0.22_0.01_250)] transition-colors"
+                  className="w-full flex items-center justify-center gap-2 bg-[var(--c-0-20)] border border-[var(--border-light)] rounded-lg px-4 py-3 cursor-pointer text-[var(--c-0-70)] text-[13px] font-medium hover:bg-[var(--bg-hover)] transition-colors"
                 >
                   <Key size={14} />
                   חבר API Key כדי לשוחח עם אורן
@@ -363,24 +363,24 @@ export function OrenChat({ open, onClose, tips, onTipSeen, financialContext }: O
                   onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage() } }}
                   placeholder="שאל את אורן..."
                   disabled={sending}
-                  className="flex-1 bg-[oklch(0.20_0.01_250)] border border-[oklch(0.28_0.01_250)] rounded-lg px-3.5 py-2.5 text-[13px] text-inherit outline-none placeholder:text-[oklch(0.45_0.01_250)] disabled:opacity-60"
+                  className="flex-1 bg-[var(--c-0-20)] border border-[var(--border-light)] rounded-lg px-3.5 py-2.5 text-[13px] text-inherit outline-none placeholder:text-[var(--c-0-45)] disabled:opacity-60"
                 />
                 <button
                   onClick={sendMessage}
                   disabled={!input.trim() || sending}
-                  className="bg-[oklch(0.55_0.18_145)] border-none rounded-lg px-3 py-2 cursor-pointer text-[oklch(0.12_0.01_250)] disabled:opacity-40 transition-opacity"
+                  className="bg-[var(--c-green-0-55)] border-none rounded-lg px-3 py-2 cursor-pointer text-[var(--c-0-10)] disabled:opacity-40 transition-opacity"
                   aria-label="שלח"
                 >
                   <Send size={16} />
                 </button>
               </div>
-              <div className="flex items-center justify-between px-3 pb-2 text-[10px] text-[oklch(0.45_0.01_250)]">
+              <div className="flex items-center justify-between px-3 pb-2 text-[10px] text-[var(--c-0-45)]">
                 <span className="flex items-center gap-1">
                   מופעל על ידי Gemini Flash
                 </span>
                 <button
                   onClick={removeApiKey}
-                  className="bg-transparent border-none cursor-pointer text-[oklch(0.45_0.01_250)] text-[10px] underline hover:text-[oklch(0.60_0.01_250)]"
+                  className="bg-transparent border-none cursor-pointer text-[var(--c-0-45)] text-[10px] underline hover:text-[var(--c-0-60)]"
                 >
                   הסר API Key
                 </button>
