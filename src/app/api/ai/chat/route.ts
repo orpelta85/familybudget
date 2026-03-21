@@ -11,15 +11,45 @@ User's financial data:
 {context}
 `
 
+// Free tier: use our API key with rate limiting (3 messages per day per user)
+const FREE_TIER_KEY = process.env.GEMINI_API_KEY || ''
+const FREE_TIER_MODEL = 'gemini-2.0-flash'
+const freeUsage = new Map<string, { count: number; date: string }>()
+
+function checkFreeLimit(userId: string): boolean {
+  const today = new Date().toISOString().split('T')[0]
+  const usage = freeUsage.get(userId)
+  if (!usage || usage.date !== today) {
+    freeUsage.set(userId, { count: 1, date: today })
+    return true
+  }
+  if (usage.count >= 3) return false
+  usage.count++
+  return true
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const { message, context, apiKey, history } = await request.json()
+    const { message, context, apiKey, history, userId } = await request.json()
 
-    if (!message || !apiKey) {
-      return NextResponse.json(
-        { error: 'Missing message or API key' },
-        { status: 400 }
-      )
+    if (!message) {
+      return NextResponse.json({ error: 'Missing message' }, { status: 400 })
+    }
+
+    // Determine which API key to use
+    let activeKey = apiKey
+    let isFree = false
+
+    if (!apiKey) {
+      // Free tier — use our key with rate limit
+      if (!FREE_TIER_KEY) {
+        return NextResponse.json({ error: 'חבר API key בהגדרות כדי לשוחח עם אורן', needsKey: true }, { status: 200 })
+      }
+      if (!checkFreeLimit(userId || 'anonymous')) {
+        return NextResponse.json({ error: 'הגעת למגבלת 3 שאלות חינמיות ביום. חבר API key משלך לשימוש ללא הגבלה!', needsKey: true }, { status: 200 })
+      }
+      activeKey = FREE_TIER_KEY
+      isFree = true
     }
 
     const systemPrompt = SYSTEM_PROMPT.replace('{context}', context || 'No data available')
@@ -29,7 +59,6 @@ export async function POST(request: NextRequest) {
       { role: 'model', parts: [{ text: 'מובן, אני אורן היועץ הפיננסי שלך. איך אפשר לעזור?' }] },
     ]
 
-    // Add conversation history
     if (history && Array.isArray(history)) {
       for (const msg of history) {
         messages.push({
@@ -39,11 +68,11 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Add current message
     messages.push({ role: 'user', parts: [{ text: message }] })
 
+    const model = isFree ? FREE_TIER_MODEL : 'gemini-2.0-flash'
     const res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${activeKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
