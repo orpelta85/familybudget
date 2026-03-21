@@ -187,8 +187,8 @@ export default function AdvisorPage() {
     <div>
       <div className="flex justify-between items-start mb-1.5">
         <div className="flex items-center gap-2">
-          <Sparkles size={18} className="text-[var(--accent-orange)]" />
-          <h1 className="text-xl font-bold tracking-tight">יועץ פיננסי</h1>
+          <Lightbulb size={18} className="text-[var(--accent-orange)]" />
+          <h1 className="text-xl font-bold tracking-tight">טיפים פיננסיים</h1>
           <PageInfo {...PAGE_TIPS.advisor} />
         </div>
         <button onClick={generateTips} disabled={generating} className="flex items-center gap-1.5 bg-[var(--c-orange-0-20)] border border-[var(--c-orange-0-32)] rounded-lg px-3.5 py-[7px] text-[var(--accent-orange)] text-[13px] font-medium cursor-pointer">

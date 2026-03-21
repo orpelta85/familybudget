@@ -14,14 +14,21 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState, useMemo } from 'react'
 import { useFamilyView } from '@/contexts/FamilyViewContext'
 import { toast } from 'sonner'
-import { Target, Plus, ChevronDown, ChevronUp, Trash2, Edit3, TrendingUp, X } from 'lucide-react'
+import { Target, Plus, ChevronDown, ChevronUp, Trash2, Edit3, TrendingUp, X, Crosshair, Home, Car, Plane, Heart, GraduationCap, Laptop, Smartphone, Palmtree, Coins, Gift, Stethoscope } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { TableSkeleton } from '@/components/ui/Skeleton'
 import { useConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { PageInfo } from '@/components/ui/PageInfo'
 import { PAGE_TIPS } from '@/lib/page-tips'
 import type { SavingsGoal, GoalDeposit, Period } from '@/lib/types'
 
-const ICON_OPTIONS = ['🎯', '🏠', '🚗', '✈️', '💍', '🎓', '💻', '📱', '🏖️', '💰', '🎁', '🏥']
+const ICON_MAP: Record<string, LucideIcon> = {
+  target: Crosshair, home: Home, car: Car, travel: Plane,
+  heart: Heart, education: GraduationCap, laptop: Laptop,
+  phone: Smartphone, vacation: Palmtree, savings: Coins,
+  gift: Gift, health: Stethoscope,
+}
+const ICON_OPTIONS = Object.keys(ICON_MAP)
 const COLOR_OPTIONS = [
   'var(--accent-blue)',
   'var(--accent-green)',
@@ -209,7 +216,7 @@ function GoalCard({
       {/* Header */}
       <button onClick={onToggle}
         className="w-full bg-transparent border-none cursor-pointer text-inherit flex items-center gap-3 p-0">
-        <span className="text-2xl">{goal.icon}</span>
+        {(() => { const Icon = ICON_MAP[goal.icon] ?? Crosshair; return <Icon size={22} className="text-[var(--accent-blue)] shrink-0" /> })()}
         <div className="flex-1 text-right">
           <div className="flex items-center gap-2 mb-1">
             <span className="font-semibold text-sm">{goal.name}</span>
@@ -539,14 +546,17 @@ function GoalModal({
           <div>
             <label className="text-xs block mb-[5px] text-text-secondary">אייקון</label>
             <div className="flex flex-wrap gap-2">
-              {ICON_OPTIONS.map(i => (
-                <button key={i} onClick={() => setIcon(i)}
-                  className={`w-9 h-9 rounded-lg border cursor-pointer text-lg flex items-center justify-center transition-colors ${
-                    icon === i ? 'border-accent-blue bg-[var(--c-blue-0-22)]' : 'border-[var(--border-default)] bg-transparent'
-                  }`}>
-                  {i}
-                </button>
-              ))}
+              {ICON_OPTIONS.map(i => {
+                const IconComp = ICON_MAP[i] ?? Crosshair
+                return (
+                  <button key={i} onClick={() => setIcon(i)}
+                    className={`w-9 h-9 rounded-lg border cursor-pointer text-lg flex items-center justify-center transition-colors ${
+                      icon === i ? 'border-accent-blue bg-[var(--c-blue-0-22)]' : 'border-[var(--border-default)] bg-transparent'
+                    }`}>
+                    <IconComp size={16} />
+                  </button>
+                )
+              })}
             </div>
           </div>
 

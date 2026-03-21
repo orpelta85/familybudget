@@ -69,7 +69,7 @@ const LIQUIDITY_MAP: Record<string, LiquidityType> = {
 const LIQUIDITY_GROUPS: { key: LiquidityType; label: string; icon: typeof Droplets; color: string; tip: string }[] = [
   { key: 'liquid', label: 'נזיל', icon: Droplets, color: 'var(--accent-green)', tip: 'כסף שאפשר למשוך מיד — עו"ש, חיסכון רגיל, קרנות צבירה' },
   { key: 'semi_liquid', label: 'חצי-נזיל', icon: Clock, color: 'var(--accent-blue)', tip: 'אפשר למשוך אבל עם מס או קנס — קרן השתלמות (לפני 6 שנים), גמל להשקעה' },
-  { key: 'locked', label: 'נעול', icon: Lock, color: 'var(--c-red-0-65)', tip: 'לא ניתן למשוך עד גיל 60+ — קרן פנסיה, ביטוח מנהלים' },
+  { key: 'locked', label: 'נעול', icon: Lock, color: 'var(--accent-orange)', tip: 'לא ניתן למשוך עד גיל 60+ — קרן פנסיה, ביטוח מנהלים' },
   { key: 'property', label: 'נדל"ן', icon: Building2, color: 'var(--c-purple-0-65)', tip: 'נכס חשוב אבל לא נזיל — אל תספרו עליו לטווח קצר' },
 ]
 

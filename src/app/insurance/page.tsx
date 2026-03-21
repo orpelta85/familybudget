@@ -12,7 +12,8 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState, useMemo } from 'react'
 import { useFamilyView } from '@/contexts/FamilyViewContext'
 import { toast } from 'sonner'
-import { Shield, Plus, X, Pencil, Trash2, Calendar, AlertTriangle } from 'lucide-react'
+import { Shield, Plus, X, Pencil, Trash2, Calendar, AlertTriangle, Stethoscope, Heart, Car, Home, Plane, FileText } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { TableSkeleton } from '@/components/ui/Skeleton'
 import { useConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { PageInfo } from '@/components/ui/PageInfo'
@@ -39,14 +40,14 @@ const TYPE_COLORS: Record<string, string> = {
   other: 'var(--text-secondary)',
 }
 
-const TYPE_ICONS: Record<string, string> = {
-  health: '🏥',
-  life: '💚',
-  car: '🚗',
-  home: '🏠',
-  travel: '✈️',
-  dental: '🦷',
-  other: '📋',
+const TYPE_ICONS: Record<string, LucideIcon> = {
+  health: Stethoscope,
+  life: Heart,
+  car: Car,
+  home: Home,
+  travel: Plane,
+  dental: Stethoscope,
+  other: FileText,
 }
 
 function daysUntil(dateStr: string | null): number | null {
@@ -260,7 +261,7 @@ export default function InsurancePage() {
           {grouped.map(([type, items]) => (
             <div key={type}>
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-base">{TYPE_ICONS[type] ?? '📋'}</span>
+                {(() => { const Icon = TYPE_ICONS[type] ?? FileText; return <Icon size={16} className="text-[var(--accent-blue)]" /> })()}
                 <h2 className="text-[14px] font-semibold text-[var(--text-heading)] flex items-center gap-1">
                   {POLICY_TYPE_LABELS[type] ?? type}
                   {type === 'life' && <InfoTooltip body="משלם לשארים במקרה פטירה. חשוב במיוחד להורים עם ילדים" />}

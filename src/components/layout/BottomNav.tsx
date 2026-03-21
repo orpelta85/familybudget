@@ -4,22 +4,22 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useState, useRef, useEffect } from 'react'
 import { cn } from '@/lib/utils'
-import { LayoutDashboard, Receipt, Users, Home, Menu, Wallet, BarChart3, PiggyBank, Heart, Target, TrendingUp, CreditCard, Sparkles, CalendarDays, Calculator, Shield } from 'lucide-react'
+import { LayoutDashboard, Receipt, Home, Menu, Wallet, BarChart3, Heart, TrendingUp, CreditCard, Sparkles, CalendarDays, Calculator, Shield, Crosshair, Archive, Baby, Landmark, Banknote, ListChecks } from 'lucide-react'
 
 const nav = [
   { href: '/',          label: 'דשבורד',  icon: LayoutDashboard },
   { href: '/expenses',  label: 'הוצאות',  icon: Receipt },
-  { href: '/goals',     label: 'יעדים',   icon: Target },
+  { href: '/goals',     label: 'יעדים',   icon: Crosshair },
   { href: '/analytics', label: 'שנתי',    icon: BarChart3 },
 ]
 
 const moreLinks = [
   { href: '/income',   label: 'הכנסות',       icon: Wallet },
-  { href: '/budget',   label: 'תקציב',        icon: BarChart3 },
-  { href: '/joint',    label: 'קופה קטנה',     icon: Users },
-  { href: '/sinking',  label: 'קרנות צבירה',  icon: Target },
-  { href: '/kids',          label: 'ילדים',        icon: Users },
-  { href: '/pension',       label: 'פנסיה',        icon: PiggyBank },
+  { href: '/budget',   label: 'תקציב',        icon: ListChecks },
+  { href: '/joint',    label: 'קופה קטנה',     icon: Banknote },
+  { href: '/sinking',  label: 'קרנות צבירה',  icon: Archive },
+  { href: '/kids',          label: 'ילדים',        icon: Baby },
+  { href: '/pension',       label: 'פנסיה',        icon: Landmark },
   { href: '/mortgage',      label: 'משכנתא',       icon: Home },
   { href: '/debts',         label: 'חובות',       icon: Calculator },
   { href: '/net-worth',     label: 'שווי נקי',    icon: TrendingUp },
@@ -81,7 +81,7 @@ export function BottomNav() {
         </button>
 
         {showMore && (
-          <div className="absolute bottom-[60px] left-1/2 -translate-x-1/2 bg-[var(--c-0-18)] border border-[var(--border-light)] rounded-xl p-1.5 min-w-[160px] shadow-[0_-4px_20px_oklch(0_0_0/0.4)] z-50">
+          <div className="absolute bottom-[60px] inset-x-0 mx-2 bg-[var(--c-0-18)] border border-[var(--border-light)] rounded-xl p-1.5 min-w-[160px] shadow-[0_-4px_20px_oklch(0_0_0/0.4)] z-50">
             {moreLinks.map(item => {
               const active = pathname === item.href
               const Icon = item.icon

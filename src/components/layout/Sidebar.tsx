@@ -6,7 +6,8 @@ import { useState, useRef, useEffect } from 'react'
 import { cn } from '@/lib/utils'
 import {
   LayoutDashboard, Wallet, BarChart3, Receipt,
-  Users, PiggyBank, Target, TrendingUp, Link2, ListChecks, Mail, Copy, X, Send, Settings, CreditCard, Sparkles, CalendarDays, Calculator, Bell, Shield, Home, ShieldCheck
+  Users, Banknote, Crosshair, TrendingUp, Link2, ListChecks, Mail, Copy, X, Send, Settings, CreditCard, Sparkles, CalendarDays, Calculator, Bell, Shield, Home, ShieldCheck,
+  Archive, Baby, Landmark
 } from 'lucide-react'
 import { isAdminEmail } from '@/lib/admin'
 import { useAlerts, useUnreadAlertCount, useMarkAlertRead } from '@/lib/queries/useAlerts'
@@ -15,31 +16,44 @@ import { useFamilyContext } from '@/lib/context/FamilyContext'
 import { FamilyViewSelector } from '@/components/layout/FamilyViewSelector'
 import { toast } from 'sonner'
 
-const nav = [
+type NavItem = { href: string; label: string; icon: typeof LayoutDashboard } | 'divider'
+
+const nav: NavItem[] = [
+  // שוטף
   { href: '/',          label: 'דשבורד',          icon: LayoutDashboard },
   { href: '/income',    label: 'הכנסה',            icon: Wallet },
   { href: '/budget',    label: 'תקציב משפחתי',     icon: ListChecks },
   { href: '/expenses',  label: 'הוצאות',           icon: Receipt },
-  { href: '/joint',     label: 'קופה קטנה',        icon: PiggyBank },
-  { href: '/sinking',   label: 'קרנות צבירה',      icon: Target },
-  { href: '/goals',     label: 'יעדים',             icon: Target },
-  { href: '/kids',      label: 'ילדים',             icon: Users },
-  { href: '/pension',   label: 'פנסיה',            icon: PiggyBank },
+  { href: '/joint',     label: 'קופה קטנה',        icon: Banknote },
+  'divider',
+  // חיסכון ולטווח ארוך
+  { href: '/sinking',   label: 'קרנות צבירה',      icon: Archive },
+  { href: '/goals',     label: 'יעדים',             icon: Crosshair },
+  { href: '/kids',      label: 'ילדים',             icon: Baby },
+  { href: '/pension',   label: 'פנסיה',            icon: Landmark },
   { href: '/mortgage',        label: 'משכנתא',            icon: Home },
   { href: '/debts',           label: 'מחשבון חובות',     icon: Calculator },
   { href: '/net-worth',      label: 'שווי נקי',         icon: TrendingUp },
+  'divider',
+  // כלים
   { href: '/insurance',     label: 'ביטוחים',           icon: Shield },
   { href: '/subscriptions', label: 'מנויים',           icon: CreditCard },
   { href: '/forecast',      label: 'תחזית תזרים',     icon: CalendarDays },
-  { href: '/advisor',       label: 'יועץ פיננסי',     icon: Sparkles },
+  { href: '/advisor',       label: 'טיפים פיננסיים',  icon: Sparkles },
   { href: '/analytics',     label: 'ניתוח שנתי',       icon: BarChart3 },
+  'divider',
+  // מערכת
   { href: '/family',        label: 'הגדרות',           icon: Settings },
 ]
 
 export function Sidebar() {
   const pathname = usePathname()
+  const hiddenPages = ['/login', '/setup', '/reset-password', '/auth']
+  const isHidden = hiddenPages.some(p => pathname.startsWith(p))
   const { family, isAdmin } = useFamilyContext()
   const { user } = useUser()
+
+  if (isHidden) return null
   const { data: alerts } = useAlerts(user?.id)
   const { data: unreadCount } = useUnreadAlertCount(user?.id)
   const markRead = useMarkAlertRead()
@@ -91,9 +105,9 @@ export function Sidebar() {
       {/* Logo + Bell */}
       <div className="px-5 pt-5 pb-4 border-b border-[var(--c-0-20)]">
         <div className="flex items-center gap-2 mb-1.5">
-          <div className="shrink-0 flex-1">
-            <img src="/logo-familyplan.png" alt="Family Plan" style={{ width: 120, height: 'auto' }} />
-            <div className="text-[10px] text-[var(--text-muted)] mt-0.5 tracking-wide">סדר בבית, שקט בכיס.</div>
+          <div className="shrink-0 flex-1 min-w-0">
+            <img src="/logo-familyplan.png" alt="Family Plan" className="w-[110px] h-auto block" />
+            <div className="text-[10px] text-[var(--text-muted)] mt-1 tracking-wide">סדר בבית, שקט בכיס.</div>
           </div>
           {/* Alert bell */}
           <div ref={alertRef} className="relative">
@@ -163,7 +177,10 @@ export function Sidebar() {
 
       {/* Nav */}
       <nav className="flex-1 p-2 px-2.5 overflow-y-auto flex flex-col gap-0.5">
-        {nav.map(item => {
+        {nav.map((item, i) => {
+          if (item === 'divider') {
+            return <div key={`div-${i}`} className="h-px bg-[var(--bg-hover)] my-1.5" />
+          }
           const active = pathname === item.href
           const Icon = item.icon
           return (
