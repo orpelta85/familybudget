@@ -30,3 +30,4 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 @rules/approach.md
 @rules/code-style.md
 @rules/frontend.md
+@rules/completion-verification.md
