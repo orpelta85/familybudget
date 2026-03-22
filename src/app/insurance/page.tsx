@@ -387,8 +387,9 @@ export default function InsurancePage() {
             </div>
             <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
               <div>
-                <label className="text-[12px] text-[var(--text-secondary)] mb-1 block">שם הפוליסה *</label>
+                <label htmlFor="ins-name" className="text-[12px] text-[var(--text-secondary)] mb-1 block">שם הפוליסה *</label>
                 <input
+                  id="ins-name"
                   value={form.name}
                   onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                   className="w-full bg-[var(--c-0-20)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-[13px] text-inherit"
@@ -396,8 +397,9 @@ export default function InsurancePage() {
                 />
               </div>
               <div>
-                <label className="text-[12px] text-[var(--text-secondary)] mb-1 block">חברת ביטוח</label>
+                <label htmlFor="ins-provider" className="text-[12px] text-[var(--text-secondary)] mb-1 block">חברת ביטוח</label>
                 <input
+                  id="ins-provider"
                   value={form.provider}
                   onChange={e => setForm(f => ({ ...f, provider: e.target.value }))}
                   className="w-full bg-[var(--c-0-20)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-[13px] text-inherit"
@@ -405,8 +407,9 @@ export default function InsurancePage() {
                 />
               </div>
               <div>
-                <label className="text-[12px] text-[var(--text-secondary)] mb-1 block">סוג ביטוח</label>
+                <label htmlFor="ins-type" className="text-[12px] text-[var(--text-secondary)] mb-1 block">סוג ביטוח</label>
                 <select
+                  id="ins-type"
                   value={form.policy_type}
                   onChange={e => setForm(f => ({ ...f, policy_type: e.target.value }))}
                   className="w-full bg-[var(--c-0-20)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-[13px] text-inherit cursor-pointer"
@@ -416,8 +419,9 @@ export default function InsurancePage() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[12px] text-[var(--text-secondary)] mb-1 block">עלות חודשית *</label>
+                  <label htmlFor="ins-monthly" className="text-[12px] text-[var(--text-secondary)] mb-1 block">עלות חודשית *</label>
                   <input
+                    id="ins-monthly"
                     type="number"
                     value={form.monthly_cost}
                     onChange={e => setForm(f => ({ ...f, monthly_cost: e.target.value }))}
@@ -427,8 +431,9 @@ export default function InsurancePage() {
                   />
                 </div>
                 <div>
-                  <label className="text-[12px] text-[var(--text-secondary)] mb-1 block">עלות שנתית</label>
+                  <label htmlFor="ins-annual" className="text-[12px] text-[var(--text-secondary)] mb-1 block">עלות שנתית</label>
                   <input
+                    id="ins-annual"
                     type="number"
                     value={form.annual_cost}
                     onChange={e => setForm(f => ({ ...f, annual_cost: e.target.value }))}
@@ -439,8 +444,9 @@ export default function InsurancePage() {
                 </div>
               </div>
               <div>
-                <label className="text-[12px] text-[var(--text-secondary)] mb-1 block">תאריך חידוש</label>
+                <label htmlFor="ins-renewal" className="text-[12px] text-[var(--text-secondary)] mb-1 block">תאריך חידוש</label>
                 <input
+                  id="ins-renewal"
                   type="date"
                   value={form.renewal_date}
                   onChange={e => setForm(f => ({ ...f, renewal_date: e.target.value }))}
@@ -459,8 +465,9 @@ export default function InsurancePage() {
                 <label htmlFor="is_shared" className="text-[13px] cursor-pointer">פוליסה משותפת (משפחתית)</label>
               </div>
               <div>
-                <label className="text-[12px] text-[var(--text-secondary)] mb-1 block">הערות</label>
+                <label htmlFor="ins-notes" className="text-[12px] text-[var(--text-secondary)] mb-1 block">הערות</label>
                 <textarea
+                  id="ins-notes"
                   value={form.notes}
                   onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
                   className="w-full bg-[var(--c-0-20)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-[13px] text-inherit resize-none"

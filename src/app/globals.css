@@ -143,10 +143,8 @@
 
   /* ── Extended palette (neutrals) ───────────────────────────────────────── */
   --c-0-10: #f0f0f2;
-  --c-0-13: #f5f5f7;
   --c-0-14: #f0f0f2;
   --c-0-15: #ebebf0;
-  --c-0-16: #ffffff;
   --c-0-18: #ffffff;
   --c-0-19: #fafafa;
   --c-0-20: #e8e8ec;
@@ -154,14 +152,12 @@
   --c-0-24: #d8d8dd;
   --c-0-25: #e0e0e5;
   --c-0-26: #d5d5da;
-  --c-0-28: #ebebf0;
   --c-0-30: #d0d0d5;
   --c-0-35: #c0c0c8;
   --c-0-38: #b8b8c0;
   --c-0-40: #b0b0b8;
   --c-0-45: #888899;
   --c-0-50: #777788;
-  --c-0-55: #888899;
   --c-0-60: #555566;
   --c-0-65: #555566;
   --c-0-68: #444455;
@@ -175,7 +171,6 @@
   --c-0-88: #1e1e30;
   --c-0-90: #1a1a2e;
   --c-0-92: #1a1a2e;
-  --c-0-93: #1a1a2e;
   --c-0-98: #111122;
 
   /* ── Extended palette (accent blue shades) ─────────────────────────────── */
@@ -384,10 +379,8 @@
 
   /* ── Extended palette (neutrals) ───────────────────────────────────────── */
   --c-0-10: oklch(0.10 0.01 250);
-  --c-0-13: oklch(0.13 0.01 250);
   --c-0-14: oklch(0.14 0.01 250);
   --c-0-15: oklch(0.15 0.01 250);
-  --c-0-16: oklch(0.16 0.01 250);
   --c-0-18: oklch(0.18 0.01 250);
   --c-0-19: oklch(0.19 0.01 250);
   --c-0-20: oklch(0.20 0.01 250);
@@ -395,14 +388,12 @@
   --c-0-24: oklch(0.24 0.01 250);
   --c-0-25: oklch(0.25 0.01 250);
   --c-0-26: oklch(0.26 0.01 250);
-  --c-0-28: oklch(0.28 0.01 250);
   --c-0-30: oklch(0.30 0.01 250);
   --c-0-35: oklch(0.35 0.01 250);
   --c-0-38: oklch(0.38 0.01 250);
   --c-0-40: oklch(0.40 0.01 250);
   --c-0-45: oklch(0.45 0.01 250);
   --c-0-50: oklch(0.50 0.01 250);
-  --c-0-55: oklch(0.55 0.01 250);
   --c-0-60: oklch(0.60 0.01 250);
   --c-0-65: oklch(0.65 0.01 250);
   --c-0-68: oklch(0.68 0.01 250);
@@ -416,7 +407,6 @@
   --c-0-88: oklch(0.88 0.01 250);
   --c-0-90: oklch(0.90 0.01 250);
   --c-0-92: oklch(0.92 0.01 250);
-  --c-0-93: oklch(0.93 0.01 250);
   --c-0-98: oklch(0.98 0.01 250);
 
   /* ── Extended palette (accent blue shades) ─────────────────────────────── */
@@ -658,6 +648,16 @@
   letter-spacing: -0.03em;
   direction: ltr;
   display: block;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Tabular nums for numeric content — consistent number widths across Heebo/Inter */
+.ltr,
+td,
+th,
+input[type="number"],
+[dir="ltr"] {
+  font-variant-numeric: tabular-nums;
 }
 
 /* Progress bar */

@@ -217,16 +217,17 @@ export default function IncomePage() {
           <div className="mb-[18px] font-semibold text-sm">הזנת הכנסה למחזור</div>
 
           {[
-            { label: 'משכורת נטו', val: salary, set: setSalary, placeholder: '0' },
-            { label: 'בונוס', val: bonus, set: setBonus, placeholder: '0' },
-            { label: 'הכנסה אחרת', val: other, set: setOther, placeholder: '0' },
+            { label: 'משכורת נטו', id: 'income-salary', val: salary, set: setSalary, placeholder: '0' },
+            { label: 'בונוס', id: 'income-bonus', val: bonus, set: setBonus, placeholder: '0' },
+            { label: 'הכנסה אחרת', id: 'income-other', val: other, set: setOther, placeholder: '0' },
           ].map(field => (
             <div key={field.label} className="mb-3.5">
-              <label className="text-[13px] block mb-[5px] text-[var(--text-body)]">
+              <label htmlFor={field.id} className="text-[13px] block mb-[5px] text-[var(--text-body)]">
                 {field.label}
               </label>
               <div className="relative">
                 <input
+                  id={field.id}
                   type="number"
                   value={field.val}
                   onChange={e => field.set(e.target.value)}
@@ -239,8 +240,9 @@ export default function IncomePage() {
           ))}
 
           <div className="mb-3.5">
-            <label className="text-[13px] block mb-[5px] text-[var(--text-body)]">הערות</label>
+            <label htmlFor="income-notes" className="text-[13px] block mb-[5px] text-[var(--text-body)]">הערות</label>
             <input
+              id="income-notes"
               type="text"
               value={notes}
               onChange={e => setNotes(e.target.value)}

@@ -296,9 +296,10 @@ export default function DebtsPage() {
 
           {/* Extra payment input */}
           <div className="card mb-5">
-            <label className="text-sm font-semibold block mb-2">כמה אתה יכול להוסיף מעבר למינימום?</label>
+            <label htmlFor="debt-extra" className="text-sm font-semibold block mb-2">כמה אתה יכול להוסיף מעבר למינימום?</label>
             <div className="flex items-center gap-3">
               <input
+                id="debt-extra"
                 type="text"
                 inputMode="numeric"
                 value={extraMonthly}
@@ -483,29 +484,29 @@ export default function DebtsPage() {
             </div>
             <div className="flex flex-col gap-3.5 mb-4">
               <div>
-                <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">שם</label>
-                <input type="text" autoFocus value={newDebt.name}
+                <label htmlFor="debt-name" className="text-xs text-[var(--c-0-60)] block mb-[5px]">שם</label>
+                <input id="debt-name" type="text" autoFocus value={newDebt.name}
                   onChange={e => setNewDebt(p => p && { ...p, name: e.target.value })}
                   placeholder="למשל: הלוואת רכב, אשראי..."
                   className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-sm" />
               </div>
               <div>
-                <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">יתרה (₪)</label>
-                <input type="text" inputMode="numeric" value={newDebt.balance}
+                <label htmlFor="debt-balance" className="text-xs text-[var(--c-0-60)] block mb-[5px]">יתרה (₪)</label>
+                <input id="debt-balance" type="text" inputMode="numeric" value={newDebt.balance}
                   onChange={e => setNewDebt(p => p && { ...p, balance: e.target.value.replace(/[^\d]/g, '') })}
                   placeholder="0"
                   className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left" />
               </div>
               <div>
-                <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">ריבית שנתית (%)</label>
-                <input type="text" inputMode="decimal" value={newDebt.interestRate}
+                <label htmlFor="debt-interest" className="text-xs text-[var(--c-0-60)] block mb-[5px]">ריבית שנתית (%)</label>
+                <input id="debt-interest" type="text" inputMode="decimal" value={newDebt.interestRate}
                   onChange={e => setNewDebt(p => p && { ...p, interestRate: e.target.value.replace(/[^\d.]/g, '') })}
                   placeholder="0"
                   className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left" />
               </div>
               <div>
-                <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">תשלום מינימלי חודשי (₪)</label>
-                <input type="text" inputMode="numeric" value={newDebt.minimumPayment}
+                <label htmlFor="debt-min-payment" className="text-xs text-[var(--c-0-60)] block mb-[5px]">תשלום מינימלי חודשי (₪)</label>
+                <input id="debt-min-payment" type="text" inputMode="numeric" value={newDebt.minimumPayment}
                   onChange={e => setNewDebt(p => p && { ...p, minimumPayment: e.target.value.replace(/[^\d]/g, '') })}
                   placeholder="0"
                   className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left" />

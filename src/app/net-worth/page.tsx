@@ -589,8 +589,9 @@ export default function NetWorthPage() {
             </div>
             <div className="flex flex-col gap-3.5 mb-4">
               <div>
-                <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">שם (אופציונלי)</label>
+                <label htmlFor="nw-name" className="text-xs text-[var(--c-0-60)] block mb-[5px]">שם (אופציונלי)</label>
                 <input
+                  id="nw-name"
                   type="text"
                   value={newEntry.name}
                   onChange={e => setNewEntry(prev => prev && { ...prev, name: e.target.value })}
@@ -599,8 +600,9 @@ export default function NetWorthPage() {
                 />
               </div>
               <div>
-                <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">קטגוריה</label>
+                <label htmlFor="nw-category" className="text-xs text-[var(--c-0-60)] block mb-[5px]">קטגוריה</label>
                 <select
+                  id="nw-category"
                   value={newEntry.category}
                   onChange={e => setNewEntry(prev => prev && { ...prev, category: e.target.value })}
                   className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-sm"
@@ -610,8 +612,9 @@ export default function NetWorthPage() {
                 </select>
               </div>
               <div>
-                <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">סכום (₪)</label>
+                <label htmlFor="nw-amount" className="text-xs text-[var(--c-0-60)] block mb-[5px]">סכום (₪)</label>
                 <input
+                  id="nw-amount"
                   type="number"
                   value={newEntry.amount}
                   onChange={e => setNewEntry(prev => prev && { ...prev, amount: e.target.value })}
@@ -624,8 +627,9 @@ export default function NetWorthPage() {
               {/* Return % for assets */}
               {isAssetForm && (
                 <div>
-                  <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">תשואה שנתית % (אופציונלי)</label>
+                  <label htmlFor="nw-return" className="text-xs text-[var(--c-0-60)] block mb-[5px]">תשואה שנתית % (אופציונלי)</label>
                   <input
+                    id="nw-return"
                     type="number"
                     step="0.1"
                     value={newEntry.return_pct}
@@ -640,8 +644,9 @@ export default function NetWorthPage() {
               {isLiabilityForm && (
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">תאריך התחלה</label>
+                    <label htmlFor="nw-start-date" className="text-xs text-[var(--c-0-60)] block mb-[5px]">תאריך התחלה</label>
                     <input
+                      id="nw-start-date"
                       type="date"
                       value={newEntry.start_date}
                       onChange={e => setNewEntry(prev => prev && { ...prev, start_date: e.target.value })}
@@ -649,8 +654,9 @@ export default function NetWorthPage() {
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">תאריך סיום</label>
+                    <label htmlFor="nw-end-date" className="text-xs text-[var(--c-0-60)] block mb-[5px]">תאריך סיום</label>
                     <input
+                      id="nw-end-date"
                       type="date"
                       value={newEntry.end_date}
                       onChange={e => setNewEntry(prev => prev && { ...prev, end_date: e.target.value })}

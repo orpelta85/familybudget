@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 import {
   LayoutDashboard, Wallet, BarChart3, Receipt,
   Users, Banknote, Crosshair, TrendingUp, Link2, ListChecks, Mail, Copy, X, Send, Settings, CreditCard, Sparkles, CalendarDays, Calculator, Bell, Shield, Home, ShieldCheck,
-  Archive, Baby, Landmark
+  Archive, Baby, Landmark, ChevronDown
 } from 'lucide-react'
 import { isAdminEmail } from '@/lib/admin'
 import { useAlerts, useUnreadAlertCount, useMarkAlertRead } from '@/lib/queries/useAlerts'
@@ -16,7 +16,9 @@ import { useFamilyContext } from '@/lib/context/FamilyContext'
 import { FamilyViewSelector } from '@/components/layout/FamilyViewSelector'
 import { toast } from 'sonner'
 
-type NavItem = { href: string; label: string; icon: typeof LayoutDashboard } | 'divider'
+type NavLink = { href: string; label: string; icon: typeof LayoutDashboard }
+type NavGroup = { groupLabel: string; icon: typeof LayoutDashboard; items: NavLink[] }
+type NavItem = NavLink | NavGroup | 'divider'
 
 const nav: NavItem[] = [
   // שוטף
@@ -24,27 +26,47 @@ const nav: NavItem[] = [
   { href: '/income',    label: 'הכנסה',            icon: Wallet },
   { href: '/budget',    label: 'תקציב משפחתי',     icon: ListChecks },
   { href: '/expenses',  label: 'הוצאות',           icon: Receipt },
-  { href: '/joint',     label: 'קופה קטנה',        icon: Banknote },
   'divider',
   // חיסכון ולטווח ארוך
   { href: '/sinking',   label: 'קרנות צבירה',      icon: Archive },
   { href: '/goals',     label: 'יעדים',             icon: Crosshair },
+  {
+    groupLabel: 'נכסים והתחייבויות',
+    icon: TrendingUp,
+    items: [
+      { href: '/pension',   label: 'פנסיה',            icon: Landmark },
+      { href: '/mortgage',  label: 'משכנתא',            icon: Home },
+      { href: '/debts',     label: 'חובות',             icon: Calculator },
+      { href: '/net-worth', label: 'שווי נקי',         icon: TrendingUp },
+    ],
+  },
   { href: '/kids',      label: 'ילדים',             icon: Baby },
-  { href: '/pension',   label: 'פנסיה',            icon: Landmark },
-  { href: '/mortgage',        label: 'משכנתא',            icon: Home },
-  { href: '/debts',           label: 'מחשבון חובות',     icon: Calculator },
-  { href: '/net-worth',      label: 'שווי נקי',         icon: TrendingUp },
   'divider',
   // כלים
-  { href: '/insurance',     label: 'ביטוחים',           icon: Shield },
-  { href: '/subscriptions', label: 'מנויים',           icon: CreditCard },
-  { href: '/forecast',      label: 'תחזית תזרים',     icon: CalendarDays },
-  { href: '/advisor',       label: 'טיפים פיננסיים',  icon: Sparkles },
-  { href: '/analytics',     label: 'ניתוח שנתי',       icon: BarChart3 },
+  {
+    groupLabel: 'כלים',
+    icon: Settings,
+    items: [
+      { href: '/joint',         label: 'קופה קטנה',        icon: Banknote },
+      { href: '/insurance',     label: 'ביטוחים',           icon: Shield },
+      { href: '/subscriptions', label: 'מנויים',           icon: CreditCard },
+      { href: '/forecast',      label: 'תחזית תזרים',     icon: CalendarDays },
+      { href: '/advisor',       label: 'טיפים פיננסיים',  icon: Sparkles },
+      { href: '/analytics',     label: 'ניתוח שנתי',       icon: BarChart3 },
+    ],
+  },
   'divider',
   // מערכת
   { href: '/family',        label: 'הגדרות',           icon: Settings },
 ]
+
+function isNavGroup(item: NavItem): item is NavGroup {
+  return typeof item !== 'string' && 'groupLabel' in item
+}
+
+function isNavLink(item: NavItem): item is NavLink {
+  return typeof item !== 'string' && 'href' in item
+}
 
 export function Sidebar() {
   const pathname = usePathname()
@@ -58,6 +80,17 @@ export function Sidebar() {
   const [inviteEmail, setInviteEmail] = useState('')
   const [sendingEmail, setSendingEmail] = useState(false)
   const alertRef = useRef<HTMLDivElement>(null)
+
+  // Auto-expand groups that contain the active page
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(() => {
+    const initial: Record<string, boolean> = {}
+    for (const item of nav) {
+      if (isNavGroup(item)) {
+        initial[item.groupLabel] = item.items.some(sub => pathname === sub.href)
+      }
+    }
+    return initial
+  })
 
   const hiddenPages = ['/login', '/setup', '/reset-password', '/auth']
   const isHidden = hiddenPages.some(p => pathname.startsWith(p))
@@ -125,7 +158,7 @@ export function Sidebar() {
               )}
             </button>
             {showAlerts && (
-              <div className="absolute top-full left-0 mt-2 bg-[var(--c-0-18)] border border-[var(--border-light)] rounded-xl p-2 min-w-[280px] max-h-[360px] overflow-y-auto shadow-[0_4px_20px_oklch(0_0_0/0.5)] z-50">
+              <div className="absolute top-full inset-inline-start-0 mt-2 bg-[var(--c-0-18)] border border-[var(--border-light)] rounded-xl p-2 min-w-[280px] max-h-[360px] overflow-y-auto shadow-[0_4px_20px_oklch(0_0_0/0.5)] z-50">
                 <div className="text-[11px] font-semibold text-[var(--text-secondary)] px-2 py-1.5 mb-1">התראות</div>
                 {!(alerts?.length) ? (
                   <div className="text-[12px] text-[var(--c-0-50)] text-center py-4">אין התראות</div>
@@ -182,12 +215,58 @@ export function Sidebar() {
           if (item === 'divider') {
             return <div key={`div-${i}`} className="h-px bg-[var(--bg-hover)] my-1.5" />
           }
-          const active = pathname === item.href
-          const Icon = item.icon
+          if (isNavGroup(item)) {
+            const expanded = expandedGroups[item.groupLabel] ?? false
+            const hasActive = item.items.some(sub => pathname === sub.href)
+            const GroupIcon = item.icon
+            return (
+              <div key={item.groupLabel}>
+                <button
+                  onClick={() => setExpandedGroups(prev => ({ ...prev, [item.groupLabel]: !prev[item.groupLabel] }))}
+                  className={cn(
+                    'w-full flex items-center gap-2.5 py-2 px-3 rounded-lg text-[13px] no-underline transition-all duration-150 border-r-2 bg-transparent border-none cursor-pointer',
+                    hasActive
+                      ? 'font-medium text-[var(--c-0-92)] border-r-[var(--accent-blue)]'
+                      : 'font-normal text-[var(--text-secondary)] border-r-transparent'
+                  )}
+                >
+                  <GroupIcon size={15} className="shrink-0" />
+                  <span className="flex-1 text-right">{item.groupLabel}</span>
+                  <ChevronDown size={13} className={cn('shrink-0 transition-transform duration-200', expanded && 'rotate-180')} />
+                </button>
+                {expanded && (
+                  <div className="flex flex-col gap-0.5 pr-3 mt-0.5">
+                    {item.items.map(sub => {
+                      const subActive = pathname === sub.href
+                      const SubIcon = sub.icon
+                      return (
+                        <Link
+                          key={sub.href}
+                          href={sub.href}
+                          className={cn(
+                            'flex items-center gap-2.5 py-1.5 px-3 rounded-lg text-[12px] no-underline transition-all duration-150 border-r-2',
+                            subActive
+                              ? 'font-medium text-[var(--c-0-92)] bg-[var(--c-0-20)] border-r-[var(--accent-blue)]'
+                              : 'font-normal text-[var(--text-secondary)] bg-transparent border-r-transparent'
+                          )}
+                        >
+                          <SubIcon size={13} className="shrink-0" />
+                          <span>{sub.label}</span>
+                        </Link>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )
+          }
+          const link = item as NavLink
+          const active = pathname === link.href
+          const Icon = link.icon
           return (
             <Link
-              key={item.href}
-              href={item.href}
+              key={link.href}
+              href={link.href}
               className={cn(
                 'flex items-center gap-2.5 py-2 px-3 rounded-lg text-[13px] no-underline transition-all duration-150 border-r-2',
                 active
@@ -196,7 +275,7 @@ export function Sidebar() {
               )}
             >
               <Icon size={15} className="shrink-0" />
-              <span>{item.label}</span>
+              <span>{link.label}</span>
             </Link>
           )
         })}

@@ -249,8 +249,9 @@ export default function ForecastPage() {
           <h2 className="font-semibold text-sm mb-4">הגדרות תחזית</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
-              <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">יתרת עו&quot;ש נוכחית (₪)</label>
+              <label htmlFor="forecast-balance" className="text-xs text-[var(--c-0-60)] block mb-[5px]">יתרת עו&quot;ש נוכחית (₪)</label>
               <input
+                id="forecast-balance"
                 type="number"
                 value={settingsForm.current_balance}
                 onChange={e => setSettingsForm(prev => ({ ...prev, current_balance: e.target.value }))}
@@ -259,8 +260,9 @@ export default function ForecastPage() {
               />
             </div>
             <div>
-              <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">יום משכורת</label>
+              <label htmlFor="forecast-payday" className="text-xs text-[var(--c-0-60)] block mb-[5px]">יום משכורת</label>
               <select
+                id="forecast-payday"
                 value={settingsForm.payday}
                 onChange={e => setSettingsForm(prev => ({ ...prev, payday: e.target.value }))}
                 className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-sm"
@@ -344,8 +346,9 @@ export default function ForecastPage() {
           <div className="mt-4 pt-4 border-t border-[var(--bg-hover)]">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
               <div>
-                <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">שם</label>
+                <label htmlFor="forecast-event-name" className="text-xs text-[var(--c-0-60)] block mb-[5px]">שם</label>
                 <input
+                  id="forecast-event-name"
                   type="text"
                   value={eventForm.name}
                   onChange={e => setEventForm(prev => prev && { ...prev, name: e.target.value })}
@@ -402,8 +405,9 @@ export default function ForecastPage() {
               </div>
               {eventForm.amount_mode === 'fixed' ? (
                 <div>
-                  <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">סכום (₪)</label>
+                  <label htmlFor="forecast-event-amount" className="text-xs text-[var(--c-0-60)] block mb-[5px]">סכום (₪)</label>
                   <input
+                    id="forecast-event-amount"
                     type="number"
                     value={eventForm.amount}
                     onChange={e => setEventForm(prev => prev && { ...prev, amount: e.target.value })}
@@ -420,8 +424,9 @@ export default function ForecastPage() {
                 </div>
               )}
               <div>
-                <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">יום בחודש</label>
+                <label htmlFor="forecast-event-day" className="text-xs text-[var(--c-0-60)] block mb-[5px]">יום בחודש</label>
                 <select
+                  id="forecast-event-day"
                   value={eventForm.day_of_month}
                   onChange={e => setEventForm(prev => prev && { ...prev, day_of_month: e.target.value })}
                   className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-sm"

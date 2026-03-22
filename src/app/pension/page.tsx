@@ -647,40 +647,40 @@ export default function PensionPage() {
                 {/* Report header fields */}
                 <div className="grid-2 gap-3 mb-4">
                   <div>
-                    <label className="text-[11px] text-[var(--text-secondary)] block mb-1 font-medium">תאריך דוח (DD/MM/YYYY)</label>
-                    <input className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" value={formDate} onChange={e => setFormDate(e.target.value)} placeholder="31/01/2026" />
+                    <label htmlFor="pension-date" className="text-[11px] text-[var(--text-secondary)] block mb-1 font-medium">תאריך דוח (DD/MM/YYYY)</label>
+                    <input id="pension-date" className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" value={formDate} onChange={e => setFormDate(e.target.value)} placeholder="31/01/2026" />
                   </div>
                   <div>
-                    <label className="text-[11px] text-[var(--text-secondary)] block mb-1 font-medium">שם הסוכן</label>
-                    <input className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" value={formAdvisor} onChange={e => setFormAdvisor(e.target.value)} />
+                    <label htmlFor="pension-advisor" className="text-[11px] text-[var(--text-secondary)] block mb-1 font-medium">שם הסוכן</label>
+                    <input id="pension-advisor" className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" value={formAdvisor} onChange={e => setFormAdvisor(e.target.value)} />
                   </div>
                   <div>
-                    <label className="text-[11px] text-[var(--text-secondary)] block mb-1 font-medium">סך חיסכון שצברת (₪)</label>
-                    <input className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" type="number" value={formTotalSavings} onChange={e => setFormTotalSavings(e.target.value)} placeholder="451046" />
+                    <label htmlFor="pension-savings" className="text-[11px] text-[var(--text-secondary)] block mb-1 font-medium">סך חיסכון שצברת (₪)</label>
+                    <input id="pension-savings" className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" type="number" value={formTotalSavings} onChange={e => setFormTotalSavings(e.target.value)} placeholder="451046" />
                   </div>
                   <div>
-                    <label className="text-[11px] text-[var(--text-secondary)] block mb-1 font-medium">תשואה מתחילת שנה (%)</label>
-                    <input className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" type="number" step="0.1" value={formYtdReturn} onChange={e => setFormYtdReturn(e.target.value)} placeholder="2.1" />
+                    <label htmlFor="pension-ytd" className="text-[11px] text-[var(--text-secondary)] block mb-1 font-medium">תשואה מתחילת שנה (%)</label>
+                    <input id="pension-ytd" className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" type="number" step="0.1" value={formYtdReturn} onChange={e => setFormYtdReturn(e.target.value)} placeholder="2.1" />
                   </div>
                   <div>
-                    <label className="text-[11px] text-[var(--text-secondary)] block mb-1 font-medium">סך הפקדות חודשיות (₪)</label>
-                    <input className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" type="number" value={formMonthlyDeposits} onChange={e => setFormMonthlyDeposits(e.target.value)} placeholder="7050" />
+                    <label htmlFor="pension-deposits" className="text-[11px] text-[var(--text-secondary)] block mb-1 font-medium">סך הפקדות חודשיות (₪)</label>
+                    <input id="pension-deposits" className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" type="number" value={formMonthlyDeposits} onChange={e => setFormMonthlyDeposits(e.target.value)} placeholder="7050" />
                   </div>
                   <div>
-                    <label className="text-[11px] text-[var(--text-secondary)] block mb-1 font-medium">פרמיית ביטוח חודשית (₪)</label>
-                    <input className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" type="number" value={formInsurancePremium} onChange={e => setFormInsurancePremium(e.target.value)} placeholder="258" />
+                    <label htmlFor="pension-insurance" className="text-[11px] text-[var(--text-secondary)] block mb-1 font-medium">פרמיית ביטוח חודשית (₪)</label>
+                    <input id="pension-insurance" className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" type="number" value={formInsurancePremium} onChange={e => setFormInsurancePremium(e.target.value)} placeholder="258" />
                   </div>
                   <div>
-                    <label className="text-[11px] text-[var(--text-secondary)] block mb-1 font-medium">קצבה חזויה (₪/חודש)</label>
-                    <input className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" type="number" value={formEstimatedPension} onChange={e => setFormEstimatedPension(e.target.value)} placeholder="4098" />
+                    <label htmlFor="pension-estimated" className="text-[11px] text-[var(--text-secondary)] block mb-1 font-medium">קצבה חזויה (₪/חודש)</label>
+                    <input id="pension-estimated" className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" type="number" value={formEstimatedPension} onChange={e => setFormEstimatedPension(e.target.value)} placeholder="4098" />
                   </div>
                   <div>
-                    <label className="text-[11px] text-[var(--text-secondary)] block mb-1 font-medium">כיסוי אובדן כושר (₪)</label>
-                    <input className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" type="number" value={formDisability} onChange={e => setFormDisability(e.target.value)} placeholder="16750" />
+                    <label htmlFor="pension-disability" className="text-[11px] text-[var(--text-secondary)] block mb-1 font-medium">כיסוי אובדן כושר (₪)</label>
+                    <input id="pension-disability" className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" type="number" value={formDisability} onChange={e => setFormDisability(e.target.value)} placeholder="16750" />
                   </div>
                   <div className="col-span-2">
-                    <label className="text-[11px] text-[var(--text-secondary)] block mb-1 font-medium">קצבה לשאירים (₪)</label>
-                    <input className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" type="number" value={formSurvivors} onChange={e => setFormSurvivors(e.target.value)} placeholder="22334" />
+                    <label htmlFor="pension-survivors" className="text-[11px] text-[var(--text-secondary)] block mb-1 font-medium">קצבה לשאירים (₪)</label>
+                    <input id="pension-survivors" className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" type="number" value={formSurvivors} onChange={e => setFormSurvivors(e.target.value)} placeholder="22334" />
                   </div>
                 </div>
 
@@ -702,8 +702,9 @@ export default function PensionPage() {
                     </div>
                     <div className="grid-2 gap-2.5">
                       <div>
-                        <label className="text-[11px] text-[var(--text-secondary)] block mb-1 font-medium">סוג מוצר</label>
+                        <label htmlFor={`prod-type-${idx}`} className="text-[11px] text-[var(--text-secondary)] block mb-1 font-medium">סוג מוצר</label>
                         <select
+                          id={`prod-type-${idx}`}
                           className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full cursor-pointer"
                           value={p.product_type}
                           onChange={e => updateProduct(idx, 'product_type', e.target.value)}
@@ -716,52 +717,52 @@ export default function PensionPage() {
                         </select>
                       </div>
                       <div>
-                        <label className="text-[11px] text-[var(--text-secondary)] block mb-1 font-medium">שם מוצר</label>
-                        <input className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" value={p.product_name} onChange={e => updateProduct(idx, 'product_name', e.target.value)} placeholder="קרן פנסיה מקיפה" />
+                        <label htmlFor={`prod-name-${idx}`} className="text-[11px] text-[var(--text-secondary)] block mb-1 font-medium">שם מוצר</label>
+                        <input id={`prod-name-${idx}`} className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" value={p.product_name} onChange={e => updateProduct(idx, 'product_name', e.target.value)} placeholder="קרן פנסיה מקיפה" />
                       </div>
                       <div>
-                        <label className="text-[11px] text-[var(--text-secondary)] block mb-1 font-medium">חברה</label>
-                        <input className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" value={p.company} onChange={e => updateProduct(idx, 'company', e.target.value)} placeholder="הראל" />
+                        <label htmlFor={`prod-company-${idx}`} className="text-[11px] text-[var(--text-secondary)] block mb-1 font-medium">חברה</label>
+                        <input id={`prod-company-${idx}`} className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" value={p.company} onChange={e => updateProduct(idx, 'company', e.target.value)} placeholder="הראל" />
                       </div>
                       <div>
-                        <label className="text-[11px] text-[var(--text-secondary)] block mb-1 font-medium">מספר חשבון</label>
-                        <input className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" value={p.account_number} onChange={e => updateProduct(idx, 'account_number', e.target.value)} />
+                        <label htmlFor={`prod-account-${idx}`} className="text-[11px] text-[var(--text-secondary)] block mb-1 font-medium">מספר חשבון</label>
+                        <input id={`prod-account-${idx}`} className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" value={p.account_number} onChange={e => updateProduct(idx, 'account_number', e.target.value)} />
                       </div>
                       <div>
-                        <label className="text-[11px] text-[var(--text-secondary)] block mb-1 font-medium">צבירה (₪)</label>
-                        <input className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" type="number" value={p.balance || ''} onChange={e => updateProduct(idx, 'balance', parseFloat(e.target.value) || 0)} />
+                        <label htmlFor={`prod-balance-${idx}`} className="text-[11px] text-[var(--text-secondary)] block mb-1 font-medium">צבירה (₪)</label>
+                        <input id={`prod-balance-${idx}`} className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" type="number" value={p.balance || ''} onChange={e => updateProduct(idx, 'balance', parseFloat(e.target.value) || 0)} />
                       </div>
                       <div>
-                        <label className="text-[11px] text-[var(--text-secondary)] block mb-1 font-medium">הפקדה חודשית כוללת (₪)</label>
-                        <input className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" type="number" value={p.monthly_deposit || ''} onChange={e => updateProduct(idx, 'monthly_deposit', parseFloat(e.target.value) || 0)} />
+                        <label htmlFor={`prod-deposit-${idx}`} className="text-[11px] text-[var(--text-secondary)] block mb-1 font-medium">הפקדה חודשית כוללת (₪)</label>
+                        <input id={`prod-deposit-${idx}`} className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" type="number" value={p.monthly_deposit || ''} onChange={e => updateProduct(idx, 'monthly_deposit', parseFloat(e.target.value) || 0)} />
                       </div>
                       <div>
-                        <label className="text-[11px] text-[var(--text-secondary)] block mb-1 font-medium">ד&quot;נ הפקדה (%)</label>
-                        <input className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" type="number" step="0.01" value={p.mgmt_fee_deposits || ''} onChange={e => updateProduct(idx, 'mgmt_fee_deposits', parseFloat(e.target.value) || 0)} />
+                        <label htmlFor={`prod-fee-dep-${idx}`} className="text-[11px] text-[var(--text-secondary)] block mb-1 font-medium">ד&quot;נ הפקדה (%)</label>
+                        <input id={`prod-fee-dep-${idx}`} className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" type="number" step="0.01" value={p.mgmt_fee_deposits || ''} onChange={e => updateProduct(idx, 'mgmt_fee_deposits', parseFloat(e.target.value) || 0)} />
                       </div>
                       <div>
-                        <label className="text-[11px] text-[var(--text-secondary)] block mb-1 font-medium">ד&quot;נ צבירה (%)</label>
-                        <input className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" type="number" step="0.01" value={p.mgmt_fee_accumulation || ''} onChange={e => updateProduct(idx, 'mgmt_fee_accumulation', parseFloat(e.target.value) || 0)} />
+                        <label htmlFor={`prod-fee-acc-${idx}`} className="text-[11px] text-[var(--text-secondary)] block mb-1 font-medium">ד&quot;נ צבירה (%)</label>
+                        <input id={`prod-fee-acc-${idx}`} className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" type="number" step="0.01" value={p.mgmt_fee_accumulation || ''} onChange={e => updateProduct(idx, 'mgmt_fee_accumulation', parseFloat(e.target.value) || 0)} />
                       </div>
                       <div>
-                        <label className="text-[11px] text-[var(--text-secondary)] block mb-1 font-medium">הפקדת עובד (₪)</label>
-                        <input className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" type="number" value={p.monthly_employee || ''} onChange={e => updateProduct(idx, 'monthly_employee', parseFloat(e.target.value) || 0)} />
+                        <label htmlFor={`prod-employee-${idx}`} className="text-[11px] text-[var(--text-secondary)] block mb-1 font-medium">הפקדת עובד (₪)</label>
+                        <input id={`prod-employee-${idx}`} className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" type="number" value={p.monthly_employee || ''} onChange={e => updateProduct(idx, 'monthly_employee', parseFloat(e.target.value) || 0)} />
                       </div>
                       <div>
-                        <label className="text-[11px] text-[var(--text-secondary)] block mb-1 font-medium">הפקדת מעסיק (₪)</label>
-                        <input className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" type="number" value={p.monthly_employer || ''} onChange={e => updateProduct(idx, 'monthly_employer', parseFloat(e.target.value) || 0)} />
+                        <label htmlFor={`prod-employer-${idx}`} className="text-[11px] text-[var(--text-secondary)] block mb-1 font-medium">הפקדת מעסיק (₪)</label>
+                        <input id={`prod-employer-${idx}`} className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" type="number" value={p.monthly_employer || ''} onChange={e => updateProduct(idx, 'monthly_employer', parseFloat(e.target.value) || 0)} />
                       </div>
                       <div>
-                        <label className="text-[11px] text-[var(--text-secondary)] block mb-1 font-medium">פיצויים (₪)</label>
-                        <input className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" type="number" value={p.monthly_severance || ''} onChange={e => updateProduct(idx, 'monthly_severance', parseFloat(e.target.value) || 0)} />
+                        <label htmlFor={`prod-severance-${idx}`} className="text-[11px] text-[var(--text-secondary)] block mb-1 font-medium">פיצויים (₪)</label>
+                        <input id={`prod-severance-${idx}`} className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" type="number" value={p.monthly_severance || ''} onChange={e => updateProduct(idx, 'monthly_severance', parseFloat(e.target.value) || 0)} />
                       </div>
                       <div>
-                        <label className="text-[11px] text-[var(--text-secondary)] block mb-1 font-medium">שכר בסיס (₪)</label>
-                        <input className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" type="number" value={p.salary_basis || ''} onChange={e => updateProduct(idx, 'salary_basis', parseFloat(e.target.value) || 0)} />
+                        <label htmlFor={`prod-salary-${idx}`} className="text-[11px] text-[var(--text-secondary)] block mb-1 font-medium">שכר בסיס (₪)</label>
+                        <input id={`prod-salary-${idx}`} className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full" type="number" value={p.salary_basis || ''} onChange={e => updateProduct(idx, 'salary_basis', parseFloat(e.target.value) || 0)} />
                       </div>
                       <div className="col-span-2 flex items-center gap-2">
-                        <label className="text-[11px] text-[var(--text-secondary)] font-medium">פעיל</label>
-                        <input type="checkbox" checked={p.is_active} onChange={e => updateProduct(idx, 'is_active', e.target.checked)} />
+                        <label htmlFor={`prod-active-${idx}`} className="text-[11px] text-[var(--text-secondary)] font-medium">פעיל</label>
+                        <input id={`prod-active-${idx}`} type="checkbox" checked={p.is_active} onChange={e => updateProduct(idx, 'is_active', e.target.checked)} />
                       </div>
                     </div>
                   </div>

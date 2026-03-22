@@ -383,13 +383,13 @@ function KidExpandedView({
             <div className="flex flex-col gap-3">
               <div className="grid-2 !mb-0">
                 <div>
-                  <label className="text-xs block mb-[5px] text-text-secondary">חיסכון חודשי (₪)</label>
-                  <input type="number" value={savingsAmount} onChange={e => setSavingsAmount(e.target.value)}
+                  <label htmlFor="kid-savings-amount" className="text-xs block mb-[5px] text-text-secondary">חיסכון חודשי (₪)</label>
+                  <input id="kid-savings-amount" type="number" value={savingsAmount} onChange={e => setSavingsAmount(e.target.value)}
                     className="input-field w-full ltr text-right" />
                 </div>
                 <div>
-                  <label className="text-xs block mb-[5px] text-text-secondary">לכמה שנים (עד גיל)</label>
-                  <input type="number" value={savingsYears} onChange={e => setSavingsYears(e.target.value)}
+                  <label htmlFor="kid-savings-years" className="text-xs block mb-[5px] text-text-secondary">לכמה שנים (עד גיל)</label>
+                  <input id="kid-savings-years" type="number" value={savingsYears} onChange={e => setSavingsYears(e.target.value)}
                     className="input-field w-full ltr text-right" />
                 </div>
               </div>
@@ -575,13 +575,13 @@ function AddKidModal({
         </div>
         <div className="flex flex-col gap-3.5">
           <div>
-            <label className="text-xs block mb-[5px] text-text-secondary">שם</label>
-            <input type="text" value={name} onChange={e => setName(e.target.value)}
+            <label htmlFor="kid-name" className="text-xs block mb-[5px] text-text-secondary">שם</label>
+            <input id="kid-name" type="text" value={name} onChange={e => setName(e.target.value)}
               className="input-field w-full" placeholder="שם הילד/ה" />
           </div>
           <div>
-            <label className="text-xs block mb-[5px] text-text-secondary">תאריך לידה</label>
-            <input type="date" value={birthDate} onChange={e => setBirthDate(e.target.value)}
+            <label htmlFor="kid-birth" className="text-xs block mb-[5px] text-text-secondary">תאריך לידה</label>
+            <input id="kid-birth" type="date" value={birthDate} onChange={e => setBirthDate(e.target.value)}
               className="input-field w-full ltr" />
           </div>
           <button onClick={handleSubmit} disabled={createKid.isPending || !name}
@@ -635,24 +635,24 @@ function AddActivityModal({
         </div>
         <div className="flex flex-col gap-3.5">
           <div>
-            <label className="text-xs block mb-[5px] text-text-secondary">שם החוג</label>
-            <input type="text" value={name} onChange={e => setName(e.target.value)}
+            <label htmlFor="activity-name" className="text-xs block mb-[5px] text-text-secondary">שם החוג</label>
+            <input id="activity-name" type="text" value={name} onChange={e => setName(e.target.value)}
               className="input-field w-full" placeholder="כדורגל, פסנתר..." />
           </div>
           <div>
-            <label className="text-xs block mb-[5px] text-text-secondary">עלות חודשית (₪)</label>
-            <input type="number" value={monthlyCost} onChange={e => setMonthlyCost(e.target.value)}
+            <label htmlFor="activity-cost" className="text-xs block mb-[5px] text-text-secondary">עלות חודשית (₪)</label>
+            <input id="activity-cost" type="number" value={monthlyCost} onChange={e => setMonthlyCost(e.target.value)}
               className="input-field w-full ltr text-right" />
           </div>
           <div className="grid-2 !mb-0">
             <div>
-              <label className="text-xs block mb-[5px] text-text-secondary">ציוד (₪)</label>
-              <input type="number" value={equipmentCost} onChange={e => setEquipmentCost(e.target.value)}
+              <label htmlFor="activity-equipment" className="text-xs block mb-[5px] text-text-secondary">ציוד (₪)</label>
+              <input id="activity-equipment" type="number" value={equipmentCost} onChange={e => setEquipmentCost(e.target.value)}
                 className="input-field w-full ltr text-right" placeholder="0" />
             </div>
             <div>
-              <label className="text-xs block mb-[5px] text-text-secondary">הסעות (₪)</label>
-              <input type="number" value={transportCost} onChange={e => setTransportCost(e.target.value)}
+              <label htmlFor="activity-transport" className="text-xs block mb-[5px] text-text-secondary">הסעות (₪)</label>
+              <input id="activity-transport" type="number" value={transportCost} onChange={e => setTransportCost(e.target.value)}
                 className="input-field w-full ltr text-right" placeholder="0" />
             </div>
           </div>
@@ -719,25 +719,25 @@ function AddExpenseModal({
         </div>
         <div className="flex flex-col gap-3.5">
           <div>
-            <label className="text-xs block mb-[5px] text-text-secondary">קטגוריה</label>
-            <select value={category} onChange={e => setCategory(e.target.value)}
+            <label htmlFor="kid-exp-category" className="text-xs block mb-[5px] text-text-secondary">קטגוריה</label>
+            <select id="kid-exp-category" value={category} onChange={e => setCategory(e.target.value)}
               className="input-field w-full">
               {KID_EXPENSE_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
           </div>
           <div>
-            <label className="text-xs block mb-[5px] text-text-secondary">סכום (₪)</label>
-            <input type="number" value={amount} onChange={e => setAmount(e.target.value)}
+            <label htmlFor="kid-exp-amount" className="text-xs block mb-[5px] text-text-secondary">סכום (₪)</label>
+            <input id="kid-exp-amount" type="number" value={amount} onChange={e => setAmount(e.target.value)}
               className="input-field w-full ltr text-right" />
           </div>
           <div>
-            <label className="text-xs block mb-[5px] text-text-secondary">תיאור</label>
-            <input type="text" value={description} onChange={e => setDescription(e.target.value)}
+            <label htmlFor="kid-exp-desc" className="text-xs block mb-[5px] text-text-secondary">תיאור</label>
+            <input id="kid-exp-desc" type="text" value={description} onChange={e => setDescription(e.target.value)}
               className="input-field w-full" placeholder="אופציונלי" />
           </div>
           <div>
-            <label className="text-xs block mb-[5px] text-text-secondary">מחזור</label>
-            <select value={periodId} onChange={e => setPeriodId(Number(e.target.value))}
+            <label htmlFor="kid-exp-period" className="text-xs block mb-[5px] text-text-secondary">מחזור</label>
+            <select id="kid-exp-period" value={periodId} onChange={e => setPeriodId(Number(e.target.value))}
               className="input-field w-full">
               {periods?.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
             </select>

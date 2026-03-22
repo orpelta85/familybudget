@@ -499,27 +499,27 @@ export default function MortgagePage() {
             </div>
             <div className="flex flex-col gap-3.5 mb-4">
               <div>
-                <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">שם</label>
-                <input type="text" value={mortgageForm.name} onChange={e => setMortgageForm(f => ({ ...f, name: e.target.value }))} className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-sm" />
+                <label htmlFor="mortgage-name" className="text-xs text-[var(--c-0-60)] block mb-[5px]">שם</label>
+                <input id="mortgage-name" type="text" value={mortgageForm.name} onChange={e => setMortgageForm(f => ({ ...f, name: e.target.value }))} className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-sm" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">סכום מקורי (₪)</label>
-                  <input type="text" inputMode="numeric" value={mortgageForm.totalAmount} onChange={e => setMortgageForm(f => ({ ...f, totalAmount: e.target.value.replace(/[^\d]/g, '') }))} placeholder="0" className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left" />
+                  <label htmlFor="mortgage-total" className="text-xs text-[var(--c-0-60)] block mb-[5px]">סכום מקורי (₪)</label>
+                  <input id="mortgage-total" type="text" inputMode="numeric" value={mortgageForm.totalAmount} onChange={e => setMortgageForm(f => ({ ...f, totalAmount: e.target.value.replace(/[^\d]/g, '') }))} placeholder="0" className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left" />
                 </div>
                 <div>
-                  <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">יתרה נוכחית (₪)</label>
-                  <input type="text" inputMode="numeric" value={mortgageForm.remainingBalance} onChange={e => setMortgageForm(f => ({ ...f, remainingBalance: e.target.value.replace(/[^\d]/g, '') }))} placeholder="0" className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left" />
+                  <label htmlFor="mortgage-remaining" className="text-xs text-[var(--c-0-60)] block mb-[5px]">יתרה נוכחית (₪)</label>
+                  <input id="mortgage-remaining" type="text" inputMode="numeric" value={mortgageForm.remainingBalance} onChange={e => setMortgageForm(f => ({ ...f, remainingBalance: e.target.value.replace(/[^\d]/g, '') }))} placeholder="0" className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">תאריך התחלה</label>
-                  <input type="date" value={mortgageForm.startDate} onChange={e => setMortgageForm(f => ({ ...f, startDate: e.target.value }))} className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-sm" dir="ltr" />
+                  <label htmlFor="mortgage-start" className="text-xs text-[var(--c-0-60)] block mb-[5px]">תאריך התחלה</label>
+                  <input id="mortgage-start" type="date" value={mortgageForm.startDate} onChange={e => setMortgageForm(f => ({ ...f, startDate: e.target.value }))} className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-sm" dir="ltr" />
                 </div>
                 <div>
-                  <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">תאריך סיום</label>
-                  <input type="date" value={mortgageForm.endDate} onChange={e => setMortgageForm(f => ({ ...f, endDate: e.target.value }))} className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-sm" dir="ltr" />
+                  <label htmlFor="mortgage-end" className="text-xs text-[var(--c-0-60)] block mb-[5px]">תאריך סיום</label>
+                  <input id="mortgage-end" type="date" value={mortgageForm.endDate} onChange={e => setMortgageForm(f => ({ ...f, endDate: e.target.value }))} className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-sm" dir="ltr" />
                 </div>
               </div>
               <label className="flex items-center gap-2 cursor-pointer">
@@ -548,8 +548,8 @@ export default function MortgagePage() {
             </div>
             <div className="flex flex-col gap-3.5 mb-4">
               <div>
-                <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">שם מסלול</label>
-                <input type="text" value={trackForm.trackName} onChange={e => setTrackForm(f => ({ ...f, trackName: e.target.value }))} placeholder="פריים, קבועה..." className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-sm" />
+                <label htmlFor="track-name" className="text-xs text-[var(--c-0-60)] block mb-[5px]">שם מסלול</label>
+                <input id="track-name" type="text" value={trackForm.trackName} onChange={e => setTrackForm(f => ({ ...f, trackName: e.target.value }))} placeholder="פריים, קבועה..." className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-sm" />
               </div>
               <div>
                 <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">סוג</label>
@@ -564,32 +564,32 @@ export default function MortgagePage() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">סכום מקורי (₪)</label>
-                  <input type="text" inputMode="numeric" value={trackForm.originalAmount} onChange={e => setTrackForm(f => ({ ...f, originalAmount: e.target.value.replace(/[^\d]/g, '') }))} placeholder="0" className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left" />
+                  <label htmlFor="track-original" className="text-xs text-[var(--c-0-60)] block mb-[5px]">סכום מקורי (₪)</label>
+                  <input id="track-original" type="text" inputMode="numeric" value={trackForm.originalAmount} onChange={e => setTrackForm(f => ({ ...f, originalAmount: e.target.value.replace(/[^\d]/g, '') }))} placeholder="0" className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left" />
                 </div>
                 <div>
-                  <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">יתרה נוכחית (₪)</label>
-                  <input type="text" inputMode="numeric" value={trackForm.remainingAmount} onChange={e => setTrackForm(f => ({ ...f, remainingAmount: e.target.value.replace(/[^\d]/g, '') }))} placeholder="0" className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left" />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">ריבית שנתית (%)</label>
-                  <input type="text" inputMode="decimal" value={trackForm.interestRate} onChange={e => setTrackForm(f => ({ ...f, interestRate: e.target.value.replace(/[^\d.]/g, '') }))} placeholder="0" className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left" />
-                </div>
-                <div>
-                  <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">תשלום חודשי (₪)</label>
-                  <input type="text" inputMode="numeric" value={trackForm.monthlyPayment} onChange={e => setTrackForm(f => ({ ...f, monthlyPayment: e.target.value.replace(/[^\d]/g, '') }))} placeholder="0" className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left" />
+                  <label htmlFor="track-remaining" className="text-xs text-[var(--c-0-60)] block mb-[5px]">יתרה נוכחית (₪)</label>
+                  <input id="track-remaining" type="text" inputMode="numeric" value={trackForm.remainingAmount} onChange={e => setTrackForm(f => ({ ...f, remainingAmount: e.target.value.replace(/[^\d]/g, '') }))} placeholder="0" className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">תאריך התחלה</label>
-                  <input type="date" value={trackForm.startDate} onChange={e => setTrackForm(f => ({ ...f, startDate: e.target.value }))} className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-sm" dir="ltr" />
+                  <label htmlFor="track-interest" className="text-xs text-[var(--c-0-60)] block mb-[5px]">ריבית שנתית (%)</label>
+                  <input id="track-interest" type="text" inputMode="decimal" value={trackForm.interestRate} onChange={e => setTrackForm(f => ({ ...f, interestRate: e.target.value.replace(/[^\d.]/g, '') }))} placeholder="0" className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left" />
                 </div>
                 <div>
-                  <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">תאריך סיום</label>
-                  <input type="date" value={trackForm.endDate} onChange={e => setTrackForm(f => ({ ...f, endDate: e.target.value }))} className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-sm" dir="ltr" />
+                  <label htmlFor="track-monthly" className="text-xs text-[var(--c-0-60)] block mb-[5px]">תשלום חודשי (₪)</label>
+                  <input id="track-monthly" type="text" inputMode="numeric" value={trackForm.monthlyPayment} onChange={e => setTrackForm(f => ({ ...f, monthlyPayment: e.target.value.replace(/[^\d]/g, '') }))} placeholder="0" className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left" />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="track-start" className="text-xs text-[var(--c-0-60)] block mb-[5px]">תאריך התחלה</label>
+                  <input id="track-start" type="date" value={trackForm.startDate} onChange={e => setTrackForm(f => ({ ...f, startDate: e.target.value }))} className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-sm" dir="ltr" />
+                </div>
+                <div>
+                  <label htmlFor="track-end" className="text-xs text-[var(--c-0-60)] block mb-[5px]">תאריך סיום</label>
+                  <input id="track-end" type="date" value={trackForm.endDate} onChange={e => setTrackForm(f => ({ ...f, endDate: e.target.value }))} className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-sm" dir="ltr" />
                 </div>
               </div>
             </div>

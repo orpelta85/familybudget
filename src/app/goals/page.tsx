@@ -365,20 +365,20 @@ function GoalExpandedView({
         <div>
           <div className="font-semibold mb-3.5 text-sm">הפקדה חדשה</div>
           <div className="mb-3">
-            <label className="text-xs block mb-[5px] text-text-secondary">מחזור</label>
-            <select value={periodId} onChange={e => setPeriodId(Number(e.target.value))}
-              aria-label="מחזור" className="input-field w-full">
+            <label htmlFor="goal-deposit-period" className="text-xs block mb-[5px] text-text-secondary">מחזור</label>
+            <select id="goal-deposit-period" value={periodId} onChange={e => setPeriodId(Number(e.target.value))}
+              className="input-field w-full">
               {periods?.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
             </select>
           </div>
           <div className="mb-3">
-            <label className="text-xs block mb-[5px] text-text-secondary">סכום (₪)</label>
-            <input type="number" value={amount} onChange={e => setAmount(e.target.value)}
+            <label htmlFor="goal-deposit-amount" className="text-xs block mb-[5px] text-text-secondary">סכום (₪)</label>
+            <input id="goal-deposit-amount" type="number" value={amount} onChange={e => setAmount(e.target.value)}
               className="input-field w-full ltr text-right" />
           </div>
           <div className="mb-4">
-            <label className="text-xs block mb-[5px] text-text-secondary">הערות</label>
-            <input type="text" value={notes} onChange={e => setNotes(e.target.value)}
+            <label htmlFor="goal-deposit-notes" className="text-xs block mb-[5px] text-text-secondary">הערות</label>
+            <input id="goal-deposit-notes" type="text" value={notes} onChange={e => setNotes(e.target.value)}
               className="input-field w-full" placeholder="אופציונלי" />
           </div>
           <button onClick={handleDeposit} disabled={addDeposit.isPending}
@@ -513,27 +513,27 @@ function GoalModal({
 
         <div className="flex flex-col gap-3.5">
           <div>
-            <label className="text-xs block mb-[5px] text-text-secondary">שם היעד</label>
-            <input type="text" value={name} onChange={e => setName(e.target.value)}
+            <label htmlFor="goal-name" className="text-xs block mb-[5px] text-text-secondary">שם היעד</label>
+            <input id="goal-name" type="text" value={name} onChange={e => setName(e.target.value)}
               className="input-field w-full" placeholder="למשל: דירה, רכב, חופשה" />
           </div>
 
           <div className="grid-2 !mb-0">
             <div>
-              <label className="text-xs block mb-[5px] text-text-secondary">סכום יעד (₪)</label>
-              <input type="number" value={target} onChange={e => setTarget(e.target.value)}
+              <label htmlFor="goal-target" className="text-xs block mb-[5px] text-text-secondary">סכום יעד (₪)</label>
+              <input id="goal-target" type="number" value={target} onChange={e => setTarget(e.target.value)}
                 className="input-field w-full ltr text-right" />
             </div>
             <div>
-              <label className="text-xs block mb-[5px] text-text-secondary">הפקדה חודשית (₪)</label>
-              <input type="number" value={monthly} onChange={e => setMonthly(e.target.value)}
+              <label htmlFor="goal-monthly" className="text-xs block mb-[5px] text-text-secondary">הפקדה חודשית (₪)</label>
+              <input id="goal-monthly" type="number" value={monthly} onChange={e => setMonthly(e.target.value)}
                 className="input-field w-full ltr text-right" />
             </div>
           </div>
 
           <div>
-            <label className="text-xs block mb-[5px] text-text-secondary">מספר תקופות</label>
-            <input type="number" value={totalPeriods} onChange={e => setTotalPeriods(e.target.value)}
+            <label htmlFor="goal-periods" className="text-xs block mb-[5px] text-text-secondary">מספר תקופות</label>
+            <input id="goal-periods" type="number" value={totalPeriods} onChange={e => setTotalPeriods(e.target.value)}
               className="input-field w-full ltr text-right" />
           </div>
 

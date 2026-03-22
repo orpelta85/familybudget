@@ -334,22 +334,21 @@ export default function SinkingPage() {
             <ModalHeader title={`${txModal.fundName} — הוצאה`} onClose={() => setTxModal(null)} />
             <div className="flex flex-col gap-3">
               <div>
-                <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">מחזור</label>
-                <select value={txPeriodId ?? ''} onChange={e => setTxPeriodId(Number(e.target.value))}
-                  aria-label="מחזור"
+                <label htmlFor="sinking-tx-period" className="text-xs text-[var(--c-0-60)] block mb-[5px]">מחזור</label>
+                <select id="sinking-tx-period" value={txPeriodId ?? ''} onChange={e => setTxPeriodId(Number(e.target.value))}
                   className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-sm">
                   {periods?.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
                 </select>
               </div>
               <div>
-                <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">סכום (₪)</label>
-                <input type="number" value={txAmount} onChange={e => setTxAmount(e.target.value)}
+                <label htmlFor="sinking-tx-amount" className="text-xs text-[var(--c-0-60)] block mb-[5px]">סכום (₪)</label>
+                <input id="sinking-tx-amount" type="number" value={txAmount} onChange={e => setTxAmount(e.target.value)}
                   placeholder="0" min="0" autoFocus
                   className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left" />
               </div>
               <div>
-                <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">תיאור (אופציונלי)</label>
-                <input type="text" value={txDesc} onChange={e => setTxDesc(e.target.value)}
+                <label htmlFor="sinking-tx-desc" className="text-xs text-[var(--c-0-60)] block mb-[5px]">תיאור (אופציונלי)</label>
+                <input id="sinking-tx-desc" type="text" value={txDesc} onChange={e => setTxDesc(e.target.value)}
                   placeholder="לדוגמה: כרטיסי טיסה, מוצר..."
                   className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-sm" />
               </div>
@@ -397,15 +396,15 @@ function FundFormFields({ form, onChange, splitFrac }: { form: FundForm; onChang
   return (
     <div className="flex flex-col gap-3.5 mb-4">
       <div>
-        <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">שם הקרן</label>
-        <input type="text" autoFocus value={form.name}
+        <label htmlFor="fund-name" className="text-xs text-[var(--c-0-60)] block mb-[5px]">שם הקרן</label>
+        <input id="fund-name" type="text" autoFocus value={form.name}
           onChange={e => onChange({ ...form, name: e.target.value })}
           placeholder="למשל: טיולים, חתונה, רכב..."
           className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-sm" />
       </div>
       <div>
-        <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">יעד שנתי כולל (₪) — כמה תוציאו על זה בשנה?</label>
-        <input type="text" inputMode="numeric" value={form.totalAnnual}
+        <label htmlFor="fund-annual" className="text-xs text-[var(--c-0-60)] block mb-[5px]">יעד שנתי כולל (₪) — כמה תוציאו על זה בשנה?</label>
+        <input id="fund-annual" type="text" inputMode="numeric" value={form.totalAnnual}
           onChange={e => onChange({ ...form, totalAnnual: e.target.value.replace(/[^\d]/g, '') })}
           placeholder="0"
           className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left" />

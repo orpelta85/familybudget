@@ -245,22 +245,22 @@ export default function SubscriptionsPage() {
             </div>
             <div className="flex flex-col gap-3.5 mb-4">
               <div>
-                <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">שם מנוי</label>
-                <input type="text" value={newSub.name} onChange={e => setNewSub(p => p && { ...p, name: e.target.value })} autoFocus placeholder="למשל: נטפליקס, ספוטיפיי..." className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-sm" />
+                <label htmlFor="sub-name" className="text-xs text-[var(--c-0-60)] block mb-[5px]">שם מנוי</label>
+                <input id="sub-name" type="text" value={newSub.name} onChange={e => setNewSub(p => p && { ...p, name: e.target.value })} autoFocus placeholder="למשל: נטפליקס, ספוטיפיי..." className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-sm" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">סכום חודשי (₪)</label>
-                  <input type="number" value={newSub.amount} onChange={e => setNewSub(p => p && { ...p, amount: e.target.value })} placeholder="0" className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left" />
+                  <label htmlFor="sub-amount" className="text-xs text-[var(--c-0-60)] block mb-[5px]">סכום חודשי (₪)</label>
+                  <input id="sub-amount" type="number" value={newSub.amount} onChange={e => setNewSub(p => p && { ...p, amount: e.target.value })} placeholder="0" className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left" />
                 </div>
                 <div>
-                  <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">יום חיוב</label>
-                  <input type="number" value={newSub.billingDay} onChange={e => setNewSub(p => p && { ...p, billingDay: e.target.value })} min="1" max="31" className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left" />
+                  <label htmlFor="sub-billing-day" className="text-xs text-[var(--c-0-60)] block mb-[5px]">יום חיוב</label>
+                  <input id="sub-billing-day" type="number" value={newSub.billingDay} onChange={e => setNewSub(p => p && { ...p, billingDay: e.target.value })} min="1" max="31" className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left" />
                 </div>
               </div>
               <div>
-                <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">קטגוריה (אופציונלי)</label>
-                <select value={newSub.categoryId} onChange={e => setNewSub(p => p && { ...p, categoryId: e.target.value })} className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-sm">
+                <label htmlFor="sub-category" className="text-xs text-[var(--c-0-60)] block mb-[5px]">קטגוריה (אופציונלי)</label>
+                <select id="sub-category" value={newSub.categoryId} onChange={e => setNewSub(p => p && { ...p, categoryId: e.target.value })} className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-sm">
                   <option value="">ללא</option>
                   {categories?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
