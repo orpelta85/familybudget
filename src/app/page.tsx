@@ -19,10 +19,10 @@ import { useFamilyContext } from '@/lib/context/FamilyContext'
 import { useFamilySummary } from '@/lib/queries/useFamily'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState, useRef } from 'react'
 import { useFamilyView } from '@/contexts/FamilyViewContext'
 import { PeriodSelector } from '@/components/layout/PeriodSelector'
-import { Wallet, Receipt, TrendingUp, PiggyBank, Target, AlertTriangle, CalendarDays, Users, X, Download } from 'lucide-react'
+import { Wallet, Receipt, TrendingUp, PiggyBank, Target, AlertTriangle, CalendarDays, Users, X, Download, MoreHorizontal } from 'lucide-react'
 import { PageInfo } from '@/components/ui/PageInfo'
 import { InfoTooltip } from '@/components/ui/InfoTooltip'
 import { PAGE_TIPS } from '@/lib/page-tips'
@@ -125,6 +125,18 @@ export default function Dashboard() {
     return personal + sharedYearAgo
   }, [allExpenses, allShared, yearAgoPeriodId, splitFrac])
 
+  const [menuOpen, setMenuOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!menuOpen) return
+    function handleClick(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setMenuOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [menuOpen])
+
   if (userLoading || setupLoading) return <DashboardSkeleton />
   if (!user) return null
 
@@ -226,6 +238,40 @@ export default function Dashboard() {
   const healthColor = healthScore >= 75 ? 'var(--accent-green)' : healthScore >= 50 ? 'var(--accent-orange)' : 'var(--accent-red)'
   const healthLabel = healthScore >= 75 ? 'מצוין' : healthScore >= 50 ? 'סביר' : 'דורש שיפור'
 
+  const handleExport = async () => {
+    setMenuOpen(false)
+    try {
+      const XLSX = await import('xlsx')
+      const wb = XLSX.utils.book_new()
+      const summaryRows = [
+        ['סיכום חודשי', selectedPeriod?.label ?? ''],
+        [],
+        ['הכנסות', totalIncome],
+        ['הוצאות אישיות', totalPersonal],
+        ['הוצאות משותפות (חלקי)', totalShared],
+        ['סה"כ הוצאות', totalExpenses],
+        ['תזרים נקי', netFlow],
+        ['אחוז חיסכון', `${savingsPct}%`],
+        [],
+        ['פירוט קטגוריות'],
+        ['קטגוריה', 'תקציב', 'הוצאות', '% ניצול'],
+      ];
+      (categories ?? []).forEach(c => {
+        const spent = spendByCat[c.id] ?? 0
+        const pct = c.monthly_target > 0 ? Math.round((spent / c.monthly_target) * 100) : 0
+        summaryRows.push([c.name, c.monthly_target, spent, `${pct}%`])
+      })
+      const ws = XLSX.utils.aoa_to_sheet(summaryRows)
+      ws['!cols'] = [{ wch: 22 }, { wch: 14 }, { wch: 14 }, { wch: 10 }]
+      XLSX.utils.book_append_sheet(wb, ws, 'סיכום חודשי')
+      const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' })
+      const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a'); a.href = url; a.download = `סיכום_חודשי_${selectedPeriod?.label ?? 'export'}.xlsx`; a.click()
+      URL.revokeObjectURL(url)
+    } catch (e) { console.error('Export monthly summary:', e) }
+  }
+
   return (
     <div>
       {/* Header */}
@@ -242,43 +288,26 @@ export default function Dashboard() {
             {selectedPeriod ? ` · ${periodLabel(selectedPeriod.start_date)}` : ''}
           </p>
         </div>
-        <button
-          onClick={async () => {
-            try {
-              const XLSX = await import('xlsx')
-              const wb = XLSX.utils.book_new()
-              const summaryRows = [
-                ['סיכום חודשי', selectedPeriod?.label ?? ''],
-                [],
-                ['הכנסות', totalIncome],
-                ['הוצאות אישיות', totalPersonal],
-                ['הוצאות משותפות (חלקי)', totalShared],
-                ['סה"כ הוצאות', totalExpenses],
-                ['תזרים נקי', netFlow],
-                ['אחוז חיסכון', `${savingsPct}%`],
-                [],
-                ['פירוט קטגוריות'],
-                ['קטגוריה', 'תקציב', 'הוצאות', '% ניצול'],
-              ];
-              (categories ?? []).forEach(c => {
-                const spent = spendByCat[c.id] ?? 0
-                const pct = c.monthly_target > 0 ? Math.round((spent / c.monthly_target) * 100) : 0
-                summaryRows.push([c.name, c.monthly_target, spent, `${pct}%`])
-              })
-              const ws = XLSX.utils.aoa_to_sheet(summaryRows)
-              ws['!cols'] = [{ wch: 22 }, { wch: 14 }, { wch: 14 }, { wch: 10 }]
-              XLSX.utils.book_append_sheet(wb, ws, 'סיכום חודשי')
-              const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' })
-              const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
-              const url = URL.createObjectURL(blob)
-              const a = document.createElement('a'); a.href = url; a.download = `סיכום_חודשי_${selectedPeriod?.label ?? 'export'}.xlsx`; a.click()
-              URL.revokeObjectURL(url)
-            } catch (e) { console.error('Export monthly summary:', e) }
-          }}
-          className="flex items-center gap-1.5 bg-[var(--c-blue-0-20)] border border-[var(--c-blue-0-32)] rounded-lg px-3 py-[7px] text-[var(--accent-blue)] text-[13px] font-medium cursor-pointer"
-        >
-          <Download size={13} /> הורד סיכום חודשי
-        </button>
+        <div className="relative" ref={menuRef}>
+          <button
+            onClick={() => setMenuOpen(v => !v)}
+            aria-label="תפריט פעולות"
+            className="flex items-center justify-center w-8 h-8 rounded-lg border border-border bg-card hover:bg-bg-hover cursor-pointer transition-colors"
+          >
+            <MoreHorizontal size={16} className="text-text-secondary" />
+          </button>
+          {menuOpen && (
+            <div className="absolute left-0 top-full mt-1 bg-card border border-border rounded-xl shadow-lg py-1 min-w-[180px] z-50">
+              <button
+                onClick={handleExport}
+                className="flex items-center gap-2 w-full px-3 py-2 text-[13px] text-text-body hover:bg-bg-hover cursor-pointer bg-transparent border-none text-right"
+              >
+                <Download size={13} className="text-text-secondary shrink-0" />
+                הורד סיכום חודשי
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {periods && <PeriodSelector periods={periods} selectedId={selectedPeriodId} onChange={setSelectedPeriodId} />}
@@ -406,144 +435,106 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* ── Forecast + Year-over-year ──────────────────────────────────────── */}
-      <div className="grid-2">
-
-        {/* Forecast */}
-        <div className="card">
-          <h2 className="card-header mb-4">
-            <CalendarDays size={14} className="text-accent-blue" />
-            תחזית חודש נוכחי
-          </h2>
-          {dataLoading
-            ? <div className="text-text-secondary text-[13px]">בחר תקופה</div>
-            : (
-              <div className="text-[13px]">
-                {[
-                  { label: 'הכנסה ידועה', value: totalIncome, color: 'var(--accent-green)', sign: '+' },
-                  { label: 'הוצאות קבועות (יעד)', value: -fixedTargets, color: 'var(--text-secondary)', sign: '-' },
-                  { label: 'משותפות (שהוזן)', value: -totalShared, color: 'var(--text-secondary)', sign: '-' },
-                  { label: 'משתנות (יעד)', value: -variableTargets, color: 'var(--accent-orange)', sign: '-' },
-                  ...(sinkingTargets > 0 ? [{ label: 'קרנות צבירה (יעד חודשי)', value: -sinkingTargets, color: 'var(--accent-teal)', sign: '-' }] : []),
-                  ...(savingsTargets > 0 ? [{ label: 'חיסכון (יעד חודשי)', value: -savingsTargets, color: 'var(--accent-green)', sign: '-' }] : []),
-                ].map(row => (
-                  <div key={row.label} className="flex justify-between py-[5px] row-divider">
-                    <span className="text-text-body">{row.label}</span>
-                    <span className="font-medium" style={{ color: row.color }}>
-                      {row.sign}{formatCurrency(Math.abs(row.value))}
+      {/* ── Month at a Glance ────────────────────────────────────────────── */}
+      <div className="card">
+        <h2 className="card-header mb-4">
+          <CalendarDays size={14} className="text-accent-blue" />
+          מבט על החודש
+        </h2>
+        {dataLoading
+          ? <div className="text-text-secondary text-[13px]">בחר תקופה</div>
+          : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Left: Forecast summary */}
+              <div>
+                <h3 className="text-xs font-semibold text-text-secondary mb-3 uppercase tracking-wide">תחזית</h3>
+                <div className="text-[13px]">
+                  {[
+                    { label: 'הכנסה ידועה', value: totalIncome, color: 'var(--accent-green)', sign: '+' },
+                    { label: 'הוצאות קבועות (יעד)', value: -fixedTargets, color: 'var(--text-secondary)', sign: '-' },
+                    { label: 'משותפות (שהוזן)', value: -totalShared, color: 'var(--text-secondary)', sign: '-' },
+                    { label: 'משתנות (יעד)', value: -variableTargets, color: 'var(--accent-orange)', sign: '-' },
+                    ...(sinkingTargets > 0 ? [{ label: 'קרנות צבירה (יעד)', value: -sinkingTargets, color: 'var(--accent-teal)', sign: '-' }] : []),
+                    ...(savingsTargets > 0 ? [{ label: 'חיסכון (יעד)', value: -savingsTargets, color: 'var(--accent-green)', sign: '-' }] : []),
+                  ].map(row => (
+                    <div key={row.label} className="flex justify-between py-[5px] row-divider">
+                      <span className="text-text-body">{row.label}</span>
+                      <span className="font-medium" style={{ color: row.color }}>
+                        {row.sign}{formatCurrency(Math.abs(row.value))}
+                      </span>
+                    </div>
+                  ))}
+                  <div className="flex justify-between pt-2.5 mt-1">
+                    <span className="font-semibold">נשאר בטוח להוציא</span>
+                    <span className={`text-base font-bold ${safeToSpend >= 0 ? 'text-accent-green' : 'text-accent-red'}`}>
+                      {formatCurrency(safeToSpend)}
                     </span>
                   </div>
-                ))}
-                <div className="flex justify-between pt-2.5 mt-1">
-                  <span className="font-semibold">נשאר בטוח להוציא</span>
-                  <span className={`text-base font-bold ${safeToSpend >= 0 ? 'text-accent-green' : 'text-accent-red'}`}>
-                    {formatCurrency(safeToSpend)}
-                  </span>
-                </div>
-                {variableRemaining > 0 && (
-                  <div className="text-[11px] text-text-secondary mt-1.5 text-right">
-                    יתרת תקציב משתנות: {formatCurrency(variableRemaining)}
-                  </div>
-                )}
-              </div>
-            )
-          }
-        </div>
-
-        {/* Year-over-year */}
-        <div className="card">
-          <h2 className="card-header mb-4">
-            <TrendingUp size={14} className="text-accent-teal" />
-            לעומת שנה שעברה
-          </h2>
-          {!yearAgoPeriodId
-            ? <div className="text-text-secondary text-[13px]">אין נתוני שנה שעברה (פחות מ-12 מחזורים)</div>
-            : (
-              <div className="text-[13px]">
-                <div className="text-[11px] text-text-secondary mb-3">
-                  {yearAgoPeriod ? periodLabel(yearAgoPeriod.start_date) : ''} → {selectedPeriod ? periodLabel(selectedPeriod.start_date) : ''}
-                </div>
-                {[
-                  { label: 'הכנסה', current: totalIncome, prev: yearAgoTotalIncome, positiveIsGood: true },
-                  { label: 'הוצאות', current: totalExpenses, prev: yearAgoExpenses, positiveIsGood: false },
-                  { label: 'תזרים נקי', current: netFlow, prev: yearAgoTotalIncome ? yearAgoTotalIncome - yearAgoExpenses : null, positiveIsGood: true },
-                ].map(row => {
-                  const pct = row.prev ? Math.round(((row.current - row.prev) / Math.abs(row.prev)) * 100) : null
-                  const isGood = pct === null ? null : row.positiveIsGood ? pct >= 0 : pct <= 0
-                  return (
-                    <div key={row.label} className="flex justify-between items-center py-[7px] row-divider">
-                      <span className="text-text-body">{row.label}</span>
-                      <div className="flex gap-2 items-center">
-                        {pct !== null && (
-                          <span className={`text-[11px] font-semibold ${isGood ? 'text-accent-green' : 'text-accent-red'}`}>
-                            {pct >= 0 ? `↑${pct}%` : `↓${Math.abs(pct)}%`}
-                          </span>
-                        )}
-                        <span className="font-medium">{formatCurrency(row.current)}</span>
-                        {row.prev !== null && (
-                          <span className="text-text-secondary text-[11px]">/ {formatCurrency(row.prev ?? 0)}</span>
-                        )}
-                      </div>
+                  {variableRemaining > 0 && (
+                    <div className="text-[11px] text-text-secondary mt-1.5 text-right">
+                      יתרת תקציב משתנות: {formatCurrency(variableRemaining)}
                     </div>
-                  )
-                })}
+                  )}
+                </div>
               </div>
-            )
-          }
-        </div>
+
+              {/* Right: Budget bars + small donut */}
+              <div>
+                <h3 className="text-xs font-semibold text-text-secondary mb-3 uppercase tracking-wide">ניצול תקציב</h3>
+                <div className="flex gap-4">
+                  {/* Budget bars */}
+                  <div className="flex-1 min-w-0">
+                    {!(categories?.length)
+                      ? <div className="text-text-secondary text-[13px]">אין קטגוריות</div>
+                      : [...(categories ?? [])]
+                        .filter(c => c.monthly_target > 0)
+                        .sort((a, b) => ((spendByCat[b.id] ?? 0) / b.monthly_target) - ((spendByCat[a.id] ?? 0) / a.monthly_target))
+                        .slice(0, 5)
+                        .map(cat => {
+                          const spent = spendByCat[cat.id] ?? 0
+                          const rawPct = spent / cat.monthly_target
+                          const pct = Math.min(rawPct, 1)
+                          const pctDisplay = Math.round(rawPct * 100)
+                          const barColor = rawPct >= 1 ? 'var(--accent-red)' : rawPct >= 0.9 ? 'var(--accent-orange)' : 'var(--accent-blue)'
+                          const avg = avgByCat[cat.id]
+                          const deviation = avg && avg > 0 ? Math.round(((spent - avg) / avg) * 100) : null
+                          return (
+                            <div key={cat.id} className="mb-2.5">
+                              <div className="flex justify-between text-xs mb-[3px]">
+                                <span className="text-text-heading">{cat.name}</span>
+                                <div className="flex gap-1.5 items-center">
+                                  {deviation !== null && (
+                                    <span className={`text-[10px] ${deviation > 15 ? 'text-accent-red' : deviation < -15 ? 'text-accent-green' : 'text-text-secondary'}`}>
+                                      {deviation > 0 ? `↑${deviation}%` : `↓${Math.abs(deviation)}%`}
+                                    </span>
+                                  )}
+                                  <span className="font-semibold" style={{ color: barColor }}>{pctDisplay}%</span>
+                                </div>
+                              </div>
+                              <div className="bar-track">
+                                <div className="bar-fill" style={{ width: `${Math.round(pct * 100)}%`, background: barColor }} />
+                              </div>
+                            </div>
+                          )
+                        })
+                    }
+                  </div>
+
+                  {/* Small donut */}
+                  {donutData.length > 0 && (
+                    <div className="hidden md:flex flex-col items-center justify-center shrink-0" style={{ width: 120 }}>
+                      <ExpenseDonut data={donutData} />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )
+        }
       </div>
 
-      {/* ── Budget utilization + Donut ─────────────────────────────────────── */}
+      {/* ── Sinking funds + Goals ──────────────────────────────────────────── */}
       <div className="grid-2">
-
-        {/* Budget bars */}
-        <div className="card">
-          <h2 className="font-semibold text-sm mb-3.5">ניצול תקציב</h2>
-          {!(categories?.length)
-            ? <div className="text-text-secondary text-[13px]">אין קטגוריות</div>
-            : [...(categories ?? [])]
-              .filter(c => c.monthly_target > 0)
-              .sort((a, b) => ((spendByCat[b.id] ?? 0) / b.monthly_target) - ((spendByCat[a.id] ?? 0) / a.monthly_target))
-              .slice(0, 7)
-              .map(cat => {
-                const spent = spendByCat[cat.id] ?? 0
-                const rawPct = spent / cat.monthly_target
-                const pct = Math.min(rawPct, 1)
-                const pctDisplay = Math.round(rawPct * 100)
-                const barColor = rawPct >= 1 ? 'var(--accent-red)' : rawPct >= 0.9 ? 'var(--accent-orange)' : 'var(--accent-blue)'
-                const avg = avgByCat[cat.id]
-                const deviation = avg && avg > 0 ? Math.round(((spent - avg) / avg) * 100) : null
-                return (
-                  <div key={cat.id} className="mb-2.5">
-                    <div className="flex justify-between text-xs mb-[3px]">
-                      <span className="text-text-heading">{cat.name}</span>
-                      <div className="flex gap-1.5 items-center">
-                        {deviation !== null && (
-                          <span className={`text-[10px] ${deviation > 15 ? 'text-accent-red' : deviation < -15 ? 'text-accent-green' : 'text-text-secondary'}`}>
-                            {deviation > 0 ? `↑${deviation}%` : `↓${Math.abs(deviation)}%`}
-                          </span>
-                        )}
-                        <span className="font-semibold" style={{ color: barColor }}>{pctDisplay}%</span>
-                      </div>
-                    </div>
-                    <div className="bar-track">
-                      <div className="bar-fill" style={{ width: `${Math.round(pct * 100)}%`, background: barColor }} />
-                    </div>
-                  </div>
-                )
-              })
-          }
-        </div>
-
-        {/* Donut */}
-        <div className="card">
-          <h2 className="font-semibold text-sm mb-3.5">חלוקת הוצאות</h2>
-          <ExpenseDonut data={donutData} />
-        </div>
-      </div>
-
-      {/* ── Sinking funds + Apartment ──────────────────────────────────────── */}
-      <div className="grid-2 !mb-0">
 
         {/* Sinking funds */}
         <div className="card">
@@ -612,9 +603,51 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* ── Net Worth + Health Score ───────────────────────────────────────── */}
+      {/* ── Year-over-year + Net Worth ─────────────────────────────────────── */}
       {!dataLoading && totalIncome > 0 && (
-        <div className="grid-2 mt-3.5">
+        <div className="grid-2">
+          {/* Year-over-year */}
+          <div className="card">
+            <h2 className="card-header mb-4">
+              <TrendingUp size={14} className="text-accent-teal" />
+              לעומת שנה שעברה
+            </h2>
+            {!yearAgoPeriodId
+              ? <div className="text-text-secondary text-[13px]">אין נתוני שנה שעברה (פחות מ-12 מחזורים)</div>
+              : (
+                <div className="text-[13px]">
+                  <div className="text-[11px] text-text-secondary mb-3">
+                    {yearAgoPeriod ? periodLabel(yearAgoPeriod.start_date) : ''} → {selectedPeriod ? periodLabel(selectedPeriod.start_date) : ''}
+                  </div>
+                  {[
+                    { label: 'הכנסה', current: totalIncome, prev: yearAgoTotalIncome, positiveIsGood: true },
+                    { label: 'הוצאות', current: totalExpenses, prev: yearAgoExpenses, positiveIsGood: false },
+                    { label: 'תזרים נקי', current: netFlow, prev: yearAgoTotalIncome ? yearAgoTotalIncome - yearAgoExpenses : null, positiveIsGood: true },
+                  ].map(row => {
+                    const pct = row.prev ? Math.round(((row.current - row.prev) / Math.abs(row.prev)) * 100) : null
+                    const isGood = pct === null ? null : row.positiveIsGood ? pct >= 0 : pct <= 0
+                    return (
+                      <div key={row.label} className="flex justify-between items-center py-[7px] row-divider">
+                        <span className="text-text-body">{row.label}</span>
+                        <div className="flex gap-2 items-center">
+                          {pct !== null && (
+                            <span className={`text-[11px] font-semibold ${isGood ? 'text-accent-green' : 'text-accent-red'}`}>
+                              {pct >= 0 ? `↑${pct}%` : `↓${Math.abs(pct)}%`}
+                            </span>
+                          )}
+                          <span className="font-medium">{formatCurrency(row.current)}</span>
+                          {row.prev !== null && (
+                            <span className="text-text-secondary text-[11px]">/ {formatCurrency(row.prev ?? 0)}</span>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )
+            }
+          </div>
+
           {/* Net Worth */}
           <div className="card">
             <h2 className="card-header mb-3.5">
@@ -642,28 +675,25 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
+        </div>
+      )}
 
-          {/* Health Score */}
-          <div className="card">
-            <h2 className="card-header mb-3.5">
-              <TrendingUp size={14} style={{ color: healthColor }} /> בריאות פיננסית
-              <InfoTooltip body="ציון מ-0 עד 100 שמשקלל: חיסכון, חירום, חובות, תקציב" />
-            </h2>
-            <div className="flex items-baseline gap-2.5 mb-2">
-              <span className="text-4xl font-bold" style={{ color: healthColor }}>{healthScore}</span>
-              <span className="text-sm text-text-secondary">/ 100</span>
-              <span className="text-[13px] font-semibold" style={{ color: healthColor }}>{healthLabel}</span>
-            </div>
-            <div className="bar-track-lg mb-3">
-              <div className="bar-fill rounded-[3px]" style={{ width: `${healthScore}%`, background: healthColor }} />
-            </div>
-            <div className="flex flex-col gap-1 text-[11px] text-text-secondary">
-              <span>חיסכון {savingsPct}% מההכנסה {savingsPct >= 20 ? '✓' : ''}</span>
-              <span>קרנות: {emergencyMonths.toFixed(1)} חודשי הוצאות</span>
-              <span>פנסיה: {pensionTotal > 0 ? '✓ פעילה' : '✗ אין נתונים'}</span>
-              <span>יעדים: {totalGoalsTarget > 0 ? ((totalGoalsSaved / totalGoalsTarget) * 100).toFixed(0) : 0}%</span>
-            </div>
-          </div>
+      {/* ── Health Score Banner ────────────────────────────────────────────── */}
+      {!dataLoading && totalIncome > 0 && (
+        <div
+          className="flex items-center gap-3 rounded-xl px-4 mt-3.5 mb-1"
+          style={{ height: 48, background: 'var(--bg-hover)' }}
+        >
+          <div
+            className="w-3 h-3 rounded-full shrink-0"
+            style={{ background: healthColor }}
+          />
+          <span className="text-sm font-bold" style={{ color: healthColor }}>{healthScore}</span>
+          <span className="text-[13px] text-text-secondary">/ 100</span>
+          <span className="text-[13px] text-text-body">
+            {healthScore >= 70 ? 'מצב פיננסי טוב' : healthScore >= 40 ? 'מצב פיננסי סביר — יש מקום לשיפור' : 'מצב פיננסי דורש תשומת לב'}
+          </span>
+          <InfoTooltip body="ציון מ-0 עד 100 שמשקלל: חיסכון, חירום, חובות, תקציב" />
         </div>
       )}
 
