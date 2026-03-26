@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
     .eq('period_id', Number(periodId))
     .single()
 
-  const totalIncome = (income?.salary ?? 0) + (income?.bonus ?? 0) + (income?.other ?? 0)
+  const totalIncome = Number(income?.salary ?? 0) + Number(income?.bonus ?? 0) + Number(income?.other ?? 0)
 
   // Fetch personal expenses with categories
   const { data: expenses } = await sb
@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
     .eq('user_id', userId)
     .eq('period_id', Number(periodId))
 
-  const totalExpenses = (expenses ?? []).reduce((s: number, e: { amount: number }) => s + e.amount, 0)
+  const totalExpenses = (expenses ?? []).reduce((s: number, e: { amount: number }) => s + Number(e.amount), 0)
   const netFlow = totalIncome - totalExpenses
   const savingsRate = totalIncome > 0 ? Math.round((netFlow / totalIncome) * 100) : 0
 
@@ -52,7 +52,7 @@ export async function GET(req: NextRequest) {
   const catSpend: Record<string, number> = {}
   for (const e of expenses ?? []) {
     const catName = (e.budget_categories as unknown as { name: string } | null)?.name ?? 'אחר'
-    catSpend[catName] = (catSpend[catName] ?? 0) + e.amount
+    catSpend[catName] = (catSpend[catName] ?? 0) + Number(e.amount)
   }
 
   // Fetch budget categories for utilization
@@ -65,15 +65,16 @@ export async function GET(req: NextRequest) {
   const overspent = (categories ?? [])
     .map(c => {
       const spent = catSpend[c.name] ?? 0
-      const pct = c.monthly_target > 0 ? (spent / c.monthly_target) * 100 : 0
-      return { name: c.name, spent, target: c.monthly_target, pct }
+      const target = Number(c.monthly_target)
+      const pct = target > 0 ? (spent / target) * 100 : 0
+      return { name: c.name, spent, target, pct }
     })
     .filter(c => c.pct > 100)
     .sort((a, b) => b.pct - a.pct)
     .slice(0, 3)
 
   // Budget utilization
-  const totalBudget = (categories ?? []).reduce((s, c) => s + c.monthly_target, 0)
+  const totalBudget = (categories ?? []).reduce((s, c) => s + Number(c.monthly_target), 0)
   const budgetUtilization = totalBudget > 0 ? Math.round((totalExpenses / totalBudget) * 100) : 0
 
   // Sinking funds progress
@@ -91,8 +92,9 @@ export async function GET(req: NextRequest) {
   const fundProgress = (funds ?? []).map(f => {
     const balance = (fundTx ?? [])
       .filter(t => t.fund_id === f.id)
-      .reduce((s, t) => s + t.amount, 0)
-    return { name: f.name, balance, target: f.yearly_target, pct: f.yearly_target > 0 ? Math.round((balance / f.yearly_target) * 100) : 0 }
+      .reduce((s, t) => s + Number(t.amount), 0)
+    const target = Number(f.yearly_target)
+    return { name: f.name, balance, target, pct: target > 0 ? Math.round((balance / target) * 100) : 0 }
   })
 
   // Period info

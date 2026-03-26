@@ -44,10 +44,15 @@ export function useMortgages(userId: string | undefined, familyId: string | unde
     enabled: !!userId,
     queryFn: async () => {
       const sb = createClient()
-      const { data, error } = await sb
+      let query = sb
         .from('mortgages')
         .select('*, mortgage_tracks(*)')
-        .order('created_at')
+      if (familyId) {
+        query = query.or(`user_id.eq.${userId},family_id.eq.${familyId}`)
+      } else {
+        query = query.eq('user_id', userId!)
+      }
+      const { data, error } = await query.order('created_at')
       if (error) throw error
       return (data ?? []).map(m => ({
         ...m,

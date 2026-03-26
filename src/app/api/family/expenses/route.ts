@@ -29,6 +29,18 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'no family found' }, { status: 404 })
   }
 
+  // Validate all requested memberIds belong to caller's family
+  const { data: familyMembers } = await sb
+    .from('family_members')
+    .select('user_id')
+    .eq('family_id', membership.family_id)
+
+  const validMemberIds = new Set((familyMembers ?? []).map(m => m.user_id))
+  const invalidIds = memberIds.filter(id => !validMemberIds.has(id))
+  if (invalidIds.length > 0) {
+    return NextResponse.json({ error: 'unauthorized member_ids' }, { status: 403 })
+  }
+
   // Get display names
   const { data: profiles } = await sb
     .from('profiles')
@@ -48,7 +60,7 @@ export async function GET(req: NextRequest) {
   // Group by user
   const result = memberIds.map(uid => {
     const userExpenses = (expenseRows ?? []).filter(e => e.user_id === uid)
-    const total = userExpenses.reduce((s, e) => s + e.amount, 0)
+    const total = userExpenses.reduce((s, e) => s + Number(e.amount), 0)
     return {
       user_id: uid,
       display_name: profileMap.get(uid) ?? 'חבר/ת משפחה',

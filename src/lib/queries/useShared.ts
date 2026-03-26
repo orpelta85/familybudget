@@ -5,9 +5,11 @@ import type { SharedExpense } from '@/lib/types'
 export function useDeleteSharedExpense() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ id, period_id }: { id: number; period_id: number }) => {
+    mutationFn: async ({ id, period_id, family_id }: { id: number; period_id: number; family_id?: string }) => {
       const sb = createClient()
-      const { error } = await sb.from('shared_expenses').delete().eq('id', id)
+      let query = sb.from('shared_expenses').delete().eq('id', id)
+      if (family_id) query = query.eq('family_id', family_id)
+      const { error } = await query
       if (error) throw error
       return period_id
     },
@@ -18,9 +20,11 @@ export function useDeleteSharedExpense() {
 export function useDeleteAllPeriodSharedExpenses() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (period_id: number) => {
+    mutationFn: async ({ period_id, family_id }: { period_id: number; family_id?: string }) => {
       const sb = createClient()
-      const { error } = await sb.from('shared_expenses').delete().eq('period_id', period_id)
+      let query = sb.from('shared_expenses').delete().eq('period_id', period_id)
+      if (family_id) query = query.eq('family_id', family_id)
+      const { error } = await query
       if (error) throw error
       return period_id
     },
@@ -91,9 +95,11 @@ export function usePaginatedSharedExpenses(
 export function useUpdateSharedExpense() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ id, period_id, category, total_amount, notes }: { id: number; period_id: number; category: string; total_amount: number; notes?: string }) => {
+    mutationFn: async ({ id, period_id, category, total_amount, notes, family_id }: { id: number; period_id: number; category: string; total_amount: number; notes?: string; family_id?: string }) => {
       const sb = createClient()
-      const { error } = await sb.from('shared_expenses').update({ category, total_amount, notes }).eq('id', id)
+      let query = sb.from('shared_expenses').update({ category, total_amount, notes }).eq('id', id)
+      if (family_id) query = query.eq('family_id', family_id)
+      const { error } = await query
       if (error) throw error
       return period_id
     },

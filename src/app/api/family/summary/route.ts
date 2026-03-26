@@ -56,7 +56,7 @@ export async function GET(req: NextRequest) {
     .in('user_id', memberIds)
 
   const incomeMap = new Map(
-    (incomeRows ?? []).map(i => [i.user_id, i.salary + i.bonus + i.other])
+    (incomeRows ?? []).map(i => [i.user_id, Number(i.salary) + Number(i.bonus) + Number(i.other)])
   )
 
   // Get personal expenses for all members in this period
@@ -68,7 +68,7 @@ export async function GET(req: NextRequest) {
 
   const expenseMap = new Map<string, number>()
   for (const e of expenseRows ?? []) {
-    expenseMap.set(e.user_id, (expenseMap.get(e.user_id) ?? 0) + e.amount)
+    expenseMap.set(e.user_id, (expenseMap.get(e.user_id) ?? 0) + Number(e.amount))
   }
 
   // Get shared expenses for this family in this period
@@ -78,7 +78,7 @@ export async function GET(req: NextRequest) {
     .eq('family_id', membership.family_id)
     .eq('period_id', Number(periodId))
 
-  const totalSharedExpenses = (sharedRows ?? []).reduce((s, e) => s + e.total_amount, 0)
+  const totalSharedExpenses = (sharedRows ?? []).reduce((s, e) => s + Number(e.total_amount), 0)
 
   // Build per-member data
   let totalIncome = 0

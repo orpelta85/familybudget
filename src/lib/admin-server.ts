@@ -1,7 +1,6 @@
 import { getAuthUser } from '@/lib/supabase/auth'
 import { NextResponse } from 'next/server'
-
-const ADMIN_EMAIL = 'orpelta85@gmail.com'
+import { ADMIN_EMAIL } from '@/lib/constants'
 
 export async function requireAdmin() {
   const user = await getAuthUser()

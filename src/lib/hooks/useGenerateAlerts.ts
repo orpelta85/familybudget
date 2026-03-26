@@ -48,14 +48,14 @@ export function useAlertGeneration(
     // Spending by category
     const spendByCat: Record<number, number> = {}
     for (const e of expenses) {
-      spendByCat[e.category_id] = (spendByCat[e.category_id] ?? 0) + e.amount
+      spendByCat[e.category_id] = (spendByCat[e.category_id] ?? 0) + Number(e.amount)
     }
 
     // 1. Category overspend (>130%)
     for (const cat of categories) {
-      if (cat.monthly_target <= 0) continue
+      if (Number(cat.monthly_target) <= 0) continue
       const spent = spendByCat[cat.id] ?? 0
-      const pct = spent / cat.monthly_target
+      const pct = spent / Number(cat.monthly_target)
       if (pct > 1.3) {
         const overPct = Math.round((pct - 1) * 100)
         alerts.push({
@@ -63,15 +63,15 @@ export function useAlertGeneration(
           type: `category_overspend_${cat.id}`,
           severity: 'warning',
           title: `חריגה ב${cat.name}`,
-          message: `הוצאת ${overPct}% יותר על ${cat.name} (${formatCurrency(spent)} מתוך תקציב ${formatCurrency(cat.monthly_target)})`,
+          message: `הוצאת ${overPct}% יותר על ${cat.name} (${formatCurrency(spent)} מתוך תקציב ${formatCurrency(Number(cat.monthly_target))})`,
         })
         if (alerts.length >= 8) break
       }
     }
 
     // 2. Low balance forecast (negative net flow)
-    const totalIncome = (income?.salary ?? 0) + (income?.bonus ?? 0) + (income?.other ?? 0)
-    const totalExpenses = expenses.reduce((s, e) => s + e.amount, 0)
+    const totalIncome = Number(income?.salary ?? 0) + Number(income?.bonus ?? 0) + Number(income?.other ?? 0)
+    const totalExpenses = expenses.reduce((s, e) => s + Number(e.amount), 0)
     const netFlow = totalIncome - totalExpenses
 
     if (netFlow < 0 && alerts.length < 8) {
@@ -87,14 +87,14 @@ export function useAlertGeneration(
     // 3. Goal achieved
     if (goals && goalDeposits && alerts.length < 8) {
       for (const goal of goals) {
-        const saved = goalDeposits.filter(d => d.goal_id === goal.id).reduce((s, d) => s + d.amount_deposited, 0)
-        if (saved >= goal.target_amount && goal.target_amount > 0) {
+        const saved = goalDeposits.filter(d => d.goal_id === goal.id).reduce((s, d) => s + Number(d.amount_deposited), 0)
+        if (saved >= Number(goal.target_amount) && Number(goal.target_amount) > 0) {
           alerts.push({
             user_id: userId,
             type: `goal_achieved_${goal.id}`,
             severity: 'success',
             title: `הגעת ליעד ${goal.name}!`,
-            message: `מזל טוב! צברת ${formatCurrency(saved)} מתוך יעד ${formatCurrency(goal.target_amount)}`,
+            message: `מזל טוב! צברת ${formatCurrency(saved)} מתוך יעד ${formatCurrency(Number(goal.target_amount))}`,
           })
           if (alerts.length >= 8) break
         }
@@ -115,7 +115,7 @@ export function useAlertGeneration(
 
     // 5. Subscription cost > 500
     const activeSubs = (subs ?? []).filter(s => s.is_active)
-    const subTotal = activeSubs.reduce((s, sub) => s + sub.amount, 0)
+    const subTotal = activeSubs.reduce((s, sub) => s + Number(sub.amount), 0)
     if (subTotal > 500 && alerts.length < 8) {
       alerts.push({
         user_id: userId,
@@ -130,7 +130,7 @@ export function useAlertGeneration(
     if (prevPeriodId && allExpenses && alerts.length < 8) {
       const prevSpendByCat: Record<number, number> = {}
       for (const e of allExpenses.filter(ex => ex.period_id === prevPeriodId)) {
-        prevSpendByCat[e.category_id] = (prevSpendByCat[e.category_id] ?? 0) + e.amount
+        prevSpendByCat[e.category_id] = (prevSpendByCat[e.category_id] ?? 0) + Number(e.amount)
       }
       for (const cat of categories) {
         if (alerts.length >= 8) break
@@ -153,15 +153,15 @@ export function useAlertGeneration(
     if (goals && goalDeposits && alerts.length < 8) {
       for (const goal of goals) {
         if (alerts.length >= 8) break
-        const saved = goalDeposits.filter(d => d.goal_id === goal.id).reduce((s, d) => s + d.amount_deposited, 0)
-        const pct = goal.target_amount > 0 ? saved / goal.target_amount : 0
+        const saved = goalDeposits.filter(d => d.goal_id === goal.id).reduce((s, d) => s + Number(d.amount_deposited), 0)
+        const pct = Number(goal.target_amount) > 0 ? saved / Number(goal.target_amount) : 0
         if (pct >= 0.8 && pct < 1) {
           alerts.push({
             user_id: userId,
             type: `goal_close_${goal.id}`,
             severity: 'success',
             title: 'יעד חיסכון קרוב להשגה',
-            message: `${goal.name} — ${Math.round(pct * 100)}% הושלם! נשאר ${formatCurrency(goal.target_amount - saved)}`,
+            message: `${goal.name} — ${Math.round(pct * 100)}% הושלם! נשאר ${formatCurrency(Number(goal.target_amount) - saved)}`,
           })
         }
       }
@@ -170,9 +170,9 @@ export function useAlertGeneration(
     // 8. Household bills higher than usual
     if (shared && allExpenses && alerts.length < 8) {
       const householdCats = ['electricity', 'household', 'property_tax', 'water_gas', 'building_committee']
-      const householdThis = shared.filter(s => householdCats.includes(s.category)).reduce((sum, s) => sum + (s.my_share ?? s.total_amount * splitFrac), 0)
+      const householdThis = shared.filter(s => householdCats.includes(s.category)).reduce((sum, s) => sum + (Number(s.my_share) || Number(s.total_amount) * splitFrac), 0)
       if (householdThis > 0 && prevPeriodId) {
-        const prevHousehold = shared.reduce((s, e) => householdCats.includes(e.category) ? s + (e.my_share ?? e.total_amount * splitFrac) : s, 0)
+        const prevHousehold = shared.reduce((s, e) => householdCats.includes(e.category) ? s + (Number(e.my_share) || Number(e.total_amount) * splitFrac) : s, 0)
         if (prevHousehold > 0 && householdThis > prevHousehold * 1.3) {
           alerts.push({
             user_id: userId,

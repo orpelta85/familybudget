@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getAuthUser } from '@/lib/supabase/auth'
 
 const SYSTEM_PROMPT = `You are אורן (Oren), a friendly Israeli financial advisor for the Family Plan app.
 You speak Hebrew. You are warm, supportive, and practical.
@@ -30,7 +31,13 @@ function checkFreeLimit(userId: string): boolean {
 
 export async function POST(request: NextRequest) {
   try {
-    const { message, context, apiKey, history, userId } = await request.json()
+    const authUser = await getAuthUser()
+    if (!authUser) {
+      return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+    }
+
+    const { message, context, apiKey, history } = await request.json()
+    const userId = authUser.id
 
     if (!message) {
       return NextResponse.json({ error: 'Missing message' }, { status: 400 })

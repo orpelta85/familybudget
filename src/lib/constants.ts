@@ -1,3 +1,6 @@
+/** Admin email — single source of truth */
+export const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'orpelta85@gmail.com'
+
 /** Monthly deposit target for the apartment fund */
 export const APARTMENT_MONTHLY_DEPOSIT = 3500
 

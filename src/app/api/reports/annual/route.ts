@@ -46,18 +46,18 @@ export async function GET(req: NextRequest) {
 
   // Fetch income
   const { data: incomeData } = await sb.from('income').select('*').eq('user_id', authUser.id).in('period_id', periodIds)
-  const totalIncome = (incomeData ?? []).reduce((s, i) => s + i.salary + i.bonus + i.other, 0)
+  const totalIncome = (incomeData ?? []).reduce((s, i) => s + Number(i.salary) + Number(i.bonus) + Number(i.other), 0)
   const avgMonthlyIncome = periodIds.length > 0 ? totalIncome / periodIds.length : 0
 
   // Fetch personal expenses
   const { data: expenseData } = await sb.from('personal_expenses').select('*, budget_categories(name)').eq('user_id', authUser.id).in('period_id', periodIds)
-  const totalExpenses = (expenseData ?? []).reduce((s, e) => s + e.amount, 0)
+  const totalExpenses = (expenseData ?? []).reduce((s, e) => s + Number(e.amount), 0)
 
   // Fetch shared expenses
   let totalShared = 0
   if (familyId) {
     const { data: sharedData } = await sb.from('shared_expenses').select('*').eq('family_id', familyId).in('period_id', periodIds)
-    totalShared = (sharedData ?? []).reduce((s, e) => s + (e.my_share ?? e.total_amount * 0.5), 0)
+    totalShared = (sharedData ?? []).reduce((s, e) => s + (Number(e.my_share) || Number(e.total_amount) * 0.5), 0)
   }
 
   const totalAllExpenses = totalExpenses + totalShared
@@ -68,8 +68,8 @@ export async function GET(req: NextRequest) {
   const monthlyData = (periods ?? []).map(p => {
     const income = (incomeData ?? []).filter(i => i.period_id === p.id)
     const expenses = (expenseData ?? []).filter(e => e.period_id === p.id)
-    const monthIncome = income.reduce((s, i) => s + i.salary + i.bonus + i.other, 0)
-    const monthExpenses = expenses.reduce((s, e) => s + e.amount, 0)
+    const monthIncome = income.reduce((s, i) => s + Number(i.salary) + Number(i.bonus) + Number(i.other), 0)
+    const monthExpenses = expenses.reduce((s, e) => s + Number(e.amount), 0)
     return {
       label: p.label,
       income: monthIncome,
@@ -82,7 +82,7 @@ export async function GET(req: NextRequest) {
   const catMap: Record<string, number> = {}
   for (const e of (expenseData ?? [])) {
     const name = e.budget_categories?.name ?? 'אחר'
-    catMap[name] = (catMap[name] ?? 0) + e.amount
+    catMap[name] = (catMap[name] ?? 0) + Number(e.amount)
   }
   const categoryBreakdown = Object.entries(catMap).sort((a, b) => b[1] - a[1])
   const topCategories = categoryBreakdown.slice(0, 5)
@@ -97,9 +97,9 @@ export async function GET(req: NextRequest) {
   let surpriseCategory: { name: string; overAmount: number } | null = null
   if (categories) {
     for (const cat of categories) {
-      if (cat.monthly_target <= 0) continue
+      if (Number(cat.monthly_target) <= 0) continue
       const spent = catMap[cat.name] ?? 0
-      const budgetTotal = cat.monthly_target * periodIds.length
+      const budgetTotal = Number(cat.monthly_target) * periodIds.length
       const over = spent - budgetTotal
       if (over > 0 && (!surpriseCategory || over > surpriseCategory.overAmount)) {
         surpriseCategory = { name: cat.name, overAmount: over }
@@ -113,8 +113,8 @@ export async function GET(req: NextRequest) {
   if (goalsData) {
     for (const g of goalsData) {
       const { data: deposits } = await sb.from('goal_deposits').select('amount_deposited').eq('goal_id', g.id)
-      const deposited = (deposits ?? []).reduce((s, d) => s + d.amount_deposited, 0)
-      goals.push({ name: g.name, target: g.target_amount, deposited, pct: g.target_amount > 0 ? Math.round((deposited / g.target_amount) * 100) : 0 })
+      const deposited = (deposits ?? []).reduce((s, d) => s + Number(d.amount_deposited), 0)
+      goals.push({ name: g.name, target: Number(g.target_amount), deposited, pct: Number(g.target_amount) > 0 ? Math.round((deposited / Number(g.target_amount)) * 100) : 0 })
     }
   }
 
@@ -124,8 +124,8 @@ export async function GET(req: NextRequest) {
   if (fundsData) {
     for (const f of fundsData) {
       const { data: txns } = await sb.from('sinking_fund_transactions').select('amount').eq('fund_id', f.id)
-      const balance = (txns ?? []).reduce((s, t) => s + t.amount, 0)
-      sinkingFunds.push({ name: f.name, target: f.yearly_target, balance })
+      const balance = (txns ?? []).reduce((s, t) => s + Number(t.amount), 0)
+      sinkingFunds.push({ name: f.name, target: Number(f.yearly_target), balance })
     }
   }
 

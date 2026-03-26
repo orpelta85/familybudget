@@ -1,6 +1,8 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'orpelta85@gmail.com'
+
 const publicPaths = ['/login', '/auth/callback', '/setup', '/reset-password']
 
 function isPublicPath(pathname: string) {
@@ -51,7 +53,7 @@ export async function middleware(request: NextRequest) {
 
   // Admin routes — only owner can access
   if (pathname.startsWith('/admin')) {
-    if (!user || user.email !== 'orpelta85@gmail.com') {
+    if (!user || user.email !== ADMIN_EMAIL) {
       const url = request.nextUrl.clone()
       url.pathname = '/'
       return NextResponse.redirect(url)

@@ -178,7 +178,7 @@ export default function ExpensesPage() {
   async function handleDeleteShared(id: number) {
     if (!(await confirm({ message: 'למחוק את ההוצאה?' }))) return
     try {
-      await deleteShared.mutateAsync({ id, period_id: selectedPeriodId! })
+      await deleteShared.mutateAsync({ id, period_id: selectedPeriodId!, family_id: familyId })
       toast.success('נמחק')
     } catch (e) { console.error('Delete shared expense:', e); toast.error('שגיאה במחיקה') }
   }
