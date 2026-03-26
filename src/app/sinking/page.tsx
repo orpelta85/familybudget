@@ -165,7 +165,7 @@ export default function SinkingPage() {
       <div className="flex justify-between items-start mb-1.5">
         <div className="flex items-center gap-2">
           <Target size={18} className="text-[var(--accent-teal)]" />
-          <h1 className="text-xl font-bold tracking-tight">קרנות שנתיות</h1>
+          <h1 className="text-xl font-bold tracking-tight">קרנות צבירה</h1>
           <PageInfo {...PAGE_TIPS.sinking} />
         </div>
         <div className="flex gap-2">

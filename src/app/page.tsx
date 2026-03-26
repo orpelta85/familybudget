@@ -26,6 +26,7 @@ import { Wallet, Receipt, TrendingUp, PiggyBank, Target, AlertTriangle, Calendar
 import { PageInfo } from '@/components/ui/PageInfo'
 import { InfoTooltip } from '@/components/ui/InfoTooltip'
 import { PAGE_TIPS } from '@/lib/page-tips'
+import { sharedCatLabel } from '@/components/expenses/SharedExpenseList'
 import dynamic from 'next/dynamic'
 import { DashboardSkeleton, ChartSkeleton } from '@/components/ui/Skeleton'
 
@@ -508,7 +509,7 @@ export default function Dashboard() {
                                       {deviation > 0 ? `↑${deviation}%` : `↓${Math.abs(deviation)}%`}
                                     </span>
                                   )}
-                                  <span className="font-semibold" style={{ color: barColor }}>{pctDisplay}%</span>
+                                  <span className="font-semibold" style={{ color: barColor }}>{pctDisplay > 200 ? '200%+' : `${pctDisplay}%`}</span>
                                 </div>
                               </div>
                               <div className="bar-track">
@@ -808,7 +809,7 @@ function FamilyDashboard({
             <div className="flex flex-col gap-1.5 text-xs">
               {(shared ?? []).map(s => (
                 <div key={s.id} className="flex justify-between">
-                  <span className="text-text-secondary">{s.category}</span>
+                  <span className="text-text-secondary">{sharedCatLabel(s.category)}</span>
                   <span className="text-text-body">{formatCurrency(s.total_amount)}</span>
                 </div>
               ))}

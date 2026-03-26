@@ -749,6 +749,10 @@ html { scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track); scrollbar
   border: 1px solid var(--border-default);
   border-radius: 12px;
   padding: 20px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.card:hover {
+  border-color: var(--card-hover-border);
 }
 
 /* Card header text */
@@ -822,6 +826,10 @@ html { scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track); scrollbar
   border: 1px solid var(--border-default);
   border-radius: 12px;
   padding: 20px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.kpi-card:hover {
+  border-color: var(--card-hover-border);
 }
 .kpi-card .kpi-label {
   font-size: 11px;
@@ -863,6 +871,12 @@ html { scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track); scrollbar
 /* Row divider */
 .row-divider {
   border-bottom: 1px solid var(--bg-divider);
+  transition: background-color 0.15s ease;
+  border-radius: 6px;
+  padding-inline: 6px;
+}
+.row-divider:hover {
+  background: var(--bg-hover);
 }
 
 /* Toast theme override */
