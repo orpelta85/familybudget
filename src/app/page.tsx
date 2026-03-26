@@ -807,10 +807,15 @@ function FamilyDashboard({
           </div>
           {(shared ?? []).length > 0 && (
             <div className="flex flex-col gap-1.5 text-xs">
-              {(shared ?? []).map(s => (
-                <div key={s.id} className="flex justify-between">
-                  <span className="text-text-secondary">{sharedCatLabel(s.category)}</span>
-                  <span className="text-text-body">{formatCurrency(s.total_amount)}</span>
+              {Object.entries(
+                (shared ?? []).reduce<Record<string, number>>((acc, s) => {
+                  acc[s.category] = (acc[s.category] ?? 0) + Number(s.total_amount)
+                  return acc
+                }, {})
+              ).map(([cat, total]) => (
+                <div key={cat} className="flex justify-between">
+                  <span className="text-text-secondary">{sharedCatLabel(cat)}</span>
+                  <span className="text-text-body">{formatCurrency(total)}</span>
                 </div>
               ))}
             </div>

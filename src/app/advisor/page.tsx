@@ -77,26 +77,29 @@ export default function AdvisorPage() {
       ? recentIncome.reduce((s, i) => s + i.salary + i.bonus + i.other, 0) / recentIncome.length
       : 0
 
-    // Analyze expenses by category
+    // Analyze expenses by category — track unique periods for proper monthly average
     const recentExpenses = allExpenses?.slice(-100) ?? []
-    const catSpend: Record<number, { name: string; total: number; count: number }> = {}
+    const catSpend: Record<number, { name: string; total: number; periods: Set<number> }> = {}
     for (const e of recentExpenses) {
       const cat = categories?.find(c => c.id === e.category_id)
       if (!cat) continue
-      if (!catSpend[cat.id]) catSpend[cat.id] = { name: cat.name, total: 0, count: 0 }
+      if (!catSpend[cat.id]) catSpend[cat.id] = { name: cat.name, total: 0, periods: new Set() }
       catSpend[cat.id].total += e.amount
-      catSpend[cat.id].count++
+      catSpend[cat.id].periods.add(e.period_id)
     }
 
-    // Budget utilization
+    // Budget utilization — compare average monthly spend (strictly greater) to target
     const overBudgetCats = (categories ?? []).filter(cat => {
-      const spent = catSpend[cat.id]?.total ?? 0
-      return cat.monthly_target > 0 && spent > cat.monthly_target * 3 // 3 months
+      const info = catSpend[cat.id]
+      if (!info || cat.monthly_target <= 0) return false
+      const months = Math.max(1, info.periods.size)
+      const avgMonth = info.total / months
+      return avgMonth > cat.monthly_target
     })
     for (const cat of overBudgetCats) {
-      const spent = catSpend[cat.id]?.total ?? 0
-      const months = Math.max(1, catSpend[cat.id]?.count ?? 1)
-      const avgMonth = spent / months
+      const info = catSpend[cat.id]
+      const months = Math.max(1, info.periods.size)
+      const avgMonth = info.total / months
       newTips.push({
         icon: 'alert',
         title: `חריגה ב${cat.name}`,

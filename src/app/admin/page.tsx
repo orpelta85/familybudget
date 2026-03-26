@@ -80,9 +80,15 @@ function useAdminUsers() {
     queryKey: ['admin', 'users'],
     queryFn: async () => {
       const res = await fetch('/api/admin/users')
-      if (!res.ok) throw new Error('Failed to load users')
-      return res.json()
+      if (!res.ok) {
+        console.error('Admin users fetch failed:', res.status, res.statusText)
+        throw new Error('Failed to load users')
+      }
+      const data = await res.json()
+      if (data?.error) throw new Error(data.error)
+      return data
     },
+    retry: 2,
   })
 }
 
@@ -201,7 +207,7 @@ function exportUsersCSV(users: AdminUser[]) {
 // ─── Component ─────────────────────────────────────────────
 export default function AdminPage() {
   const { data: stats, isLoading: statsLoading } = useAdminStats()
-  const { data: users, isLoading: usersLoading } = useAdminUsers()
+  const { data: users, isLoading: usersLoading, error: usersError } = useAdminUsers()
   const { data: activity } = useAdminActivity()
   const changePlan = useChangePlan()
   const blockUser = useBlockUser()
@@ -529,7 +535,9 @@ export default function AdminPage() {
             </tbody>
           </table>
           {filteredUsers.length === 0 && (
-            <div className="text-center py-8 text-[var(--c-0-45)] text-[13px]">לא נמצאו משתמשים</div>
+            <div className="text-center py-8 text-[var(--c-0-45)] text-[13px]">
+              {usersError ? `שגיאה בטעינת משתמשים: ${usersError.message}` : 'לא נמצאו משתמשים'}
+            </div>
           )}
         </div>
       </div>
