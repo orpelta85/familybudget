@@ -14,8 +14,8 @@ import { PAGE_TIPS } from '@/lib/page-tips'
 import { toast } from 'sonner'
 import dynamic from 'next/dynamic'
 import { ChartSkeleton } from '@/components/ui/Skeleton'
-import { createClient } from '@/lib/supabase/client'
 import { useUser } from '@/lib/queries/useUser'
+import { useImpersonation } from '@/lib/context/ImpersonationContext'
 
 const AdminGrowthChart = dynamic(
   () => import('@/components/dashboard/AdminGrowthChart').then(m => ({ default: m.AdminGrowthChart })),
@@ -145,13 +145,13 @@ function useBlockUser() {
 
 // ─── Test Families for Impersonation ──────────────────────
 const TEST_FAMILIES = [
-  { name: 'משפחת כהן', desc: 'ממוצעת, 4 נפשות, 25K', email: 'avi.cohen@test.com', color: '250' },
-  { name: 'משפחת לוי', desc: 'בגירעון, 5 נפשות, 18K', email: 'dani.levi@test.com', color: '27' },
-  { name: 'עמית זהבי', desc: 'רווק חוסך, 16K', email: 'amit.zahavi@test.com', color: '145' },
-  { name: 'משפחת רחמים', desc: 'מוציאים מעל ההכנסה, 20K', email: 'moshe.rachamim@test.com', color: '330' },
-  { name: 'משפחת ביטון', desc: 'חוסכים לדירה, 22K', email: 'yonatan.biton@test.com', color: '80' },
-  { name: 'משפחת שרון', desc: 'גדולה מסודרת, 6 נפשות, 31K', email: 'gilad.sharon@test.com', color: '200' },
-  { name: 'משפחת אדלר', desc: 'גמלאים, דירה בבעלות, 16K', email: 'yaakov.adler@test.com', color: '55' },
+  { name: 'משפחת כהן', desc: 'ממוצעת, 4 נפשות, 25K', userId: 'a1000001-0000-0000-0000-000000000001', familyId: 'f2000000-0000-0000-0000-000000000001', color: '250' },
+  { name: 'משפחת לוי', desc: 'בגירעון, 5 נפשות, 18K', userId: 'a2000001-0000-0000-0000-000000000001', familyId: 'f3000000-0000-0000-0000-000000000001', color: '27' },
+  { name: 'עמית זהבי', desc: 'רווק חוסך, 16K', userId: 'a3000001-0000-0000-0000-000000000001', familyId: 'f4000000-0000-0000-0000-000000000001', color: '145' },
+  { name: 'משפחת רחמים', desc: 'מוציאים מעל ההכנסה, 20K', userId: 'a4000001-0000-0000-0000-000000000001', familyId: 'f5000000-0000-0000-0000-000000000001', color: '330' },
+  { name: 'משפחת ביטון', desc: 'חוסכים לדירה, 22K', userId: 'a5000001-0000-0000-0000-000000000001', familyId: 'f6000000-0000-0000-0000-000000000001', color: '80' },
+  { name: 'משפחת שרון', desc: 'גדולה מסודרת, 6 נפשות, 31K', userId: 'a6000001-0000-0000-0000-000000000001', familyId: 'f7000000-0000-0000-0000-000000000001', color: '200' },
+  { name: 'משפחת אדלר', desc: 'גמלאים, דירה בבעלות, 16K', userId: 'a7000001-0000-0000-0000-000000000001', familyId: 'f8000000-0000-0000-0000-000000000001', color: '55' },
 ]
 
 // ─── Helpers ───────────────────────────────────────────────
@@ -211,6 +211,7 @@ export default function AdminPage() {
   const { data: activity } = useAdminActivity()
   const changePlan = useChangePlan()
   const blockUser = useBlockUser()
+  const { startImpersonation } = useImpersonation()
 
   const [search, setSearch] = useState('')
   const [planFilter, setPlanFilter] = useState<string>('all')
@@ -584,29 +585,15 @@ export default function AdminPage() {
       {/* ─── Section 6: Test Families (Impersonation) ─── */}
       <div className="bg-[var(--c-0-14)] border border-[var(--bg-hover)] rounded-xl p-4 mb-6">
         <h2 className="text-[14px] font-semibold text-[var(--text-body)] mb-1">משפחות לדוגמה</h2>
-        <p className="text-[11px] text-[var(--c-0-45)] mb-4">התחבר כמשפחת בדיקה כדי לראות איך האפליקציה נראית עם נתונים שונים. הזן את סיסמת הבדיקה ידנית.</p>
+        <p className="text-[11px] text-[var(--c-0-45)] mb-4">צפה כמשפחת בדיקה כדי לראות איך האפליקציה נראית עם נתונים שונים.</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
           {TEST_FAMILIES.map(fam => (
             <button
-              key={fam.email}
-              onClick={async () => {
-                const pw = prompt('הזן סיסמת בדיקה:')
-                if (!pw) return
-                const sb = createClient()
-                const { data: { user: currentUser } } = await sb.auth.getUser()
-                if (currentUser?.email) {
-                  localStorage.setItem('admin_original_email', currentUser.email)
-                }
-                const { error } = await sb.auth.signInWithPassword({
-                  email: fam.email,
-                  password: pw,
-                })
-                if (error) {
-                  toast.error(`שגיאה בהתחברות: ${error.message}`)
-                } else {
-                  toast.success(`מחובר כ: ${fam.name}`)
-                  window.location.href = '/'
-                }
+              key={fam.userId}
+              onClick={() => {
+                startImpersonation(fam.userId, fam.familyId, fam.name)
+                toast.success(`צופה כ: ${fam.name}`)
+                window.location.href = '/'
               }}
               className={cn(
                 'flex flex-col items-start gap-1.5 p-3 rounded-xl border cursor-pointer transition-all text-right',

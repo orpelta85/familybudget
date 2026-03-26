@@ -2,6 +2,7 @@
 import { createContext, useContext } from 'react'
 import { useFamily } from '@/lib/queries/useFamily'
 import { useUser } from '@/lib/queries/useUser'
+import { useImpersonation } from '@/lib/context/ImpersonationContext'
 import type { Family, FamilyMember } from '@/lib/types'
 
 interface FamilyContextValue {
@@ -24,6 +25,7 @@ const Ctx = createContext<FamilyContextValue>({
 
 export function FamilyProvider({ children }: { children: React.ReactNode }) {
   const { user } = useUser()
+  const { impersonation } = useImpersonation()
   const { data, isLoading } = useFamily(user?.id)
 
   const family = data?.family ?? null
@@ -31,10 +33,13 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
   const myMembership = members.find(m => m.user_id === user?.id) ?? null
   const isAdmin = myMembership?.role === 'admin'
 
+  // When impersonating, override familyId from the impersonation context
+  const effectiveFamilyId = impersonation ? impersonation.familyId : family?.id
+
   return (
     <Ctx.Provider value={{
       family,
-      familyId: family?.id,
+      familyId: effectiveFamilyId,
       members,
       myMembership,
       isAdmin,

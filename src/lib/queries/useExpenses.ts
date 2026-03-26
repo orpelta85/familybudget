@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
+import { withImpersonation } from '@/lib/impersonate-client'
 import type { PersonalExpense, BudgetCategory } from '@/lib/types'
 
 export function usePersonalExpenses(periodId: number | undefined, userId: string | undefined) {
@@ -84,7 +85,7 @@ export function useFamilyPersonalExpenses(periodId: number | undefined, memberId
     queryKey: ['family_personal_expenses', periodId, memberIds],
     enabled: !!periodId && memberIds.length > 0 && enabled,
     queryFn: async () => {
-      const res = await fetch(`/api/family/expenses?period_id=${periodId}&member_ids=${memberIds.join(',')}`)
+      const res = await fetch(withImpersonation(`/api/family/expenses?period_id=${periodId}&member_ids=${memberIds.join(',')}`))
       if (!res.ok) throw new Error('Failed to fetch family expenses')
       return res.json()
     },

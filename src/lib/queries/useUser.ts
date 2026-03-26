@@ -4,11 +4,13 @@ import { useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import type { User } from '@supabase/supabase-js'
 import { createClient } from '@/lib/supabase/client'
+import { useImpersonation } from '@/lib/context/ImpersonationContext'
 
 export function useUser() {
   const qc = useQueryClient()
+  const { impersonation } = useImpersonation()
 
-  const { data: user = null, isLoading: loading } = useQuery<User | null>({
+  const { data: realUser = null, isLoading: loading } = useQuery<User | null>({
     queryKey: ['user'],
     queryFn: async () => {
       const sb = createClient()
@@ -26,5 +28,16 @@ export function useUser() {
     return () => subscription.unsubscribe()
   }, [qc])
 
-  return { user, loading }
+  // When impersonating, return a fake User object with the impersonated userId
+  if (impersonation) {
+    const fakeUser = {
+      id: impersonation.userId,
+      email: `${impersonation.name}@test.impersonation`,
+      user_metadata: { name: impersonation.name },
+    } as unknown as User
+
+    return { user: fakeUser, loading: false, realUser }
+  }
+
+  return { user: realUser, loading, realUser }
 }

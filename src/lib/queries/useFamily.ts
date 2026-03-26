@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
+import { withImpersonation } from '@/lib/impersonate-client'
 import type { Family, FamilyMember } from '@/lib/types'
 
 export interface FamilyMemberProfile {
@@ -55,7 +56,7 @@ export function useFamilySummary(periodId: number | undefined, enabled: boolean)
     queryKey: ['family_summary', periodId],
     enabled: !!periodId && enabled,
     queryFn: async () => {
-      const res = await fetch(`/api/family/summary?period_id=${periodId}`)
+      const res = await fetch(withImpersonation(`/api/family/summary?period_id=${periodId}`))
       if (!res.ok) throw new Error('Failed to fetch family summary')
       return res.json()
     },

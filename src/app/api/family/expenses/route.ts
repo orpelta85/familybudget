@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
-import { getAuthUser } from '@/lib/supabase/auth'
+import { getEffectiveUserId } from '@/lib/impersonate-server'
 
 export async function GET(req: NextRequest) {
-  const authUser = await getAuthUser()
-  if (!authUser) {
+  const effective = await getEffectiveUserId(req)
+  if (!effective) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
   }
 
@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
   const { data: membership } = await sb
     .from('family_members')
     .select('family_id')
-    .eq('user_id', authUser.id)
+    .eq('user_id', effective.userId)
     .limit(1)
     .maybeSingle()
 
