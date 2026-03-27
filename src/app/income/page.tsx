@@ -232,7 +232,7 @@ export default function IncomePage() {
                   value={field.val}
                   onChange={e => field.set(e.target.value)}
                   placeholder={field.placeholder}
-                  className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg py-2.5 pr-3 pl-10 text-inherit text-[15px] text-right" style={{ direction: 'ltr' }}
+                  className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg py-2.5 pr-9 pl-3 text-inherit text-[15px] text-right" style={{ direction: 'ltr' }}
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)] text-[13px]">₪</span>
               </div>

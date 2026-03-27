@@ -11,11 +11,13 @@ export async function GET(req: NextRequest) {
   if (error) return error
 
   try {
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      return NextResponse.json({ error: 'Service role key not configured' }, { status: 500 })
+    }
     const sb = createServiceClient()
 
-    // Run all independent queries in parallel for speed
-    const [usersResult, profilesResult, membershipsResult, familiesResult, kidsResult, plansResult, expensesResult] = await Promise.all([
-      sb.auth.admin.listUsers({ perPage: 1000 }),
+    const [authUsersResult, profilesResult, membershipsResult, familiesResult, kidsResult, plansResult, expensesResult] = await Promise.all([
+      sb.rpc('get_auth_users' as never),
       sb.from('profiles').select('id, name'),
       sb.from('family_members').select('user_id, family_id, role'),
       sb.from('families').select('id, name, created_by'),
@@ -24,12 +26,12 @@ export async function GET(req: NextRequest) {
       sb.from('personal_expenses').select('user_id').limit(10000),
     ])
 
-    if (usersResult.error) {
-      console.error('Admin listUsers error:', usersResult.error.message)
-      return NextResponse.json({ error: 'Failed to list users' }, { status: 500 })
+    if (authUsersResult.error) {
+      console.error('Admin get_auth_users error:', authUsersResult.error.message)
+      return NextResponse.json({ error: 'Failed to list users: ' + authUsersResult.error.message }, { status: 500 })
     }
 
-    const users = usersResult.data?.users ?? []
+    const users = ((authUsersResult.data ?? []) as { id: string; email: string; created_at: string; last_sign_in_at: string | null; banned_until: string | null }[])
     const profiles = profilesResult.data ?? []
     const memberships = membershipsResult.data ?? []
     const families = familiesResult.data ?? []

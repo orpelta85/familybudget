@@ -160,7 +160,10 @@ export default function ExpensesPage() {
         const label = data.useCustomCat
           ? (data.sharedLabel.trim() || 'הוצאה משותפת')
           : (data.sharedLabel.trim() || sharedCatLabel(data.sharedCategory) || 'הוצאה משותפת')
-        await upsertShared.mutateAsync({ period_id: selectedPeriodId, category: resolvedCategory as SharedCategory, total_amount: amt, notes: label, family_id: familyId })
+        const notes = data.detailMode && data.description.trim()
+          ? `${label} - ${data.description.trim()}`
+          : label
+        await upsertShared.mutateAsync({ period_id: selectedPeriodId, category: resolvedCategory as SharedCategory, total_amount: amt, notes, family_id: familyId })
       }
       toast.success('הוצאה נוספה')
     } catch (e) { console.error('Add expense:', e); toast.error('שגיאה בהוספה') }
@@ -475,31 +478,29 @@ export default function ExpensesPage() {
   return (
     <div>
       {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <div className="flex justify-between items-start mb-5">
-        <div>
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-5">
+        <div className="min-w-0">
           <div className="flex items-center gap-2 mb-1">
             <Receipt size={18} className="text-[var(--accent-orange)]" />
             <h1 className="text-xl font-bold tracking-tight">הוצאות</h1>
             <PageInfo {...PAGE_TIPS.expenses} />
           </div>
-          <p className="text-muted-foreground text-[13px]">{selectedPeriod?.label ?? '...'}</p>
+          <p className="text-muted-foreground text-[13px] break-words">{selectedPeriod?.label ?? '...'}</p>
         </div>
-        <div className="flex items-center gap-3">
-        <div className="flex gap-2">
-          <button onClick={handleResetExpenses} className="flex items-center gap-1.5 bg-transparent border border-border rounded-lg px-3.5 py-[7px] text-muted-foreground text-xs font-medium cursor-pointer">
-            <Trash2 size={13} /> אפס הוצאות
+        <div className="flex flex-wrap gap-2">
+          <button onClick={handleResetExpenses} className="flex items-center gap-1.5 bg-transparent border border-border rounded-lg px-2.5 sm:px-3.5 py-[7px] text-muted-foreground text-xs font-medium cursor-pointer" title="אפס הוצאות">
+            <Trash2 size={13} className="shrink-0" /> <span className="hidden sm:inline-block">אפס הוצאות</span>
           </button>
-          <button onClick={handleExportExcel} className="flex items-center gap-1.5 bg-secondary border border-[var(--border-light)] rounded-lg px-3 py-[7px] text-[var(--text-body)] text-xs cursor-pointer">
-            <Download size={13} /> הורד לאקסל
+          <button onClick={handleExportExcel} className="flex items-center gap-1.5 bg-secondary border border-[var(--border-light)] rounded-lg px-2.5 sm:px-3 py-[7px] text-[var(--text-body)] text-xs cursor-pointer" title="הורד לאקסל">
+            <Download size={13} className="shrink-0" /> <span className="hidden sm:inline-block">הורד לאקסל</span>
           </button>
-          <button onClick={downloadTemplate} className="flex items-center gap-1.5 bg-secondary border border-[var(--border-light)] rounded-lg px-3 py-[7px] text-[var(--text-body)] text-xs cursor-pointer">
-            <FileSpreadsheet size={13} /> תבנית
+          <button onClick={downloadTemplate} className="flex items-center gap-1.5 bg-secondary border border-[var(--border-light)] rounded-lg px-2.5 sm:px-3 py-[7px] text-[var(--text-body)] text-xs cursor-pointer" title="תבנית">
+            <FileSpreadsheet size={13} className="shrink-0" /> <span className="hidden sm:inline-block">תבנית</span>
           </button>
-          <button onClick={() => fileRef.current?.click()} className="btn-hover flex items-center gap-1.5 bg-primary border-none rounded-lg px-3 py-[7px] text-primary-foreground text-xs font-semibold cursor-pointer">
-            <Upload size={13} /> Excel
+          <button onClick={() => fileRef.current?.click()} className="btn-hover flex items-center gap-1.5 bg-primary border-none rounded-lg px-2.5 sm:px-3 py-[7px] text-primary-foreground text-xs font-semibold cursor-pointer" title="Excel">
+            <Upload size={13} className="shrink-0" /> <span className="hidden sm:inline-block">Excel</span>
           </button>
           <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleExcelUpload} />
-        </div>
         </div>
       </div>
 

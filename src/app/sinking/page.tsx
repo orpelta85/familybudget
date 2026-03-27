@@ -180,12 +180,12 @@ export default function SinkingPage() {
           </button>
         </div>
       </div>
-      <p className="text-[var(--text-secondary)] text-[13px] mb-5">
+      <div className="text-[var(--text-secondary)] text-[13px] mb-5">
         סה&quot;כ הפרשה חודשית <InfoTooltip body="הסכום שמפרישים כל חודש לקרן. נקבע לפי היעד השנתי חלקי 12" />: <span className="inline-block font-semibold text-[var(--accent-teal)]">{formatCurrency(totalMonthly)}</span>
         <span className="mr-2 text-[var(--text-secondary)] text-xs">
           (יעד שנתי: {formatCurrency((funds ?? []).reduce((s, f) => s + (f.yearly_target || f.monthly_allocation * 12), 0))})
         </span>
-      </p>
+      </div>
 
       {/* Fund list */}
       {!funds?.length
@@ -207,7 +207,7 @@ export default function SinkingPage() {
               return (
                 <div key={fund.id} className="card-hover card-transition bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl px-[18px] py-3.5">
                   <div className="flex items-center gap-2.5">
-                    {/* Name + type */}
+                    {/* Name + type — right side in RTL (first in DOM) */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="font-semibold text-sm">{fund.name}</span>
@@ -220,21 +220,11 @@ export default function SinkingPage() {
                           {shared ? 'משותף' : 'אישי'}
                         </span>
                       </div>
-                      {/* Progress bar */}
                       {balance > 0 && (
                         <div className="mt-1.5 h-1 rounded-sm bg-[var(--bg-hover)] overflow-hidden max-w-[240px]">
                           <div className="h-full rounded-sm bg-[var(--accent-teal)] transition-[width] duration-[400ms] ease-out" style={{ width: `${Math.max(0, pct)}%` }} />
                         </div>
                       )}
-                    </div>
-
-                    {/* Amounts */}
-                    <div className="text-right shrink-0">
-                      <div className="text-base font-bold text-[var(--c-0-88)]">{formatCurrency(fund.monthly_allocation)}<span className="text-[11px] font-normal text-[var(--text-secondary)] mr-[3px]">/חודש</span></div>
-                      <div className="text-xs text-[var(--text-secondary)]">
-                        יעד שנתי: {formatCurrency(totalAnnual)}
-                        {shared && <span className="mr-1 text-[var(--text-secondary)]">(חלקי: {formatCurrency(fund.monthly_allocation * 12)})</span>}
-                      </div>
                     </div>
 
                     {/* Actions */}
@@ -259,6 +249,15 @@ export default function SinkingPage() {
                       >
                         <Trash2 size={12} />
                       </button>
+                    </div>
+
+                    {/* Amounts — left side in RTL (last in DOM) */}
+                    <div className="text-left shrink-0">
+                      <div className="text-base font-bold text-[var(--c-0-88)]">{formatCurrency(fund.monthly_allocation)}<span className="text-[11px] font-normal text-[var(--text-secondary)] mr-[3px]">/חודש</span></div>
+                      <div className="text-xs text-[var(--text-secondary)]">
+                        יעד שנתי: {formatCurrency(totalAnnual)}
+                        {shared && <span className="mr-1 text-[var(--text-secondary)]">(חלקי: {formatCurrency(fund.monthly_allocation * 12)})</span>}
+                      </div>
                     </div>
                   </div>
 

@@ -11,7 +11,7 @@ interface InfoTooltipProps {
 
 export function InfoTooltip({ title, body, size = 14 }: InfoTooltipProps) {
   const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
+  const ref = useRef<HTMLSpanElement>(null)
 
   useEffect(() => {
     if (!open) return
@@ -25,7 +25,7 @@ export function InfoTooltip({ title, body, size = 14 }: InfoTooltipProps) {
   }, [open])
 
   return (
-    <div className="relative inline-flex" ref={ref}>
+    <span className="relative inline-flex" ref={ref}>
       <button
         type="button"
         onClick={(e) => { e.stopPropagation(); setOpen(!open) }}
@@ -35,8 +35,8 @@ export function InfoTooltip({ title, body, size = 14 }: InfoTooltipProps) {
         <Info size={size} style={{ color: 'var(--text-muted)' }} />
       </button>
       {open && (
-        <div
-          className="absolute z-50 top-full mt-1.5"
+        <span
+          className="absolute z-50 top-full mt-1.5 block"
           style={{
             right: 0,
             minWidth: 220,
@@ -48,7 +48,7 @@ export function InfoTooltip({ title, body, size = 14 }: InfoTooltipProps) {
             padding: '12px 14px',
           }}
         >
-          <div className="flex justify-between items-start gap-2 mb-1">
+          <span className="flex justify-between items-start gap-2 mb-1" style={{ display: 'flex' }}>
             {title && (
               <span className="text-[12px] font-semibold" style={{ color: 'var(--c-0-82)' }}>
                 {title}
@@ -62,12 +62,12 @@ export function InfoTooltip({ title, body, size = 14 }: InfoTooltipProps) {
             >
               <X size={12} style={{ color: 'var(--c-0-50)' }} />
             </button>
-          </div>
-          <p className="text-[12px] leading-relaxed m-0" style={{ color: 'var(--c-0-68)' }}>
+          </span>
+          <span className="text-[12px] leading-relaxed block" style={{ color: 'var(--c-0-68)' }}>
             {body}
-          </p>
-        </div>
+          </span>
+        </span>
       )}
-    </div>
+    </span>
   )
 }

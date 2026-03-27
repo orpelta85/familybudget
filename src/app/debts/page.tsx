@@ -332,9 +332,9 @@ export default function DebtsPage() {
                   </tr>
                   <tr className={`border-b border-[var(--c-0-20)] ${method === 'snowball' ? 'bg-[var(--c-blue-0-18)]' : ''}`}>
                     <td className="py-2.5 px-3">
-                      <button onClick={() => setMethod('snowball')} className={`bg-transparent border-none cursor-pointer text-inherit font-medium ${method === 'snowball' ? 'text-[var(--accent-green)]' : ''}`}>
+                      <div role="button" tabIndex={0} onClick={() => setMethod('snowball')} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setMethod('snowball') } }} className={`bg-transparent border-none cursor-pointer text-inherit font-medium ${method === 'snowball' ? 'text-[var(--accent-green)]' : ''}`}>
                         Snowball (מהקטן לגדול) <InfoTooltip body="שיטה שבה סוגרים קודם את החוב הקטן ביותר — נותן מוטיבציה" />
-                      </button>
+                      </div>
                     </td>
                     <td className="py-2.5 px-3">{formatMonths(snowballResult.months)}</td>
                     <td className="py-2.5 px-3 text-[var(--accent-orange)]">{formatCurrency(snowballResult.totalInterest)}</td>
@@ -342,9 +342,9 @@ export default function DebtsPage() {
                   </tr>
                   <tr className={`${method === 'avalanche' ? 'bg-[var(--c-blue-0-18)]' : ''}`}>
                     <td className="py-2.5 px-3">
-                      <button onClick={() => setMethod('avalanche')} className={`bg-transparent border-none cursor-pointer text-inherit font-medium ${method === 'avalanche' ? 'text-[var(--accent-green)]' : ''}`}>
+                      <div role="button" tabIndex={0} onClick={() => setMethod('avalanche')} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setMethod('avalanche') } }} className={`bg-transparent border-none cursor-pointer text-inherit font-medium ${method === 'avalanche' ? 'text-[var(--accent-green)]' : ''}`}>
                         Avalanche (מהיקר לזול) <InfoTooltip body="שיטה שבה סוגרים קודם את החוב עם הריבית הגבוהה — חוסך הכי הרבה כסף" />
-                      </button>
+                      </div>
                     </td>
                     <td className="py-2.5 px-3">{formatMonths(avalancheResult.months)}</td>
                     <td className="py-2.5 px-3 text-[var(--accent-orange)]">{formatCurrency(avalancheResult.totalInterest)}</td>
@@ -457,7 +457,7 @@ export default function DebtsPage() {
                           <td className="py-1.5 px-2 text-[var(--text-secondary)]">{monthNum}</td>
                           {row.map((val, i) => (
                             <td key={i} className="py-1.5 px-2" style={{ color: val > 0 ? COLORS[i % COLORS.length] : 'var(--c-0-40)' }}>
-                              {val > 0 ? formatCurrency(Math.round(val)) : '0 ₪'}
+                              {val > 0 ? formatCurrency(Math.round(val)) : formatCurrency(0)}
                             </td>
                           ))}
                           <td className="py-1.5 px-2 font-semibold text-[var(--text-heading)]">{formatCurrency(Math.round(total))}</td>

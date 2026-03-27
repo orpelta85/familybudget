@@ -131,8 +131,8 @@ export function ExpenseForm({ categories, funds, splitFrac, isPending, onAdd }: 
         {detailMode && (
           <div>
             <label htmlFor="expense-desc" className="text-[11px] text-muted-foreground block mb-1 font-medium">תיאור</label>
-            <input id="expense-desc" type="text" value={expType === 'shared' ? sharedLabel : description}
-              onChange={e => expType === 'shared' ? setSharedLabel(e.target.value) : setDescription(e.target.value)}
+            <input id="expense-desc" type="text" value={description}
+              onChange={e => setDescription(e.target.value)}
               placeholder={expType === 'shared' ? 'תיאור ההוצאה...' : 'לדוגמה: טיב טעם, WOLT...'}
               className="w-full bg-secondary border border-[var(--border-light)] rounded-lg px-3 py-2 text-inherit text-[13px] outline-none" />
           </div>

@@ -11,6 +11,7 @@ import { PwaRegister } from "@/components/PwaRegister";
 import { OrenAvatar } from "@/components/ai/OrenAvatar";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_URL || 'https://familyplan.co.il'),
   title: "Family Plan",
   description: "סדר בבית, שקט בכיס — ניהול תקציב משפחתי חכם",
   icons: {
@@ -29,9 +30,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="he" dir="rtl">
+    <html lang="he" dir="rtl" suppressHydrationWarning>
       <head>
         <script dangerouslySetInnerHTML={{ __html: `(function(){try{var t=localStorage.getItem('theme')||'dark';document.documentElement.setAttribute('data-theme',t)}catch(e){document.documentElement.setAttribute('data-theme','dark')}})()` }} />
+        <style dangerouslySetInnerHTML={{ __html: `.logo-dark{display:block}.logo-light{display:none}[data-theme="light"] .logo-dark{display:none}[data-theme="light"] .logo-light{display:block}` }} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700;800&display=swap" rel="stylesheet" />

@@ -2,7 +2,7 @@
 
 import { useUser } from '@/lib/queries/useUser'
 import { usePeriods, useCurrentPeriod } from '@/lib/queries/usePeriods'
-import { useJointPoolIncome, useJointPoolExpenses, useUpsertJointIncome, useAddJointExpense } from '@/lib/queries/useJoint'
+import { useJointPoolIncome, useJointPoolExpenses, useUpsertJointIncome, useAddJointExpense, useDeleteJointExpense, useJointCarryOver } from '@/lib/queries/useJoint'
 import { formatCurrency } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { useQueryClient } from '@tanstack/react-query'
@@ -12,7 +12,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { PeriodSelector } from '@/components/layout/PeriodSelector'
 import { toast } from 'sonner'
-import { PiggyBank, Trash2, Inbox } from 'lucide-react'
+import { PiggyBank, Trash2, Inbox, X } from 'lucide-react'
 import type { PoolCategory } from '@/lib/types'
 import { TableSkeleton } from '@/components/ui/Skeleton'
 import { useConfirmDialog } from '@/components/ui/ConfirmDialog'
@@ -47,12 +47,16 @@ export default function JointPage() {
   const { data: poolExpenses } = useJointPoolExpenses(selectedPeriodId, familyId)
   const upsertIncome = useUpsertJointIncome()
   const addExpense = useAddJointExpense()
+  const deleteExpense = useDeleteJointExpense()
+  const { data: carryOver = 0 } = useJointCarryOver(selectedPeriodId, familyId, periods ?? undefined)
   const queryClient = useQueryClient()
   const confirm = useConfirmDialog()
 
   const [myContrib, setMyContrib] = useState('')
   const [partnerContrib, setPartnerContrib] = useState('')
   const [expCategory, setExpCategory] = useState<PoolCategory>('restaurants')
+  const [useCustomCat, setUseCustomCat] = useState(false)
+  const [customCatName, setCustomCatName] = useState('')
   const [expAmount, setExpAmount] = useState('')
   const [expDesc, setExpDesc] = useState('')
 
@@ -80,8 +84,8 @@ export default function JointPage() {
   }
 
   const totalIncome = (Number(myContrib) || 0) + (Number(partnerContrib) || 0)
-  const totalExpenses = poolExpenses?.reduce((s, e) => s + e.amount, 0) ?? 0
-  const balance = totalIncome - totalExpenses
+  const totalExpenses = poolExpenses?.reduce((s, e) => s + Number(e.amount), 0) ?? 0
+  const balance = carryOver + totalIncome - totalExpenses
   const selectedPeriod = periods?.find(p => p.id === selectedPeriodId)
 
   async function saveIncome() {
@@ -93,13 +97,24 @@ export default function JointPage() {
     } catch (e) { console.error('Save joint income:', e); toast.error('שגיאה') }
   }
 
+  async function handleDeleteExpense(id: number) {
+    if (!selectedPeriodId) return
+    if (!(await confirm({ message: 'למחוק את ההוצאה?' }))) return
+    try {
+      await deleteExpense.mutateAsync({ id, periodId: selectedPeriodId })
+      toast.success('ההוצאה נמחקה')
+    } catch (e) { console.error('Delete joint expense:', e); toast.error('שגיאה במחיקה') }
+  }
+
   async function addExp(e: React.FormEvent) {
     e.preventDefault()
     if (!selectedPeriodId || !expAmount) return
     if (!familyId) { toast.error('לא משויך למשפחה'); return }
     try {
-      await addExpense.mutateAsync({ period_id: selectedPeriodId, category: expCategory, amount: Number(expAmount), description: expDesc, expense_date: new Date().toISOString().split('T')[0], family_id: familyId })
-      setExpAmount(''); setExpDesc('')
+      const category = useCustomCat ? 'misc' as PoolCategory : expCategory
+      const desc = useCustomCat ? (customCatName.trim() + (expDesc ? ` - ${expDesc}` : '')) : expDesc
+      await addExpense.mutateAsync({ period_id: selectedPeriodId, category, amount: Number(expAmount), description: desc, expense_date: new Date().toISOString().split('T')[0], family_id: familyId })
+      setExpAmount(''); setExpDesc(''); setCustomCatName('')
       toast.success('הוצאה נוספה')
     } catch (e) { console.error('Add joint expense:', e); toast.error('שגיאה') }
   }
@@ -131,6 +146,12 @@ export default function JointPage() {
             <div className={`text-4xl font-extrabold tracking-[-0.04em] ${balance >= 0 ? 'text-[var(--c-purple-0-80)]' : 'text-[var(--c-red-0-75)]'}`}>{formatCurrency(balance)}</div>
           </div>
           <div className="flex gap-6">
+            {carryOver !== 0 && (
+              <div className="text-center">
+                <div className={`text-lg font-bold ${carryOver >= 0 ? 'text-[var(--accent-blue)]' : 'text-[var(--accent-orange)]'}`}>{formatCurrency(carryOver)}</div>
+                <div className="text-[11px] text-[var(--text-secondary)]">העברה</div>
+              </div>
+            )}
             <div className="text-center">
               <div className="text-lg font-bold text-[var(--accent-green)]">{formatCurrency(totalIncome)}</div>
               <div className="text-[11px] text-[var(--text-secondary)]">הכנסות</div>
@@ -154,7 +175,7 @@ export default function JointPage() {
             <div key={f.label} className="mb-3">
               <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">{f.label}</label>
               <input type="number" value={f.val} onChange={e => f.set(e.target.value)} placeholder="0"
-                className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-[15px] ltr text-left" />
+                className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-[15px] text-right [direction:ltr]" />
             </div>
           ))}
           <button onClick={saveIncome} disabled={upsertIncome.isPending}
@@ -167,13 +188,28 @@ export default function JointPage() {
         <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5">
           <div className="font-semibold mb-3.5 text-sm">הוצאה משותפת</div>
           <form onSubmit={addExp} className="flex flex-col gap-3">
-            <select value={expCategory} onChange={e => setExpCategory(e.target.value as PoolCategory)}
-              aria-label="קטגוריית הוצאה"
-              className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-[13px]">
-              {POOL_CATEGORIES.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
-            </select>
+            <div>
+              <div className="flex justify-between items-center mb-1">
+                <label className="text-[11px] text-[var(--c-0-60)] block font-medium">קטגוריה</label>
+                <button type="button" onClick={() => setUseCustomCat(v => !v)}
+                  className="bg-transparent border-none text-[10px] text-[var(--accent-purple)] cursor-pointer p-0">
+                  {useCustomCat ? '← מרשימה' : '+ ידנית'}
+                </button>
+              </div>
+              {useCustomCat ? (
+                <input type="text" value={customCatName} onChange={e => setCustomCatName(e.target.value)}
+                  placeholder="שם קטגוריה חופשי..."
+                  className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-[13px]" />
+              ) : (
+                <select value={expCategory} onChange={e => setExpCategory(e.target.value as PoolCategory)}
+                  aria-label="קטגוריית הוצאה"
+                  className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-[13px]">
+                  {POOL_CATEGORIES.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
+                </select>
+              )}
+            </div>
             <input type="number" value={expAmount} onChange={e => setExpAmount(e.target.value)} placeholder="סכום (₪)" required min="0"
-              className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-[15px] ltr text-left" />
+              className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-[15px] text-right [direction:ltr]" />
             <input type="text" value={expDesc} onChange={e => setExpDesc(e.target.value)} placeholder="תיאור (אופציונלי)"
               className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-[13px]" />
             <button type="submit" className="btn-hover bg-[var(--accent-orange)] border-none rounded-lg py-2.5 font-semibold text-[13px] text-[var(--c-0-10)] cursor-pointer">
@@ -187,12 +223,23 @@ export default function JointPage() {
       <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5">
         <div className="font-semibold mb-3.5 text-sm">הוצאות המחזור</div>
         {poolExpenses?.length ? poolExpenses.map(e => (
-          <div key={e.id} className="flex justify-between py-[9px] border-b border-[var(--c-0-20)] text-[13px]">
-            <div>
-              <span className="font-medium">{POOL_CATEGORIES.find(c => c.key === e.category)?.label ?? e.category}</span>
-              {e.description && <span className="text-[var(--text-secondary)] mr-2">· {e.description}</span>}
+          <div key={e.id} className="flex items-center justify-between py-[9px] border-b border-[var(--c-0-20)] text-[13px] group">
+            <div className="flex-1 min-w-0">
+              <div>
+                <span className="font-medium">{POOL_CATEGORIES.find(c => c.key === e.category)?.label ?? e.category}</span>
+                {e.description && <span className="text-[var(--text-secondary)] mr-2">· {e.description}</span>}
+              </div>
+              {e.expense_date && (
+                <div className="text-[11px] text-[var(--text-secondary)] mt-0.5">{new Date(e.expense_date).toLocaleDateString('he-IL')}</div>
+              )}
             </div>
-            <span className="font-semibold text-[var(--accent-orange)]">{formatCurrency(e.amount)}</span>
+            <div className="flex items-center gap-2">
+              <span className="font-semibold text-[var(--accent-orange)]">{formatCurrency(Number(e.amount))}</span>
+              <button type="button" onClick={() => handleDeleteExpense(e.id)} aria-label="מחק הוצאה"
+                className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-[var(--c-red-0-15)] text-[var(--text-secondary)] hover:text-[var(--c-red-0-75)]">
+                <X size={14} />
+              </button>
+            </div>
           </div>
         )) : (
           <div className="text-center py-6">

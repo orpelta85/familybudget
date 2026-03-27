@@ -22,7 +22,25 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState, useRef } from 'react'
 import { useFamilyView } from '@/contexts/FamilyViewContext'
 import { PeriodSelector } from '@/components/layout/PeriodSelector'
-import { Wallet, Receipt, TrendingUp, PiggyBank, Target, AlertTriangle, CalendarDays, Users, X, Download, MoreHorizontal } from 'lucide-react'
+import { Wallet, Receipt, TrendingUp, PiggyBank, Target, AlertTriangle, CalendarDays, Users, X, Download, MoreHorizontal, Home, Car, Plane, GraduationCap, ShieldAlert, Heart, Baby } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
+
+const GOAL_ICON_MAP: Record<string, LucideIcon> = {
+  '\u{1F3E0}': Home, 'home': Home, '\u{1F3E1}': Home,
+  '\u{1F697}': Car, 'car': Car, '\u{1F698}': Car,
+  '\u{2708}\uFE0F': Plane, '\u{1F6EB}': Plane, 'plane': Plane, 'vacation': Plane,
+  '\u{1F393}': GraduationCap, 'graduation-cap': GraduationCap, 'education': GraduationCap,
+  '\u{1F6E1}\uFE0F': ShieldAlert, 'shield-alert': ShieldAlert, 'emergency': ShieldAlert,
+  '\u{2764}\uFE0F': Heart, '\u{1F492}': Heart, 'heart': Heart, 'wedding': Heart,
+  '\u{1F476}': Baby, 'baby': Baby,
+  'target': Target, '\u{1F3AF}': Target,
+  'piggy-bank': PiggyBank, '\u{1F416}': PiggyBank,
+  'wallet': Wallet, '\u{1F4B0}': Wallet,
+}
+function GoalIcon({ icon, color, size = 13 }: { icon: string; color?: string; size?: number }) {
+  const Icon = GOAL_ICON_MAP[icon.trim().toLowerCase()] ?? GOAL_ICON_MAP[icon.trim()] ?? Target
+  return <Icon size={size} style={color ? { color } : undefined} />
+}
 import { PageInfo } from '@/components/ui/PageInfo'
 import { InfoTooltip } from '@/components/ui/InfoTooltip'
 import { PAGE_TIPS } from '@/lib/page-tips'
@@ -187,15 +205,14 @@ export default function Dashboard() {
     const fund = (funds ?? []).find(f => f.id === fundId)
     const txns = allSinkingTx?.filter(t => t.fund_id === fundId) ?? []
     const txBalance = txns.reduce((s, t) => s + t.amount, 0)
-    if (txns.length > 0) return txBalance
-    // No transactions yet — estimate from monthly allocation x months elapsed
+    if (txns.length > 0 && txBalance !== 0) return txBalance
     if (fund && fund.monthly_allocation > 0 && fund.created_at) {
       const created = new Date(fund.created_at)
       const now = new Date()
       const monthsElapsed = (now.getFullYear() - created.getFullYear()) * 12 + (now.getMonth() - created.getMonth())
-      return fund.monthly_allocation * Math.max(0, monthsElapsed)
+      return fund.monthly_allocation * Math.max(1, monthsElapsed)
     }
-    return 0
+    return txBalance
   }
   const totalFundBalance = (funds ?? []).reduce((s, f) => s + getFundBalance(f.id), 0)
 
@@ -360,12 +377,35 @@ export default function Dashboard() {
           shared={shared}
           savingsGoals={savingsGoals}
           goalDeposits={goalDeposits}
+          funds={funds}
+          allSinkingTx={allSinkingTx}
+          categories={categories}
+          spendByCat={spendByCat}
           dataLoading={dataLoading}
         />
       )}
 
       {/* ── Personal View ────────────────────────────────────────────────── */}
       {viewMode === 'personal' && <>
+
+      {/* ── Health Score (Financial Status) — top of dashboard ────────── */}
+      {!dataLoading && totalIncome > 0 && (
+        <div
+          className="flex items-center gap-3 rounded-xl px-4 mb-4"
+          style={{ height: 48, background: 'var(--bg-hover)' }}
+        >
+          <div
+            className="w-3 h-3 rounded-full shrink-0"
+            style={{ background: healthColor }}
+          />
+          <span className="text-sm font-bold" style={{ color: healthColor }}>{healthScore}</span>
+          <span className="text-[13px] text-text-secondary">/ 100</span>
+          <span className="text-[13px] text-text-body">
+            {healthScore >= 70 ? 'מצב פיננסי טוב' : healthScore >= 40 ? 'מצב פיננסי סביר - יש מקום לשיפור' : 'מצב פיננסי דורש תשומת לב'}
+          </span>
+          <InfoTooltip body="ציון מ-0 עד 100 שמשקלל: חיסכון, חירום, חובות, תקציב" />
+        </div>
+      )}
 
       {/* ── Empty state for new users ──────────────────────────────────────── */}
       {!dataLoading && totalIncome === 0 && totalExpenses === 0 && !(categories?.length) && (
@@ -408,18 +448,13 @@ export default function Dashboard() {
       {/* ── KPI cards ──────────────────────────────────────────────────────── */}
       <div className="grid-kpi">
         {[
-          { label: 'הכנסה נטו', value: dataLoading ? '—' : formatCurrency(totalIncome), color: 'var(--accent-blue)', Icon: Wallet, tip: 'הכנסה אחרי מס ונכויים — הסכום שבאמת נכנס לחשבון' },
+          { label: 'הכנסה נטו', value: dataLoading ? '—' : formatCurrency(totalIncome), color: 'var(--accent-blue)', Icon: Wallet, tip: 'הכנסה אחרי מס ונכויים - הסכום שבאמת נכנס לחשבון' },
           { label: 'הוצאות החודש', value: dataLoading ? '—' : formatCurrency(totalExpenses), color: 'var(--accent-orange)', Icon: Receipt, tip: '' },
           {
             label: 'תזרים נקי', value: dataLoading ? '—' : formatCurrency(netFlow),
             color: netFlow >= 0 ? 'var(--accent-green)' : 'var(--accent-red)', Icon: TrendingUp, tip: '',
-          },
-          {
-            label: '% חיסכון', value: dataLoading ? '—' : `${savingsPct}%`,
-            color: savingsPct >= 20 ? 'var(--accent-green)' : savingsPct >= 0 ? 'var(--accent-orange)' : 'var(--accent-red)',
-            Icon: PiggyBank,
-            sub: savingsPct >= 20 ? '✓ יעד חיסכון' : savingsPct >= 0 ? 'מתחת ל-20%' : 'גירעון',
-            tip: 'כמה מההכנסה נשאר אחרי כל ההוצאות. מעל 20% = מצוין',
+            sub: dataLoading ? undefined : `${savingsPct}% חיסכון`,
+            subColor: savingsPct >= 20 ? 'var(--accent-green)' : savingsPct >= 0 ? 'var(--accent-orange)' : 'var(--accent-red)',
           },
         ].map(kpi => (
           <div key={kpi.label} className="kpi-card">
@@ -431,7 +466,7 @@ export default function Dashboard() {
               <kpi.Icon size={14} className="opacity-70" style={{ color: kpi.color }} />
             </div>
             <div className="kpi-value" dir="ltr" style={{ color: kpi.color }}>{kpi.value}</div>
-            {kpi.sub && <div className="kpi-sub" style={{ color: kpi.color }}>{kpi.sub}</div>}
+            {kpi.sub && <div className="kpi-sub" style={{ color: (kpi as { subColor?: string }).subColor ?? kpi.color }}>{kpi.sub}</div>}
           </div>
         ))}
       </div>
@@ -445,18 +480,17 @@ export default function Dashboard() {
         {dataLoading
           ? <div className="text-text-secondary text-[13px]">בחר תקופה</div>
           : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Left: Forecast summary */}
+            <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-6">
+              {/* Right (in RTL): Personal breakdown */}
               <div>
-                <h3 className="text-xs font-semibold text-text-secondary mb-3 uppercase tracking-wide">תחזית</h3>
                 <div className="text-[13px]">
                   {[
-                    { label: 'הכנסה ידועה', value: totalIncome, color: 'var(--accent-green)', sign: '+' },
-                    { label: 'הוצאות קבועות (יעד)', value: -fixedTargets, color: 'var(--text-secondary)', sign: '-' },
-                    { label: 'משותפות (שהוזן)', value: -totalShared, color: 'var(--text-secondary)', sign: '-' },
-                    { label: 'משתנות (יעד)', value: -variableTargets, color: 'var(--accent-orange)', sign: '-' },
-                    ...(sinkingTargets > 0 ? [{ label: 'קרנות צבירה (יעד)', value: -sinkingTargets, color: 'var(--accent-teal)', sign: '-' }] : []),
-                    ...(savingsTargets > 0 ? [{ label: 'חיסכון (יעד)', value: -savingsTargets, color: 'var(--accent-green)', sign: '-' }] : []),
+                    { label: 'הכנסה', value: totalIncome, color: 'var(--accent-green)', sign: '+' },
+                    { label: 'הוצאות אישיות', value: -totalPersonal, color: 'var(--accent-orange)', sign: '-' },
+                    { label: 'הוצאות משותפות (החלק שלי)', value: -totalShared, color: 'var(--accent-shared)', sign: '-' },
+                    { label: 'הוצאות קבועות (חלק אישי)', value: -fixedTargets, color: 'var(--text-secondary)', sign: '-' },
+                    { label: 'הוצאות משתנות (חלק אישי)', value: -variableTargets, color: 'var(--accent-orange)', sign: '-' },
+                    ...(savingsTargets > 0 ? [{ label: 'חיסכון', value: -savingsTargets, color: 'var(--accent-green)', sign: '-' }] : []),
                   ].map(row => (
                     <div key={row.label} className="flex justify-between py-[5px] row-divider">
                       <span className="text-text-body">{row.label}</span>
@@ -466,72 +500,114 @@ export default function Dashboard() {
                     </div>
                   ))}
                   <div className="flex justify-between pt-2.5 mt-1">
-                    <span className="font-semibold">נשאר בטוח להוציא</span>
+                    <span className="font-semibold">סיכום - נשאר בטוח להוציא</span>
                     <span className={`text-base font-bold ${safeToSpend >= 0 ? 'text-accent-green' : 'text-accent-red'}`}>
                       {formatCurrency(safeToSpend)}
                     </span>
                   </div>
-                  {variableRemaining > 0 && (
-                    <div className="text-[11px] text-text-secondary mt-1.5 text-right">
-                      יתרת תקציב משתנות: {formatCurrency(variableRemaining)}
-                    </div>
-                  )}
                 </div>
               </div>
 
-              {/* Right: Budget bars + small donut */}
-              <div>
-                <h3 className="text-xs font-semibold text-text-secondary mb-3 uppercase tracking-wide">ניצול תקציב</h3>
-                <div className="flex gap-4">
-                  {/* Budget bars */}
-                  <div className="flex-1 min-w-0">
-                    {!(categories?.length)
-                      ? <div className="text-text-secondary text-[13px]">אין קטגוריות</div>
-                      : [...(categories ?? [])]
-                        .filter(c => c.monthly_target > 0)
-                        .sort((a, b) => ((spendByCat[b.id] ?? 0) / b.monthly_target) - ((spendByCat[a.id] ?? 0) / a.monthly_target))
-                        .slice(0, 5)
-                        .map(cat => {
-                          const spent = spendByCat[cat.id] ?? 0
-                          const rawPct = spent / cat.monthly_target
-                          const pct = Math.min(rawPct, 1)
-                          const pctDisplay = Math.round(rawPct * 100)
-                          const barColor = rawPct >= 1 ? 'var(--accent-red)' : rawPct >= 0.9 ? 'var(--accent-orange)' : 'var(--accent-blue)'
-                          const avg = avgByCat[cat.id]
-                          const deviation = avg && avg > 0 ? Math.round(((spent - avg) / avg) * 100) : null
-                          return (
-                            <div key={cat.id} className="mb-2.5">
-                              <div className="flex justify-between text-xs mb-[3px]">
-                                <span className="text-text-heading">{cat.name}</span>
-                                <div className="flex gap-1.5 items-center">
-                                  {deviation !== null && (
-                                    <span className={`text-[10px] ${deviation > 15 ? 'text-accent-red' : deviation < -15 ? 'text-accent-green' : 'text-text-secondary'}`}>
-                                      {deviation > 0 ? `↑${deviation}%` : `↓${Math.abs(deviation)}%`}
-                                    </span>
-                                  )}
-                                  <span className="font-semibold" style={{ color: barColor }}>{pctDisplay > 200 ? '200%+' : `${pctDisplay}%`}</span>
-                                </div>
-                              </div>
-                              <div className="bar-track">
-                                <div className="bar-fill" style={{ width: `${Math.round(pct * 100)}%`, background: barColor }} />
-                              </div>
-                            </div>
-                          )
-                        })
-                    }
-                  </div>
-
-                  {/* Small donut */}
-                  {donutData.length > 0 && (
-                    <div className="hidden md:flex flex-col items-center justify-center shrink-0" style={{ width: 120 }}>
-                      <ExpenseDonut data={donutData} />
-                    </div>
-                  )}
+              {/* Left (in RTL): Pie chart */}
+              {donutData.length > 0 && (
+                <div className="flex flex-col items-center justify-center shrink-0" style={{ width: 150 }}>
+                  <ExpenseDonut data={donutData} />
                 </div>
-              </div>
+              )}
             </div>
           )
         }
+      </div>
+
+      {/* ── Budget + Year-over-year ────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Right (in RTL): Budget utilization */}
+        <div className="card">
+          <h2 className="card-header mb-3.5">
+            <Target size={14} className="text-accent-blue" /> ניצול תקציב
+          </h2>
+          {!(categories?.length)
+            ? <div className="text-text-secondary text-[13px]">אין קטגוריות</div>
+            : [...(categories ?? [])]
+              .filter(c => c.monthly_target > 0)
+              .sort((a, b) => ((spendByCat[b.id] ?? 0) / b.monthly_target) - ((spendByCat[a.id] ?? 0) / a.monthly_target))
+              .slice(0, 5)
+              .map(cat => {
+                const spent = spendByCat[cat.id] ?? 0
+                const rawPct = spent / cat.monthly_target
+                const pct = Math.min(rawPct, 1)
+                const pctDisplay = Math.round(rawPct * 100)
+                const barColor = rawPct >= 1 ? 'var(--accent-red)' : rawPct >= 0.9 ? 'var(--accent-orange)' : 'var(--accent-blue)'
+                const avg = avgByCat[cat.id]
+                const deviation = avg && avg > 0 ? Math.round(((spent - avg) / avg) * 100) : null
+                return (
+                  <div key={cat.id} className="mb-2.5">
+                    <div className="flex justify-between text-xs mb-[3px]">
+                      <span className="text-text-heading">{cat.name}</span>
+                      <div className="flex gap-1.5 items-center">
+                        {deviation !== null && (
+                          <span className={`text-[10px] ${deviation > 15 ? 'text-accent-red' : deviation < -15 ? 'text-accent-green' : 'text-text-secondary'}`}>
+                            {deviation > 0 ? `↑${deviation}%` : `↓${Math.abs(deviation)}%`}
+                          </span>
+                        )}
+                        <span className="font-semibold" style={{ color: barColor }}>{pctDisplay > 200 ? '200%+' : `${pctDisplay}%`}</span>
+                      </div>
+                    </div>
+                    <div className="bar-track">
+                      <div className="bar-fill" style={{ width: `${Math.round(pct * 100)}%`, background: barColor }} />
+                    </div>
+                  </div>
+                )
+              })
+          }
+          {variableRemaining > 0 && (
+            <div className="text-[11px] text-text-secondary mt-2 text-right">
+              יתרת תקציב משתנות: {formatCurrency(variableRemaining)}
+            </div>
+          )}
+        </div>
+
+        {/* Left (in RTL): Year-over-year */}
+        <div className="card">
+          <h2 className="card-header mb-4">
+            <TrendingUp size={14} className="text-accent-teal" />
+            לעומת שנה שעברה
+          </h2>
+          {!yearAgoPeriodId
+            ? <div className="text-text-secondary text-[13px]">אין נתוני שנה שעברה (פחות מ-12 מחזורים)</div>
+            : (
+              <div className="text-[13px]">
+                <div className="text-[11px] text-text-secondary mb-3">
+                  {yearAgoPeriod ? periodLabel(yearAgoPeriod.start_date) : ''} → {selectedPeriod ? periodLabel(selectedPeriod.start_date) : ''}
+                </div>
+                {[
+                  { label: 'הכנסה', current: totalIncome, prev: yearAgoTotalIncome, positiveIsGood: true },
+                  { label: 'הוצאות', current: totalExpenses, prev: yearAgoExpenses, positiveIsGood: false },
+                  { label: 'תזרים נקי', current: netFlow, prev: yearAgoTotalIncome ? yearAgoTotalIncome - yearAgoExpenses : null, positiveIsGood: true },
+                ].map(row => {
+                  const pct = row.prev ? Math.round(((row.current - row.prev) / Math.abs(row.prev)) * 100) : null
+                  const isGood = pct === null ? null : row.positiveIsGood ? pct >= 0 : pct <= 0
+                  return (
+                    <div key={row.label} className="flex justify-between items-center py-[7px] row-divider">
+                      <span className="text-text-body">{row.label}</span>
+                      <div className="flex gap-2 items-center">
+                        {pct !== null && (
+                          <span className={`text-[11px] font-semibold ${isGood ? 'text-accent-green' : 'text-accent-red'}`}>
+                            {pct >= 0 ? `↑${pct}%` : `↓${Math.abs(pct)}%`}
+                          </span>
+                        )}
+                        <span className="font-medium">{formatCurrency(row.current)}</span>
+                        {row.prev !== null && (
+                          <span className="text-text-secondary text-[11px]">/ {formatCurrency(row.prev ?? 0)}</span>
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )
+          }
+        </div>
       </div>
 
       {/* ── Sinking funds + Goals ──────────────────────────────────────────── */}
@@ -589,7 +665,7 @@ export default function Dashboard() {
               return (
                 <div key={goal.id} className="mb-[11px]">
                   <div className="flex justify-between text-xs mb-[3px]">
-                    <span className="text-text-heading">{goal.icon} {goal.name}</span>
+                    <span className="text-text-heading flex items-center gap-1"><GoalIcon icon={goal.icon} color={goal.color} /> {goal.name}</span>
                     <span className="font-semibold" style={{ color: goal.color }}>
                       {formatCurrency(saved)} / {formatCurrency(goal.target_amount)}
                     </span>
@@ -604,99 +680,9 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* ── Year-over-year + Net Worth ─────────────────────────────────────── */}
-      {!dataLoading && totalIncome > 0 && (
-        <div className="grid-2">
-          {/* Year-over-year */}
-          <div className="card">
-            <h2 className="card-header mb-4">
-              <TrendingUp size={14} className="text-accent-teal" />
-              לעומת שנה שעברה
-            </h2>
-            {!yearAgoPeriodId
-              ? <div className="text-text-secondary text-[13px]">אין נתוני שנה שעברה (פחות מ-12 מחזורים)</div>
-              : (
-                <div className="text-[13px]">
-                  <div className="text-[11px] text-text-secondary mb-3">
-                    {yearAgoPeriod ? periodLabel(yearAgoPeriod.start_date) : ''} → {selectedPeriod ? periodLabel(selectedPeriod.start_date) : ''}
-                  </div>
-                  {[
-                    { label: 'הכנסה', current: totalIncome, prev: yearAgoTotalIncome, positiveIsGood: true },
-                    { label: 'הוצאות', current: totalExpenses, prev: yearAgoExpenses, positiveIsGood: false },
-                    { label: 'תזרים נקי', current: netFlow, prev: yearAgoTotalIncome ? yearAgoTotalIncome - yearAgoExpenses : null, positiveIsGood: true },
-                  ].map(row => {
-                    const pct = row.prev ? Math.round(((row.current - row.prev) / Math.abs(row.prev)) * 100) : null
-                    const isGood = pct === null ? null : row.positiveIsGood ? pct >= 0 : pct <= 0
-                    return (
-                      <div key={row.label} className="flex justify-between items-center py-[7px] row-divider">
-                        <span className="text-text-body">{row.label}</span>
-                        <div className="flex gap-2 items-center">
-                          {pct !== null && (
-                            <span className={`text-[11px] font-semibold ${isGood ? 'text-accent-green' : 'text-accent-red'}`}>
-                              {pct >= 0 ? `↑${pct}%` : `↓${Math.abs(pct)}%`}
-                            </span>
-                          )}
-                          <span className="font-medium">{formatCurrency(row.current)}</span>
-                          {row.prev !== null && (
-                            <span className="text-text-secondary text-[11px]">/ {formatCurrency(row.prev ?? 0)}</span>
-                          )}
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              )
-            }
-          </div>
+      {/* Year-over-year moved into budget grid above, Net Worth moved to KPI card */}
 
-          {/* Net Worth */}
-          <div className="card">
-            <h2 className="card-header mb-3.5">
-              <Wallet size={14} className="text-accent-purple" /> שווי נקי
-            </h2>
-            <div className={`text-[28px] font-bold text-right mb-3.5 ${netWorth >= 0 ? 'text-accent-purple' : 'text-accent-red'}`}>
-              {formatCurrency(netWorth)}
-            </div>
-            <div className="flex flex-col gap-1.5 text-xs">
-              {pensionTotal > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-text-secondary">פנסיה והשקעות</span>
-                  <span className="text-text-body">{formatCurrency(pensionTotal)}</span>
-                </div>
-              )}
-              {totalFundBalance !== 0 && (
-                <div className="flex justify-between">
-                  <span className="text-text-secondary">קרנות צבירה</span>
-                  <span className="text-text-body">{formatCurrency(totalFundBalance)}</span>
-                </div>
-              )}
-              <div className="flex justify-between">
-                <span className="text-text-secondary">יעדי חיסכון</span>
-                <span className="text-text-body">{formatCurrency(totalGoalsSaved)}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── Health Score Banner ────────────────────────────────────────────── */}
-      {!dataLoading && totalIncome > 0 && (
-        <div
-          className="flex items-center gap-3 rounded-xl px-4 mt-3.5 mb-1"
-          style={{ height: 48, background: 'var(--bg-hover)' }}
-        >
-          <div
-            className="w-3 h-3 rounded-full shrink-0"
-            style={{ background: healthColor }}
-          />
-          <span className="text-sm font-bold" style={{ color: healthColor }}>{healthScore}</span>
-          <span className="text-[13px] text-text-secondary">/ 100</span>
-          <span className="text-[13px] text-text-body">
-            {healthScore >= 70 ? 'מצב פיננסי טוב' : healthScore >= 40 ? 'מצב פיננסי סביר — יש מקום לשיפור' : 'מצב פיננסי דורש תשומת לב'}
-          </span>
-          <InfoTooltip body="ציון מ-0 עד 100 שמשקלל: חיסכון, חירום, חובות, תקציב" />
-        </div>
-      )}
+      {/* Health Score moved to top (below alerts) */}
 
       </>}
     </div>
@@ -710,6 +696,10 @@ function FamilyDashboard({
   shared,
   savingsGoals,
   goalDeposits,
+  funds,
+  allSinkingTx,
+  categories,
+  spendByCat,
   dataLoading,
 }: {
   summary: import('@/lib/queries/useFamily').FamilySummary | undefined
@@ -717,6 +707,10 @@ function FamilyDashboard({
   shared: import('@/lib/types').SharedExpense[] | undefined
   savingsGoals: import('@/lib/types').SavingsGoal[] | undefined
   goalDeposits: import('@/lib/types').GoalDeposit[] | undefined
+  funds: import('@/lib/types').SinkingFund[] | undefined
+  allSinkingTx: import('@/lib/types').SinkingFundTransaction[] | undefined
+  categories: import('@/lib/types').BudgetCategory[] | undefined
+  spendByCat: Record<number, number>
   dataLoading: boolean
 }) {
   if (!summary) {
@@ -726,6 +720,27 @@ function FamilyDashboard({
   const totalExpenses = summary.total_personal_expenses + summary.total_shared_expenses
   const familyNet = summary.total_income - totalExpenses
   const familySavingsPct = summary.total_income > 0 ? Math.round((familyNet / summary.total_income) * 100) : 0
+
+  // Sinking fund balance calc
+  function getFundBal(fundId: number) {
+    const txns = (allSinkingTx ?? []).filter(t => t.fund_id === fundId)
+    const txBalance = txns.reduce((s, t) => s + t.amount, 0)
+    if (txns.length > 0 && txBalance !== 0) return txBalance
+    const fund = (funds ?? []).find(f => f.id === fundId)
+    if (fund && fund.monthly_allocation > 0 && fund.created_at) {
+      const created = new Date(fund.created_at)
+      const now = new Date()
+      const months = (now.getFullYear() - created.getFullYear()) * 12 + (now.getMonth() - created.getMonth())
+      return fund.monthly_allocation * Math.max(1, months)
+    }
+    return txBalance
+  }
+  const totalFundBal = (funds ?? []).reduce((s, f) => s + getFundBal(f.id), 0)
+
+  // Budget utilization
+  const totalBudget = (categories ?? []).reduce((s, c) => s + c.monthly_target, 0)
+  const totalSpent = Object.values(spendByCat).reduce((s, v) => s + v, 0) + totalSharedFromPersonal
+  const budgetPct = totalBudget > 0 ? Math.round((totalSpent / totalBudget) * 100) : 0
 
   return (
     <>
@@ -739,11 +754,13 @@ function FamilyDashboard({
             value: formatCurrency(familyNet),
             color: familyNet >= 0 ? 'var(--accent-green)' : 'var(--accent-red)',
             Icon: TrendingUp,
+            sub: `${familySavingsPct}% חיסכון`,
+            subColor: familySavingsPct >= 20 ? 'var(--accent-green)' : familySavingsPct >= 0 ? 'var(--accent-orange)' : 'var(--accent-red)',
           },
           {
-            label: '% חיסכון משפחתי',
-            value: `${familySavingsPct}%`,
-            color: familySavingsPct >= 20 ? 'var(--accent-green)' : familySavingsPct >= 0 ? 'var(--accent-orange)' : 'var(--accent-red)',
+            label: 'קופה קטנה',
+            value: formatCurrency(totalFundBal),
+            color: 'var(--accent-teal)',
             Icon: PiggyBank,
           },
         ].map(kpi => (
@@ -753,6 +770,11 @@ function FamilyDashboard({
               <kpi.Icon size={14} className="opacity-70" style={{ color: kpi.color }} />
             </div>
             <div className="kpi-value" dir="ltr" style={{ color: kpi.color }}>{kpi.value}</div>
+            {(kpi as { sub?: string }).sub && (
+              <div className="kpi-sub" style={{ color: (kpi as { subColor?: string }).subColor ?? kpi.color }}>
+                {(kpi as { sub?: string }).sub}
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -760,7 +782,8 @@ function FamilyDashboard({
       {/* Per-member breakdown */}
       <div className="grid-3 mb-4">
         {summary.members.map(member => {
-          const memberNet = member.income - member.personal_expenses
+          const memberShared = totalSharedFromPersonal > 0 ? Math.round(totalSharedFromPersonal / summary.members.length) : 0
+          const memberNet = member.income - member.personal_expenses - memberShared
           return (
             <div key={member.user_id} className="card">
               <div className="flex items-center gap-2 mb-3.5">
@@ -777,8 +800,12 @@ function FamilyDashboard({
                     <span className="text-text-secondary">הוצאות אישיות</span>
                     <span className="font-medium text-accent-orange">{formatCurrency(member.personal_expenses)}</span>
                   </div>
+                  <div className="flex justify-between">
+                    <span className="text-text-secondary">הוצאות משותפות</span>
+                    <span className="font-medium text-accent-shared">{formatCurrency(memberShared)}</span>
+                  </div>
                   <div className="flex justify-between border-t border-t-bg-hover pt-2">
-                    <span className="font-semibold">נטו</span>
+                    <span className="font-semibold">נטו אמיתי</span>
                     <span className={`font-bold ${memberNet >= 0 ? 'text-accent-green' : 'text-accent-red'}`}>{formatCurrency(memberNet)}</span>
                   </div>
                 </div>
@@ -796,8 +823,35 @@ function FamilyDashboard({
         })}
       </div>
 
-      {/* Shared expenses breakdown */}
+      {/* Budget summary + Shared expenses */}
       <div className="grid-2">
+        {/* Budget summary */}
+        <div className="card">
+          <div className="card-header mb-3.5">
+            <Target size={14} className="text-accent-blue" /> סיכום תקציב
+          </div>
+          <div className="flex items-baseline gap-2 mb-3">
+            <span className={`text-[22px] font-bold tracking-tight ${budgetPct <= 100 ? 'text-accent-green' : 'text-accent-red'}`}>
+              {budgetPct}%
+            </span>
+            <span className="text-xs text-text-secondary">ניצול מתוך {formatCurrency(totalBudget)}</span>
+          </div>
+          <div className="bar-track mb-2">
+            <div
+              className="bar-fill"
+              style={{
+                width: `${Math.min(budgetPct, 100)}%`,
+                background: budgetPct <= 80 ? 'var(--accent-green)' : budgetPct <= 100 ? 'var(--accent-orange)' : 'var(--accent-red)',
+              }}
+            />
+          </div>
+          <div className="flex justify-between text-xs text-text-secondary">
+            <span>הוצאות: {formatCurrency(totalSpent)}</span>
+            <span>תקציב: {formatCurrency(totalBudget)}</span>
+          </div>
+        </div>
+
+        {/* Shared expenses */}
         <div className="card">
           <div className="card-header mb-3.5">
             <Receipt size={14} className="text-accent-shared" /> הוצאות משותפות
@@ -821,6 +875,42 @@ function FamilyDashboard({
             </div>
           )}
         </div>
+      </div>
+
+      {/* Sinking Funds + Goals */}
+      <div className="grid-2">
+        {/* Sinking funds */}
+        <div className="card">
+          <div className="flex justify-between items-center mb-3.5">
+            <div className="card-header">
+              <PiggyBank size={14} className="text-accent-teal" /> קרנות צבירה
+            </div>
+            <div className="text-[13px] font-bold text-accent-teal">
+              {formatCurrency(totalFundBal)}
+            </div>
+          </div>
+          {!(funds?.length)
+            ? <div className="text-text-secondary text-[13px]">אין קרנות</div>
+            : (funds ?? []).map(fund => {
+              const balance = getFundBal(fund.id)
+              const annualTarget = fund.yearly_target || fund.monthly_allocation * 12
+              const pct = annualTarget > 0 ? Math.min((balance / annualTarget) * 100, 100) : 0
+              return (
+                <div key={fund.id} className="mb-[11px]">
+                  <div className="flex justify-between text-xs mb-[3px]">
+                    <span className="text-text-heading">{fund.name}</span>
+                    <span className={`font-semibold ${balance >= 0 ? 'text-accent-teal' : 'text-accent-red'}`}>
+                      {formatCurrency(balance)}
+                    </span>
+                  </div>
+                  <div className="bar-track">
+                    <div className="bar-fill bg-accent-teal" style={{ width: `${Math.max(0, pct)}%` }} />
+                  </div>
+                </div>
+              )
+            })
+          }
+        </div>
 
         {/* Goals */}
         <div className="card">
@@ -837,7 +927,7 @@ function FamilyDashboard({
               return (
                 <div key={goal.id} className="mb-[11px]">
                   <div className="flex justify-between text-xs mb-[3px]">
-                    <span className="text-text-heading">{goal.icon} {goal.name}</span>
+                    <span className="text-text-heading flex items-center gap-1"><GoalIcon icon={goal.icon} color={goal.color} /> {goal.name}</span>
                     <span className="font-semibold" style={{ color: goal.color }}>
                       {formatCurrency(saved)} / {formatCurrency(goal.target_amount)}
                     </span>

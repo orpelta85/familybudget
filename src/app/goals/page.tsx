@@ -12,7 +12,6 @@ import { useFamilyContext } from '@/lib/context/FamilyContext'
 import { useSharedPeriod } from '@/lib/context/PeriodContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useMemo } from 'react'
-import { useFamilyView } from '@/contexts/FamilyViewContext'
 import { toast } from 'sonner'
 import { Target, Plus, ChevronDown, ChevronUp, Trash2, Edit3, TrendingUp, X, Crosshair, Home, Car, Plane, Heart, GraduationCap, Laptop, Smartphone, Palmtree, Coins, Gift, Stethoscope } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
@@ -56,9 +55,6 @@ export default function GoalsPage() {
   const [showAddModal, setShowAddModal] = useState(false)
   const [editGoal, setEditGoal] = useState<SavingsGoal | null>(null)
   const [expandedGoal, setExpandedGoal] = useState<number | null>(null)
-  const { viewMode: globalView } = useFamilyView()
-  const goalsFilter = globalView === 'personal' ? 'personal' : 'all'
-
   useEffect(() => {
     if (currentPeriod && !selectedPeriodId) setSelectedPeriodId(currentPeriod.id)
   }, [currentPeriod, selectedPeriodId, setSelectedPeriodId])
@@ -69,10 +65,7 @@ export default function GoalsPage() {
 
   if (loading || !user) return <TableSkeleton rows={5} />
 
-  const filteredGoals = (goals ?? []).filter(g => {
-    if (goalsFilter === 'personal') return !g.is_shared
-    return true
-  })
+  const filteredGoals = goals ?? []
 
   function getGoalDeposits(goalId: number) {
     return (allDeposits ?? []).filter(d => d.goal_id === goalId)
@@ -464,6 +457,41 @@ function GoalModal({
   const [isShared, setIsShared] = useState(goal?.is_shared ?? false)
   const [icon, setIcon] = useState(goal?.icon ?? '🎯')
   const [color, setColor] = useState(goal?.color ?? COLOR_OPTIONS[0])
+  const [lastEdited, setLastEdited] = useState<'target' | 'monthly' | 'periods'>('target')
+
+  function handleTargetChange(val: string) {
+    setTarget(val)
+    setLastEdited('target')
+    const t = Number(val)
+    const m = Number(monthly)
+    if (t > 0 && m > 0) {
+      setTotalPeriods(Math.ceil(t / m).toString())
+    }
+  }
+
+  function handleMonthlyChange(val: string) {
+    setMonthly(val)
+    setLastEdited('monthly')
+    const t = Number(target)
+    const m = Number(val)
+    if (t > 0 && m > 0) {
+      setTotalPeriods(Math.ceil(t / m).toString())
+    }
+  }
+
+  function handlePeriodsChange(val: string) {
+    setTotalPeriods(val)
+    setLastEdited('periods')
+    const t = Number(target)
+    const p = Number(val)
+    if (t > 0 && p > 0) {
+      setMonthly(Math.ceil(t / p).toString())
+    }
+  }
+
+  const calculatedTotal = Number(monthly) * Number(totalPeriods)
+  const targetNum = Number(target)
+  const mismatch = targetNum > 0 && calculatedTotal > 0 && Math.abs(calculatedTotal - targetNum) > 1
 
   async function handleSubmit() {
     if (!name || !target) return
@@ -518,24 +546,33 @@ function GoalModal({
               className="input-field w-full" placeholder="למשל: דירה, רכב, חופשה" />
           </div>
 
+          <div>
+            <label htmlFor="goal-target" className="text-xs block mb-[5px] text-text-secondary">סכום יעד (₪)</label>
+            <input id="goal-target" type="number" value={target} onChange={e => handleTargetChange(e.target.value)}
+              className="input-field w-full ltr text-right" />
+          </div>
+
           <div className="grid-2 !mb-0">
             <div>
-              <label htmlFor="goal-target" className="text-xs block mb-[5px] text-text-secondary">סכום יעד (₪)</label>
-              <input id="goal-target" type="number" value={target} onChange={e => setTarget(e.target.value)}
+              <label htmlFor="goal-monthly" className="text-xs block mb-[5px] text-text-secondary">הפקדה חודשית (₪)</label>
+              <input id="goal-monthly" type="number" value={monthly} onChange={e => handleMonthlyChange(e.target.value)}
                 className="input-field w-full ltr text-right" />
             </div>
             <div>
-              <label htmlFor="goal-monthly" className="text-xs block mb-[5px] text-text-secondary">הפקדה חודשית (₪)</label>
-              <input id="goal-monthly" type="number" value={monthly} onChange={e => setMonthly(e.target.value)}
+              <label htmlFor="goal-periods" className="text-xs block mb-[5px] text-text-secondary">מספר חודשים</label>
+              <input id="goal-periods" type="number" value={totalPeriods} onChange={e => handlePeriodsChange(e.target.value)}
                 className="input-field w-full ltr text-right" />
             </div>
           </div>
 
-          <div>
-            <label htmlFor="goal-periods" className="text-xs block mb-[5px] text-text-secondary">מספר תקופות</label>
-            <input id="goal-periods" type="number" value={totalPeriods} onChange={e => setTotalPeriods(e.target.value)}
-              className="input-field w-full ltr text-right" />
-          </div>
+          {targetNum > 0 && Number(monthly) > 0 && Number(totalPeriods) > 0 && (
+            <div className={`text-[12px] px-3 py-2 rounded-lg ${mismatch ? 'bg-[var(--c-orange-0-20)] text-[var(--accent-orange)]' : 'bg-[var(--c-green-0-20)] text-[var(--accent-green)]'}`}>
+              {mismatch
+                ? `${Number(totalPeriods)} חודשים x ${formatCurrency(Number(monthly))} = ${formatCurrency(calculatedTotal)} (הפרש של ${formatCurrency(Math.abs(calculatedTotal - targetNum))} מהיעד)`
+                : `${Number(totalPeriods)} חודשים x ${formatCurrency(Number(monthly))} = ${formatCurrency(calculatedTotal)}`
+              }
+            </div>
+          )}
 
           <label className="flex items-center gap-2.5 cursor-pointer">
             <input type="checkbox" checked={isShared} onChange={e => setIsShared(e.target.checked)}

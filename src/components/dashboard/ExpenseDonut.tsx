@@ -16,7 +16,7 @@ export function ExpenseDonut({ data }: { data: DonutEntry[] }) {
 
   return (
     <>
-      <div dir="ltr">
+      <div dir="ltr" style={{ width: '100%', height: 150 }}>
       <ResponsiveContainer width="100%" height={150}>
         <PieChart>
           <Pie data={data} cx="50%" cy="50%" innerRadius={42} outerRadius={68} dataKey="value" paddingAngle={2}>

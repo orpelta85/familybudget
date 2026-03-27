@@ -24,10 +24,11 @@ const navSections: NavSection[] = [
     sectionLabel: 'פעילות שוטפת',
     items: [
       { href: '/',          label: 'דשבורד',          icon: LayoutDashboard },
-      { href: '/income',    label: 'הכנסה',            icon: Wallet },
-      { href: '/budget',    label: 'תקציב משפחתי',     icon: ListChecks },
+      { href: '/income',    label: 'הכנסות',           icon: Wallet },
       { href: '/expenses',  label: 'הוצאות',           icon: Receipt },
+      { href: '/budget',    label: 'תקציב',              icon: ListChecks },
       { href: '/joint',     label: 'קופה קטנה',        icon: Banknote },
+      { href: '/kids',      label: 'ילדים',             icon: Baby },
     ],
   },
   {
@@ -35,7 +36,6 @@ const navSections: NavSection[] = [
     items: [
       { href: '/sinking',   label: 'קרנות צבירה',      icon: Archive },
       { href: '/goals',     label: 'יעדים',             icon: Crosshair },
-      { href: '/kids',      label: 'ילדים',             icon: Baby },
       { href: '/pension',   label: 'פנסיה',             icon: Landmark },
     ],
   },
@@ -116,14 +116,18 @@ export function Sidebar() {
 
   return (<>
     <aside className="hidden md:flex md:flex-col w-[var(--sidebar-width)] fixed top-0 right-0 h-screen bg-[var(--c-0-14)] border-l border-[var(--bg-hover)] z-40">
-      {/* Logo + Bell */}
+      {/* Logo */}
       <div className="px-5 pt-5 pb-4 border-b border-[var(--c-0-20)]">
-        <div className="flex items-center gap-2 mb-1.5">
-          <div className="shrink-0 flex-1 min-w-0">
-            <img src="/logo-familyplan.png" alt="Family Plan" className="w-[110px] h-auto block" />
-            <div className="text-[10px] text-[var(--text-muted)] mt-1 tracking-wide">סדר בבית, שקט בכיס.</div>
+        <div className="mb-1.5 flex flex-col items-center">
+          <img src="/logo-familyplan.png" alt="Family Plan" width={158} height={158} className="w-[158px] h-[158px] object-contain logo-dark" />
+          <img src="/logo-familyplan-light.png" alt="Family Plan" width={158} height={158} className="w-[158px] h-[158px] object-contain logo-light" />
+          <div className="text-[10px] text-[var(--text-muted)] -mt-4 tracking-wide">סדר בבית, שקט בכיס.</div>
+        </div>
+        {/* Family name + Bell */}
+        <div className="flex items-center justify-between min-h-[24px]">
+          <div className="text-[11px] text-[var(--text-secondary)] tracking-wide">
+            {family?.name ?? '\u00A0'}
           </div>
-          {/* Alert bell */}
           <div ref={alertRef} className="relative">
             <button
               onClick={() => setShowAlerts(v => !v)}
@@ -179,11 +183,6 @@ export function Sidebar() {
             )}
           </div>
         </div>
-        {family?.name && (
-          <div className="text-[11px] text-[var(--text-secondary)] tracking-wide">
-            {family.name}
-          </div>
-        )}
       </div>
 
       {/* View Selector */}
