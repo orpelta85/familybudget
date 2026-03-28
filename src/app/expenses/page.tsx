@@ -496,20 +496,28 @@ export default function ExpensesPage() {
       const today = new Date().toISOString().split('T')[0]
       const sb = createClient()
 
-      // Auto-create new categories from Excel
+      // Auto-create new categories from Excel (use Supabase directly for reliability)
       const newCatNames = [...new Set(valid.filter(r => r.categoryId.startsWith('__new__')).map(r => r.categoryId.replace('__new__', '')))]
       const createdCatMap: Record<string, number> = {}
       const maxSort = Math.max(0, ...(categories ?? []).map(c => c.sort_order ?? 0))
       for (let i = 0; i < newCatNames.length; i++) {
-        try {
-          const created = await addCategory.mutateAsync({
-            user_id: user.id, name: newCatNames[i], type: 'variable',
-            monthly_target: 0, sort_order: maxSort + i + 1,
-          })
+        // First check if category already exists (exact or partial match)
+        const existing = (categories ?? []).find(c => c.name === newCatNames[i])
+          || (categories ?? []).find(c => c.name.toLowerCase() === newCatNames[i].toLowerCase())
+          || (categories ?? []).find(c => c.name.includes(newCatNames[i]) || newCatNames[i].includes(c.name))
+        if (existing) {
+          createdCatMap[newCatNames[i]] = existing.id
+          continue
+        }
+        // Create new category directly via Supabase
+        const { data: created, error } = await sb.from('budget_categories').insert({
+          user_id: user.id, name: newCatNames[i], type: 'variable',
+          monthly_target: 0, sort_order: maxSort + i + 1,
+        }).select('id').single()
+        if (created) {
           createdCatMap[newCatNames[i]] = created.id
-        } catch {
-          const existing = (categories ?? []).find(c => c.name.includes(newCatNames[i]))
-          if (existing) createdCatMap[newCatNames[i]] = existing.id
+        } else {
+          console.error('Failed to create category:', newCatNames[i], error)
         }
       }
 
@@ -541,7 +549,9 @@ export default function ExpensesPage() {
           resolvedCatId = Number(r.categoryId)
         }
         if (!resolvedCatId || isNaN(resolvedCatId)) {
-          resolvedCatId = categories?.[0]?.id ?? 1
+          // Fallback to "שונות" (misc), not the first category
+          const miscCat = categories?.find(c => c.name === 'שונות')
+          resolvedCatId = miscCat?.id ?? categories?.[0]?.id ?? 1
         }
 
         if (r.is_shared && familyId) {
