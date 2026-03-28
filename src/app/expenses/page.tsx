@@ -547,14 +547,21 @@ export default function ExpensesPage() {
         if (r.is_shared && familyId) {
           // Map Hebrew category name to shared category enum value
           const catName = r.category || categories?.find(c => String(c.id) === r.categoryId)?.name || ''
+          // Must match shared_category enum in DB:
+          // rent, property_tax, electricity, water_gas, building_committee, internet,
+          // home_insurance, netflix, spotify, groceries, misc, car_loan, insurance,
+          // eating_out, entertainment, subscriptions, shopping, pets, travel
           const LABEL_TO_KEY: Record<string, string> = {
-            'שכירות': 'rent', 'חשבונות בית': 'household', 'ביטוחים': 'insurance',
-            'הלוואות': 'loans', 'מנויים': 'subscriptions', 'מכולת': 'groceries',
-            'אוכל בחוץ': 'eating_out', 'תחבורה': 'transport', 'בריאות ורפואה': 'health', 'בריאות': 'health',
-            'בגדים וקניות': 'clothing', 'בגדים': 'clothing', 'בילויים ופנאי': 'leisure', 'בילויים': 'leisure',
-            'ילדים': 'kids', 'חיות מחמד': 'pets', 'חיסכון והשקעות': 'savings',
-            'הלוואת רכב': 'car_loan', 'ארנונה': 'property_tax', 'חשמל': 'electricity',
-            'מים+גז': 'water_gas', 'ועד בית': 'building_committee',
+            'שכירות': 'rent', 'ארנונה': 'property_tax', 'חשמל': 'electricity',
+            'מים+גז': 'water_gas', 'ועד בית': 'building_committee', 'אינטרנט': 'internet',
+            'ביטוח דירה': 'home_insurance', 'נטפליקס': 'netflix', 'ספוטיפיי': 'spotify',
+            'מכולת': 'groceries', 'הלוואת רכב': 'car_loan', 'ביטוחים': 'insurance',
+            'אוכל בחוץ': 'eating_out', 'בילויים ופנאי': 'entertainment', 'בילויים': 'entertainment',
+            'מנויים': 'subscriptions', 'בגדים וקניות': 'shopping', 'בגדים': 'shopping',
+            'חיות מחמד': 'pets', 'טיולים': 'travel',
+            'חשבונות בית': 'misc', 'הלוואות': 'misc', 'תחבורה': 'misc',
+            'בריאות ורפואה': 'misc', 'בריאות': 'misc', 'ילדים': 'misc',
+            'חיסכון והשקעות': 'misc',
           }
           const sharedCat = LABEL_TO_KEY[catName] || 'misc'
           sharedRows.push({
