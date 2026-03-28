@@ -713,9 +713,18 @@ export default function ExpensesPage() {
             </button>
           </div>
           <p className="text-[12px] text-[var(--text-secondary)] mb-3">
-            נמצאו {rawParsedRows.length} שורות עם תאריכי חיוב. בחר טווח תאריכים לסינון.
+            נמצאו {rawParsedRows.length} שורות. בחר טווח תאריכים או ייבא הכל.
           </p>
-          {/* Date range inputs */}
+          {/* Select all OR date range */}
+          <div className="flex items-center gap-3 mb-4">
+            <button
+              onClick={() => applyDateFilter('', '')}
+              className="shrink-0 bg-[var(--c-teal-0-22)] border border-[var(--c-teal-0-40)] rounded-lg px-4 py-2 text-[var(--c-teal-0-75)] text-[13px] font-semibold cursor-pointer hover:bg-[var(--c-teal-0-30)] transition-colors"
+            >
+              בחר הכל ({rawParsedRows.length})
+            </button>
+            <span className="text-[12px] text-[var(--c-0-40)]">או</span>
+          </div>
           <div className="flex items-center gap-3 mb-4">
             <div className="flex-1">
               <label className="block text-[11px] text-[var(--text-secondary)] mb-1">מתאריך</label>
@@ -780,20 +789,13 @@ export default function ExpensesPage() {
               }
             </div>
           )}
-          <div className="flex gap-2">
-            <button
-              onClick={() => applyDateFilter(importDateFrom, importDateTo)}
-              className="flex-1 bg-primary border-none rounded-lg py-2.5 text-primary-foreground font-semibold text-[13px] cursor-pointer"
-            >
-              {importDateFrom && importDateTo ? `סנן והמשך (${filteredRowCount})` : 'המשך ללא סינון'}
-            </button>
-            <button
-              onClick={() => applyDateFilter('', '')}
-              className="bg-[var(--c-teal-0-22)] border border-[var(--c-teal-0-40)] rounded-lg px-3 py-2.5 text-[var(--c-teal-0-75)] text-[13px] font-semibold cursor-pointer"
-            >
-              בחר הכל ({rawParsedRows.length})
-            </button>
-          </div>
+          <button
+            onClick={() => applyDateFilter(importDateFrom, importDateTo)}
+            disabled={!importDateFrom || !importDateTo}
+            className="w-full bg-primary border-none rounded-lg py-2.5 text-primary-foreground font-semibold text-[13px] cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+          >
+            {importDateFrom && importDateTo ? `סנן והמשך (${filteredRowCount})` : 'בחר טווח תאריכים'}
+          </button>
         </div>
       )}
 
