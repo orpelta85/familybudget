@@ -275,6 +275,8 @@ export async function parseExpenseExcelDetailed(file: File): Promise<ParseResult
             }
           })
           .filter(r => r.amount > 0 && r.description && !/^סה.?כ|^total/i.test(r.description))
+          // Bank statements: filter out credit card charge lines (double-counted with card detail files)
+          .filter(r => !debitKey || !/כרטיסי.?אשראי/i.test(r.description))
 
         const totalAmount = parsed.reduce((s, r) => s + r.amount, 0)
 
