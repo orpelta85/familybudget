@@ -524,6 +524,7 @@ export default function ExpensesPage() {
         const { data: created, error } = await sb.from('budget_categories').insert({
           user_id: user.id, name: catName, type: 'variable',
           monthly_target: 0, sort_order: maxSort + i + 1,
+          year: selectedYear ?? 1,
         }).select('id').single()
         if (created) {
           createdCatMap[catName] = created.id
@@ -593,7 +594,7 @@ export default function ExpensesPage() {
             'אוכל בחוץ': 'eating_out', 'בילויים ופנאי': 'entertainment', 'בילויים': 'entertainment',
             'מנויים': 'subscriptions', 'בגדים וקניות': 'shopping', 'בגדים': 'shopping',
             'חיות מחמד': 'pets', 'כלבים': 'pets', 'דוגווקרס': 'pets',
-            'טיולים': 'travel', 'חופשה': 'travel',
+            'טיולים': 'travel', 'חופשה': 'vacation',
             'פארם': 'groceries',
             'חשבונות בית': 'misc', 'הלוואות': 'misc', 'תחבורה': 'misc',
             'בריאות ורפואה': 'misc', 'בריאות': 'misc', 'ילדים': 'misc',

@@ -20,6 +20,11 @@ const SHARED_CATEGORIES: { value: string; label: string }[] = [
   { value: 'kids', label: 'ילדים' },
   { value: 'pets', label: 'חיות מחמד' },
   { value: 'savings', label: 'חיסכון והשקעות' },
+  { value: 'vacation', label: 'חופשה' },
+  { value: 'travel', label: 'טיולים' },
+  { value: 'car_loan', label: 'הלוואת רכב' },
+  { value: 'property_tax', label: 'ארנונה' },
+  { value: 'water_gas', label: 'מים+גז' },
   { value: 'misc', label: 'שונות' },
 ]
 
@@ -41,6 +46,7 @@ const SHARED_CAT_LABEL_MAP: Record<string, string> = {
   savings: 'חיסכון והשקעות',
   misc: 'שונות',
   travel: 'טיולים',
+  vacation: 'חופשה',
   car_loan: 'הלוואת רכב',
   property_tax: 'ארנונה',
   electricity: 'חשמל',
