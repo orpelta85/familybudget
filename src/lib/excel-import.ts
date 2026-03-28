@@ -255,13 +255,11 @@ export async function parseExpenseExcelDetailed(file: File): Promise<ParseResult
               }
             }
 
-            // For bank statements with split debit/credit columns, use whichever has a value
+            // For bank statements with split debit/credit columns, only use חובה (debit = expenses)
+            // Do NOT fall back to זכות (credit = income/refunds)
             let parsedAmount = Math.abs(parseFloat(String(row[amountKey] ?? '0').replace(/[^\d.]/g, '')) || 0)
-            if (!parsedAmount && debitKey) {
+            if (!parsedAmount && debitKey && amountKey !== debitKey) {
               parsedAmount = Math.abs(parseFloat(String(row[debitKey] ?? '0').replace(/[^\d.]/g, '')) || 0)
-            }
-            if (!parsedAmount && creditKey) {
-              parsedAmount = Math.abs(parseFloat(String(row[creditKey] ?? '0').replace(/[^\d.]/g, '')) || 0)
             }
 
             return {
