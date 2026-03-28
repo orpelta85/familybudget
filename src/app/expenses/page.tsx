@@ -88,6 +88,7 @@ export default function ExpensesPage() {
   const [importRows, setImportRows] = useState<ImportRow[]>([])
   const [showImport, setShowImport] = useState(false)
   const [importing, setImporting] = useState(false)
+  const [parsingFiles, setParsingFiles] = useState(false)
   const [detectedFormat, setDetectedFormat] = useState<string | null>(null)
   const [importTotal, setImportTotal] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
@@ -261,6 +262,8 @@ export default function ExpensesPage() {
 
   // Parse multiple files and merge results
   async function processExcelFiles(files: File[]) {
+    if (parsingFiles) return
+    setParsingFiles(true)
     try {
       const allRows: RawExpenseRow[] = []
       const formats: string[] = []
@@ -298,7 +301,7 @@ export default function ExpensesPage() {
         ? `נקראו ${files.length} קבצים · ${allRows.length} שורות`
         : `נקראו ${allRows.length} שורות`
       toast.success(msg + (formats.length ? ` · ${formats.join(', ')}` : ''))
-    } catch (e) { console.error('Read Excel files:', e); toast.error('שגיאה בקריאת הקבצים') }
+    } catch (e) { console.error('Read Excel files:', e); toast.error('שגיאה בקריאת הקבצים') } finally { setParsingFiles(false) }
   }
 
   // Apply period filter and show import modal
@@ -698,6 +701,7 @@ export default function ExpensesPage() {
         onDrop={handleDrop}
         onImportSave={handleImportSave}
         showTextInput={showTextInput}
+        parsingFiles={parsingFiles}
         onAcceptAllSuggestions={() => {
           // Accept all suggestions with confidence >= 0.3 — no change needed, they already have categoryId set
           toast.success('כל ההצעות אושרו')

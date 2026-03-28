@@ -5,7 +5,7 @@ import { getAuthUser } from '@/lib/supabase/auth'
 function fmt(n: number): string {
   const formatted = new Intl.NumberFormat('he-IL', { maximumFractionDigits: 0 }).format(Math.abs(n))
   const sign = n < 0 ? '-' : ''
-  return `${sign}${formatted} ₪`
+  return `₪ ${sign}${formatted}`
 }
 
 export async function GET(req: NextRequest) {

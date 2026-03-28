@@ -31,6 +31,7 @@ interface ExcelImportModalProps {
   onImportSave: () => void
   showTextInput: (title: string) => Promise<string | null>
   onAcceptAllSuggestions?: () => void
+  parsingFiles?: boolean
 }
 
 export function ExcelImportModal({
@@ -39,6 +40,7 @@ export function ExcelImportModal({
   categories, funds,
   isDragging, setIsDragging, fileRef,
   onDrop, onImportSave, showTextInput, onAcceptAllSuggestions,
+  parsingFiles = false,
 }: ExcelImportModalProps) {
   const [bulkCategory, setBulkCategory] = useState('')
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set())
@@ -70,13 +72,22 @@ export function ExcelImportModal({
           }`}
           onClick={() => fileRef.current?.click()}
         >
-          <Upload size={24} className={`mx-auto mb-2 ${isDragging ? 'text-[var(--accent-blue)]' : 'text-[var(--c-0-40)]'}`} />
-          <div className="text-[13px] text-[var(--text-secondary)]">
-            גרור קבצי Excel לכאן או לחץ לבחירה
-          </div>
-          <div className="text-[11px] text-[var(--c-0-45)] mt-1">
-            xlsx, xls, csv — ניתן לבחור מספר קבצים בו-זמנית (בנקים + אשראי)
-          </div>
+          {parsingFiles ? (
+            <>
+              <div className="animate-spin mx-auto mb-2 w-6 h-6 border-2 border-[var(--accent-blue)] border-t-transparent rounded-full" />
+              <div className="text-[13px] text-[var(--accent-blue)] font-medium">קורא קבצים...</div>
+            </>
+          ) : (
+            <>
+              <Upload size={24} className={`mx-auto mb-2 ${isDragging ? 'text-[var(--accent-blue)]' : 'text-[var(--c-0-40)]'}`} />
+              <div className="text-[13px] text-[var(--text-secondary)]">
+                גרור קבצי Excel לכאן או לחץ לבחירה
+              </div>
+              <div className="text-[11px] text-[var(--c-0-45)] mt-1">
+                xlsx, xls, csv — ניתן לבחור מספר קבצים בו-זמנית (בנקים + אשראי)
+              </div>
+            </>
+          )}
         </div>
       )}
 

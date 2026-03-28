@@ -315,6 +315,14 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   LOGO THEME SWITCHING
+   ═══════════════════════════════════════════════════════════════════════════ */
+.logo-dark { display: block; }
+.logo-light { display: none; }
+[data-theme="light"] .logo-dark { display: none; }
+[data-theme="light"] .logo-light { display: block; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
    DARK MODE
    ═══════════════════════════════════════════════════════════════════════════ */
 [data-theme="dark"] {
@@ -581,7 +589,6 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(155px, 1fr));
   gap: 12px;
-  margin-bottom: 16px;
 }
 /* Sidebar + content layout (e.g., apartment form + table) */
 .grid-sidebar {

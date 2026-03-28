@@ -1,7 +1,12 @@
 // ── Shared expenses Excel ─────────────────────────────────────────────────────
+// Dynamic import to avoid Turbopack tree-shaking issues with xlsx in browser context
+let _XLSX: typeof import('xlsx') | null = null
 
 async function getXLSX() {
-  return await import('xlsx')
+  if (!_XLSX) {
+    _XLSX = await import('xlsx')
+  }
+  return _XLSX
 }
 
 export interface RawSharedRow {
@@ -116,7 +121,28 @@ export async function parseExpenseExcelDetailed(file: File): Promise<ParseResult
         const wb = XLSX.read(data, { type: 'array', cellDates: true })
         const sheetName = wb.SheetNames[0]
         const sheet = wb.Sheets[sheetName]
-        const rows: Record<string, unknown>[] = XLSX.utils.sheet_to_json(sheet, { defval: '' })
+        // Try default header row first
+        let rows: Record<string, unknown>[] = XLSX.utils.sheet_to_json(sheet, { defval: '' })
+
+        // If first row keys don't look like Hebrew headers (credit card metadata rows),
+        // try skipping rows until we find a header-like row
+        if (rows.length > 0) {
+          const firstKeys = Object.keys(rows[0])
+          const looksLikeHeaders = firstKeys.some(k => /תאריך|סכום|שם.?בית|תיאור|אסמכתא|עסקה/i.test(k))
+          if (!looksLikeHeaders) {
+            // Try rows 1-5 as potential header rows
+            for (let headerRow = 1; headerRow <= 5; headerRow++) {
+              const tryRows: Record<string, unknown>[] = XLSX.utils.sheet_to_json(sheet, { defval: '', range: headerRow })
+              if (tryRows.length > 0) {
+                const tryKeys = Object.keys(tryRows[0])
+                if (tryKeys.some(k => /תאריך|סכום|שם.?בית|תיאור|אסמכתא|עסקה/i.test(k))) {
+                  rows = tryRows
+                  break
+                }
+              }
+            }
+          }
+        }
 
         if (!rows.length) { resolve({ rows: [], detectedFormat: null, totalAmount: 0, totalCount: 0 }); return }
 
@@ -194,7 +220,7 @@ export async function parseExpenseExcelDetailed(file: File): Promise<ParseResult
               fund_name: fundVal || undefined,
             }
           })
-          .filter(r => r.amount > 0 && r.description)
+          .filter(r => r.amount > 0 && r.description && !/^סה.?כ|^total/i.test(r.description))
 
         const totalAmount = parsed.reduce((s, r) => s + r.amount, 0)
 

@@ -23,13 +23,13 @@ const moreSections: MoreSection[] = [
       { href: '/income',   label: 'הכנסות',       icon: Wallet },
       { href: '/budget',   label: 'תקציב',        icon: ListChecks },
       { href: '/joint',    label: 'קופה קטנה',    icon: Banknote },
+      { href: '/kids',     label: 'ילדים',         icon: Baby },
     ],
   },
   {
     sectionLabel: 'חיסכון ויעדים',
     items: [
       { href: '/sinking',  label: 'קרנות צבירה',  icon: Archive },
-      { href: '/kids',     label: 'ילדים',         icon: Baby },
       { href: '/pension',  label: 'פנסיה',         icon: Landmark },
     ],
   },
