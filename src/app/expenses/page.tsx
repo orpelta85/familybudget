@@ -545,8 +545,20 @@ export default function ExpensesPage() {
         }
 
         if (r.is_shared && familyId) {
+          // Map Hebrew category name to shared category enum value
+          const catName = r.category || categories?.find(c => String(c.id) === r.categoryId)?.name || ''
+          const LABEL_TO_KEY: Record<string, string> = {
+            'שכירות': 'rent', 'חשבונות בית': 'household', 'ביטוחים': 'insurance',
+            'הלוואות': 'loans', 'מנויים': 'subscriptions', 'מכולת': 'groceries',
+            'אוכל בחוץ': 'eating_out', 'תחבורה': 'transport', 'בריאות ורפואה': 'health', 'בריאות': 'health',
+            'בגדים וקניות': 'clothing', 'בגדים': 'clothing', 'בילויים ופנאי': 'leisure', 'בילויים': 'leisure',
+            'ילדים': 'kids', 'חיות מחמד': 'pets', 'חיסכון והשקעות': 'savings',
+            'הלוואת רכב': 'car_loan', 'ארנונה': 'property_tax', 'חשמל': 'electricity',
+            'מים+גז': 'water_gas', 'ועד בית': 'building_committee',
+          }
+          const sharedCat = LABEL_TO_KEY[catName] || 'misc'
           sharedRows.push({
-            period_id: selectedPeriodId, category: 'misc',
+            period_id: selectedPeriodId, category: sharedCat,
             total_amount: r.amount, notes: r.description, family_id: familyId,
           })
         } else {
