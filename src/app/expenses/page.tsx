@@ -568,10 +568,13 @@ export default function ExpensesPage() {
             'מכולת': 'groceries', 'הלוואת רכב': 'car_loan', 'ביטוחים': 'insurance',
             'אוכל בחוץ': 'eating_out', 'בילויים ופנאי': 'entertainment', 'בילויים': 'entertainment',
             'מנויים': 'subscriptions', 'בגדים וקניות': 'shopping', 'בגדים': 'shopping',
-            'חיות מחמד': 'pets', 'טיולים': 'travel',
+            'חיות מחמד': 'pets', 'כלבים': 'pets', 'דוגווקרס': 'pets',
+            'טיולים': 'travel', 'חופשה': 'travel',
+            'פארם': 'groceries',
             'חשבונות בית': 'misc', 'הלוואות': 'misc', 'תחבורה': 'misc',
             'בריאות ורפואה': 'misc', 'בריאות': 'misc', 'ילדים': 'misc',
-            'חיסכון והשקעות': 'misc',
+            'חיסכון והשקעות': 'misc', 'השקעות': 'misc',
+            'ספורט': 'misc', 'מוזיקה': 'misc', 'טיפוח': 'misc', 'אימון אישי': 'misc',
           }
           const sharedCat = LABEL_TO_KEY[catName] || 'misc'
           sharedRows.push({
