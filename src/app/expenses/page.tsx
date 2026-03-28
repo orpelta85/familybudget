@@ -789,9 +789,9 @@ export default function ExpensesPage() {
             </button>
             <button
               onClick={() => applyDateFilter('', '')}
-              className="bg-secondary border border-[var(--border-light)] rounded-lg px-3 py-2.5 text-inherit text-xs cursor-pointer"
+              className="bg-[var(--c-teal-0-22)] border border-[var(--c-teal-0-40)] rounded-lg px-3 py-2.5 text-[var(--c-teal-0-75)] text-[13px] font-semibold cursor-pointer"
             >
-              דלג - הצג הכל
+              בחר הכל ({rawParsedRows.length})
             </button>
           </div>
         </div>
