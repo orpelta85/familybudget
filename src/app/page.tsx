@@ -163,7 +163,8 @@ export default function Dashboard() {
   const totalIncome = (income?.salary ?? 0) + (income?.bonus ?? 0) + (income?.other ?? 0)
   const totalPersonal = expenses?.reduce((s, e) => s + e.amount, 0) ?? 0
   const totalShared = shared?.reduce((s, e) => s + (e.my_share ?? e.total_amount * splitFrac), 0) ?? 0
-  const totalExpenses = totalPersonal + totalShared
+  const sinkingMonthly = (funds ?? []).filter(f => f.is_active).reduce((s, f) => s + f.monthly_allocation, 0)
+  const totalExpenses = totalPersonal + totalShared + sinkingMonthly
   const netFlow = totalIncome - totalExpenses
   const savingsPct = totalIncome > 0 ? Math.round((netFlow / totalIncome) * 100) : 0
   const dataLoading = !selectedPeriodId
@@ -180,22 +181,23 @@ export default function Dashboard() {
   const variableTargets = variableCats.reduce((s, c) => s + c.monthly_target, 0)
   const variableSpent = variableCats.reduce((s, c) => s + (spendByCat[c.id] ?? 0), 0)
   const variableRemaining = variableTargets - variableSpent
-  const sinkingTargets = (categories ?? []).filter(c => c.type === 'sinking').reduce((s, c) => s + c.monthly_target, 0)
-  const savingsTargets = (categories ?? []).filter(c => c.type === 'savings').reduce((s, c) => s + c.monthly_target, 0)
-  const safeToSpend = totalIncome - fixedTargets - variableTargets - sinkingTargets - savingsTargets - totalShared
+  const savingsSpent = (categories ?? []).filter(c => c.type === 'savings').reduce((s, c) => s + (spendByCat[c.id] ?? 0), 0)
+  const personalExclSavings = totalPersonal - savingsSpent
+  const safeToSpend = totalIncome - personalExclSavings - totalShared - sinkingMonthly - savingsSpent
 
   // ── Year-over-year ────────────────────────────────────────────────────────
   const yearAgoIncome = allIncome?.find(i => i.period_id === yearAgoPeriodId)
   const yearAgoTotalIncome = yearAgoIncome ? yearAgoIncome.salary + yearAgoIncome.bonus + yearAgoIncome.other : null
   const yearAgoPeriod = periods?.find(p => p.id === yearAgoPeriodId)
 
-  // ── Donut data ─────────────────────────────────────────────────────────────
+  // ── Donut data (personal expenses by type + shared as "fixed") ──────────
   const expByType = (categories ?? []).reduce<Record<string, number>>((acc, cat) => {
     const spent = spendByCat[cat.id] ?? 0
     if (spent > 0) acc[cat.type] = (acc[cat.type] ?? 0) + spent
     return acc
   }, {})
-  if (totalShared > 0) expByType['shared'] = totalShared
+  // Shared expenses are mostly fixed (rent, utilities, insurance) — add to fixed
+  if (totalShared > 0) expByType['fixed'] = (expByType['fixed'] ?? 0) + totalShared
   const donutData = Object.entries(expByType).map(([type, value]) => ({
     name: TYPE_LABELS[type] ?? type, value, color: TYPE_COLORS[type] ?? 'var(--text-secondary)',
   }))
@@ -291,9 +293,9 @@ export default function Dashboard() {
   }
 
   return (
-    <div>
+    <div className="space-y-4">
       {/* Header */}
-      <div className="flex justify-between items-start mb-4">
+      <div className="flex justify-between items-start">
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold tracking-tight">
@@ -436,7 +438,7 @@ export default function Dashboard() {
 
       {/* ── Alert bar ──────────────────────────────────────────────────────── */}
       {showAlert && (
-        <div className="bg-alert-bg border border-alert-border rounded-[10px] px-4 py-[11px] mb-4 flex items-start gap-2.5">
+        <div className="bg-alert-bg border border-alert-border rounded-[10px] px-4 py-[11px] flex items-start gap-2.5">
           <AlertTriangle size={15} className="text-accent-orange shrink-0 mt-px" />
           <div className="text-[13px] text-alert-text leading-relaxed">
             {netFlow < 0 && <span>תזרים שלילי החודש ({formatCurrency(netFlow)}). </span>}
@@ -471,52 +473,49 @@ export default function Dashboard() {
         ))}
       </div>
 
-      {/* ── Month at a Glance ────────────────────────────────────────────── */}
-      <div className="card">
-        <h2 className="card-header mb-4">
-          <CalendarDays size={14} className="text-accent-blue" />
-          מבט על החודש
-        </h2>
-        {dataLoading
-          ? <div className="text-text-secondary text-[13px]">בחר תקופה</div>
-          : (
-            <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-6">
-              {/* Right (in RTL): Personal breakdown */}
-              <div>
-                <div className="text-[13px]">
-                  {[
-                    { label: 'הכנסה', value: totalIncome, color: 'var(--accent-green)', sign: '+' },
-                    { label: 'הוצאות אישיות', value: -totalPersonal, color: 'var(--accent-orange)', sign: '-' },
-                    { label: 'הוצאות משותפות (החלק שלי)', value: -totalShared, color: 'var(--accent-shared)', sign: '-' },
-                    { label: 'הוצאות קבועות (חלק אישי)', value: -fixedTargets, color: 'var(--text-secondary)', sign: '-' },
-                    { label: 'הוצאות משתנות (חלק אישי)', value: -variableTargets, color: 'var(--accent-orange)', sign: '-' },
-                    ...(savingsTargets > 0 ? [{ label: 'חיסכון', value: -savingsTargets, color: 'var(--accent-green)', sign: '-' }] : []),
-                  ].map(row => (
-                    <div key={row.label} className="flex justify-between py-[5px] row-divider">
-                      <span className="text-text-body">{row.label}</span>
-                      <span className="font-medium" style={{ color: row.color }}>
-                        {row.sign}{formatCurrency(Math.abs(row.value))}
-                      </span>
-                    </div>
-                  ))}
-                  <div className="flex justify-between pt-2.5 mt-1">
-                    <span className="font-semibold">סיכום - נשאר בטוח להוציא</span>
-                    <span className={`text-base font-bold ${safeToSpend >= 0 ? 'text-accent-green' : 'text-accent-red'}`}>
-                      {formatCurrency(safeToSpend)}
+      {/* ── Month at a Glance — 2 cards ────────────────────────────────── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Card 1: Summary table (1/3) */}
+        <div className="card">
+          <h2 className="card-header mb-4">
+            <CalendarDays size={14} className="text-accent-blue" />
+            מבט על החודש
+          </h2>
+          {dataLoading
+            ? <div className="text-text-secondary text-[13px]">בחר תקופה</div>
+            : (
+              <div className="text-[13px]">
+                {[
+                  { label: 'הכנסה', value: totalIncome, color: 'var(--accent-green)', sign: '+' },
+                  { label: 'הוצאות אישיות', value: -personalExclSavings, color: 'var(--accent-orange)', sign: '-' },
+                  { label: 'הוצאות משותפות (החלק שלי)', value: -totalShared, color: 'var(--accent-shared)', sign: '-' },
+                  ...(sinkingMonthly > 0 ? [{ label: 'קרנות צבירה', value: -sinkingMonthly, color: 'var(--accent-teal)', sign: '-' }] : []),
+                  ...(savingsSpent > 0 ? [{ label: 'חיסכון', value: -savingsSpent, color: 'var(--accent-green)', sign: '-' }] : []),
+                ].map(row => (
+                  <div key={row.label} className="flex justify-between py-[5px] row-divider">
+                    <span className="text-text-body">{row.label}</span>
+                    <span className="font-medium" style={{ color: row.color }}>
+                      {row.sign}{formatCurrency(Math.abs(row.value))}
                     </span>
                   </div>
+                ))}
+                <div className="flex justify-between pt-2.5 mt-1">
+                  <span className="font-semibold">נשאר להוציא</span>
+                  <span className={`text-base font-bold ${safeToSpend >= 0 ? 'text-accent-green' : 'text-accent-red'}`}>
+                    {formatCurrency(safeToSpend)}
+                  </span>
                 </div>
               </div>
+            )
+          }
+        </div>
 
-              {/* Left (in RTL): Pie chart */}
-              {donutData.length > 0 && (
-                <div className="flex flex-col items-center justify-center shrink-0" style={{ width: 150 }}>
-                  <ExpenseDonut data={donutData} />
-                </div>
-              )}
-            </div>
-          )
-        }
+        {/* Card 2: Donut chart (2/3) */}
+        {donutData.length > 0 && (
+          <div className="card flex flex-col items-center justify-center">
+            <ExpenseDonut data={donutData} />
+          </div>
+        )}
       </div>
 
       {/* ── Budget + Year-over-year ────────────────────────────────────────── */}
@@ -689,6 +688,71 @@ export default function Dashboard() {
   )
 }
 
+// ── Family Member Card ──────────────────────────────────────────────────────
+function FamilyMemberCard({ member, memberShared, memberSinking }: {
+  member: { user_id: string; display_name: string; income: number; personal_expenses: number; show_details: boolean }
+  memberShared: number
+  memberSinking: number
+}) {
+  const [showSinking, setShowSinking] = useState(true)
+  const netBefore = member.income - member.personal_expenses - memberShared
+  const netAfter = netBefore - memberSinking
+
+  return (
+    <div className="card">
+      <div className="flex items-center gap-2 mb-3.5">
+        <Users size={14} className="text-accent-blue" />
+        <span className="font-semibold text-sm">{member.display_name}</span>
+      </div>
+      {member.show_details ? (
+        <div className="flex flex-col gap-2 text-[13px]">
+          <div className="flex justify-between">
+            <span className="text-text-secondary">הכנסה</span>
+            <span className="font-medium text-accent-green">+{formatCurrency(member.income)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-text-secondary">הוצאות אישיות</span>
+            <span className="font-medium text-accent-orange">-{formatCurrency(member.personal_expenses)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-text-secondary">הוצאות משותפות</span>
+            <span className="font-medium text-accent-shared">-{formatCurrency(memberShared)}</span>
+          </div>
+          {showSinking && memberSinking > 0 && (
+            <div className="flex justify-between">
+              <span className="text-text-secondary">קרנות צבירה</span>
+              <span className="font-medium text-accent-teal">-{formatCurrency(memberSinking)}</span>
+            </div>
+          )}
+          <div className="flex justify-between border-t border-t-bg-hover pt-2">
+            <span className="font-semibold">{showSinking ? 'נטו אחרי קרנות' : 'נטו אמיתי'}</span>
+            <span className={`font-bold ${(showSinking ? netAfter : netBefore) >= 0 ? 'text-accent-green' : 'text-accent-red'}`}>
+              {formatCurrency(showSinking ? netAfter : netBefore)}
+            </span>
+          </div>
+          {memberSinking > 0 && (
+            <button
+              type="button"
+              onClick={() => setShowSinking(v => !v)}
+              className="self-start mt-1 px-2 py-1 rounded text-[11px] cursor-pointer transition-all duration-150 bg-[var(--bg-hover)] text-[var(--text-secondary)] border border-[var(--border-light)] hover:text-[var(--text-primary)]"
+            >
+              {showSinking ? 'הסתר קרנות' : 'הצג קרנות'}
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="text-[13px] text-text-secondary">
+          <div className="flex justify-between mb-2">
+            <span>הכנסה</span>
+            <span className="font-medium text-accent-green">+{formatCurrency(member.income)}</span>
+          </div>
+          <div className="text-xs text-text-secondary italic">פרטי הוצאות מוסתרים</div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Family Dashboard Component ──────────────────────────────────────────────
 function FamilyDashboard({
   summary,
@@ -717,7 +781,8 @@ function FamilyDashboard({
     return <DashboardSkeleton />
   }
 
-  const totalExpenses = summary.total_personal_expenses + summary.total_shared_expenses
+  const familySinkingMonthly = (funds ?? []).filter(f => f.is_active).reduce((s, f) => s + f.monthly_allocation, 0)
+  const totalExpenses = summary.total_personal_expenses + summary.total_shared_expenses + familySinkingMonthly
   const familyNet = summary.total_income - totalExpenses
   const familySavingsPct = summary.total_income > 0 ? Math.round((familyNet / summary.total_income) * 100) : 0
 
@@ -779,49 +844,31 @@ function FamilyDashboard({
         ))}
       </div>
 
-      {/* Per-member breakdown */}
-      <div className="grid-3 mb-4">
-        {summary.members.map(member => {
-          const memberShared = totalSharedFromPersonal > 0 ? Math.round(totalSharedFromPersonal / summary.members.length) : 0
-          const memberNet = member.income - member.personal_expenses - memberShared
-          return (
-            <div key={member.user_id} className="card">
-              <div className="flex items-center gap-2 mb-3.5">
-                <Users size={14} className="text-accent-blue" />
-                <span className="font-semibold text-sm">{member.display_name}</span>
-              </div>
-              {member.show_details ? (
-                <div className="flex flex-col gap-2 text-[13px]">
-                  <div className="flex justify-between">
-                    <span className="text-text-secondary">הכנסה</span>
-                    <span className="font-medium text-accent-green">{formatCurrency(member.income)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-text-secondary">הוצאות אישיות</span>
-                    <span className="font-medium text-accent-orange">{formatCurrency(member.personal_expenses)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-text-secondary">הוצאות משותפות</span>
-                    <span className="font-medium text-accent-shared">{formatCurrency(memberShared)}</span>
-                  </div>
-                  <div className="flex justify-between border-t border-t-bg-hover pt-2">
-                    <span className="font-semibold">נטו אמיתי</span>
-                    <span className={`font-bold ${memberNet >= 0 ? 'text-accent-green' : 'text-accent-red'}`}>{formatCurrency(memberNet)}</span>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-[13px] text-text-secondary">
-                  <div className="flex justify-between mb-2">
-                    <span>הכנסה</span>
-                    <span className="font-medium text-accent-green">{formatCurrency(member.income)}</span>
-                  </div>
-                  <div className="text-xs text-text-secondary italic">פרטי הוצאות מוסתרים</div>
-                </div>
-              )}
-            </div>
-          )
-        })}
+      {/* Per-member breakdown + donut */}
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_1fr_1fr] gap-4">
+        {summary.members.map(member => (
+          <FamilyMemberCard
+            key={member.user_id}
+            member={member}
+            memberShared={summary.total_shared_expenses > 0 ? Math.round(summary.total_shared_expenses / summary.members.length) : 0}
+            memberSinking={Math.round(familySinkingMonthly / summary.members.length)}
+          />
+        ))}
+        {/* Family donut */}
+        <div className="card flex flex-col items-center justify-center">
+          <h2 className="card-header mb-3 self-end">
+            <CalendarDays size={14} className="text-accent-blue" />
+            חלוקת הוצאות
+          </h2>
+          <ExpenseDonut data={[
+            { name: 'אישיות', value: summary.total_personal_expenses, color: 'var(--accent-orange)' },
+            { name: 'משותפות', value: summary.total_shared_expenses, color: 'var(--accent-shared)' },
+            ...(familySinkingMonthly > 0 ? [{ name: 'קרנות צבירה', value: familySinkingMonthly, color: 'var(--accent-teal)' }] : []),
+          ]} />
+        </div>
       </div>
+
+      {/* member cards handled by FamilyMemberCard above */}
 
       {/* Budget summary + Shared expenses */}
       <div className="grid-2">

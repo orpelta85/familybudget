@@ -14,10 +14,15 @@ interface Props {
 
 export function PeriodSelector({ periods, selectedId, onChange }: Props) {
   const [showAll, setShowAll] = useState(false)
-  const visibleCount = 4
-  const visiblePeriods = periods.slice(0, visibleCount)
-  const hasMore = periods.length > visibleCount
-  const selectedInVisible = visiblePeriods.some(p => p.id === selectedId)
+
+  // Show: 1 before selected, selected, 1 after selected
+  const selectedIdx = periods.findIndex(p => p.id === selectedId)
+  const centerIdx = selectedIdx >= 0 ? selectedIdx : 0
+  const startIdx = Math.max(0, centerIdx - 1)
+  const endIdx = Math.min(periods.length, centerIdx + 2)
+  const visiblePeriods = periods.slice(startIdx, endIdx)
+  const hiddenPeriods = periods.filter(p => !visiblePeriods.includes(p))
+  const hasMore = hiddenPeriods.length > 0
 
   return (
     <div className="mb-5 flex items-center gap-2 flex-wrap">
@@ -43,19 +48,15 @@ export function PeriodSelector({ periods, selectedId, onChange }: Props) {
             onClick={() => setShowAll(v => !v)}
             className={cn(
               'flex items-center gap-1 px-3 py-1.5 rounded-lg text-[12px] border cursor-pointer transition-all duration-150',
-              !selectedInVisible && selectedId
-                ? 'bg-[var(--accent-blue)] text-[var(--c-0-10)] border-[var(--accent-blue)]'
-                : 'bg-[var(--bg-hover)] text-[var(--text-secondary)] border-[var(--border-light)] hover:text-[var(--text-primary)]'
+              'bg-[var(--bg-hover)] text-[var(--text-secondary)] border-[var(--border-light)] hover:text-[var(--text-primary)]'
             )}
           >
-            {!selectedInVisible && selectedId
-              ? periodLabel(periods.find(p => p.id === selectedId)?.start_date ?? '')
-              : 'עוד'}
+            עוד
             <ChevronDown size={13} className={cn('transition-transform duration-200', showAll && 'rotate-180')} />
           </button>
           {showAll && (
             <div className="absolute top-full inset-inline-start-0 mt-1 bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-1 shadow-[0_4px_16px_oklch(0_0_0/0.3)] z-50 min-w-[160px]">
-              {periods.slice(visibleCount).map(p => (
+              {hiddenPeriods.map(p => (
                 <button
                   key={p.id}
                   onClick={() => { onChange(p.id); setShowAll(false) }}

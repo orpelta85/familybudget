@@ -2,11 +2,17 @@
 
 import { useState } from 'react'
 import { formatCurrency } from '@/lib/utils'
-import { Upload, X, FileSpreadsheet } from 'lucide-react'
+import { Upload, X, FileSpreadsheet, CheckCircle2, AlertCircle, HelpCircle, Sparkles } from 'lucide-react'
 import type { RawExpenseRow } from '@/lib/excel-import'
 import type { BudgetCategory, SinkingFund } from '@/lib/types'
 
-export type ImportRow = RawExpenseRow & { categoryId: string }
+export type ImportRow = RawExpenseRow & {
+  categoryId: string
+  matchConfidence?: number
+  matchSource?: 'user-exact' | 'user-fuzzy' | 'global' | 'none'
+  matchRuleId?: number
+  originalCategoryId?: string
+}
 
 interface ExcelImportModalProps {
   importRows: ImportRow[]
@@ -24,6 +30,7 @@ interface ExcelImportModalProps {
   onDrop: (e: React.DragEvent) => void
   onImportSave: () => void
   showTextInput: (title: string) => Promise<string | null>
+  onAcceptAllSuggestions?: () => void
 }
 
 export function ExcelImportModal({
@@ -31,7 +38,7 @@ export function ExcelImportModal({
   importing, detectedFormat, importTotal,
   categories, funds,
   isDragging, setIsDragging, fileRef,
-  onDrop, onImportSave, showTextInput,
+  onDrop, onImportSave, showTextInput, onAcceptAllSuggestions,
 }: ExcelImportModalProps) {
   const [bulkCategory, setBulkCategory] = useState('')
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set())
@@ -65,10 +72,10 @@ export function ExcelImportModal({
         >
           <Upload size={24} className={`mx-auto mb-2 ${isDragging ? 'text-[var(--accent-blue)]' : 'text-[var(--c-0-40)]'}`} />
           <div className="text-[13px] text-[var(--text-secondary)]">
-            גרור קובץ Excel לכאן או לחץ לבחירה
+            גרור קבצי Excel לכאן או לחץ לבחירה
           </div>
           <div className="text-[11px] text-[var(--c-0-45)] mt-1">
-            xlsx, xls, csv — תומך בפורמטים של בנקים וכרטיסי אשראי ישראליים
+            xlsx, xls, csv — ניתן לבחור מספר קבצים בו-זמנית (בנקים + אשראי)
           </div>
         </div>
       )}
@@ -88,16 +95,49 @@ export function ExcelImportModal({
             </div>
             <button onClick={() => setShowImport(false)} aria-label="סגור ייבוא" className="bg-transparent border-none cursor-pointer flex items-center justify-center p-2 min-w-9 min-h-9 text-muted-foreground"><X size={14} /></button>
           </div>
-          {/* Summary bar */}
-          <div className="flex items-center gap-4 mb-3 text-[12px] text-[var(--text-secondary)] bg-[var(--c-0-14)] rounded-lg px-3 py-2">
-            <span>סה&quot;כ: <strong className="text-[var(--text-heading)]">{formatCurrency(importTotal)}</strong></span>
-            <span>{importRows.length} שורות</span>
-            <span>{importRows.filter(r => r.categoryId.startsWith('__new__')).length > 0 && (
-              <span className="text-[var(--accent-orange)]">
-                {new Set(importRows.filter(r => r.categoryId.startsWith('__new__')).map(r => r.category)).size} קטגוריות חדשות
-              </span>
-            )}</span>
-          </div>
+          {/* Smart categorization summary bar */}
+          {(() => {
+            const autoMatched = importRows.filter(r => (r.matchConfidence ?? 0) >= 0.8).length
+            const suggestions = importRows.filter(r => (r.matchConfidence ?? 0) >= 0.3 && (r.matchConfidence ?? 0) < 0.8).length
+            const needsInput = importRows.filter(r => (r.matchConfidence ?? 0) < 0.3).length
+            const newCats = new Set(importRows.filter(r => r.categoryId.startsWith('__new__')).map(r => r.category)).size
+            return (
+              <div className="flex flex-wrap items-center gap-3 mb-3 text-[12px] text-[var(--text-secondary)] bg-[var(--c-0-14)] rounded-lg px-3 py-2">
+                <span>סה&quot;כ: <strong className="text-[var(--text-heading)]">{formatCurrency(importTotal)}</strong></span>
+                <span className="text-[var(--c-0-45)]">|</span>
+                {autoMatched > 0 && (
+                  <span className="flex items-center gap-1 text-[var(--c-teal-0-75)]">
+                    <CheckCircle2 size={12} /> {autoMatched} זוהו
+                  </span>
+                )}
+                {suggestions > 0 && (
+                  <span className="flex items-center gap-1 text-[var(--accent-orange)]">
+                    <AlertCircle size={12} /> {suggestions} הצעות
+                  </span>
+                )}
+                {needsInput > 0 && (
+                  <span className="flex items-center gap-1 text-[var(--c-red-0-65)]">
+                    <HelpCircle size={12} /> {needsInput} ללא קטגוריה
+                  </span>
+                )}
+                {newCats > 0 && (
+                  <span className="text-[var(--accent-orange)]">{newCats} קטגוריות חדשות</span>
+                )}
+                {suggestions > 0 && onAcceptAllSuggestions && (
+                  <>
+                    <span className="text-[var(--c-0-45)]">|</span>
+                    <button
+                      type="button"
+                      onClick={onAcceptAllSuggestions}
+                      className="flex items-center gap-1 bg-[var(--c-teal-0-22)] border border-[var(--c-teal-0-40)] text-[var(--c-teal-0-75)] rounded-md px-2 py-0.5 text-[11px] font-semibold cursor-pointer hover:bg-[var(--c-teal-0-30)] transition-colors"
+                    >
+                      <Sparkles size={11} /> קבל הכל
+                    </button>
+                  </>
+                )}
+              </div>
+            )
+          })()}
           {/* Bulk category change */}
           {selectedRows.size > 0 && (
             <div className="flex items-center gap-2 mb-3 bg-[var(--c-blue-0-18)] rounded-lg px-3 py-2">
@@ -129,6 +169,7 @@ export function ExcelImportModal({
             {importRows.map((row, i) => {
               const isAutoMatched = row.categoryId && !row.categoryId.startsWith('__new__') && row.category
               const isNewCat = row.categoryId?.startsWith('__new__')
+              const conf = row.matchConfidence ?? 0
               return (
                 <div key={i} className="grid-import-row py-1.5 border-b border-[var(--c-0-20)]">
                   <input
@@ -141,7 +182,25 @@ export function ExcelImportModal({
                     })}
                     className="cursor-pointer shrink-0 w-3.5 h-3.5"
                   />
-                  <span className="text-xs text-[var(--text-heading)] overflow-hidden text-ellipsis whitespace-nowrap">{row.description}</span>
+                  <span className="flex items-center gap-1.5 text-xs text-[var(--text-heading)] overflow-hidden text-ellipsis whitespace-nowrap">
+                    <span
+                      className={`shrink-0 w-2 h-2 rounded-full ${
+                        conf >= 0.8 ? 'bg-[var(--c-teal-0-65)]' : conf >= 0.3 ? 'bg-[var(--accent-orange)]' : 'bg-[var(--c-red-0-55)]'
+                      }`}
+                      title={conf >= 0.8 ? 'זוהה אוטומטית' : conf >= 0.3 ? 'הצעה' : 'לא זוהה'}
+                    />
+                    {row.sourceFile && (
+                      <span className="shrink-0 text-[9px] bg-[var(--c-0-20)] text-[var(--c-0-60)] px-1.5 py-0.5 rounded font-medium max-w-[60px] overflow-hidden text-ellipsis whitespace-nowrap" title={row.sourceFile}>
+                        {row.sourceFile}
+                      </span>
+                    )}
+                    {row.description}
+                    {row.installmentInfo && (
+                      <span className="shrink-0 text-[9px] bg-[var(--c-purple-0-22)] text-[var(--c-purple-0-75)] px-1.5 py-0.5 rounded font-medium whitespace-nowrap" title={row.originalAmount ? `סכום עסקה: ${row.originalAmount.toLocaleString()} ₪` : undefined}>
+                        {row.installmentInfo}
+                      </span>
+                    )}
+                  </span>
                   <span className="text-xs font-semibold text-right text-[var(--accent-orange)]">{formatCurrency(row.amount)}</span>
                   {/* Toggle personal/shared */}
                   <button

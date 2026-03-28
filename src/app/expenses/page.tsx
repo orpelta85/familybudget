@@ -2,7 +2,9 @@
 
 import { useUser } from '@/lib/queries/useUser'
 import { usePeriods, useCurrentPeriod } from '@/lib/queries/usePeriods'
-import { usePersonalExpenses, useBudgetCategories, useAddExpense, useDeleteExpense, useUpdateExpense, useAddBudgetCategory, useCategoryRules, useSaveCategoryRule, findMatchingRule, useFamilyPersonalExpenses } from '@/lib/queries/useExpenses'
+import { usePersonalExpenses, useBudgetCategories, useAddExpense, useDeleteExpense, useUpdateExpense, useAddBudgetCategory, useCategoryRules, useSaveCategoryRule, useUpdateRuleConfidence, useGlobalMappings, findMatchingRule, useFamilyPersonalExpenses } from '@/lib/queries/useExpenses'
+import { categorizeTransaction } from '@/lib/categorization-engine'
+import type { MatchResult } from '@/lib/categorization-engine'
 import { useSharedExpenses, useUpsertSharedExpense, useDeleteSharedExpense, useUpdateSharedExpense } from '@/lib/queries/useShared'
 import { useSinkingFunds, useAddSinkingTransaction, useAddSinkingFund } from '@/lib/queries/useSinking'
 import { useSplitFraction } from '@/lib/queries/useProfile'
@@ -19,7 +21,7 @@ import { useEffect, useState, useRef, useMemo } from 'react'
 import { useFamilyView } from '@/contexts/FamilyViewContext'
 import { PeriodSelector } from '@/components/layout/PeriodSelector'
 import { toast } from 'sonner'
-import { Receipt, Upload, Download, FileSpreadsheet, Trash2 } from 'lucide-react'
+import { Receipt, Upload, Download, FileSpreadsheet, Trash2, X } from 'lucide-react'
 import type { RawExpenseRow } from '@/lib/excel-import'
 import type { BudgetCategory, SharedCategory } from '@/lib/types'
 import { useConfirmDialog } from '@/components/ui/ConfirmDialog'
@@ -74,7 +76,9 @@ export default function ExpensesPage() {
   const addFund       = useAddSinkingFund()
   const addCategory   = useAddBudgetCategory()
   const { data: categoryRules } = useCategoryRules(user?.id)
+  const { data: globalMappings } = useGlobalMappings()
   const saveCategoryRule = useSaveCategoryRule()
+  const updateRuleConfidence = useUpdateRuleConfidence()
   const recurringPersonal = useRecurringPersonal(user?.id)
   const recurringShared   = useRecurringShared(user?.id)
   const queryClient = useQueryClient()
@@ -87,6 +91,12 @@ export default function ExpensesPage() {
   const [detectedFormat, setDetectedFormat] = useState<string | null>(null)
   const [importTotal, setImportTotal] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
+
+  // Multi-file + period selection state
+  const [rawParsedRows, setRawParsedRows] = useState<ImportRow[]>([])
+  const [showPeriodStep, setShowPeriodStep] = useState(false)
+  const [importPeriodId, setImportPeriodId] = useState<number | null>(null)
+  const [parsedFormats, setParsedFormats] = useState<string[]>([])
 
   // Reset expenses dialog state
   const [showResetDialog, setShowResetDialog] = useState(false)
@@ -124,6 +134,8 @@ export default function ExpensesPage() {
   const totalPersonal  = (personalExp ?? []).reduce((s, e) => s + e.amount, 0)
   const totalSharedMy  = (sharedExp ?? []).reduce((s, e) => s + (e.my_share ?? e.total_amount * splitFrac), 0)
   const totalAll       = totalPersonal + totalSharedMy
+  const sinkingMonthly = (funds ?? []).filter(f => f.is_active).reduce((s, f) => s + f.monthly_allocation, 0)
+  const totalWithSinking = totalAll + sinkingMonthly
 
   // ── Add expense ─────────────────────────────────────────────────────────────
   async function handleAdd(data: {
@@ -200,67 +212,158 @@ export default function ExpensesPage() {
   }
 
   // ── Excel ───────────────────────────────────────────────────────────────────
-  async function processExcelFile(file: File) {
+
+  // Categorize parsed rows using existing rules and categories
+  function categorizeRows(rows: RawExpenseRow[]): ImportRow[] {
+    const cats = categories ?? []
+    const rules = (categoryRules ?? []) as import('@/lib/categorization-engine').CategoryRule[]
+    const globals = (globalMappings ?? []) as import('@/lib/categorization-engine').GlobalMapping[]
+
+    const mapped = rows.map(row => {
+      let categoryId = ''
+      let matchConfidence = 0
+      let matchSource: ImportRow['matchSource'] = 'none'
+      let matchRuleId: number | undefined
+
+      if (row.category) {
+        const catName = row.category.trim()
+        const match = cats.find(c => c.name === catName)
+          || cats.find(c => c.name.trim().toLowerCase() === catName.toLowerCase())
+          || cats.find(c => c.name.includes(catName) || catName.includes(c.name))
+        if (match) { categoryId = String(match.id); matchConfidence = 0.95; matchSource = 'user-exact' }
+        else { categoryId = `__new__${catName}`; matchConfidence = 0.9; matchSource = 'user-exact' }
+      }
+
+      if (!categoryId && row.description) {
+        const result: MatchResult = categorizeTransaction(row.description, rules, globals, cats)
+        if (result.matchSource !== 'none') {
+          if (result.categoryId) categoryId = String(result.categoryId)
+          else if (result.categoryName) categoryId = `__new__${result.categoryName}`
+          matchConfidence = result.confidence
+          matchSource = result.matchSource
+          matchRuleId = result.ruleId
+          if (result.isShared) row.is_shared = true
+        }
+      }
+
+      return { ...row, categoryId, matchConfidence, matchSource, matchRuleId, originalCategoryId: categoryId }
+    })
+
+    const existingFundNames = (funds ?? []).map(f => f.name)
+    mapped.forEach(row => {
+      if (row.fund_name && !existingFundNames.includes(row.fund_name)) {
+        row.fund_name = `__new_fund__${row.fund_name}`
+      }
+    })
+
+    return mapped
+  }
+
+  // Parse multiple files and merge results
+  async function processExcelFiles(files: File[]) {
     try {
-      const result: ParseResult = await parseExpenseExcelDetailed(file)
-      const r = result.rows
-      const cats = categories ?? []
-      const rules = categoryRules ?? []
-      let autoMatched = 0
-      const mapped = r.map(row => {
-        let categoryId = ''
-        if (row.category) {
-          const catName = row.category.trim()
-          const match = cats.find(c => c.name === catName)
-            || cats.find(c => c.name.trim().toLowerCase() === catName.toLowerCase())
-            || cats.find(c => c.name.includes(catName) || catName.includes(c.name))
-          if (match) categoryId = String(match.id)
-          else categoryId = `__new__${catName}`
+      const allRows: RawExpenseRow[] = []
+      const formats: string[] = []
+
+      for (const file of files) {
+        const result: ParseResult = await parseExpenseExcelDetailed(file)
+        const sourceLabel = result.detectedFormat?.label ?? file.name.replace(/\.(xlsx|xls|csv)$/i, '')
+        // Tag each row with source file
+        for (const row of result.rows) {
+          row.sourceFile = sourceLabel
         }
-        if (!categoryId && row.description && rules.length > 0) {
-          const rule = findMatchingRule(row.description, rules)
-          if (rule) {
-            categoryId = String(rule.category_id)
-            autoMatched++
-          }
-        }
-        return { ...row, categoryId }
-      })
-      const existingFundNames = (funds ?? []).map(f => f.name)
-      mapped.forEach(row => {
-        if (row.fund_name && !existingFundNames.includes(row.fund_name)) {
-          row.fund_name = `__new_fund__${row.fund_name}`
-        }
-      })
-      setImportRows(mapped); setShowImport(true)
-      setDetectedFormat(result.detectedFormat?.label ?? null)
-      setImportTotal(result.totalAmount)
-      const sharedCount = mapped.filter(r => r.is_shared).length
-      const matched = mapped.filter(r => r.categoryId && !r.categoryId.startsWith('__new__')).length
-      const newCats = new Set(mapped.filter(r => r.categoryId.startsWith('__new__')).map(r => r.category)).size
-      const newFunds = new Set(mapped.filter(r => r.fund_name?.startsWith('__new_fund__')).map(r => r.fund_name!.replace('__new_fund__', ''))).size
-      let msg = `נטענו ${r.length} שורות`
-      if (result.detectedFormat) msg += ` · זוהה: ${result.detectedFormat.label}`
-      if (sharedCount > 0) msg += ` · ${sharedCount} משותפות`
-      if (matched > 0) msg += ` · ${matched} קטגוריות זוהו`
-      if (autoMatched > 0) msg += ` · ${autoMatched} זוהו אוטומטית`
-      if (newCats > 0) msg += ` · ${newCats} קטגוריות חדשות ייווצרו`
-      if (newFunds > 0) msg += ` · ${newFunds} קרנות חדשות ייווצרו`
-      toast.success(msg)
-    } catch (e) { console.error('Read Excel file:', e); toast.error('שגיאה בקריאת הקובץ') }
+        allRows.push(...result.rows)
+        if (result.detectedFormat?.label) formats.push(result.detectedFormat.label)
+      }
+
+      if (!allRows.length) { toast.error('לא נמצאו שורות בקבצים'); return }
+
+      const mapped = categorizeRows(allRows)
+      setParsedFormats(formats)
+
+      // Check if any rows have charge dates — if so, show period selection step
+      const hasChargeDates = mapped.some(r => r.chargeDate)
+
+      if (hasChargeDates && periods?.length) {
+        // Store raw categorized rows and show period selection step
+        setRawParsedRows(mapped)
+        setImportPeriodId(selectedPeriodId ?? null)
+        setShowPeriodStep(true)
+      } else {
+        // No charge dates — go directly to preview
+        finishImportSetup(mapped, formats)
+      }
+
+      const msg = files.length > 1
+        ? `נקראו ${files.length} קבצים · ${allRows.length} שורות`
+        : `נקראו ${allRows.length} שורות`
+      toast.success(msg + (formats.length ? ` · ${formats.join(', ')}` : ''))
+    } catch (e) { console.error('Read Excel files:', e); toast.error('שגיאה בקריאת הקבצים') }
+  }
+
+  // Apply period filter and show import modal
+  function applyPeriodFilter(periodId: number | null) {
+    let rows = rawParsedRows
+    if (periodId && periods) {
+      const period = periods.find(p => p.id === periodId)
+      if (period) {
+        const start = new Date(period.start_date)
+        const end = new Date(period.end_date)
+        rows = rows.filter(r => {
+          if (!r.chargeDate) return true // Keep rows without charge date
+          const parsed = parseHebrewDate(r.chargeDate)
+          if (!parsed) return true
+          return parsed >= start && parsed <= end
+        })
+      }
+    }
+    setShowPeriodStep(false)
+    finishImportSetup(rows, parsedFormats)
+    // Update selected period to match import period
+    if (periodId) setSelectedPeriodId(periodId)
+  }
+
+  function finishImportSetup(mapped: ImportRow[], formats: string[]) {
+    setImportRows(mapped)
+    setShowImport(true)
+    setDetectedFormat(formats.join(', ') || null)
+    setImportTotal(mapped.reduce((s, r) => s + r.amount, 0))
+  }
+
+  // Parse date strings in Israeli formats (DD/MM/YYYY, DD.MM.YYYY, DD-MM-YYYY, Date objects)
+  function parseHebrewDate(dateStr: string): Date | null {
+    if (!dateStr) return null
+    // If it's already an ISO date or Date-like string
+    const iso = Date.parse(dateStr)
+    if (!isNaN(iso)) return new Date(iso)
+    // DD/MM/YYYY or DD.MM.YYYY or DD-MM-YYYY
+    const m = dateStr.match(/(\d{1,2})[/.\-](\d{1,2})[/.\-](\d{2,4})/)
+    if (m) {
+      const day = parseInt(m[1])
+      const month = parseInt(m[2]) - 1
+      const year = parseInt(m[3]) < 100 ? 2000 + parseInt(m[3]) : parseInt(m[3])
+      return new Date(year, month, day)
+    }
+    return null
+  }
+
+  // Legacy single-file handler (still works)
+  async function processExcelFile(file: File) {
+    await processExcelFiles([file])
   }
 
   async function handleExcelUpload(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]; if (!file) return
-    await processExcelFile(file)
+    const files = e.target.files
+    if (!files || files.length === 0) return
+    await processExcelFiles(Array.from(files))
     e.target.value = ''
   }
 
   function handleDrop(e: React.DragEvent) {
     e.preventDefault(); setIsDragging(false)
-    const file = e.dataTransfer.files?.[0]
-    if (file && /\.(xlsx|xls|csv)$/i.test(file.name)) {
-      processExcelFile(file)
+    const files = Array.from(e.dataTransfer.files).filter(f => /\.(xlsx|xls|csv)$/i.test(f.name))
+    if (files.length > 0) {
+      processExcelFiles(files)
     } else {
       toast.error('קובץ לא נתמך — השתמש ב-xlsx, xls או csv')
     }
@@ -383,12 +486,24 @@ export default function ExpensesPage() {
               })
             }
           }
+          // Smart confidence feedback loop
           if (r.description && resolvedCatId && !isNaN(resolvedCatId)) {
+            const userChangedCategory = r.originalCategoryId && r.categoryId !== r.originalCategoryId
+            if (r.matchRuleId && !userChangedCategory) {
+              // User accepted auto-suggestion: boost confidence
+              updateRuleConfidence.mutate({ ruleId: r.matchRuleId, userId: user.id, delta: 0.1 })
+            } else if (r.matchRuleId && userChangedCategory) {
+              // User changed category: decrease old rule confidence
+              updateRuleConfidence.mutate({ ruleId: r.matchRuleId, userId: user.id, delta: -0.15 })
+            }
+            // Create/update rule for this merchant-category pairing
             saveCategoryRule.mutate({
               user_id: user.id,
               merchant_pattern: r.description.trim(),
               category_id: resolvedCatId,
               fund_name: rawFundName || undefined,
+              confidence: r.matchSource === 'none' ? 0.5 : (r.matchConfidence ?? 0.5),
+              source: 'user',
             })
           }
           imported++
@@ -500,11 +615,58 @@ export default function ExpensesPage() {
           <button onClick={() => fileRef.current?.click()} className="btn-hover flex items-center gap-1.5 bg-primary border-none rounded-lg px-2.5 sm:px-3 py-[7px] text-primary-foreground text-xs font-semibold cursor-pointer" title="Excel">
             <Upload size={13} className="shrink-0" /> <span className="hidden sm:inline-block">Excel</span>
           </button>
-          <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" className="hidden" onChange={handleExcelUpload} />
+          <input ref={fileRef} type="file" accept=".xlsx,.xls,.csv" multiple className="hidden" onChange={handleExcelUpload} />
         </div>
       </div>
 
       {periods && <PeriodSelector periods={periods} selectedId={selectedPeriodId} onChange={setSelectedPeriodId} />}
+
+      {/* ── Period Selection Step (after file upload, before preview) ──── */}
+      {showPeriodStep && periods && (
+        <div className="bg-card border border-[var(--accent-blue)] rounded-xl p-5 mb-4">
+          <div className="flex justify-between items-center mb-3">
+            <div className="flex items-center gap-2">
+              <FileSpreadsheet size={14} className="text-primary" />
+              <span className="font-semibold text-[13px]">בחר מחזור חיוב לסינון</span>
+            </div>
+            <button onClick={() => { setShowPeriodStep(false); setRawParsedRows([]) }} aria-label="ביטול" className="bg-transparent border-none cursor-pointer flex items-center justify-center p-2 min-w-9 min-h-9 text-muted-foreground">
+              <X size={14} />
+            </button>
+          </div>
+          <p className="text-[12px] text-[var(--text-secondary)] mb-3">
+            נמצאו {rawParsedRows.length} שורות עם תאריכי חיוב. בחר מחזור כדי לסנן רק את העסקאות שתאריך החיוב שלהן נופל בטווח המחזור.
+          </p>
+          <div className="flex flex-wrap gap-2 mb-4">
+            {periods.map(p => (
+              <button
+                key={p.id}
+                onClick={() => setImportPeriodId(p.id)}
+                className={`px-3 py-1.5 rounded-lg text-[12px] font-medium cursor-pointer transition-colors ${
+                  importPeriodId === p.id
+                    ? 'bg-primary text-primary-foreground'
+                    : 'bg-secondary border border-[var(--border-light)] text-[var(--text-body)] hover:bg-[var(--bg-hover)]'
+                }`}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => applyPeriodFilter(importPeriodId)}
+              className="flex-1 bg-primary border-none rounded-lg py-2 text-primary-foreground font-semibold text-xs cursor-pointer"
+            >
+              {importPeriodId ? 'סנן והמשך' : 'המשך ללא סינון'}
+            </button>
+            <button
+              onClick={() => applyPeriodFilter(null)}
+              className="bg-secondary border border-[var(--border-light)] rounded-lg px-3 py-2 text-inherit text-xs cursor-pointer"
+            >
+              דלג - הצג הכל
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ── Family View ──────────────────────────────────────────────────── */}
       {viewMode !== 'personal' && (
@@ -512,6 +674,7 @@ export default function ExpensesPage() {
           familyExpenses={familyExpenses}
           sharedExp={sharedExp}
           splitFrac={splitFrac}
+          sinkingMonthly={sinkingMonthly}
           formatCurrency={formatCurrency}
         />
       )}
@@ -535,6 +698,10 @@ export default function ExpensesPage() {
         onDrop={handleDrop}
         onImportSave={handleImportSave}
         showTextInput={showTextInput}
+        onAcceptAllSuggestions={() => {
+          // Accept all suggestions with confidence >= 0.3 — no change needed, they already have categoryId set
+          toast.success('כל ההצעות אושרו')
+        }}
       />
 
       <div className="grid-2 items-start">
@@ -554,6 +721,8 @@ export default function ExpensesPage() {
             totalPersonal={totalPersonal}
             totalSharedMy={totalSharedMy}
             totalAll={totalAll}
+            sinkingMonthly={sinkingMonthly}
+            totalWithSinking={totalWithSinking}
           />
 
           {/* ── Personal + Shared side by side ──────────────────────────────── */}

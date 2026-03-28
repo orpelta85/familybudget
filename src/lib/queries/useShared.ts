@@ -114,7 +114,7 @@ export function useUpsertSharedExpense() {
       const sb = createClient()
       const { data, error } = await sb
         .from('shared_expenses')
-        .upsert(expense, { onConflict: 'family_id,period_id,category' })
+        .insert(expense)
         .select()
         .single()
       if (error) throw error

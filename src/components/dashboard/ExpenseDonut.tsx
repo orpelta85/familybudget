@@ -16,10 +16,10 @@ export function ExpenseDonut({ data }: { data: DonutEntry[] }) {
 
   return (
     <>
-      <div dir="ltr" style={{ width: '100%', height: 150 }}>
-      <ResponsiveContainer width="100%" height={150}>
+      <div dir="ltr" style={{ width: '100%', height: 200 }}>
+      <ResponsiveContainer width="100%" height={200}>
         <PieChart>
-          <Pie data={data} cx="50%" cy="50%" innerRadius={42} outerRadius={68} dataKey="value" paddingAngle={2}>
+          <Pie data={data} cx="50%" cy="50%" innerRadius={55} outerRadius={90} dataKey="value" paddingAngle={2}>
             {data.map((entry, i) => <Cell key={i} fill={entry.color} strokeWidth={0} />)}
           </Pie>
           <Tooltip

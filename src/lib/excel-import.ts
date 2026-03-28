@@ -49,11 +49,15 @@ export async function parseSharedExcel(file: File): Promise<RawSharedRow[]> {
 
 export interface RawExpenseRow {
   date: string
+  chargeDate?: string  // תאריך חיוב — for filtering by billing period
   description: string
   amount: number
+  originalAmount?: number  // סכום עסקה מקורי (לפני תשלומים)
+  installmentInfo?: string // e.g. "תשלום 3 מתוך 6"
   category?: string
   is_shared?: boolean
   fund_name?: string   // אם מולא — גם הוצאה מקרן
+  sourceFile?: string  // שם הקובץ שממנו נטען
 }
 
 // Israeli bank/credit card format detection
@@ -93,6 +97,7 @@ export interface ParseResult {
   detectedFormat: DetectedFormat | null
   totalAmount: number
   totalCount: number
+  fileName?: string  // source file name for multi-file imports
 }
 
 // פירוט אשראי ישראלי — מנסה לזהות עמודות שונות
@@ -123,8 +128,23 @@ export async function parseExpenseExcelDetailed(file: File): Promise<ParseResult
         const detectedFormat = detectBankFormat(keys, sheetName)
 
         const dateKey   = keys.find(k => /תאריך.?עסקה|תאריך.?חיוב|תאריך|date/i.test(k)) ?? keys[0]
+        // Charge date (תאריך חיוב) — separate from transaction date
+        const chargeDateKey = keys.find(k => /תאריך.?חיוב/i.test(k))
         const descKey   = keys.find(k => /שם.?בית.?עסק|שם.?עסק|עסק|בית.?עסק|שם|תיאור|פירוט|description|merchant/i.test(k)) ?? keys[1]
-        const amountKey = keys.find(k => /סכום.?חיוב|סכום.?עסקה|סכום|חיוב|amount|sum|סה.?כ/i.test(k)) ?? keys[2]
+
+        // Feature 3: Prefer charge amount (סכום חיוב) over transaction amount (סכום עסקה)
+        const chargeAmountKey = keys.find(k => /סכום.?חיוב/i.test(k))
+        const txAmountKey     = keys.find(k => /סכום.?עסקה|סכום.?מקורי/i.test(k))
+        const genericAmountKey = keys.find(k => /סכום|חיוב|amount|sum|סה.?כ/i.test(k))
+        // Use charge amount if available (monthly installment), fall back to transaction/generic
+        const amountKey = chargeAmountKey ?? genericAmountKey ?? txAmountKey ?? keys[2]
+        // Keep transaction amount key for showing original amount on installments
+        const originalAmountKey = chargeAmountKey && txAmountKey ? txAmountKey : undefined
+
+        // Installment columns
+        const installmentNumKey   = keys.find(k => /מספר.?תשלום|תשלום.?נוכחי|תשלום$/i.test(k))
+        const installmentTotalKey = keys.find(k => /סה.?כ.?תשלומים|מספר.?תשלומים|תשלומים/i.test(k))
+
         const catKey    = keys.find(k => /קטגוריה|category|סוג.?הוצאה|ענף|קטגורי/i.test(k))
         const typeKey   = keys.find(k => /אישי|משותף|סוג|type|personal|shared/i.test(k)) ?? keys[4]
         const fundKey   = keys.find(k => /קרן|fund/i.test(k)) ?? keys[5]
@@ -134,10 +154,41 @@ export async function parseExpenseExcelDetailed(file: File): Promise<ParseResult
             const rawTypeVal = typeKey ? String(row[typeKey] ?? '') : ''
             const typeVal = rawTypeVal.trim().replace(/[\u200f\u200e\u202a\u202b\u202c]/g, '')
             const fundVal = fundKey ? String(row[fundKey] ?? '').trim() : ''
+
+            // Charge date for period filtering
+            const rawChargeDate = chargeDateKey ? String(row[chargeDateKey] ?? '') : ''
+
+            // Installment info
+            let installmentInfo: string | undefined
+            let originalAmount: number | undefined
+            if (installmentNumKey && installmentTotalKey) {
+              const num = parseInt(String(row[installmentNumKey] ?? '0').replace(/[^\d]/g, ''))
+              const total = parseInt(String(row[installmentTotalKey] ?? '0').replace(/[^\d]/g, ''))
+              if (num > 0 && total > 1) {
+                installmentInfo = `תשלום ${num} מתוך ${total}`
+              }
+            }
+            // If we have both charge and transaction amounts and they differ, it's an installment
+            if (originalAmountKey) {
+              const txAmt = Math.abs(parseFloat(String(row[originalAmountKey] ?? '0').replace(/[^\d.]/g, '')) || 0)
+              const chargeAmt = Math.abs(parseFloat(String(row[amountKey] ?? '0').replace(/[^\d.]/g, '')) || 0)
+              if (txAmt > 0 && chargeAmt > 0 && txAmt !== chargeAmt) {
+                originalAmount = txAmt
+                if (!installmentInfo) {
+                  // Derive installment count from amounts
+                  const count = Math.round(txAmt / chargeAmt)
+                  if (count > 1) installmentInfo = `תשלום מתוך ${count}`
+                }
+              }
+            }
+
             return {
               date: String(row[dateKey] ?? ''),
+              chargeDate: rawChargeDate || undefined,
               description: String(row[descKey] ?? '').trim(),
               amount: Math.abs(parseFloat(String(row[amountKey] ?? '0').replace(/[^\d.]/g, '')) || 0),
+              originalAmount,
+              installmentInfo,
               category: catKey ? String(row[catKey] ?? '').trim() || undefined : undefined,
               is_shared: typeVal.length > 0 && !/אישי|personal/i.test(typeVal),
               fund_name: fundVal || undefined,

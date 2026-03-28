@@ -130,6 +130,9 @@ export function PersonalExpenseList({
         </div>
         <span className="text-sm font-bold text-primary">{formatCurrency(totalPersonal)}</span>
       </div>
+      <div className="text-[11px] text-muted-foreground mb-2.5">
+        פירוט הוצאות אישיות חודשי
+      </div>
       {!expenses.length
         ? <div className="text-xs text-muted-foreground text-center py-6"><Inbox size={32} className="text-[var(--c-0-30)] mx-auto mb-2" />אין הוצאות אישיות</div>
         : <div className="flex flex-col gap-1.5">

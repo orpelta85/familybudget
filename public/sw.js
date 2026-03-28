@@ -1,4 +1,4 @@
-const CACHE_NAME = 'family-finance-v1'
+const CACHE_NAME = 'family-finance-v3'
 const APP_SHELL = [
   '/',
   '/manifest.json',
@@ -52,8 +52,22 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
-  // Cache-first for static assets
-  if (url.pathname.match(/\.(js|css|png|svg|jpg|jpeg|gif|woff2?)$/)) {
+  // Network-first for JS/CSS (always get fresh code)
+  if (url.pathname.match(/\.(js|css)$/)) {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          const clone = response.clone()
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone))
+          return response
+        })
+        .catch(() => caches.match(event.request))
+    )
+    return
+  }
+
+  // Cache-first for images/fonts only
+  if (url.pathname.match(/\.(png|svg|jpg|jpeg|gif|woff2?)$/)) {
     event.respondWith(
       caches.match(event.request).then((cached) => {
         if (cached) return cached

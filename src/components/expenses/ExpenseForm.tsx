@@ -141,9 +141,12 @@ export function ExpenseForm({ categories, funds, splitFrac, isPending, onAdd }: 
         {/* Amount */}
         <div>
           <label htmlFor="expense-amount" className="text-[11px] text-muted-foreground block mb-1 font-medium">סכום (₪){expType === 'shared' ? ` — כולל (חלקך ${splitPctLabel}%)` : ''}</label>
-          <input id="expense-amount" type="number" value={amount} onChange={e => setAmount(e.target.value)}
-            placeholder="0" required min="0.01" step="0.01"
-            className="w-full bg-secondary border border-[var(--border-light)] rounded-lg px-3 py-2 text-inherit text-[13px] outline-none text-left" style={{ direction: 'ltr' }} />
+          <div className="relative">
+            <input id="expense-amount" type="number" value={amount} onChange={e => setAmount(e.target.value)}
+              placeholder="0" required min="0.01" step="0.01"
+              className="w-full bg-secondary border border-[var(--border-light)] rounded-lg pl-8 pr-3 py-2 text-inherit text-[13px] outline-none text-right" style={{ direction: 'ltr' }} />
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-[12px]">₪</span>
+          </div>
           {expType === 'shared' && Number(amount) > 0 && (
             <div className="mt-1 text-[11px] text-[var(--accent-shared)]">
               חלקך: {formatCurrency(Number(amount) * splitFrac)}

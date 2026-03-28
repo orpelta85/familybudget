@@ -186,8 +186,22 @@ interface CategoryRule {
   id: number
   user_id: string
   merchant_pattern: string
-  category_id: number
+  category_id: number | null
   fund_name: string | null
+  shared_category: string | null
+  is_shared: boolean
+  confidence: number
+  times_used: number
+  source: string
+}
+
+interface GlobalMapping {
+  id: number
+  merchant_pattern: string
+  suggested_category: string
+  shared_category: string | null
+  is_shared: boolean
+  confidence: number
 }
 
 export function useCategoryRules(userId: string | undefined) {
@@ -206,17 +220,71 @@ export function useCategoryRules(userId: string | undefined) {
   })
 }
 
+export function useGlobalMappings() {
+  return useQuery<GlobalMapping[]>({
+    queryKey: ['global_category_mappings'],
+    staleTime: 1000 * 60 * 30, // 30 minutes — global data rarely changes
+    queryFn: async () => {
+      const sb = createClient()
+      const { data, error } = await sb
+        .from('global_category_mappings')
+        .select('*')
+        .order('confidence', { ascending: false })
+      if (error) throw error
+      return data
+    },
+  })
+}
+
 export function useSaveCategoryRule() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (rule: { user_id: string; merchant_pattern: string; category_id: number; fund_name?: string }) => {
+    mutationFn: async (rule: {
+      user_id: string
+      merchant_pattern: string
+      category_id?: number | null
+      fund_name?: string
+      shared_category?: string
+      is_shared?: boolean
+      confidence?: number
+      source?: string
+    }) => {
       const sb = createClient()
       const { error } = await sb
         .from('category_rules')
-        .upsert(rule, { onConflict: 'user_id,merchant_pattern' })
+        .upsert({
+          ...rule,
+          confidence: rule.confidence ?? 0.5,
+          source: rule.source ?? 'user',
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'user_id,merchant_pattern' })
       if (error) throw error
     },
     onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: ['category_rules', vars.user_id] }),
+  })
+}
+
+export function useUpdateRuleConfidence() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ ruleId, userId, delta }: { ruleId: number; userId: string; delta: number }) => {
+      const sb = createClient()
+      // Fetch current rule
+      const { data: rule } = await sb.from('category_rules').select('confidence, times_used').eq('id', ruleId).single()
+      if (!rule) return
+      const newConf = Math.max(0, Math.min(1, (rule.confidence ?? 0.5) + delta))
+      const newUsed = (rule.times_used ?? 0) + 1
+      const { error } = await sb.from('category_rules').update({
+        confidence: newConf,
+        times_used: newUsed,
+        updated_at: new Date().toISOString(),
+      }).eq('id', ruleId)
+      if (error) throw error
+      return userId
+    },
+    onSuccess: (userId) => {
+      if (userId) qc.invalidateQueries({ queryKey: ['category_rules', userId] })
+    },
   })
 }
 
