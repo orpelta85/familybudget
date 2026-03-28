@@ -231,11 +231,21 @@ export default function ExpensesPage() {
 
       if (row.category) {
         const catName = row.category.trim()
-        const match = cats.find(c => c.name === catName)
+        // Priority 1: exact match
+        const exactMatch = cats.find(c => c.name === catName)
           || cats.find(c => c.name.trim().toLowerCase() === catName.toLowerCase())
-          || cats.find(c => c.name.includes(catName) || catName.includes(c.name))
-        if (match) { categoryId = String(match.id); matchConfidence = 0.95; matchSource = 'user-exact' }
-        else { categoryId = `__new__${catName}`; matchConfidence = 0.9; matchSource = 'user-exact' }
+        if (exactMatch) {
+          categoryId = String(exactMatch.id); matchConfidence = 1.0; matchSource = 'user-exact'
+        } else {
+          // Priority 2: partial match — Excel "בילויים" → DB "בילויים ופנאי"
+          const partialMatch = cats.find(c => c.name.includes(catName) || catName.includes(c.name))
+          if (partialMatch) {
+            categoryId = String(partialMatch.id); matchConfidence = 0.85; matchSource = 'user-exact'
+          } else {
+            // No match at all — mark for creation
+            categoryId = `__new__${catName}`; matchConfidence = 0.9; matchSource = 'user-exact'
+          }
+        }
       }
 
       if (!categoryId && row.description) {
@@ -499,26 +509,38 @@ export default function ExpensesPage() {
       // Auto-create new categories from Excel (use Supabase directly for reliability)
       const newCatNames = [...new Set(valid.filter(r => r.categoryId.startsWith('__new__')).map(r => r.categoryId.replace('__new__', '')))]
       const createdCatMap: Record<string, number> = {}
+      const failedCats: string[] = []
       const maxSort = Math.max(0, ...(categories ?? []).map(c => c.sort_order ?? 0))
       for (let i = 0; i < newCatNames.length; i++) {
-        // First check if category already exists (exact or partial match)
-        const existing = (categories ?? []).find(c => c.name === newCatNames[i])
-          || (categories ?? []).find(c => c.name.toLowerCase() === newCatNames[i].toLowerCase())
-          || (categories ?? []).find(c => c.name.includes(newCatNames[i]) || newCatNames[i].includes(c.name))
+        const catName = newCatNames[i]
+        // First check if category already exists (exact match only — partial matches should have been resolved in categorizeRows)
+        const existing = (categories ?? []).find(c => c.name === catName)
+          || (categories ?? []).find(c => c.name.toLowerCase() === catName.toLowerCase())
         if (existing) {
-          createdCatMap[newCatNames[i]] = existing.id
+          createdCatMap[catName] = existing.id
           continue
         }
         // Create new category directly via Supabase
         const { data: created, error } = await sb.from('budget_categories').insert({
-          user_id: user.id, name: newCatNames[i], type: 'variable',
+          user_id: user.id, name: catName, type: 'variable',
           monthly_target: 0, sort_order: maxSort + i + 1,
         }).select('id').single()
         if (created) {
-          createdCatMap[newCatNames[i]] = created.id
+          createdCatMap[catName] = created.id
         } else {
-          console.error('Failed to create category:', newCatNames[i], error)
+          console.error(`Failed to create category "${catName}":`, error)
+          // Try fetching it — might have been created by another concurrent request
+          const { data: fetched } = await sb.from('budget_categories')
+            .select('id').eq('user_id', user.id).eq('name', catName).single()
+          if (fetched) {
+            createdCatMap[catName] = fetched.id
+          } else {
+            failedCats.push(catName)
+          }
         }
+      }
+      if (failedCats.length) {
+        console.warn(`Categories that failed to create (will fall back to שונות): ${failedCats.join(', ')}`)
       }
 
       // Auto-create new sinking funds from Excel
@@ -550,6 +572,8 @@ export default function ExpensesPage() {
         }
         if (!resolvedCatId || isNaN(resolvedCatId)) {
           // Fallback to "שונות" (misc), not the first category
+          const origName = r.categoryId.startsWith('__new__') ? r.categoryId.replace('__new__', '') : r.category
+          console.warn(`Category "${origName}" could not be resolved for "${r.description}" — falling back to שונות`)
           const miscCat = categories?.find(c => c.name === 'שונות')
           resolvedCatId = miscCat?.id ?? categories?.[0]?.id ?? 1
         }
@@ -577,9 +601,14 @@ export default function ExpensesPage() {
             'ספורט': 'misc', 'מוזיקה': 'misc', 'טיפוח': 'misc', 'אימון אישי': 'misc',
           }
           const sharedCat = LABEL_TO_KEY[catName] || 'misc'
+          // When mapping to misc, prefix notes with original category so the info isn't lost
+          let sharedNotes = r.description
+          if (sharedCat === 'misc' && catName && catName !== 'שונות') {
+            sharedNotes = `[${catName}] ${r.description}`
+          }
           sharedRows.push({
             period_id: selectedPeriodId, category: sharedCat,
-            total_amount: r.amount, notes: r.description, family_id: familyId,
+            total_amount: r.amount, notes: sharedNotes, family_id: familyId,
           })
         } else {
           personalRows.push({
