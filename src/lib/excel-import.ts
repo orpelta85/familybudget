@@ -165,7 +165,7 @@ export async function parseExpenseExcelDetailed(file: File): Promise<ParseResult
         // AND at least 2 header-like columns to confirm it's a real header row
         const isHeaderRow = (keys: string[]) => {
           const shortKeys = keys.filter(k => k.length < 40 && !/^__EMPTY/.test(k))
-          const headerPattern = /^תאריך|סכום|שם.?בית|תיאור|אסמכתא|עסקה|חיוב|פירוט$|בית.?עסק|מטבע/i
+          const headerPattern = /^תאריך|סכום|שם.?בית|תיאור|אסמכתא|עסקה|חיוב|חובה|זכות|פירוט$|בית.?עסק|מטבע/i
           const matches = shortKeys.filter(k => headerPattern.test(k))
           return matches.length >= 2
         }
@@ -206,8 +206,11 @@ export async function parseExpenseExcelDetailed(file: File): Promise<ParseResult
         const chargeAmountKey = keys.find(k => /סכום.?חיוב/i.test(k))
         const txAmountKey     = keys.find(k => /סכום.?עסקה|סכום.?מקורי/i.test(k))
         const genericAmountKey = keys.find(k => /סכום|חיוב|amount|sum|סה.?כ/i.test(k))
-        // Use charge amount if available (monthly installment), fall back to transaction/generic
-        const amountKey = chargeAmountKey ?? genericAmountKey ?? txAmountKey ?? keys[2]
+        // Bank statement: debit column (חובה) — expenses are here
+        const debitKey = keys.find(k => /^חובה$/i.test(k))
+        const creditKey = keys.find(k => /^זכות$/i.test(k))
+        // Use charge amount if available, then generic, then debit, then fallback
+        const amountKey = chargeAmountKey ?? genericAmountKey ?? txAmountKey ?? debitKey ?? keys[2]
         // Keep transaction amount key for showing original amount on installments
         const originalAmountKey = chargeAmountKey && txAmountKey ? txAmountKey : undefined
 
@@ -252,11 +255,20 @@ export async function parseExpenseExcelDetailed(file: File): Promise<ParseResult
               }
             }
 
+            // For bank statements with split debit/credit columns, use whichever has a value
+            let parsedAmount = Math.abs(parseFloat(String(row[amountKey] ?? '0').replace(/[^\d.]/g, '')) || 0)
+            if (!parsedAmount && debitKey) {
+              parsedAmount = Math.abs(parseFloat(String(row[debitKey] ?? '0').replace(/[^\d.]/g, '')) || 0)
+            }
+            if (!parsedAmount && creditKey) {
+              parsedAmount = Math.abs(parseFloat(String(row[creditKey] ?? '0').replace(/[^\d.]/g, '')) || 0)
+            }
+
             return {
               date: normalizeDate(row[dateKey]),
               chargeDate: rawChargeDate ? normalizeDate(rawChargeDate) : undefined,
               description: String(row[descKey] ?? '').trim(),
-              amount: Math.abs(parseFloat(String(row[amountKey] ?? '0').replace(/[^\d.]/g, '')) || 0),
+              amount: parsedAmount,
               originalAmount,
               installmentInfo,
               category: catKey ? String(row[catKey] ?? '').trim() || undefined : undefined,
