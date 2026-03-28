@@ -292,9 +292,9 @@ export default function ExpensesPage() {
       const mapped = categorizeRows(allRows)
       setParsedFormats(formats)
 
-      const hasChargeDates = mapped.some(r => r.chargeDate)
+      const hasDates = mapped.some(r => r.chargeDate || r.date)
 
-      if (hasChargeDates && periods?.length) {
+      if (hasDates && periods?.length) {
         setRawParsedRows(mapped)
         setImportPeriodId(selectedPeriodId ?? null)
         // Default to current period's date range
@@ -342,8 +342,10 @@ export default function ExpensesPage() {
       const end = new Date(toDate)
       end.setHours(23, 59, 59) // Include the entire end day
       rows = rows.filter(r => {
-        if (!r.chargeDate) return true
-        const parsed = parseHebrewDate(r.chargeDate)
+        // Use chargeDate if available, otherwise fall back to date
+        const dateStr = r.chargeDate || r.date
+        if (!dateStr) return true
+        const parsed = parseHebrewDate(dateStr)
         if (!parsed) return true
         return parsed >= start && parsed <= end
       })
@@ -380,9 +382,7 @@ export default function ExpensesPage() {
     const end = new Date(importDateTo)
     end.setHours(23, 59, 59)
     return rawParsedRows.filter(r => {
-      if (!r.chargeDate) return true
-      // Inline date parse to avoid hook ordering issues
-      const ds = r.chargeDate
+      const ds = r.chargeDate || r.date
       if (!ds) return true
       const iso = Date.parse(ds)
       if (!isNaN(iso)) return new Date(iso) >= start && new Date(iso) <= end
