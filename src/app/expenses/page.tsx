@@ -384,13 +384,17 @@ export default function ExpensesPage() {
     return rawParsedRows.filter(r => {
       const ds = r.chargeDate || r.date
       if (!ds) return true
-      const iso = Date.parse(ds)
-      if (!isNaN(iso)) return new Date(iso) >= start && new Date(iso) <= end
+      // Try DD/MM/YYYY regex FIRST (Israeli format), before Date.parse (which assumes MM/DD)
       const m = ds.match(/(\d{1,2})[/.\-](\d{1,2})[/.\-](\d{2,4})/)
       if (m) {
         const yr = parseInt(m[3]) < 100 ? 2000 + parseInt(m[3]) : parseInt(m[3])
         const d = new Date(yr, parseInt(m[2]) - 1, parseInt(m[1]))
         return d >= start && d <= end
+      }
+      // Only use Date.parse for ISO strings (YYYY-MM-DD)
+      if (/^\d{4}-/.test(ds)) {
+        const iso = Date.parse(ds)
+        if (!isNaN(iso)) return new Date(iso) >= start && new Date(iso) <= end
       }
       return true
     }).length
@@ -406,16 +410,18 @@ export default function ExpensesPage() {
   // Parse date strings in Israeli formats (DD/MM/YYYY, DD.MM.YYYY, DD-MM-YYYY, Date objects)
   function parseHebrewDate(dateStr: string): Date | null {
     if (!dateStr) return null
-    // If it's already an ISO date or Date-like string
-    const iso = Date.parse(dateStr)
-    if (!isNaN(iso)) return new Date(iso)
-    // DD/MM/YYYY or DD.MM.YYYY or DD-MM-YYYY
+    // Try DD/MM/YYYY FIRST — Date.parse("9/2/2026") wrongly gives September (US format)
     const m = dateStr.match(/(\d{1,2})[/.\-](\d{1,2})[/.\-](\d{2,4})/)
     if (m) {
       const day = parseInt(m[1])
       const month = parseInt(m[2]) - 1
       const year = parseInt(m[3]) < 100 ? 2000 + parseInt(m[3]) : parseInt(m[3])
       return new Date(year, month, day)
+    }
+    // Only use Date.parse for ISO format (YYYY-MM-DD)
+    if (/^\d{4}-/.test(dateStr)) {
+      const iso = Date.parse(dateStr)
+      if (!isNaN(iso)) return new Date(iso)
     }
     return null
   }
