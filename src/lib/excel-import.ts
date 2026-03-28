@@ -115,6 +115,24 @@ export interface ParseResult {
   fileName?: string  // source file name for multi-file imports
 }
 
+// Convert Excel serial dates (e.g. 46174) and Date objects to DD/MM/YYYY string
+function normalizeDate(val: unknown): string {
+  if (val == null || val === '') return ''
+  // Date object (from cellDates: true)
+  if (val instanceof Date) {
+    return `${val.getDate()}/${val.getMonth() + 1}/${val.getFullYear()}`
+  }
+  const s = String(val)
+  // Excel serial number (30000-60000 range, no slashes/dashes)
+  const num = parseFloat(s)
+  if (!isNaN(num) && num > 30000 && num < 60000 && /^\d{4,5}(\.\d+)?$/.test(s.trim())) {
+    const epoch = new Date(1899, 11, 30)
+    const dt = new Date(epoch.getTime() + num * 86400000)
+    return `${dt.getDate()}/${dt.getMonth() + 1}/${dt.getFullYear()}`
+  }
+  return s
+}
+
 // פירוט אשראי ישראלי — מנסה לזהות עמודות שונות
 export async function parseExpenseExcel(file: File): Promise<RawExpenseRow[]> {
   const result = await parseExpenseExcelDetailed(file)
@@ -235,8 +253,8 @@ export async function parseExpenseExcelDetailed(file: File): Promise<ParseResult
             }
 
             return {
-              date: String(row[dateKey] ?? ''),
-              chargeDate: rawChargeDate || undefined,
+              date: normalizeDate(row[dateKey]),
+              chargeDate: rawChargeDate ? normalizeDate(rawChargeDate) : undefined,
               description: String(row[descKey] ?? '').trim(),
               amount: Math.abs(parseFloat(String(row[amountKey] ?? '0').replace(/[^\d.]/g, '')) || 0),
               originalAmount,

@@ -37,11 +37,20 @@ interface ExcelImportModalProps {
 
 function formatDate(d: string | undefined): string {
   if (!d) return '-'
+  // Excel serial date (e.g. 46174.00 or 46174)
+  const num = parseFloat(d)
+  if (!isNaN(num) && num > 30000 && num < 60000 && /^\d{4,5}(\.\d+)?$/.test(d.trim())) {
+    const epoch = new Date(1899, 11, 30)
+    const dt = new Date(epoch.getTime() + num * 86400000)
+    return `${dt.getDate()}/${dt.getMonth() + 1}`
+  }
+  // ISO date string or Date object toString
   const iso = Date.parse(d)
   if (!isNaN(iso)) {
     const dt = new Date(iso)
     return `${dt.getDate()}/${dt.getMonth() + 1}`
   }
+  // DD/MM/YYYY, DD.MM.YYYY, DD-MM-YYYY
   const m = d.match(/(\d{1,2})[/.\-](\d{1,2})[/.\-](\d{2,4})/)
   if (m) return `${m[1]}/${m[2]}`
   return d.substring(0, 8)
