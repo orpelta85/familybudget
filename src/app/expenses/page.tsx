@@ -92,12 +92,15 @@ export default function ExpensesPage() {
   const [detectedFormat, setDetectedFormat] = useState<string | null>(null)
   const [importTotal, setImportTotal] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
+  const [parseProgress, setParseProgress] = useState<{ current: number; total: number } | null>(null)
 
   // Multi-file + period selection state
   const [rawParsedRows, setRawParsedRows] = useState<ImportRow[]>([])
   const [showPeriodStep, setShowPeriodStep] = useState(false)
   const [importPeriodId, setImportPeriodId] = useState<number | null>(null)
   const [parsedFormats, setParsedFormats] = useState<string[]>([])
+  const [importDateFrom, setImportDateFrom] = useState('')
+  const [importDateTo, setImportDateTo] = useState('')
 
   // Reset expenses dialog state
   const [showResetDialog, setShowResetDialog] = useState(false)
@@ -262,16 +265,21 @@ export default function ExpensesPage() {
 
   // Parse multiple files and merge results
   async function processExcelFiles(files: File[]) {
-    if (parsingFiles) return
+    if (parsingFiles) {
+      toast.info('הקבצים עדיין נטענים, אנא המתן')
+      return
+    }
     setParsingFiles(true)
+    setParseProgress({ current: 0, total: files.length })
     try {
       const allRows: RawExpenseRow[] = []
       const formats: string[] = []
 
-      for (const file of files) {
+      for (let i = 0; i < files.length; i++) {
+        setParseProgress({ current: i + 1, total: files.length })
+        const file = files[i]
         const result: ParseResult = await parseExpenseExcelDetailed(file)
         const sourceLabel = result.detectedFormat?.label ?? file.name.replace(/\.(xlsx|xls|csv)$/i, '')
-        // Tag each row with source file
         for (const row of result.rows) {
           row.sourceFile = sourceLabel
         }
@@ -284,16 +292,25 @@ export default function ExpensesPage() {
       const mapped = categorizeRows(allRows)
       setParsedFormats(formats)
 
-      // Check if any rows have charge dates — if so, show period selection step
       const hasChargeDates = mapped.some(r => r.chargeDate)
 
       if (hasChargeDates && periods?.length) {
-        // Store raw categorized rows and show period selection step
         setRawParsedRows(mapped)
         setImportPeriodId(selectedPeriodId ?? null)
+        // Default to current period's date range
+        const curPeriod = periods.find(p => p.id === selectedPeriodId)
+        if (curPeriod) {
+          setImportDateFrom(curPeriod.start_date)
+          setImportDateTo(curPeriod.end_date)
+        } else {
+          // Default to current month
+          const now = new Date()
+          setImportDateFrom(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`)
+          const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate()
+          setImportDateTo(`${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${lastDay}`)
+        }
         setShowPeriodStep(true)
       } else {
-        // No charge dates — go directly to preview
         finishImportSetup(mapped, formats)
       }
 
@@ -301,30 +318,83 @@ export default function ExpensesPage() {
         ? `נקראו ${files.length} קבצים · ${allRows.length} שורות`
         : `נקראו ${allRows.length} שורות`
       toast.success(msg + (formats.length ? ` · ${formats.join(', ')}` : ''))
-    } catch (e) { console.error('Read Excel files:', e); toast.error('שגיאה בקריאת הקבצים') } finally { setParsingFiles(false) }
+    } catch (e) {
+      console.error('Excel import error:', e)
+      const errMsg = e instanceof Error ? e.message : String(e)
+      if (errMsg.includes('שגיאה בקריאת הקובץ')) {
+        toast.error(errMsg)
+      } else if (errMsg.includes('dynamically imported module') || errMsg.includes('Failed to fetch') || errMsg.includes('import')) {
+        toast.error('שגיאה בטעינת ספריית Excel - בדוק את חיבור האינטרנט')
+      } else {
+        toast.error(`שגיאה בקריאת הקבצים: ${errMsg}`)
+      }
+    } finally {
+      setParsingFiles(false)
+      setParseProgress(null)
+    }
   }
 
-  // Apply period filter and show import modal
-  function applyPeriodFilter(periodId: number | null) {
+  // Apply date range filter and show import modal
+  function applyDateFilter(fromDate: string, toDate: string) {
     let rows = rawParsedRows
-    if (periodId && periods) {
-      const period = periods.find(p => p.id === periodId)
-      if (period) {
-        const start = new Date(period.start_date)
-        const end = new Date(period.end_date)
-        rows = rows.filter(r => {
-          if (!r.chargeDate) return true // Keep rows without charge date
-          const parsed = parseHebrewDate(r.chargeDate)
-          if (!parsed) return true
-          return parsed >= start && parsed <= end
-        })
-      }
+    if (fromDate && toDate) {
+      const start = new Date(fromDate)
+      const end = new Date(toDate)
+      end.setHours(23, 59, 59) // Include the entire end day
+      rows = rows.filter(r => {
+        if (!r.chargeDate) return true
+        const parsed = parseHebrewDate(r.chargeDate)
+        if (!parsed) return true
+        return parsed >= start && parsed <= end
+      })
     }
     setShowPeriodStep(false)
     finishImportSetup(rows, parsedFormats)
-    // Update selected period to match import period
-    if (periodId) setSelectedPeriodId(periodId)
+    // Try to match to an existing period for the selected period selector
+    if (fromDate && periods) {
+      const from = new Date(fromDate)
+      const match = periods.find(p => {
+        const ps = new Date(p.start_date)
+        return ps.getMonth() === from.getMonth() && ps.getFullYear() === from.getFullYear()
+      })
+      if (match) setSelectedPeriodId(match.id)
+    }
   }
+
+  // Legacy period-based filter (still used internally)
+  function applyPeriodFilter(periodId: number | null) {
+    if (periodId && periods) {
+      const period = periods.find(p => p.id === periodId)
+      if (period) {
+        applyDateFilter(period.start_date, period.end_date)
+        return
+      }
+    }
+    applyDateFilter('', '')
+  }
+
+  // Count rows matching current date filter (inline calculation, no hook needed)
+  const filteredRowCount = (() => {
+    if (!importDateFrom || !importDateTo) return rawParsedRows.length
+    const start = new Date(importDateFrom)
+    const end = new Date(importDateTo)
+    end.setHours(23, 59, 59)
+    return rawParsedRows.filter(r => {
+      if (!r.chargeDate) return true
+      // Inline date parse to avoid hook ordering issues
+      const ds = r.chargeDate
+      if (!ds) return true
+      const iso = Date.parse(ds)
+      if (!isNaN(iso)) return new Date(iso) >= start && new Date(iso) <= end
+      const m = ds.match(/(\d{1,2})[/.\-](\d{1,2})[/.\-](\d{2,4})/)
+      if (m) {
+        const yr = parseInt(m[3]) < 100 ? 2000 + parseInt(m[3]) : parseInt(m[3])
+        const d = new Date(yr, parseInt(m[2]) - 1, parseInt(m[1]))
+        return d >= start && d <= end
+      }
+      return true
+    }).length
+  })()
 
   function finishImportSetup(mapped: ImportRow[], formats: string[]) {
     setImportRows(mapped)
@@ -630,40 +700,90 @@ export default function ExpensesPage() {
           <div className="flex justify-between items-center mb-3">
             <div className="flex items-center gap-2">
               <FileSpreadsheet size={14} className="text-primary" />
-              <span className="font-semibold text-[13px]">בחר מחזור חיוב לסינון</span>
+              <span className="font-semibold text-[13px]">סינון לפי תאריך חיוב</span>
             </div>
             <button onClick={() => { setShowPeriodStep(false); setRawParsedRows([]) }} aria-label="ביטול" className="bg-transparent border-none cursor-pointer flex items-center justify-center p-2 min-w-9 min-h-9 text-muted-foreground">
               <X size={14} />
             </button>
           </div>
           <p className="text-[12px] text-[var(--text-secondary)] mb-3">
-            נמצאו {rawParsedRows.length} שורות עם תאריכי חיוב. בחר מחזור כדי לסנן רק את העסקאות שתאריך החיוב שלהן נופל בטווח המחזור.
+            נמצאו {rawParsedRows.length} שורות עם תאריכי חיוב. בחר טווח תאריכים לסינון.
           </p>
-          <div className="flex flex-wrap gap-2 mb-4">
-            {periods.map(p => (
-              <button
-                key={p.id}
-                onClick={() => setImportPeriodId(p.id)}
-                className={`px-3 py-1.5 rounded-lg text-[12px] font-medium cursor-pointer transition-colors ${
-                  importPeriodId === p.id
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-secondary border border-[var(--border-light)] text-[var(--text-body)] hover:bg-[var(--bg-hover)]'
-                }`}
-              >
-                {p.label}
-              </button>
-            ))}
+          {/* Date range inputs */}
+          <div className="flex items-center gap-3 mb-4">
+            <div className="flex-1">
+              <label className="block text-[11px] text-[var(--text-secondary)] mb-1">מתאריך</label>
+              <input
+                type="date"
+                value={importDateFrom}
+                onChange={e => setImportDateFrom(e.target.value)}
+                aria-label="מתאריך"
+                className="w-full bg-[var(--c-0-18)] border border-[var(--border-light)] rounded-lg px-3 py-2 text-[13px] text-inherit outline-none focus:border-[var(--accent-blue)] transition-colors"
+              />
+            </div>
+            <div className="flex-1">
+              <label className="block text-[11px] text-[var(--text-secondary)] mb-1">עד תאריך</label>
+              <input
+                type="date"
+                value={importDateTo}
+                onChange={e => setImportDateTo(e.target.value)}
+                aria-label="עד תאריך"
+                className="w-full bg-[var(--c-0-18)] border border-[var(--border-light)] rounded-lg px-3 py-2 text-[13px] text-inherit outline-none focus:border-[var(--accent-blue)] transition-colors"
+              />
+            </div>
           </div>
+          {/* Quick select presets */}
+          <div className="flex flex-wrap gap-1.5 mb-4">
+            {(() => {
+              const now = new Date()
+              const presets: { label: string; from: string; to: string }[] = []
+              for (let i = 0; i < 6; i++) {
+                const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+                const y = d.getFullYear()
+                const m = d.getMonth()
+                const monthName = d.toLocaleDateString('he-IL', { month: 'short', year: '2-digit' })
+                // Calendar month (1st to last day)
+                const lastDay = new Date(y, m + 1, 0).getDate()
+                presets.push({
+                  label: monthName,
+                  from: `${y}-${String(m + 1).padStart(2, '0')}-01`,
+                  to: `${y}-${String(m + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`,
+                })
+              }
+              return presets.map(p => (
+                <button
+                  key={p.from}
+                  onClick={() => { setImportDateFrom(p.from); setImportDateTo(p.to) }}
+                  className={`px-2.5 py-1 rounded-md text-[11px] font-medium cursor-pointer transition-colors ${
+                    importDateFrom === p.from && importDateTo === p.to
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-[var(--c-0-18)] border border-[var(--border-light)] text-[var(--text-secondary)] hover:bg-[var(--c-0-25)] hover:text-[var(--text-body)]'
+                  }`}
+                >
+                  {p.label}
+                </button>
+              ))
+            })()}
+          </div>
+          {/* Match count */}
+          {importDateFrom && importDateTo && (
+            <div className="text-[12px] text-[var(--text-secondary)] mb-3">
+              {filteredRowCount === rawParsedRows.length
+                ? `כל ${rawParsedRows.length} השורות בטווח`
+                : `${filteredRowCount} מתוך ${rawParsedRows.length} שורות בטווח`
+              }
+            </div>
+          )}
           <div className="flex gap-2">
             <button
-              onClick={() => applyPeriodFilter(importPeriodId)}
-              className="flex-1 bg-primary border-none rounded-lg py-2 text-primary-foreground font-semibold text-xs cursor-pointer"
+              onClick={() => applyDateFilter(importDateFrom, importDateTo)}
+              className="flex-1 bg-primary border-none rounded-lg py-2.5 text-primary-foreground font-semibold text-[13px] cursor-pointer"
             >
-              {importPeriodId ? 'סנן והמשך' : 'המשך ללא סינון'}
+              {importDateFrom && importDateTo ? `סנן והמשך (${filteredRowCount})` : 'המשך ללא סינון'}
             </button>
             <button
-              onClick={() => applyPeriodFilter(null)}
-              className="bg-secondary border border-[var(--border-light)] rounded-lg px-3 py-2 text-inherit text-xs cursor-pointer"
+              onClick={() => applyDateFilter('', '')}
+              className="bg-secondary border border-[var(--border-light)] rounded-lg px-3 py-2.5 text-inherit text-xs cursor-pointer"
             >
               דלג - הצג הכל
             </button>
@@ -702,6 +822,7 @@ export default function ExpensesPage() {
         onImportSave={handleImportSave}
         showTextInput={showTextInput}
         parsingFiles={parsingFiles}
+        parseProgress={parseProgress}
         onAcceptAllSuggestions={() => {
           // Accept all suggestions with confidence >= 0.3 — no change needed, they already have categoryId set
           toast.success('כל ההצעות אושרו')

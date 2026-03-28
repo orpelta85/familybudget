@@ -5,6 +5,11 @@ let _XLSX: typeof import('xlsx') | null = null
 async function getXLSX() {
   if (!_XLSX) {
     _XLSX = await import('xlsx')
+    // Load codepage tables for .xls (BIFF) Hebrew support
+    try {
+      const cptable = await import('xlsx/dist/cpexcel.full.mjs' as string)
+      _XLSX.set_cptable(cptable)
+    } catch { /* codepage tables optional for .xlsx */ }
   }
   return _XLSX
 }
@@ -47,6 +52,9 @@ export async function parseSharedExcel(file: File): Promise<RawSharedRow[]> {
           .filter(r => r.label && r.total_amount > 0)
         resolve(parsed)
       } catch (err) { reject(err) }
+    }
+    reader.onerror = () => {
+      reject(new Error(`שגיאה בקריאת הקובץ: ${file.name}`))
     }
     reader.readAsArrayBuffer(file)
   })
@@ -113,29 +121,43 @@ export async function parseExpenseExcel(file: File): Promise<RawExpenseRow[]> {
 
 export async function parseExpenseExcelDetailed(file: File): Promise<ParseResult> {
   const XLSX = await getXLSX()
+  const isXls = /\.xls$/i.test(file.name)
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
     reader.onload = (e) => {
       try {
-        const data = new Uint8Array(e.target?.result as ArrayBuffer)
-        const wb = XLSX.read(data, { type: 'array', cellDates: true })
+        // .xls (BIFF) crashes with type:'array' in Turbopack browser — use 'binary' instead
+        let wb: ReturnType<typeof XLSX.read>
+        if (isXls) {
+          const bstr = e.target?.result as string
+          wb = XLSX.read(bstr, { type: 'binary' })
+        } else {
+          const data = new Uint8Array(e.target?.result as ArrayBuffer)
+          wb = XLSX.read(data, { type: 'array', cellDates: true })
+        }
         const sheetName = wb.SheetNames[0]
         const sheet = wb.Sheets[sheetName]
         // Try default header row first
         let rows: Record<string, unknown>[] = XLSX.utils.sheet_to_json(sheet, { defval: '' })
 
-        // If first row keys don't look like Hebrew headers (credit card metadata rows),
-        // try skipping rows until we find a header-like row
+        // Detect real header row — metadata rows like "פירוט עסקות נכון לתאריך:"
+        // can falsely match "תאריך", so we require short column-like keys (< 40 chars)
+        // AND at least 2 header-like columns to confirm it's a real header row
+        const isHeaderRow = (keys: string[]) => {
+          const shortKeys = keys.filter(k => k.length < 40 && !/^__EMPTY/.test(k))
+          const headerPattern = /^תאריך|סכום|שם.?בית|תיאור|אסמכתא|עסקה|חיוב|פירוט$|בית.?עסק|מטבע/i
+          const matches = shortKeys.filter(k => headerPattern.test(k))
+          return matches.length >= 2
+        }
+
         if (rows.length > 0) {
           const firstKeys = Object.keys(rows[0])
-          const looksLikeHeaders = firstKeys.some(k => /תאריך|סכום|שם.?בית|תיאור|אסמכתא|עסקה/i.test(k))
-          if (!looksLikeHeaders) {
-            // Try rows 1-5 as potential header rows
-            for (let headerRow = 1; headerRow <= 5; headerRow++) {
+          if (!isHeaderRow(firstKeys)) {
+            for (let headerRow = 1; headerRow <= 7; headerRow++) {
               const tryRows: Record<string, unknown>[] = XLSX.utils.sheet_to_json(sheet, { defval: '', range: headerRow })
               if (tryRows.length > 0) {
                 const tryKeys = Object.keys(tryRows[0])
-                if (tryKeys.some(k => /תאריך|סכום|שם.?בית|תיאור|אסמכתא|עסקה/i.test(k))) {
+                if (isHeaderRow(tryKeys)) {
                   rows = tryRows
                   break
                 }
@@ -156,7 +178,9 @@ export async function parseExpenseExcelDetailed(file: File): Promise<ParseResult
         const dateKey   = keys.find(k => /תאריך.?עסקה|תאריך.?חיוב|תאריך|date/i.test(k)) ?? keys[0]
         // Charge date (תאריך חיוב) — separate from transaction date
         const chargeDateKey = keys.find(k => /תאריך.?חיוב/i.test(k))
-        const descKey   = keys.find(k => /שם.?בית.?עסק|שם.?עסק|עסק|בית.?עסק|שם|תיאור|פירוט|description|merchant/i.test(k)) ?? keys[1]
+        const descKey   = keys.find(k => /שם.?בית.?העסק|שם.?בית.?עסק|שם.?העסק|שם.?עסק|בית.?העסק|בית.?עסק/i.test(k))
+                       ?? keys.find(k => /תיאור|פירוט|description|merchant/i.test(k))
+                       ?? keys[1]
 
         // Feature 3: Prefer charge amount (סכום חיוב) over transaction amount (סכום עסקה)
         const chargeAmountKey = keys.find(k => /סכום.?חיוב/i.test(k))
@@ -234,7 +258,14 @@ export async function parseExpenseExcelDetailed(file: File): Promise<ParseResult
         reject(err)
       }
     }
-    reader.readAsArrayBuffer(file)
+    reader.onerror = () => {
+      reject(new Error(`שגיאה בקריאת הקובץ: ${file.name}`))
+    }
+    if (isXls) {
+      reader.readAsBinaryString(file)
+    } else {
+      reader.readAsArrayBuffer(file)
+    }
   })
 }
 

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { formatCurrency } from '@/lib/utils'
-import { Upload, X, FileSpreadsheet, CheckCircle2, AlertCircle, HelpCircle, Sparkles } from 'lucide-react'
+import { Upload, X, FileSpreadsheet, CheckCircle2, AlertCircle, HelpCircle, Sparkles, Loader2 } from 'lucide-react'
 import type { RawExpenseRow } from '@/lib/excel-import'
 import type { BudgetCategory, SinkingFund } from '@/lib/types'
 
@@ -32,6 +32,7 @@ interface ExcelImportModalProps {
   showTextInput: (title: string) => Promise<string | null>
   onAcceptAllSuggestions?: () => void
   parsingFiles?: boolean
+  parseProgress?: { current: number; total: number } | null
 }
 
 export function ExcelImportModal({
@@ -40,7 +41,7 @@ export function ExcelImportModal({
   categories, funds,
   isDragging, setIsDragging, fileRef,
   onDrop, onImportSave, showTextInput, onAcceptAllSuggestions,
-  parsingFiles = false,
+  parsingFiles = false, parseProgress,
 }: ExcelImportModalProps) {
   const [bulkCategory, setBulkCategory] = useState('')
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set())
@@ -61,39 +62,48 @@ export function ExcelImportModal({
     <>
       {/* Drag & Drop Zone */}
       {!showImport && (
-        <div
-          onDragOver={e => { e.preventDefault(); setIsDragging(true) }}
-          onDragLeave={() => setIsDragging(false)}
-          onDrop={onDrop}
-          className={`border-2 border-dashed rounded-xl p-6 mb-4 text-center cursor-pointer transition-all duration-200 ${
-            isDragging
-              ? 'border-[var(--accent-blue)] bg-[var(--c-blue-0-16)]'
-              : 'border-[var(--border-default)] bg-transparent hover:border-[var(--c-0-35)]'
-          }`}
-          onClick={() => fileRef.current?.click()}
-        >
-          {parsingFiles ? (
-            <>
-              <div className="animate-spin mx-auto mb-2 w-6 h-6 border-2 border-[var(--accent-blue)] border-t-transparent rounded-full" />
-              <div className="text-[13px] text-[var(--accent-blue)] font-medium">קורא קבצים...</div>
-            </>
-          ) : (
-            <>
-              <Upload size={24} className={`mx-auto mb-2 ${isDragging ? 'text-[var(--accent-blue)]' : 'text-[var(--c-0-40)]'}`} />
-              <div className="text-[13px] text-[var(--text-secondary)]">
-                גרור קבצי Excel לכאן או לחץ לבחירה
+        <div className="relative mb-4">
+          <div
+            onDragOver={e => { if (!parsingFiles) { e.preventDefault(); setIsDragging(true) } }}
+            onDragLeave={() => setIsDragging(false)}
+            onDrop={parsingFiles ? undefined : onDrop}
+            className={`border-2 border-dashed rounded-xl p-6 text-center transition-all duration-200 ${
+              parsingFiles
+                ? 'border-[var(--accent-blue)] bg-[var(--c-blue-0-16)] pointer-events-none opacity-60'
+                : isDragging
+                  ? 'border-[var(--accent-blue)] bg-[var(--c-blue-0-16)] cursor-pointer'
+                  : 'border-[var(--border-default)] bg-transparent hover:border-[var(--c-0-35)] cursor-pointer'
+            }`}
+            onClick={() => !parsingFiles && fileRef.current?.click()}
+          >
+            <Upload size={24} className={`mx-auto mb-2 ${isDragging ? 'text-[var(--accent-blue)]' : 'text-[var(--c-0-40)]'}`} />
+            <div className="text-[13px] text-[var(--text-secondary)]">
+              גרור קבצי Excel לכאן או לחץ לבחירה
+            </div>
+            <div className="text-[11px] text-[var(--c-0-45)] mt-1">
+              xlsx, xls, csv — ניתן לבחור מספר קבצים בו-זמנית (בנקים + אשראי)
+            </div>
+          </div>
+          {/* Loading overlay */}
+          {parsingFiles && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center rounded-xl bg-[var(--c-0-10)]/80 backdrop-blur-sm z-10">
+              <Loader2 size={28} className="animate-spin text-[var(--accent-blue)] mb-2" />
+              <div className="text-[14px] text-[var(--accent-blue)] font-semibold">
+                קורא קבצים...
               </div>
-              <div className="text-[11px] text-[var(--c-0-45)] mt-1">
-                xlsx, xls, csv — ניתן לבחור מספר קבצים בו-זמנית (בנקים + אשראי)
-              </div>
-            </>
+              {parseProgress && parseProgress.total > 1 && (
+                <div className="text-[12px] text-[var(--text-secondary)] mt-1">
+                  קורא קובץ {parseProgress.current} מתוך {parseProgress.total}
+                </div>
+              )}
+            </div>
           )}
         </div>
       )}
 
       {/* Excel import preview */}
       {showImport && (
-        <div className="bg-card border border-[var(--accent-blue)] rounded-xl p-5 mb-4">
+        <div className="relative bg-card border border-[var(--accent-blue)] rounded-xl p-5 mb-4">
           <div className="flex justify-between items-center mb-3">
             <div className="flex items-center gap-2">
               <FileSpreadsheet size={14} className="text-primary" />
@@ -283,11 +293,23 @@ export function ExcelImportModal({
             })}
           </div>
           <div className="flex gap-2">
-            <button onClick={onImportSave} disabled={importing} className={`flex-1 border-none rounded-lg py-2 text-primary-foreground font-semibold text-xs ${importing ? 'bg-[var(--c-blue-0-40)] cursor-wait' : 'bg-primary cursor-pointer'}`}>
+            <button onClick={onImportSave} disabled={importing} className={`flex-1 border-none rounded-lg py-2.5 text-primary-foreground font-semibold text-[13px] ${importing ? 'bg-[var(--c-blue-0-40)] cursor-wait' : 'bg-primary cursor-pointer'}`}>
               {importing ? 'מייבא... נא להמתין' : `ייבא ${importRows.filter(r => (r.categoryId || r.category) && r.amount > 0).length}`}
             </button>
-            <button onClick={() => { setShowImport(false); setImportRows([]) }} className="bg-secondary border border-[var(--border-light)] rounded-lg px-3 py-2 text-inherit text-xs cursor-pointer outline-none">ביטול</button>
+            <button onClick={() => { setShowImport(false); setImportRows([]) }} disabled={importing} className="bg-secondary border border-[var(--border-light)] rounded-lg px-3 py-2.5 text-inherit text-xs cursor-pointer outline-none disabled:opacity-40 disabled:cursor-not-allowed">ביטול</button>
           </div>
+          {/* Importing overlay */}
+          {importing && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center rounded-xl bg-[var(--c-0-10)]/80 backdrop-blur-sm z-10">
+              <Loader2 size={32} className="animate-spin text-[var(--accent-blue)] mb-3" />
+              <div className="text-[15px] text-[var(--accent-blue)] font-semibold">
+                מייבא הוצאות...
+              </div>
+              <div className="text-[12px] text-[var(--text-secondary)] mt-1">
+                נא להמתין, הפעולה עשויה לקחת מספר שניות
+              </div>
+            </div>
+          )}
         </div>
       )}
     </>
