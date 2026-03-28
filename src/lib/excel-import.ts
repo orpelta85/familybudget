@@ -82,16 +82,18 @@ interface DetectedFormat {
 const BANK_FORMATS: { pattern: RegExp; name: string; label: string }[] = [
   { pattern: /ויזה.?כאל|cal.*visa|visa.*cal/i, name: 'visa_cal', label: 'ויזה כאל' },
   { pattern: /ישראכרט|isracard/i, name: 'isracard', label: 'ישראכרט' },
-  { pattern: /מקס|max/i, name: 'max', label: 'מקס' },
   { pattern: /לאומי.?קארד|leumi.*card/i, name: 'leumi_card', label: 'לאומי קארד' },
   { pattern: /בנק.?לאומי|leumi/i, name: 'leumi', label: 'בנק לאומי' },
   { pattern: /הפועלים|hapoalim/i, name: 'hapoalim', label: 'בנק הפועלים' },
-  { pattern: /דיסקונט|discount/i, name: 'discount', label: 'בנק דיסקונט' },
+  { pattern: /בנק.?דיסקונט|discount.*bank/i, name: 'discount', label: 'בנק דיסקונט' },
   { pattern: /מזרחי|mizrahi|טפחות/i, name: 'mizrahi', label: 'מזרחי טפחות' },
+  { pattern: /בינלאומי|fibi|first.?international/i, name: 'fibi', label: 'בנק בינלאומי' },
+  { pattern: /\bmax\b|מקס/i, name: 'max', label: 'מקס' },
 ]
 
 function detectBankFormat(keys: string[], sheetName: string): DetectedFormat | null {
-  const allText = [...keys, sheetName].join(' ')
+  // Only match on sheet name to avoid false positives from column names like "מפתח דיסקונט"
+  const allText = sheetName
   for (const fmt of BANK_FORMATS) {
     if (fmt.pattern.test(allText)) return { name: fmt.name, label: fmt.label }
   }
