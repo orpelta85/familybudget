@@ -528,67 +528,77 @@ export default function ExpensesPage() {
         }
       }
 
+      // Resolve categories for all rows
+      const personalRows: { period_id: number; user_id: string; category_id: number; amount: number; description: string; expense_date: string }[] = []
+      const sharedRows: { period_id: number; category: string; total_amount: number; notes: string; family_id: string }[] = []
+      const fundTxRows: { fund_id: number; period_id: number; amount: number; description: string; transaction_date: string }[] = []
+
+      for (const r of valid) {
+        let resolvedCatId: number
+        if (r.categoryId.startsWith('__new__')) {
+          resolvedCatId = createdCatMap[r.categoryId.replace('__new__', '')]
+        } else {
+          resolvedCatId = Number(r.categoryId)
+        }
+        if (!resolvedCatId || isNaN(resolvedCatId)) {
+          resolvedCatId = categories?.[0]?.id ?? 1
+        }
+
+        if (r.is_shared && familyId) {
+          sharedRows.push({
+            period_id: selectedPeriodId, category: 'misc',
+            total_amount: r.amount, notes: r.description, family_id: familyId,
+          })
+        } else {
+          personalRows.push({
+            period_id: selectedPeriodId, user_id: user.id,
+            category_id: resolvedCatId, amount: r.amount,
+            description: r.description, expense_date: today,
+          })
+        }
+        const rawFundName = r.fund_name?.startsWith('__new_fund__') ? r.fund_name.replace('__new_fund__', '') : r.fund_name
+        if (rawFundName) {
+          const fund = (funds ?? []).find(f => f.name === rawFundName)
+          const fundId = fund?.id ?? createdFundMap[rawFundName]
+          if (fundId) {
+            fundTxRows.push({
+              fund_id: fundId, period_id: selectedPeriodId,
+              amount: -r.amount, description: r.description, transaction_date: today,
+            })
+          }
+        }
+        // Smart confidence feedback (fire-and-forget)
+        if (r.description && resolvedCatId && !isNaN(resolvedCatId)) {
+          const userChangedCategory = r.originalCategoryId && r.categoryId !== r.originalCategoryId
+          if (r.matchRuleId && !userChangedCategory) {
+            updateRuleConfidence.mutate({ ruleId: r.matchRuleId, userId: user.id, delta: 0.1 })
+          } else if (r.matchRuleId && userChangedCategory) {
+            updateRuleConfidence.mutate({ ruleId: r.matchRuleId, userId: user.id, delta: -0.15 })
+          }
+          saveCategoryRule.mutate({
+            user_id: user.id, merchant_pattern: r.description.trim(),
+            category_id: resolvedCatId, fund_name: rawFundName || undefined,
+            confidence: r.matchSource === 'none' ? 0.5 : (r.matchConfidence ?? 0.5),
+            source: 'user',
+          })
+        }
+      }
+
+      // Batch insert (much faster than one-by-one)
       let imported = 0
       let failed = 0
-      for (const r of valid) {
-        try {
-          let resolvedCatId: number
-          if (r.categoryId.startsWith('__new__')) {
-            resolvedCatId = createdCatMap[r.categoryId.replace('__new__', '')]
-          } else {
-            resolvedCatId = Number(r.categoryId)
-          }
-          if (!resolvedCatId || isNaN(resolvedCatId)) {
-            resolvedCatId = categories?.[0]?.id ?? 1
-          }
-
-          if (r.is_shared && familyId) {
-            await sb.from('shared_expenses').insert({
-              period_id: selectedPeriodId, category: 'misc',
-              total_amount: r.amount, notes: r.description, family_id: familyId,
-            })
-          } else {
-            await sb.from('personal_expenses').insert({
-              period_id: selectedPeriodId, user_id: user.id,
-              category_id: resolvedCatId, amount: r.amount,
-              description: r.description, expense_date: today,
-            })
-          }
-          const rawFundName = r.fund_name?.startsWith('__new_fund__') ? r.fund_name.replace('__new_fund__', '') : r.fund_name
-          if (rawFundName) {
-            const fund = (funds ?? []).find(f => f.name === rawFundName)
-            const fundId = fund?.id ?? createdFundMap[rawFundName]
-            if (fundId) {
-              await sb.from('sinking_fund_transactions').insert({
-                fund_id: fundId, period_id: selectedPeriodId,
-                amount: -r.amount, description: r.description, transaction_date: today,
-              })
-            }
-          }
-          // Smart confidence feedback loop
-          if (r.description && resolvedCatId && !isNaN(resolvedCatId)) {
-            const userChangedCategory = r.originalCategoryId && r.categoryId !== r.originalCategoryId
-            if (r.matchRuleId && !userChangedCategory) {
-              // User accepted auto-suggestion: boost confidence
-              updateRuleConfidence.mutate({ ruleId: r.matchRuleId, userId: user.id, delta: 0.1 })
-            } else if (r.matchRuleId && userChangedCategory) {
-              // User changed category: decrease old rule confidence
-              updateRuleConfidence.mutate({ ruleId: r.matchRuleId, userId: user.id, delta: -0.15 })
-            }
-            // Create/update rule for this merchant-category pairing
-            saveCategoryRule.mutate({
-              user_id: user.id,
-              merchant_pattern: r.description.trim(),
-              category_id: resolvedCatId,
-              fund_name: rawFundName || undefined,
-              confidence: r.matchSource === 'none' ? 0.5 : (r.matchConfidence ?? 0.5),
-              source: 'user',
-            })
-          }
-          imported++
-        } catch {
-          failed++
-        }
+      if (personalRows.length) {
+        const { error } = await sb.from('personal_expenses').insert(personalRows)
+        if (error) { console.error('Batch personal insert error:', error); failed += personalRows.length }
+        else imported += personalRows.length
+      }
+      if (sharedRows.length) {
+        const { error } = await sb.from('shared_expenses').insert(sharedRows)
+        if (error) { console.error('Batch shared insert error:', error); failed += sharedRows.length }
+        else imported += sharedRows.length
+      }
+      if (fundTxRows.length) {
+        await sb.from('sinking_fund_transactions').insert(fundTxRows)
       }
       queryClient.invalidateQueries({ queryKey: ['personal_expenses'] })
       queryClient.invalidateQueries({ queryKey: ['shared_expenses'] })
