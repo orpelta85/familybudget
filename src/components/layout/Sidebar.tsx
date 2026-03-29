@@ -120,7 +120,7 @@ export function Sidebar() {
       <div className="px-5 pt-5 pb-4 border-b border-[var(--c-0-20)]">
         <div className="mb-1.5 flex flex-col items-center">
           <img src="/logo-familyplan.png" alt="Family Plan" width={158} height={158} className="w-[158px] h-[158px] object-contain logo-dark" />
-          <img src="/logo-familyplan-light.png" alt="Family Plan" width={158} height={158} className="w-[158px] h-[158px] object-contain logo-light" />
+          <img src="/logo-familyplan-light.png" alt="Family Plan" width={158} height={158} className="w-[158px] h-[158px] object-contain logo-light" style={{ filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.10)) contrast(1.1) saturate(1.15)' }} />
           <div className="text-[10px] text-[var(--text-muted)] -mt-4 tracking-wide">סדר בבית, שקט בכיס.</div>
         </div>
         {/* Family name + Bell */}
@@ -194,7 +194,7 @@ export function Sidebar() {
           <div key={section.sectionLabel}>
             <div
               className={cn(
-                'text-[10px] uppercase tracking-[0.05em] text-[var(--text-muted)] px-3 pb-2 select-none',
+                'text-[10px] uppercase tracking-[0.05em] text-[var(--text-muted)] font-medium px-3 pb-2 select-none',
                 si === 0 ? 'pt-2' : 'pt-5'
               )}
             >
@@ -209,10 +209,10 @@ export function Sidebar() {
                     key={link.href}
                     href={link.href}
                     className={cn(
-                      'flex items-center gap-2.5 py-2 px-3 rounded-lg text-[13px] no-underline transition-all duration-150 border-r-2',
+                      'flex items-center gap-2.5 py-2 px-3 rounded-lg text-[13px] no-underline transition-all duration-150 border-r-2 font-medium',
                       active
-                        ? 'font-medium text-[var(--c-0-92)] bg-[var(--c-0-20)] border-r-[var(--accent-blue)]'
-                        : 'font-normal text-[var(--text-secondary)] bg-transparent border-r-transparent'
+                        ? 'text-[var(--c-0-92)] bg-[var(--c-0-22)] border-r-[var(--accent-blue)] border-r-[3px]'
+                        : 'text-[var(--text-secondary)] bg-transparent border-r-transparent'
                     )}
                   >
                     <Icon size={15} className="shrink-0" />
@@ -227,10 +227,10 @@ export function Sidebar() {
         <Link
           href="/family"
           className={cn(
-            'flex items-center gap-2.5 py-2 px-3 rounded-lg text-[13px] no-underline transition-all duration-150 border-r-2',
+            'flex items-center gap-2.5 py-2 px-3 rounded-lg text-[13px] no-underline transition-all duration-150 border-r-2 font-medium',
             pathname === '/family'
-              ? 'font-medium text-[var(--c-0-92)] bg-[var(--c-0-20)] border-r-[var(--accent-blue)]'
-              : 'font-normal text-[var(--text-secondary)] bg-transparent border-r-transparent'
+              ? 'text-[var(--c-0-92)] bg-[var(--c-0-22)] border-r-[var(--accent-blue)] border-r-[3px]'
+              : 'text-[var(--text-secondary)] bg-transparent border-r-transparent'
           )}
         >
           <Settings size={15} className="shrink-0" />
@@ -242,10 +242,10 @@ export function Sidebar() {
             <Link
               href="/admin"
               className={cn(
-                'flex items-center gap-2.5 py-2 px-3 rounded-lg text-[13px] no-underline transition-all duration-150 border-r-2',
+                'flex items-center gap-2.5 py-2 px-3 rounded-lg text-[13px] no-underline transition-all duration-150 border-r-2 font-medium',
                 pathname === '/admin'
-                  ? 'font-medium text-[var(--c-purple-0-85)] bg-[var(--c-purple-0-20)] border-r-[var(--c-purple-0-60)]'
-                  : 'font-normal text-[var(--c-purple-0-60)] bg-transparent border-r-transparent'
+                  ? 'text-[var(--c-purple-0-85)] bg-[var(--c-purple-0-20)] border-r-[var(--c-purple-0-60)] border-r-[3px]'
+                  : 'text-[var(--c-purple-0-60)] bg-transparent border-r-transparent'
               )}
             >
               <ShieldCheck size={15} className="shrink-0" />

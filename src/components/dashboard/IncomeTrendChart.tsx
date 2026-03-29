@@ -26,7 +26,7 @@ export function IncomeTrendChart({ data }: { data: TrendEntry[] }) {
         />
         <Bar dataKey="total" radius={[4, 4, 0, 0]}>
           {data.map((entry, i) => (
-            <Cell key={i} fill={entry.isCurrent ? 'var(--accent-blue)' : 'var(--c-0-30)'} />
+            <Cell key={i} fill={entry.isCurrent ? 'var(--accent-blue)' : 'var(--c-0-40)'} />
           ))}
         </Bar>
       </BarChart>
