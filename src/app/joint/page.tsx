@@ -59,6 +59,7 @@ export default function JointPage() {
   const [customCatName, setCustomCatName] = useState('')
   const [expAmount, setExpAmount] = useState('')
   const [expDesc, setExpDesc] = useState('')
+  const [expDate, setExpDate] = useState(new Date().toISOString().split('T')[0])
 
   useEffect(() => {
     if (poolIncome) {
@@ -113,8 +114,8 @@ export default function JointPage() {
     try {
       const category = useCustomCat ? 'misc' as PoolCategory : expCategory
       const desc = useCustomCat ? (customCatName.trim() + (expDesc ? ` - ${expDesc}` : '')) : expDesc
-      await addExpense.mutateAsync({ period_id: selectedPeriodId, category, amount: Number(expAmount), description: desc, expense_date: new Date().toISOString().split('T')[0], family_id: familyId })
-      setExpAmount(''); setExpDesc(''); setCustomCatName('')
+      await addExpense.mutateAsync({ period_id: selectedPeriodId, category, amount: Number(expAmount), description: desc, expense_date: expDate, family_id: familyId })
+      setExpAmount(''); setExpDesc(''); setCustomCatName(''); setExpDate(new Date().toISOString().split('T')[0])
       toast.success('הוצאה נוספה')
     } catch (e) { console.error('Add joint expense:', e); toast.error('שגיאה') }
   }
@@ -141,10 +142,6 @@ export default function JointPage() {
       {/* Balance hero */}
       <div className={`rounded-xl p-5 mb-5 border ${balance >= 0 ? 'bg-[var(--c-purple-0-15)] border-[var(--c-purple-0-25)]' : 'bg-[var(--c-red-0-15)] border-[var(--c-red-0-25)]'}`}>
         <div className="flex justify-between items-center">
-          <div>
-            <div className="text-xs text-[var(--c-purple-0-60)] mb-1 uppercase tracking-[0.04em]">יתרת הקופה</div>
-            <div className={`text-4xl font-extrabold tracking-[-0.04em] ${balance >= 0 ? 'text-[var(--c-purple-0-80)]' : 'text-[var(--c-red-0-75)]'}`}>{formatCurrency(balance)}</div>
-          </div>
           <div className="flex gap-6">
             {carryOver !== 0 && (
               <div className="text-center">
@@ -160,6 +157,10 @@ export default function JointPage() {
               <div className="text-lg font-bold text-[var(--accent-orange)]">{formatCurrency(totalExpenses)}</div>
               <div className="text-[11px] text-[var(--text-secondary)]">הוצאות</div>
             </div>
+          </div>
+          <div>
+            <div className="text-xs text-[var(--c-purple-0-60)] mb-1 uppercase tracking-[0.04em] text-left">יתרת הקופה</div>
+            <div className={`text-4xl font-extrabold tracking-[-0.04em] ${balance >= 0 ? 'text-[var(--c-purple-0-80)]' : 'text-[var(--c-red-0-75)]'}`}>{formatCurrency(balance)}</div>
           </div>
         </div>
       </div>
@@ -212,6 +213,11 @@ export default function JointPage() {
               className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-[15px] text-right [direction:ltr]" />
             <input type="text" value={expDesc} onChange={e => setExpDesc(e.target.value)} placeholder="תיאור (אופציונלי)"
               className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-[13px]" />
+            <div>
+              <label className="text-[11px] text-[var(--c-0-60)] block mb-[5px] font-medium">תאריך</label>
+              <input type="date" value={expDate} onChange={e => setExpDate(e.target.value)} aria-label="תאריך הוצאה"
+                className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-[13px] [direction:ltr]" />
+            </div>
             <button type="submit" className="btn-hover bg-[var(--accent-orange)] border-none rounded-lg py-2.5 font-semibold text-[13px] text-[var(--c-0-10)] cursor-pointer">
               + הוסף הוצאה
             </button>

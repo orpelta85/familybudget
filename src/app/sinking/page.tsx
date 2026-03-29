@@ -2,7 +2,7 @@
 
 import { useUser } from '@/lib/queries/useUser'
 import { usePeriods } from '@/lib/queries/usePeriods'
-import { useSinkingFunds, useAllSinkingTransactions, useAddSinkingTransaction, useUpdateSinkingFund, useAddSinkingFund, useDeleteSinkingFund, useFamilySinkingFunds, useFamilySinkingTransactions } from '@/lib/queries/useSinking'
+import { useSinkingFunds, useAllSinkingTransactions, useAddSinkingTransaction, useUpdateSinkingFund, useAddSinkingFund, useDeleteSinkingFund, useDeleteSinkingTransaction, useFamilySinkingFunds, useFamilySinkingTransactions } from '@/lib/queries/useSinking'
 import { useSplitFraction } from '@/lib/queries/useProfile'
 import { formatCurrency } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
@@ -13,7 +13,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState, useMemo } from 'react'
 import { toast } from 'sonner'
 import { useConfirmDialog } from '@/components/ui/ConfirmDialog'
-import { Target, Plus, X, Pencil, Users, User, Trash2, Inbox } from 'lucide-react'
+import { Target, Plus, X, Pencil, Users, User, Trash2, Inbox, Calendar, ChevronDown, ChevronUp } from 'lucide-react'
 import { TableSkeleton } from '@/components/ui/Skeleton'
 import { PageInfo } from '@/components/ui/PageInfo'
 import { InfoTooltip } from '@/components/ui/InfoTooltip'
@@ -40,6 +40,7 @@ export default function SinkingPage() {
   const updateFund = useUpdateSinkingFund()
   const addFund = useAddSinkingFund()
   const deleteFund = useDeleteSinkingFund()
+  const deleteTxn = useDeleteSinkingTransaction()
   const queryClient = useQueryClient()
   const confirm = useConfirmDialog()
 
@@ -51,7 +52,9 @@ export default function SinkingPage() {
   const [txModal, setTxModal] = useState<{ fundId: number; fundName: string; type: 'add' | 'use' } | null>(null)
   const [txAmount, setTxAmount] = useState('')
   const [txDesc, setTxDesc] = useState('')
+  const [txDate, setTxDate] = useState(new Date().toISOString().split('T')[0])
   const [txPeriodId, setTxPeriodId] = useState<number | undefined>()
+  const [expandedFunds, setExpandedFunds] = useState<Set<number>>(new Set())
 
   useEffect(() => {
     if (!loading && !user) router.push('/login')
@@ -83,10 +86,14 @@ export default function SinkingPage() {
   }
 
   function getFundBalance(fundId: number) {
+    const fund = (funds ?? []).find(f => f.id === fundId)
+    if (!fund) return 0
     const txns = allTxns?.filter(t => t.fund_id === fundId) ?? []
+    const currentMonth = new Date().getMonth() + 1
+    const accumulated = fund.monthly_allocation * currentMonth
     const deposits = txns.filter(t => t.amount > 0).reduce((s, t) => s + t.amount, 0)
     const withdrawals = txns.filter(t => t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0)
-    return deposits - withdrawals
+    return accumulated + deposits - withdrawals
   }
 
   async function handleDeleteFund(id: number, name: string) {
@@ -95,6 +102,23 @@ export default function SinkingPage() {
       await deleteFund.mutateAsync(id)
       toast.success('קרן נמחקה')
     } catch (e) { console.error('Delete sinking fund:', e); toast.error('שגיאה במחיקה') }
+  }
+
+  async function handleDeleteTxn(id: number) {
+    if (!(await confirm({ message: 'למחוק את העסקה?' }))) return
+    try {
+      await deleteTxn.mutateAsync(id)
+      toast.success('עסקה נמחקה')
+    } catch (e) { console.error('Delete sinking txn:', e); toast.error('שגיאה במחיקה') }
+  }
+
+  function toggleFundExpand(fundId: number) {
+    setExpandedFunds(prev => {
+      const next = new Set(prev)
+      if (next.has(fundId)) next.delete(fundId)
+      else next.add(fundId)
+      return next
+    })
   }
 
   async function handleAddFund() {
@@ -141,9 +165,9 @@ export default function SinkingPage() {
     const amount = txModal.type === 'add' ? raw : -raw
     const desc = txDesc || (txModal.type === 'add' ? 'הפקדה' : 'הוצאה')
     try {
-      await addTxn.mutateAsync({ fund_id: txModal.fundId, period_id: txPeriodId, amount, description: desc, transaction_date: new Date().toISOString().split('T')[0] })
+      await addTxn.mutateAsync({ fund_id: txModal.fundId, period_id: txPeriodId, amount, description: desc, transaction_date: txDate })
       toast.success(txModal.type === 'add' ? 'הפקדה נרשמה' : 'הוצאה נרשמה')
-      setTxModal(null); setTxAmount(''); setTxDesc('')
+      setTxModal(null); setTxAmount(''); setTxDesc(''); setTxDate(new Date().toISOString().split('T')[0])
     } catch (e) { console.error('Sinking fund transaction:', e); toast.error('שגיאה') }
   }
 
@@ -199,15 +223,16 @@ export default function SinkingPage() {
           <div className="flex flex-col gap-2.5">
             {funds.map(fund => {
               const shared = fund.is_shared
-              // Use yearly_target from DB directly — the source of truth
               const totalAnnual = fund.yearly_target || fund.monthly_allocation * 12
               const balance = getFundBalance(fund.id)
               const pct = totalAnnual > 0 ? Math.min((balance / totalAnnual) * 100, 100) : 0
+              const isExpanded = expandedFunds.has(fund.id)
+              const fundTxns = (allTxns ?? []).filter(t => t.fund_id === fund.id).sort((a, b) => (b.transaction_date ?? '').localeCompare(a.transaction_date ?? ''))
 
               return (
                 <div key={fund.id} className="card-hover card-transition bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl px-[18px] py-3.5">
                   <div className="flex items-center gap-2.5">
-                    {/* Name + type — right side in RTL (first in DOM) */}
+                    {/* Name + type - right side in RTL (first in DOM) */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <span className="font-semibold text-sm">{fund.name}</span>
@@ -230,7 +255,7 @@ export default function SinkingPage() {
                     {/* Actions */}
                     <div className="flex gap-1.5 shrink-0">
                       <button
-                        onClick={() => { setTxModal({ fundId: fund.id, fundName: fund.name, type: 'use' }); setTxAmount('') }}
+                        onClick={() => { setTxModal({ fundId: fund.id, fundName: fund.name, type: 'use' }); setTxAmount(''); setTxDate(new Date().toISOString().split('T')[0]) }}
                         className="flex items-center justify-center gap-1 bg-[var(--c-orange-0-20)] border border-[var(--c-orange-0-28)] rounded-[7px] px-2.5 py-2 min-h-9 text-[var(--accent-orange)] text-xs cursor-pointer"
                       >
                         <X size={11} /> הוצאה
@@ -251,7 +276,7 @@ export default function SinkingPage() {
                       </button>
                     </div>
 
-                    {/* Amounts — left side in RTL (last in DOM) */}
+                    {/* Amounts - left side in RTL (last in DOM) */}
                     <div className="text-left shrink-0">
                       <div className="text-base font-bold text-[var(--c-0-88)]">{formatCurrency(fund.monthly_allocation)}<span className="text-[11px] font-normal text-[var(--text-secondary)] mr-[3px]">/חודש</span></div>
                       <div className="text-xs text-[var(--text-secondary)]">
@@ -261,23 +286,19 @@ export default function SinkingPage() {
                     </div>
                   </div>
 
-                  {/* Balance row — BUG 2 FIX: inverted colors */}
-                  {/* Sinking fund = savings. Green = money available (good). Red = overspent (bad). */}
-                  {balance !== 0 && (() => {
-                    const remaining = totalAnnual - balance
-                    // For sinking funds: balance > 0 means saved money still available = GREEN
-                    // balance < 0 means overspent = RED
-                    const balanceColor = balance > 0 ? 'text-[var(--accent-green)]' : 'text-[var(--accent-red)]'
+                  {/* Balance row */}
+                  {(() => {
+                    const balanceColor = balance > 0 ? 'text-[var(--accent-green)]' : balance < 0 ? 'text-[var(--accent-red)]' : 'text-[var(--text-secondary)]'
                     const currentMonth = new Date().getMonth() + 1
                     const expectedPct = (currentMonth / 12) * 100
                     const trackStatus = pct >= expectedPct
-                      ? { text: 'בזמן ✓', color: 'text-[var(--accent-green)]' }
+                      ? { text: 'בזמן', color: 'text-[var(--accent-green)]' }
                       : pct >= expectedPct * 0.8
                         ? { text: 'קצת מאחור', color: 'text-[var(--accent-orange)]' }
                         : { text: 'מאחור', color: 'text-[var(--accent-red)]' }
                     return (
                       <div className="mt-2 text-xs text-[var(--text-secondary)] flex justify-between pt-2 border-t border-[var(--c-0-20)]">
-                        <span>צבור <InfoTooltip body="כמה צברתם עד עכשיו. ירוק = לא חרגתם, אדום = הוצאתם יותר ממה שצברתם" />: <span className={`${balanceColor} font-semibold inline-block`}>{formatCurrency(balance)}</span>{balance < 0 && <span className="text-[11px] text-[var(--text-secondary)] mr-1">(הוצאה גדולה מהצבירה)</span>}</span>
+                        <span>צבור <InfoTooltip body="הצבירה האוטומטית מההפרשה החודשית + הפקדות ידניות - הוצאות" />: <span className={`${balanceColor} font-semibold inline-block`}>{formatCurrency(balance)}</span>{balance < 0 && <span className="text-[11px] text-[var(--text-secondary)] mr-1">(הוצאה גדולה מהצבירה)</span>}</span>
                         <span className="flex items-center gap-2">
                           {pct.toFixed(0)}% מהיעד השנתי
                           <span className={`text-[11px] font-medium ${trackStatus.color}`}>{trackStatus.text}</span>
@@ -285,9 +306,51 @@ export default function SinkingPage() {
                       </div>
                     )
                   })()}
+
+                  {/* Transaction history toggle */}
+                  {fundTxns.length > 0 && (
+                    <button
+                      onClick={() => toggleFundExpand(fund.id)}
+                      className="mt-2 flex items-center gap-1 text-[11px] text-[var(--text-secondary)] bg-transparent border-none cursor-pointer p-0 hover:text-[var(--c-0-70)]"
+                    >
+                      {isExpanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                      {fundTxns.length} עסקאות
+                    </button>
+                  )}
+
+                  {/* Expanded transaction list */}
+                  {isExpanded && fundTxns.length > 0 && (
+                    <div className="mt-2 flex flex-col gap-1 border-t border-[var(--c-0-20)] pt-2">
+                      {fundTxns.map(tx => (
+                        <div key={tx.id} className="flex items-center gap-2 text-xs py-1 px-1 rounded hover:bg-[var(--bg-hover)]">
+                          <span className="text-[var(--text-secondary)] shrink-0 w-[70px] text-left ltr">{tx.transaction_date ?? '-'}</span>
+                          <span className="flex-1 min-w-0 truncate text-[var(--c-0-70)]">{tx.description || '-'}</span>
+                          <span className={`shrink-0 font-medium ${tx.amount > 0 ? 'text-[var(--accent-green)]' : 'text-[var(--accent-orange)]'}`}>
+                            {tx.amount > 0 ? '+' : ''}{formatCurrency(tx.amount)}
+                          </span>
+                          <button
+                            onClick={() => handleDeleteTxn(tx.id)}
+                            aria-label="מחק עסקה"
+                            className="shrink-0 bg-transparent border-none text-[var(--text-secondary)] cursor-pointer p-1 hover:text-[var(--accent-red)]"
+                          >
+                            <Trash2 size={11} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )
             })}
+
+            {/* Add fund inline card */}
+            <button
+              onClick={() => setNewFund({ name: '', totalAnnual: '', isShared: false })}
+              className="flex items-center justify-center gap-2 border-2 border-dashed border-[var(--border-default)] rounded-xl px-[18px] py-5 text-[var(--text-secondary)] text-sm cursor-pointer bg-transparent hover:border-[var(--accent-teal)] hover:text-[var(--accent-teal)] transition-colors"
+            >
+              <Plus size={15} />
+              הוסף קרן
+            </button>
           </div>
         )
       }
@@ -344,6 +407,11 @@ export default function SinkingPage() {
                 <input id="sinking-tx-amount" type="number" value={txAmount} onChange={e => setTxAmount(e.target.value)}
                   placeholder="0" min="0" autoFocus
                   className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left" />
+              </div>
+              <div>
+                <label htmlFor="sinking-tx-date" className="text-xs text-[var(--c-0-60)] block mb-[5px]">תאריך</label>
+                <input id="sinking-tx-date" type="date" value={txDate} onChange={e => setTxDate(e.target.value)}
+                  className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-sm ltr text-left" />
               </div>
               <div>
                 <label htmlFor="sinking-tx-desc" className="text-xs text-[var(--c-0-60)] block mb-[5px]">תיאור (אופציונלי)</label>

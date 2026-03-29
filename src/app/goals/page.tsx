@@ -13,7 +13,7 @@ import { useSharedPeriod } from '@/lib/context/PeriodContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useMemo } from 'react'
 import { toast } from 'sonner'
-import { Target, Plus, ChevronDown, ChevronUp, Trash2, Edit3, TrendingUp, X, Crosshair, Home, Car, Plane, Heart, GraduationCap, Laptop, Smartphone, Palmtree, Coins, Gift, Stethoscope } from 'lucide-react'
+import { Target, Plus, ChevronDown, ChevronUp, Trash2, Edit3, TrendingUp, X, Crosshair, Home, Car, Plane, Heart, GraduationCap, Laptop, Smartphone, Palmtree, Coins, Gift, Stethoscope, User, Users } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { TableSkeleton } from '@/components/ui/Skeleton'
 import { useConfirmDialog } from '@/components/ui/ConfirmDialog'
@@ -213,9 +213,13 @@ function GoalCard({
         <div className="flex-1 text-right">
           <div className="flex items-center gap-2 mb-1">
             <span className="font-semibold text-sm">{goal.name}</span>
-            {goal.is_shared && (
-              <span className="text-[10px] bg-[var(--c-blue-0-22)] rounded px-1.5 py-0.5 text-text-secondary">משותף</span>
-            )}
+            <span className={`inline-flex items-center gap-[3px] rounded-[20px] px-2 py-0.5 text-[11px] ${
+              goal.is_shared
+                ? 'bg-[var(--c-blue-0-20)] border border-[var(--c-blue-0-32)] text-[var(--accent-blue)]'
+                : 'bg-[var(--c-teal-0-20)] border border-[var(--c-teal-0-32)] text-[var(--c-teal-0-65)]'
+            }`}>
+              {goal.is_shared ? <><Users size={10} /> משותף</> : <><User size={10} /> אישי</>}
+            </span>
           </div>
           <div className="flex gap-4 text-xs text-text-secondary">
             <span>{formatCurrency(totalSaved)} / {formatCurrency(goal.target_amount)}</span>
@@ -464,8 +468,11 @@ function GoalModal({
     setLastEdited('target')
     const t = Number(val)
     const m = Number(monthly)
+    const p = Number(totalPeriods)
     if (t > 0 && m > 0) {
       setTotalPeriods(Math.ceil(t / m).toString())
+    } else if (t > 0 && p > 0) {
+      setMonthly(Math.ceil(t / p).toString())
     }
   }
 
@@ -474,8 +481,11 @@ function GoalModal({
     setLastEdited('monthly')
     const t = Number(target)
     const m = Number(val)
+    const p = Number(totalPeriods)
     if (t > 0 && m > 0) {
       setTotalPeriods(Math.ceil(t / m).toString())
+    } else if (m > 0 && p > 0) {
+      setTarget((m * p).toString())
     }
   }
 
@@ -483,11 +493,20 @@ function GoalModal({
     setTotalPeriods(val)
     setLastEdited('periods')
     const t = Number(target)
+    const m = Number(monthly)
     const p = Number(val)
     if (t > 0 && p > 0) {
       setMonthly(Math.ceil(t / p).toString())
+    } else if (m > 0 && p > 0) {
+      setTarget((m * p).toString())
     }
   }
+
+  const autoCalculated: 'target' | 'monthly' | 'periods' | null =
+    lastEdited === 'target' ? (Number(target) > 0 && Number(monthly) > 0 ? 'periods' : Number(target) > 0 && Number(totalPeriods) > 0 ? 'monthly' : null) :
+    lastEdited === 'monthly' ? (Number(target) > 0 && Number(monthly) > 0 ? 'periods' : Number(monthly) > 0 && Number(totalPeriods) > 0 ? 'target' : null) :
+    lastEdited === 'periods' ? (Number(target) > 0 && Number(totalPeriods) > 0 ? 'monthly' : Number(monthly) > 0 && Number(totalPeriods) > 0 ? 'target' : null) :
+    null
 
   const calculatedTotal = Number(monthly) * Number(totalPeriods)
   const targetNum = Number(target)
@@ -547,30 +566,53 @@ function GoalModal({
           </div>
 
           <div>
-            <label htmlFor="goal-target" className="text-xs block mb-[5px] text-text-secondary">סכום יעד (₪)</label>
+            <div className="flex items-center justify-between mb-[5px]">
+              <label htmlFor="goal-target" className="text-xs text-text-secondary">סכום יעד (₪)</label>
+              {autoCalculated === 'target' && (
+                <span className="text-[10px] text-[var(--accent-teal)]">חושב אוטומטית</span>
+              )}
+            </div>
             <input id="goal-target" type="number" value={target} onChange={e => handleTargetChange(e.target.value)}
-              className="input-field w-full ltr text-right" />
+              className={`input-field w-full ltr text-right ${autoCalculated === 'target' ? 'ring-1 ring-[var(--accent-teal)]/30' : ''}`} />
           </div>
 
           <div className="grid-2 !mb-0">
             <div>
-              <label htmlFor="goal-monthly" className="text-xs block mb-[5px] text-text-secondary">הפקדה חודשית (₪)</label>
+              <div className="flex items-center justify-between mb-[5px]">
+                <label htmlFor="goal-monthly" className="text-xs text-text-secondary">הפקדה חודשית (₪)</label>
+                {autoCalculated === 'monthly' && (
+                  <span className="text-[10px] text-[var(--accent-teal)]">חושב אוטומטית</span>
+                )}
+              </div>
               <input id="goal-monthly" type="number" value={monthly} onChange={e => handleMonthlyChange(e.target.value)}
-                className="input-field w-full ltr text-right" />
+                className={`input-field w-full ltr text-right ${autoCalculated === 'monthly' ? 'ring-1 ring-[var(--accent-teal)]/30' : ''}`} />
             </div>
             <div>
-              <label htmlFor="goal-periods" className="text-xs block mb-[5px] text-text-secondary">מספר חודשים</label>
+              <div className="flex items-center justify-between mb-[5px]">
+                <label htmlFor="goal-periods" className="text-xs text-text-secondary">מספר חודשים</label>
+                {autoCalculated === 'periods' && (
+                  <span className="text-[10px] text-[var(--accent-teal)]">חושב אוטומטית</span>
+                )}
+              </div>
               <input id="goal-periods" type="number" value={totalPeriods} onChange={e => handlePeriodsChange(e.target.value)}
-                className="input-field w-full ltr text-right" />
+                className={`input-field w-full ltr text-right ${autoCalculated === 'periods' ? 'ring-1 ring-[var(--accent-teal)]/30' : ''}`} />
             </div>
           </div>
 
           {targetNum > 0 && Number(monthly) > 0 && Number(totalPeriods) > 0 && (
-            <div className={`text-[12px] px-3 py-2 rounded-lg ${mismatch ? 'bg-[var(--c-orange-0-20)] text-[var(--accent-orange)]' : 'bg-[var(--c-green-0-20)] text-[var(--accent-green)]'}`}>
-              {mismatch
-                ? `${Number(totalPeriods)} חודשים x ${formatCurrency(Number(monthly))} = ${formatCurrency(calculatedTotal)} (הפרש של ${formatCurrency(Math.abs(calculatedTotal - targetNum))} מהיעד)`
-                : `${Number(totalPeriods)} חודשים x ${formatCurrency(Number(monthly))} = ${formatCurrency(calculatedTotal)}`
-              }
+            <div className="bg-[var(--c-0-15)] border border-[var(--border-default)] rounded-lg px-3.5 py-2.5 text-[12px]">
+              <div className="flex justify-between items-center">
+                <span className="text-text-secondary">תחשיב:</span>
+                <span className="text-text-heading font-medium">
+                  {formatCurrency(Number(monthly))} x {Number(totalPeriods)} חודשים = {formatCurrency(calculatedTotal)}
+                </span>
+              </div>
+              {mismatch && (
+                <div className={`mt-1 text-[11px] ${Math.abs(calculatedTotal - targetNum) / targetNum < 0.02 ? 'text-[var(--accent-green)]' : 'text-[var(--accent-orange)]'}`}>
+                  הפרש עיגול: {formatCurrency(Math.abs(calculatedTotal - targetNum))}
+                  {Math.abs(calculatedTotal - targetNum) / targetNum < 0.02 && ' (זניח)'}
+                </div>
+              )}
             </div>
           )}
 

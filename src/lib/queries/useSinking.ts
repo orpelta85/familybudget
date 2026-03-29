@@ -120,6 +120,22 @@ export function useDeleteSinkingFund() {
   })
 }
 
+export function useDeleteSinkingTransaction() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async (id: number) => {
+      const sb = createClient()
+      const { error } = await sb.from('sinking_fund_transactions').delete().eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['sinking_transactions'] })
+      qc.invalidateQueries({ queryKey: ['all_sinking_transactions'] })
+      qc.invalidateQueries({ queryKey: ['family_sinking_transactions'] })
+    },
+  })
+}
+
 export function useAddSinkingTransaction() {
   const qc = useQueryClient()
   return useMutation({
