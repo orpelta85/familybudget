@@ -1,7 +1,7 @@
 'use client'
 
 import { useUser } from '@/lib/queries/useUser'
-import { useBudgetCategories, usePersonalExpenses, useFamilyPersonalExpenses, useUpdateCategoryTarget, useDeleteCategory } from '@/lib/queries/useExpenses'
+import { useBudgetCategories, usePersonalExpenses, useFamilyPersonalExpenses, useUpdateCategoryTarget, useDeleteCategory, useInactiveCategories, useReactivateCategory, useAddBudgetCategory } from '@/lib/queries/useExpenses'
 import { useSharedExpenses } from '@/lib/queries/useShared'
 import { usePeriods, useCurrentPeriod } from '@/lib/queries/usePeriods'
 import { useIncome, useFamilyIncome } from '@/lib/queries/useIncome'
@@ -12,7 +12,7 @@ import { useFamilyContext } from '@/lib/context/FamilyContext'
 import { useFamilyView } from '@/contexts/FamilyViewContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useMemo } from 'react'
-import { BarChart3, Inbox, Check, Clock, Users, Download, Pencil, ChevronDown, X } from 'lucide-react'
+import { BarChart3, Inbox, Check, Clock, Users, Download, Pencil, ChevronDown, X, Plus, RotateCcw } from 'lucide-react'
 import { toast } from 'sonner'
 import { useConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { PageInfo } from '@/components/ui/PageInfo'
@@ -82,7 +82,14 @@ export default function BudgetPage() {
   const { data: periods } = usePeriods()
   const updateTarget = useUpdateCategoryTarget()
   const deleteCategory = useDeleteCategory()
+  const { data: inactiveCategories } = useInactiveCategories(user?.id)
+  const reactivateCategory = useReactivateCategory()
+  const addCategory = useAddBudgetCategory()
   const confirm = useConfirmDialog()
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [newCatName, setNewCatName] = useState('')
+  const [newCatType, setNewCatType] = useState<'fixed' | 'variable'>('variable')
+  const [newCatTarget, setNewCatTarget] = useState('')
   const { selectedPeriodId, setSelectedPeriodId } = useSharedPeriod()
   const { familyId, members } = useFamilyContext()
   const { viewMode } = useFamilyView()
@@ -186,6 +193,33 @@ export default function BudgetPage() {
     } catch (e) { console.error('Update budget target:', e); toast.error('שגיאה בעדכון היעד') }
   }
 
+  async function handleAddCategory() {
+    if (!user || !newCatName.trim()) return
+    const maxSort = (categories ?? []).reduce((m, c) => Math.max(m, c.sort_order ?? 0), 0)
+    try {
+      await addCategory.mutateAsync({
+        user_id: user.id,
+        name: newCatName.trim(),
+        type: newCatType,
+        monthly_target: Number(newCatTarget) || 0,
+        sort_order: maxSort + 1,
+        year: new Date().getFullYear(),
+      })
+      toast.success(`${newCatName.trim()} נוסף לתקציב`)
+      setNewCatName('')
+      setNewCatTarget('')
+      setShowAddModal(false)
+    } catch (e) { console.error('Add category:', e); toast.error('שגיאה בהוספה') }
+  }
+
+  async function handleReactivate(catId: number, catName: string) {
+    if (!user) return
+    try {
+      await reactivateCategory.mutateAsync({ id: catId, user_id: user.id })
+      toast.success(`${catName} חזר לתקציב`)
+    } catch (e) { console.error('Reactivate:', e); toast.error('שגיאה') }
+  }
+
   async function handleDeleteCategory(catId: number, catName: string) {
     if (!(await confirm({ message: `להסתיר את "${catName}" מהתקציב?` }))) return
     try {
@@ -243,9 +277,14 @@ export default function BudgetPage() {
           <h1 className="text-xl font-bold tracking-tight">תקציב משפחתי</h1>
           <PageInfo {...PAGE_TIPS.budget} />
         </div>
-        <button onClick={handleExportBudget} className="flex items-center gap-1.5 bg-[var(--c-blue-0-20)] border border-[var(--c-blue-0-32)] rounded-lg px-3 py-[7px] text-[var(--accent-blue)] text-[13px] font-medium cursor-pointer">
-          <Download size={13} /> הורד לאקסל
-        </button>
+        <div className="flex items-center gap-2">
+          <button onClick={() => setShowAddModal(true)} className="flex items-center gap-1.5 bg-[var(--c-green-0-20)] border border-[var(--c-green-0-32)] rounded-lg px-3 py-[7px] text-[var(--accent-green)] text-[13px] font-medium cursor-pointer">
+            <Plus size={13} /> הוסף קטגוריה
+          </button>
+          <button onClick={handleExportBudget} className="flex items-center gap-1.5 bg-[var(--c-blue-0-20)] border border-[var(--c-blue-0-32)] rounded-lg px-3 py-[7px] text-[var(--accent-blue)] text-[13px] font-medium cursor-pointer">
+            <Download size={13} /> הורד לאקסל
+          </button>
+        </div>
       </div>
       <p className="text-muted-foreground text-[13px] mb-5">
         {selectedPeriod?.label ?? currentPeriod?.label ?? '...'}
@@ -506,6 +545,96 @@ export default function BudgetPage() {
           </div>
         )
       }
+      {/* Add Category Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+          <div className="bg-[var(--c-0-18)] border border-[var(--border-light)] rounded-[14px] p-7 w-[420px] max-h-[85vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-5">
+              <span className="font-semibold text-[15px]">הוסף קטגוריה לתקציב</span>
+              <button onClick={() => setShowAddModal(false)} aria-label="סגור" className="bg-transparent border-none text-muted-foreground cursor-pointer p-2">
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Reactivate hidden categories */}
+            {(inactiveCategories ?? []).length > 0 && (
+              <div className="mb-5">
+                <div className="text-[12px] text-muted-foreground mb-2">קטגוריות מוסתרות - לחץ להחזיר</div>
+                <div className="flex flex-wrap gap-1.5">
+                  {(inactiveCategories ?? []).map(cat => (
+                    <button
+                      key={cat.id}
+                      type="button"
+                      onClick={() => handleReactivate(cat.id, cat.name)}
+                      className="flex items-center gap-1 bg-[var(--c-0-22)] border border-[var(--border-light)] rounded-lg px-2.5 py-1.5 text-[12px] text-[var(--c-0-70)] cursor-pointer hover:bg-[var(--c-0-28)] transition-colors"
+                    >
+                      <RotateCcw size={10} /> {cat.name}
+                    </button>
+                  ))}
+                </div>
+                <div className="border-b border-[var(--c-0-20)] my-4" />
+              </div>
+            )}
+
+            {/* New category form */}
+            <div className="flex flex-col gap-3.5">
+              <div>
+                <label htmlFor="cat-name" className="text-xs text-[var(--c-0-60)] block mb-[5px]">שם קטגוריה</label>
+                <input
+                  id="cat-name"
+                  type="text"
+                  autoFocus
+                  value={newCatName}
+                  onChange={e => setNewCatName(e.target.value)}
+                  placeholder="למשל: ביגוד, חינוך..."
+                  className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-sm"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">סוג</label>
+                <div className="flex gap-2">
+                  {([['fixed', 'קבוע'], ['variable', 'משתנה']] as const).map(([val, label]) => (
+                    <button
+                      key={val}
+                      type="button"
+                      onClick={() => setNewCatType(val)}
+                      className={`flex-1 rounded-lg py-[9px] text-[12px] cursor-pointer ${
+                        newCatType === val
+                          ? 'bg-[var(--c-blue-0-24)] border border-[var(--c-blue-0-40)] text-[var(--c-blue-0-75)] font-semibold'
+                          : 'bg-[var(--c-0-20)] border border-[var(--border-light)] text-muted-foreground font-normal'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label htmlFor="cat-target" className="text-xs text-[var(--c-0-60)] block mb-[5px]">יעד חודשי (₪)</label>
+                <input
+                  id="cat-target"
+                  type="text"
+                  inputMode="numeric"
+                  value={newCatTarget}
+                  onChange={e => setNewCatTarget(e.target.value.replace(/[^\d]/g, ''))}
+                  placeholder="0"
+                  className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-base ltr text-left"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={handleAddCategory}
+                disabled={!newCatName.trim() || addCategory.isPending}
+                className={`w-full bg-[var(--accent-green)] border-none rounded-lg py-[11px] font-semibold text-sm text-[var(--c-0-10)] ${
+                  !newCatName.trim() || addCategory.isPending ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'
+                }`}
+              >
+                {addCategory.isPending ? '...' : 'הוסף קטגוריה'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

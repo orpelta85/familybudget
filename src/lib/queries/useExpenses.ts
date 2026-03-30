@@ -104,6 +104,39 @@ export function useUpdateCategoryTarget() {
   })
 }
 
+export function useInactiveCategories(userId: string | undefined) {
+  return useQuery<BudgetCategory[]>({
+    queryKey: ['budget_categories_inactive', userId],
+    enabled: !!userId,
+    queryFn: async () => {
+      const sb = createClient()
+      const { data, error } = await sb
+        .from('budget_categories')
+        .select('*')
+        .eq('user_id', userId!)
+        .eq('is_active', false)
+        .order('name')
+      if (error) throw error
+      return data
+    },
+  })
+}
+
+export function useReactivateCategory() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, user_id }: { id: number; user_id: string }) => {
+      const sb = createClient()
+      const { error } = await sb.from('budget_categories').update({ is_active: true }).eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: ['budget_categories', vars.user_id] })
+      qc.invalidateQueries({ queryKey: ['budget_categories_inactive', vars.user_id] })
+    },
+  })
+}
+
 export function useDeleteCategory() {
   const qc = useQueryClient()
   return useMutation({
@@ -165,7 +198,7 @@ export function useDeleteAllPeriodExpenses() {
 export function useAddBudgetCategory() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (cat: { user_id: string; name: string; type: string; monthly_target: number; sort_order: number }) => {
+    mutationFn: async (cat: { user_id: string; name: string; type: string; monthly_target: number; sort_order: number; year?: number }) => {
       const sb = createClient()
       const { data, error } = await sb
         .from('budget_categories')
