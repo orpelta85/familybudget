@@ -210,7 +210,7 @@ export default function SinkingPage() {
       <div className="text-[var(--text-secondary)] text-[13px] mb-5">
         סה&quot;כ הפרשה חודשית: <span className="inline-block font-semibold text-[var(--accent-teal)]">{formatCurrency(totalMonthly)}</span>
         <span className="mr-2 text-[var(--text-secondary)] text-xs">
-          (יעד שנתי: {formatCurrency(totalAnnualAll)})
+          (תקציב שנתי: {formatCurrency(totalAnnualAll)})
         </span>
         {totalSpentAll > 0 && (
           <span className="mr-2 text-xs">
@@ -288,7 +288,7 @@ export default function SinkingPage() {
                     <div className="text-left shrink-0">
                       <div className="text-base font-bold text-[var(--c-0-88)]">{formatCurrency(fund.monthly_allocation)}<span className="text-[11px] font-normal text-[var(--text-secondary)] mr-[3px]">/חודש</span></div>
                       <div className="text-xs text-[var(--text-secondary)]">
-                        יעד שנתי: {formatCurrency(totalAnnual)}
+                        תקציב שנתי: {formatCurrency(totalAnnual)}
                         {shared && <span className="mr-1 text-[var(--text-secondary)]">(חלקי: {formatCurrency(fund.monthly_allocation * 12)})</span>}
                       </div>
                     </div>
@@ -463,7 +463,7 @@ function FundFormFields({ form, onChange, splitFrac }: { form: FundForm; onChang
           className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-sm" />
       </div>
       <div>
-        <label htmlFor="fund-annual" className="text-xs text-[var(--c-0-60)] block mb-[5px]">יעד שנתי כולל (₪) — כמה תוציאו על זה בשנה?</label>
+        <label htmlFor="fund-annual" className="text-xs text-[var(--c-0-60)] block mb-[5px]">תקציב שנתי כולל (₪) — כמה תוציאו על זה בשנה?</label>
         <input id="fund-annual" type="text" inputMode="numeric" value={form.totalAnnual}
           onChange={e => onChange({ ...form, totalAnnual: e.target.value.replace(/[^\d]/g, '') })}
           placeholder="0"
