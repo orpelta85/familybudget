@@ -700,6 +700,51 @@ export default function ExpensesPage() {
     setImporting(false)
   }
 
+  // ── Convert personal ↔ shared ───────────────────────────────────────────────
+  async function handleConvertToShared(exp: PersonalExpense) {
+    if (!user || !selectedPeriodId || !familyId) return
+    const cat = categories?.find(c => c.id === exp.category_id)
+    const catName = cat?.name ?? exp.description ?? 'שונות'
+    try {
+      // Map personal category name to shared category key
+      const NAME_TO_SHARED: Record<string, string> = {
+        'מכולת': 'groceries', 'אוכל בחוץ': 'eating_out', 'בילויים ופנאי': 'entertainment',
+        'בגדים וקניות': 'shopping', 'חיות מחמד': 'pets', 'ביטוחים': 'insurance',
+        'שכירות': 'rent', 'מנויים': 'subscriptions', 'בריאות ורפואה': 'health',
+      }
+      const sharedCat = NAME_TO_SHARED[catName] ?? 'misc'
+      await upsertShared.mutateAsync({
+        period_id: selectedPeriodId,
+        category: sharedCat as SharedCategory,
+        total_amount: exp.amount,
+        notes: exp.description || catName,
+        family_id: familyId,
+      })
+      await deleteExpense.mutateAsync({ id: exp.id, period_id: selectedPeriodId, user_id: user.id })
+      toast.success(`"${exp.description || catName}" הועבר למשותפות`)
+    } catch (e) { console.error('Convert to shared:', e); toast.error('שגיאה בהמרה') }
+  }
+
+  async function handleConvertToPersonal(exp: SharedExpense) {
+    if (!user || !selectedPeriodId) return
+    const label = exp.notes || sharedCatLabel(exp.category)
+    try {
+      // Find or use default personal category
+      const matchCat = categories?.find(c => c.name === label) ?? categories?.find(c => c.name === 'שונות') ?? categories?.[0]
+      if (!matchCat) { toast.error('אין קטגוריות אישיות'); return }
+      await addExpense.mutateAsync({
+        period_id: selectedPeriodId,
+        user_id: user.id,
+        category_id: matchCat.id,
+        amount: Number(exp.my_share ?? exp.total_amount * splitFrac),
+        description: label,
+        expense_date: new Date().toISOString().split('T')[0],
+      })
+      await deleteShared.mutateAsync({ id: exp.id, period_id: selectedPeriodId, family_id: familyId })
+      toast.success(`"${label}" הועבר לאישיות`)
+    } catch (e) { console.error('Convert to personal:', e); toast.error('שגיאה בהמרה') }
+  }
+
   // ── Fixed/Variable toggle ───────────────────────────────────────────────────
   function handleToggleFixed(exp: PersonalExpense) {
     if (!user || !selectedPeriod) return
@@ -1050,6 +1095,7 @@ export default function ExpensesPage() {
               onToggleLock={toggleLockPersonal}
               onToggleFixed={handleToggleFixed}
               onToggleCategoryType={handleToggleCategoryType}
+              onConvertToShared={handleConvertToShared}
             />
 
             <SharedExpenseList
@@ -1061,6 +1107,7 @@ export default function ExpensesPage() {
               onDelete={handleDeleteShared}
               onToggleLock={toggleLockShared}
               onToggleFixed={handleToggleSharedFixed}
+              onConvertToPersonal={handleConvertToPersonal}
             />
           </div>{/* close grid-2 */}
 

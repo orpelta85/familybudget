@@ -16,6 +16,7 @@ interface PersonalExpenseListProps {
   onToggleLock: (exp: { id: number; category_id: number; amount: number; description?: string }) => void
   onToggleFixed?: (exp: PersonalExpense) => void
   onToggleCategoryType?: (categoryId: number, currentType: string) => void
+  onConvertToShared?: (exp: PersonalExpense) => void
 }
 
 interface CategoryGroup {
@@ -27,7 +28,7 @@ interface CategoryGroup {
 
 export function PersonalExpenseList({
   expenses, categories, totalPersonal,
-  isLocked, getItemId, onEdit, onDelete, onToggleLock, onToggleFixed, onToggleCategoryType,
+  isLocked, getItemId, onEdit, onDelete, onToggleLock, onToggleFixed, onToggleCategoryType, onConvertToShared,
 }: PersonalExpenseListProps) {
   const [editingPersonal, setEditingPersonal] = useState<{ id: number; categoryId: string; amount: string; description: string } | null>(null)
   const [openCategories, setOpenCategories] = useState<Set<number>>(new Set())
@@ -101,6 +102,9 @@ export function PersonalExpenseList({
               setEditingPersonal(null)
             }} className="flex items-center gap-1 bg-primary text-primary-foreground border-none rounded-md px-2 py-1 text-[11px] font-semibold cursor-pointer"><Check size={11} /> שמור</button>
             <button onClick={() => setEditingPersonal(null)} className="bg-transparent border border-[var(--border-light)] text-muted-foreground rounded-md px-2 py-1 text-[11px] cursor-pointer">ביטול</button>
+            {onConvertToShared && (
+              <button onClick={() => { onConvertToShared(e); setEditingPersonal(null) }} className="bg-[var(--c-purple-0-22)] text-[var(--c-purple-0-75)] border-none rounded-md px-2 py-1 text-[11px] font-medium cursor-pointer mr-auto">העבר למשותף</button>
+            )}
           </div>
         </div>
       )

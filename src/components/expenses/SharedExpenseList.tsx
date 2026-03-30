@@ -86,11 +86,12 @@ interface SharedExpenseListProps {
   onDelete: (id: number) => void
   onToggleLock: (exp: { id: number; category: string; total_amount: number; notes?: string | null }) => void
   onToggleFixed?: (exp: SharedExpense) => void
+  onConvertToPersonal?: (exp: SharedExpense) => void
 }
 
 export function SharedExpenseList({
   expenses, splitFrac, totalSharedMy,
-  isLocked, onEdit, onDelete, onToggleLock, onToggleFixed,
+  isLocked, onEdit, onDelete, onToggleLock, onToggleFixed, onConvertToPersonal,
 }: SharedExpenseListProps) {
   const [editingShared, setEditingShared] = useState<{ id: number; category: string; totalAmount: string; notes: string } | null>(null)
   const [openCategories, setOpenCategories] = useState<Set<string>>(new Set())
@@ -194,6 +195,9 @@ export function SharedExpenseList({
                                 setEditingShared(null)
                               }} className="flex items-center gap-1 bg-[var(--c-purple-0-55)] text-primary-foreground border-none rounded-md px-2 py-1 text-[11px] font-semibold cursor-pointer"><Check size={11} /> שמור</button>
                               <button onClick={() => setEditingShared(null)} className="bg-transparent border border-[var(--border-light)] text-muted-foreground rounded-md px-2 py-1 text-[11px] cursor-pointer">ביטול</button>
+                              {onConvertToPersonal && (
+                                <button onClick={() => { onConvertToPersonal(e); setEditingShared(null) }} className="bg-[var(--c-blue-0-18)] text-[var(--c-blue-0-62)] border-none rounded-md px-2 py-1 text-[11px] font-medium cursor-pointer mr-auto">העבר לאישי</button>
+                              )}
                             </div>
                           </div>
                         )
