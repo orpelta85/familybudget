@@ -96,7 +96,7 @@ export default function InsurancePage() {
   const { user, loading } = useUser()
   const router = useRouter()
   const { familyId } = useFamilyContext()
-  const { viewMode } = useFamilyView()
+  useFamilyView() // keep context provider active
   const { data: policies, isLoading } = useInsurancePolicies(user?.id, familyId)
   const addPolicy = useAddInsurancePolicy()
   const updatePolicy = useUpdateInsurancePolicy()
@@ -111,12 +111,8 @@ export default function InsurancePage() {
     if (!loading && !user) router.push('/login')
   }, [user, loading, router])
 
-  // Filter by view mode
-  const filtered = useMemo(() => {
-    if (!policies) return []
-    if (viewMode === 'personal') return policies.filter(p => !p.is_shared)
-    return policies
-  }, [policies, viewMode])
+  // Show all policies in a single unified view
+  const filtered = useMemo(() => policies ?? [], [policies])
 
   // Group by type
   const grouped = useMemo(() => {
@@ -288,8 +284,10 @@ export default function InsurancePage() {
                           {p.provider && (
                             <span className="text-[11px] text-[var(--text-muted)]">{p.provider}</span>
                           )}
-                          {p.is_shared && (
-                            <span className="text-[10px] bg-[var(--c-purple-0-22)] text-[var(--c-purple-0-75)] px-1.5 py-0.5 rounded font-medium">משותף</span>
+                          {p.is_shared ? (
+                            <span className="text-[10px] bg-[var(--c-purple-0-22)] text-[var(--c-purple-0-75)] px-1.5 py-0.5 rounded font-medium">משפחתי</span>
+                          ) : (
+                            <span className="text-[10px] bg-[var(--c-blue-0-18)] text-[var(--c-blue-0-62)] px-1.5 py-0.5 rounded font-medium">אישי</span>
                           )}
                         </div>
                         <div className="flex items-center gap-4 text-[12px] text-[var(--c-0-60)]">

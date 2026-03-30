@@ -51,6 +51,7 @@ export interface PersonalExpense {
   amount: number
   description?: string
   expense_date?: string
+  is_fixed?: boolean | null
   budget_categories?: BudgetCategory
 }
 

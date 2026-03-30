@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { formatCurrency } from '@/lib/utils'
-import { User, Lock, Unlock, X, Pencil, Check, Inbox, ChevronDown } from 'lucide-react'
+import { User, Lock, Unlock, X, Pencil, Check, Inbox, ChevronDown, Pin, PinOff } from 'lucide-react'
 import type { BudgetCategory, PersonalExpense } from '@/lib/types'
 
 interface PersonalExpenseListProps {
@@ -14,6 +14,7 @@ interface PersonalExpenseListProps {
   onEdit: (data: { id: number; category_id: number; amount: number; description: string; period_id: number; user_id: string }) => Promise<void>
   onDelete: (exp: { id: number; category_id: number; amount: number; description?: string }) => void
   onToggleLock: (exp: { id: number; category_id: number; amount: number; description?: string }) => void
+  onToggleFixed?: (exp: PersonalExpense) => void
 }
 
 interface CategoryGroup {
@@ -25,7 +26,7 @@ interface CategoryGroup {
 
 export function PersonalExpenseList({
   expenses, categories, totalPersonal,
-  isLocked, getItemId, onEdit, onDelete, onToggleLock,
+  isLocked, getItemId, onEdit, onDelete, onToggleLock, onToggleFixed,
 }: PersonalExpenseListProps) {
   const [editingPersonal, setEditingPersonal] = useState<{ id: number; categoryId: string; amount: string; description: string } | null>(null)
   const [openCategories, setOpenCategories] = useState<Set<number>>(new Set())
@@ -62,10 +63,18 @@ export function PersonalExpenseList({
     })
   }
 
+  function isExpenseFixed(e: PersonalExpense): boolean {
+    if (e.is_fixed !== null && e.is_fixed !== undefined) return e.is_fixed
+    const cat = categories?.find(c => c.id === e.category_id)
+    return cat?.type === 'fixed'
+  }
+
   const renderExpense = (e: PersonalExpense, catName: string) => {
     const itemId = getItemId(e.category_id, e.description ?? '', e.id)
     const locked = isLocked(itemId)
     const isEditing = editingPersonal?.id === e.id
+    const fixed = isExpenseFixed(e)
+    const hasOverride = e.is_fixed !== null && e.is_fixed !== undefined
 
     if (isEditing) {
       return (
@@ -108,6 +117,14 @@ export function PersonalExpenseList({
             className="bg-transparent border-none cursor-pointer flex items-center justify-center p-1 min-w-6 min-h-6 text-[var(--c-0-45)] hover:text-[var(--c-0-70)]">
             <Pencil size={10} />
           </button>
+          {onToggleFixed && (
+            <button onClick={() => onToggleFixed(e)}
+              title={fixed ? 'סמן כמשתנה' : 'סמן כקבוע'}
+              aria-label={fixed ? 'סמן כמשתנה' : 'סמן כקבוע'}
+              className={`bg-transparent border-none cursor-pointer flex items-center justify-center p-1 min-w-6 min-h-6 ${fixed ? 'text-[var(--accent-orange)]' : 'text-[var(--c-0-35)]'} ${hasOverride ? 'opacity-100' : 'opacity-60'}`}>
+              {fixed ? <Pin size={11} /> : <PinOff size={11} />}
+            </button>
+          )}
           <button onClick={() => onToggleLock(e)}
             title={locked ? 'בטל נעילה' : 'נעל לחודשים הבאים'}
             aria-label={locked ? 'בטל נעילה' : 'נעל לחודשים הבאים'}

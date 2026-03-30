@@ -311,9 +311,24 @@ export function findMatchingRule(merchantName: string, rules: CategoryRule[]): C
 export function useUpdateExpense() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ id, period_id, user_id, category_id, amount, description }: { id: number; period_id: number; user_id: string; category_id: number; amount: number; description?: string }) => {
+    mutationFn: async ({ id, period_id, user_id, category_id, amount, description, is_fixed }: { id: number; period_id: number; user_id: string; category_id: number; amount: number; description?: string; is_fixed?: boolean | null }) => {
       const sb = createClient()
-      const { error } = await sb.from('personal_expenses').update({ category_id, amount, description }).eq('id', id)
+      const { error } = await sb.from('personal_expenses').update({ category_id, amount, description, is_fixed }).eq('id', id)
+      if (error) throw error
+      return { period_id, user_id }
+    },
+    onSuccess: ({ period_id, user_id }) => {
+      qc.invalidateQueries({ queryKey: ['personal_expenses', period_id, user_id] })
+    },
+  })
+}
+
+export function useToggleExpenseFixed() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, period_id, user_id, is_fixed }: { id: number; period_id: number; user_id: string; is_fixed: boolean | null }) => {
+      const sb = createClient()
+      const { error } = await sb.from('personal_expenses').update({ is_fixed }).eq('id', id)
       if (error) throw error
       return { period_id, user_id }
     },

@@ -2,11 +2,11 @@
 
 import { useUser } from '@/lib/queries/useUser'
 import { usePeriods, useCurrentPeriod } from '@/lib/queries/usePeriods'
-import { usePersonalExpenses, useBudgetCategories, useAddExpense, useDeleteExpense, useUpdateExpense, useAddBudgetCategory, useCategoryRules, useSaveCategoryRule, useUpdateRuleConfidence, useGlobalMappings, findMatchingRule, useFamilyPersonalExpenses } from '@/lib/queries/useExpenses'
+import { usePersonalExpenses, useBudgetCategories, useAddExpense, useDeleteExpense, useUpdateExpense, useToggleExpenseFixed, useAddBudgetCategory, useCategoryRules, useSaveCategoryRule, useUpdateRuleConfidence, useGlobalMappings, findMatchingRule, useFamilyPersonalExpenses } from '@/lib/queries/useExpenses'
 import { categorizeTransaction } from '@/lib/categorization-engine'
 import type { MatchResult } from '@/lib/categorization-engine'
 import { useSharedExpenses, useUpsertSharedExpense, useDeleteSharedExpense, useUpdateSharedExpense } from '@/lib/queries/useShared'
-import { useSinkingFunds, useAddSinkingTransaction, useAddSinkingFund } from '@/lib/queries/useSinking'
+import { useSinkingFunds, useAllSinkingTransactions, useAddSinkingTransaction, useAddSinkingFund } from '@/lib/queries/useSinking'
 import { useSplitFraction } from '@/lib/queries/useProfile'
 import { formatCurrency } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
@@ -23,7 +23,7 @@ import { PeriodSelector } from '@/components/layout/PeriodSelector'
 import { toast } from 'sonner'
 import { Receipt, Upload, Download, FileSpreadsheet, Trash2, X } from 'lucide-react'
 import type { RawExpenseRow } from '@/lib/excel-import'
-import type { BudgetCategory, SharedCategory } from '@/lib/types'
+import type { BudgetCategory, SharedCategory, PersonalExpense } from '@/lib/types'
 import { useConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { PageInfo } from '@/components/ui/PageInfo'
 import { PAGE_TIPS } from '@/lib/page-tips'
@@ -66,11 +66,13 @@ export default function ExpensesPage() {
   const { data: sharedExp }   = useSharedExpenses(selectedPeriodId, familyId)
   const { data: categories }  = useBudgetCategories(user?.id)
   const { data: funds }       = useSinkingFunds(user?.id)
+  const { data: allSinkingTx } = useAllSinkingTransactions(user?.id)
   const addExpense    = useAddExpense()
   const deleteExpense = useDeleteExpense()
   const upsertShared  = useUpsertSharedExpense()
   const deleteShared  = useDeleteSharedExpense()
   const updateExpense = useUpdateExpense()
+  const toggleFixed   = useToggleExpenseFixed()
   const updateShared  = useUpdateSharedExpense()
   const addSinkingTx  = useAddSinkingTransaction()
   const addFund       = useAddSinkingFund()
@@ -139,7 +141,13 @@ export default function ExpensesPage() {
   const totalSharedMy  = (sharedExp ?? []).reduce((s, e) => s + (e.my_share ?? e.total_amount * splitFrac), 0)
   const totalAll       = totalPersonal + totalSharedMy
   const sinkingMonthly = (funds ?? []).filter(f => f.is_active).reduce((s, f) => s + f.monthly_allocation, 0)
-  const totalWithSinking = totalAll + sinkingMonthly
+  const fundWithdrawals = (allSinkingTx ?? []).filter(t => t.period_id === selectedPeriodId && t.amount < 0).reduce((s, t) => {
+    const fund = (funds ?? []).find(f => f.id === t.fund_id)
+    const share = fund?.is_shared ? splitFrac : 1
+    return s + Math.abs(t.amount) * share
+  }, 0)
+  const sinkingNet = Math.max(0, sinkingMonthly - fundWithdrawals)
+  const totalWithSinking = totalAll + sinkingNet
 
   // ── Add expense ─────────────────────────────────────────────────────────────
   async function handleAdd(data: {
@@ -230,7 +238,14 @@ export default function ExpensesPage() {
       let matchRuleId: number | undefined
 
       if (row.category) {
-        const catName = row.category.trim()
+        // Aliases: map common variants to canonical category names
+        const CATEGORY_ALIASES: Record<string, string> = {
+          'דוגווקרס': 'חיות מחמד', 'כלבים': 'חיות מחמד',
+          'הלוואת רכב': 'הלוואות', 'מים+גז': 'חשבונות בית',
+          'בילויים': 'בילויים ופנאי', 'בגדים': 'בגדים וקניות',
+          'בריאות': 'בריאות ורפואה', 'השקעות': 'חיסכון והשקעות',
+        }
+        const catName = CATEGORY_ALIASES[row.category.trim()] ?? row.category.trim()
         // Priority 1: exact match
         const exactMatch = cats.find(c => c.name === catName)
           || cats.find(c => c.name.trim().toLowerCase() === catName.toLowerCase())
@@ -683,6 +698,21 @@ export default function ExpensesPage() {
     setImporting(false)
   }
 
+  // ── Fixed/Variable toggle ───────────────────────────────────────────────────
+  function handleToggleFixed(exp: PersonalExpense) {
+    if (!user || !selectedPeriod) return
+    const cat = categories?.find(c => c.id === exp.category_id)
+    const currentlyFixed = exp.is_fixed !== null && exp.is_fixed !== undefined ? exp.is_fixed : cat?.type === 'fixed'
+    const newValue = currentlyFixed ? false : true
+    toggleFixed.mutate({
+      id: exp.id,
+      period_id: selectedPeriod.id,
+      user_id: user.id,
+      is_fixed: newValue,
+    })
+    toast.success(newValue ? 'סומן כהוצאה קבועה' : 'סומן כהוצאה משתנה')
+  }
+
   // ── Lock helpers ────────────────────────────────────────────────────────────
   function toggleLockPersonal(exp: { id: number; category_id: number; amount: number; description?: string }) {
     const catName = (categories ?? []).find(c => c.id === exp.category_id)?.name ?? ''
@@ -915,6 +945,8 @@ export default function ExpensesPage() {
         <ExpenseForm
           categories={categories}
           funds={funds}
+          allSinkingTx={allSinkingTx}
+          selectedPeriodId={selectedPeriodId}
           splitFrac={splitFrac}
           isPending={isPending}
           onAdd={handleAdd}
@@ -941,6 +973,7 @@ export default function ExpensesPage() {
               onEdit={handleEditPersonal}
               onDelete={handleDeletePersonal}
               onToggleLock={toggleLockPersonal}
+              onToggleFixed={handleToggleFixed}
             />
 
             <SharedExpenseList

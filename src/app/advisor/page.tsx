@@ -67,8 +67,11 @@ export default function AdvisorPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, allExpenses, allIncome, categories, funds, subs])
 
-  function generateTips() {
+  async function generateTips() {
     setGenerating(true)
+    setTips([])
+    // Brief pause so user sees the refresh animation
+    await new Promise(r => setTimeout(r, 400))
     const newTips: Tip[] = []
 
     // Analyze income

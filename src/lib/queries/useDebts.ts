@@ -60,6 +60,19 @@ export function useAddDebt() {
   })
 }
 
+export function useUpdateDebt() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, user_id, ...fields }: Partial<Debt> & { id: number; user_id: string }) => {
+      const sb = createClient()
+      const { data, error } = await sb.from('debts').update(fields).eq('id', id).select().single()
+      if (error) throw error
+      return data
+    },
+    onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: ['debts', vars.user_id] }),
+  })
+}
+
 export function useDeleteDebt() {
   const qc = useQueryClient()
   return useMutation({

@@ -1,13 +1,13 @@
 'use client'
 
 import { useUser } from '@/lib/queries/useUser'
-import { useDebts, useAddDebt, useDeleteDebt, useFamilyDebts } from '@/lib/queries/useDebts'
+import { useDebts, useAddDebt, useUpdateDebt, useDeleteDebt, useFamilyDebts } from '@/lib/queries/useDebts'
 import { formatCurrency } from '@/lib/utils'
 import { useFamilyContext } from '@/lib/context/FamilyContext'
 import { useFamilyView } from '@/contexts/FamilyViewContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useMemo } from 'react'
-import { Calculator, Plus, X, Trash2, Inbox, TrendingDown, ArrowDown } from 'lucide-react'
+import { Calculator, Plus, X, Trash2, Pencil, Inbox, TrendingDown, ArrowDown } from 'lucide-react'
 import { toast } from 'sonner'
 import { useConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { TableSkeleton } from '@/components/ui/Skeleton'
@@ -59,7 +59,6 @@ function calculatePayoff(
 
   while (balances.some(b => b > 0.01) && month < maxMonths) {
     month++
-    let extraLeft = extraMonthly
 
     // Apply interest
     for (let i = 0; i < balances.length; i++) {
@@ -69,14 +68,19 @@ function calculatePayoff(
       balances[i] += interest
     }
 
-    // Pay minimums
+    // Pay minimums — freed minimums from paid-off debts add to extra
+    let freedMinimums = 0
     for (let i = 0; i < balances.length; i++) {
-      if (balances[i] <= 0) continue
+      if (balances[i] <= 0) {
+        freedMinimums += mins[i]
+        continue
+      }
       const payment = Math.min(mins[i], balances[i])
       balances[i] -= payment
     }
 
     // Apply extra to target debt (first unpaid in sorted order)
+    let extraLeft = extraMonthly + freedMinimums
     for (let i = 0; i < balances.length; i++) {
       if (balances[i] <= 0) continue
       const payment = Math.min(extraLeft, balances[i])
@@ -137,10 +141,12 @@ export default function DebtsPage() {
   const { data: familyDebtsData } = useFamilyDebts(familyMemberIds, isFamily)
   const debts = isFamily ? familyDebtsData : myDebts
   const addDebt = useAddDebt()
+  const updateDebt = useUpdateDebt()
   const deleteDebt = useDeleteDebt()
   const confirm = useConfirmDialog()
 
   const [newDebt, setNewDebt] = useState<DebtForm | null>(null)
+  const [editingDebtId, setEditingDebtId] = useState<number | null>(null)
   const [extraMonthly, setExtraMonthly] = useState('500')
   const [method, setMethod] = useState<Method>('avalanche')
 
@@ -166,25 +172,56 @@ export default function DebtsPage() {
 
   if (loading || !user) return <TableSkeleton rows={5} />
 
-  async function handleAddDebt() {
+  function openEditDebt(debt: NonNullable<typeof debts>[number]) {
+    setEditingDebtId(debt.id)
+    setNewDebt({
+      name: debt.name,
+      balance: String(debt.balance),
+      interestRate: String(debt.interest_rate),
+      minimumPayment: String(debt.minimum_payment),
+      debtType: debt.debt_type as DebtType,
+      earlyPayoffPenalty: debt.early_payoff_penalty,
+    })
+  }
+
+  function closeModal() {
+    setNewDebt(null)
+    setEditingDebtId(null)
+  }
+
+  async function handleSaveDebt() {
     if (!newDebt || !user) return
     const balance = Number(newDebt.balance)
     const rate = Number(newDebt.interestRate)
     const min = Number(newDebt.minimumPayment)
     if (!newDebt.name.trim() || balance <= 0 || rate < 0 || min <= 0) return
     try {
-      await addDebt.mutateAsync({
-        user_id: user.id,
-        name: newDebt.name.trim(),
-        balance,
-        interest_rate: rate,
-        minimum_payment: min,
-        debt_type: newDebt.debtType,
-        early_payoff_penalty: newDebt.earlyPayoffPenalty,
-      })
-      toast.success('חוב נוסף')
-      setNewDebt(null)
-    } catch (e) { console.error('Add debt:', e); toast.error('שגיאה בהוספה') }
+      if (editingDebtId) {
+        await updateDebt.mutateAsync({
+          id: editingDebtId,
+          user_id: user.id,
+          name: newDebt.name.trim(),
+          balance,
+          interest_rate: rate,
+          minimum_payment: min,
+          debt_type: newDebt.debtType,
+          early_payoff_penalty: newDebt.earlyPayoffPenalty,
+        })
+        toast.success('חוב עודכן')
+      } else {
+        await addDebt.mutateAsync({
+          user_id: user.id,
+          name: newDebt.name.trim(),
+          balance,
+          interest_rate: rate,
+          minimum_payment: min,
+          debt_type: newDebt.debtType,
+          early_payoff_penalty: newDebt.earlyPayoffPenalty,
+        })
+        toast.success('חוב נוסף')
+      }
+      closeModal()
+    } catch (e) { console.error('Save debt:', e); toast.error(editingDebtId ? 'שגיאה בעדכון' : 'שגיאה בהוספה') }
   }
 
   async function handleDeleteDebt(id: number, name: string) {
@@ -198,9 +235,11 @@ export default function DebtsPage() {
   function formatMonths(m: number): string {
     const years = Math.floor(m / 12)
     const months = m % 12
-    if (years === 0) return `${months} חודשים`
-    if (months === 0) return `${years} שנים`
-    return `${years} שנים ו-${months} חודשים`
+    const yLabel = years === 1 ? 'שנה' : `${years} שנים`
+    const mLabel = months === 1 ? 'חודש' : `${months} חודשים`
+    if (years === 0) return mLabel
+    if (months === 0) return yLabel
+    return `${yLabel} ו-${mLabel}`
   }
 
   // Stacked area chart data — sample every N months to fit
@@ -219,7 +258,7 @@ export default function DebtsPage() {
           <PageInfo {...PAGE_TIPS.debts} />
         </div>
         <button
-          onClick={() => setNewDebt({ name: '', balance: '', interestRate: '', minimumPayment: '', debtType: 'fixed', earlyPayoffPenalty: false })}
+          onClick={() => { setEditingDebtId(null); setNewDebt({ name: '', balance: '', interestRate: '', minimumPayment: '', debtType: 'fixed', earlyPayoffPenalty: false }) }}
           className="btn-hover flex items-center gap-1.5 bg-[var(--c-orange-0-20)] border border-[var(--c-orange-0-32)] rounded-lg px-3.5 py-[7px] text-[var(--accent-orange)] text-[13px] font-medium cursor-pointer"
         >
           <Plus size={13} /> הוסף חוב
@@ -282,6 +321,13 @@ export default function DebtsPage() {
                       <div className="text-xs text-[var(--text-secondary)]">מינימום: {formatCurrency(Number(debt.minimum_payment))}</div>
                     </div>
                     <button
+                      onClick={() => openEditDebt(debt)}
+                      aria-label="ערוך חוב"
+                      className="flex items-center justify-center bg-[var(--c-blue-0-18)] border border-[var(--c-blue-0-28)] rounded-[7px] p-2 min-w-9 min-h-9 text-[var(--c-blue-0-62)] text-xs cursor-pointer"
+                    >
+                      <Pencil size={12} />
+                    </button>
+                    <button
                       onClick={() => handleDeleteDebt(debt.id, debt.name)}
                       aria-label="מחק חוב"
                       className="flex items-center justify-center bg-[var(--c-red-0-18)] border border-[var(--c-red-0-28)] rounded-[7px] p-2 min-w-9 min-h-9 text-[var(--c-red-0-62)] text-xs cursor-pointer"
@@ -314,41 +360,45 @@ export default function DebtsPage() {
           <div className="card mb-5">
             <h2 className="font-semibold text-sm mb-4">השוואת שיטות</h2>
             <div className="overflow-x-auto">
-              <table className="w-full text-[13px] border-collapse">
+              <table className="w-full text-[13px] md:text-[13px] text-[11px] border-collapse">
                 <thead>
                   <tr className="border-b border-[var(--bg-hover)]">
-                    <th className="py-2 px-3 text-right text-[var(--text-secondary)] font-medium text-[11px]">שיטה</th>
-                    <th className="py-2 px-3 text-right text-[var(--text-secondary)] font-medium text-[11px]">זמן פירעון</th>
-                    <th className="py-2 px-3 text-right text-[var(--text-secondary)] font-medium text-[11px]">ריבית כוללת</th>
-                    <th className="py-2 px-3 text-right text-[var(--text-secondary)] font-medium text-[11px]">חיסכון</th>
+                    <th className="py-2 px-1.5 md:px-3 text-right text-[var(--text-secondary)] font-medium text-[11px]">שיטה</th>
+                    <th className="py-2 px-1.5 md:px-3 text-right text-[var(--text-secondary)] font-medium text-[11px]">זמן פירעון</th>
+                    <th className="py-2 px-1.5 md:px-3 text-right text-[var(--text-secondary)] font-medium text-[11px]">ריבית</th>
+                    <th className="py-2 px-1.5 md:px-3 text-right text-[var(--text-secondary)] font-medium text-[11px]">חיסכון</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr className="border-b border-[var(--c-0-20)] opacity-60">
-                    <td className="py-2.5 px-3 font-medium">מינימום בלבד</td>
-                    <td className="py-2.5 px-3">{formatMonths(minimumResult.months)}</td>
-                    <td className="py-2.5 px-3 text-[var(--accent-orange)]">{formatCurrency(minimumResult.totalInterest)}</td>
-                    <td className="py-2.5 px-3">—</td>
+                    <td className="py-2.5 px-1.5 md:px-3 font-medium">מינימום בלבד</td>
+                    <td className="py-2.5 px-1.5 md:px-3">{formatMonths(minimumResult.months)}</td>
+                    <td className="py-2.5 px-1.5 md:px-3 text-[var(--accent-orange)]">{formatCurrency(minimumResult.totalInterest)}</td>
+                    <td className="py-2.5 px-1.5 md:px-3">—</td>
                   </tr>
                   <tr className={`border-b border-[var(--c-0-20)] ${method === 'snowball' ? 'bg-[var(--c-blue-0-18)]' : ''}`}>
-                    <td className="py-2.5 px-3">
+                    <td className="py-2.5 px-1.5 md:px-3">
                       <div role="button" tabIndex={0} onClick={() => setMethod('snowball')} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setMethod('snowball') } }} className={`bg-transparent border-none cursor-pointer text-inherit font-medium ${method === 'snowball' ? 'text-[var(--accent-green)]' : ''}`}>
-                        Snowball (מהקטן לגדול) <InfoTooltip body="שיטה שבה סוגרים קודם את החוב הקטן ביותר — נותן מוטיבציה" />
+                        <span className="hidden md:inline">Snowball (מהקטן לגדול)</span>
+                        <span className="md:hidden">Snowball</span>
+                        {' '}<InfoTooltip body="שיטה שבה סוגרים קודם את החוב הקטן ביותר — נותן מוטיבציה" />
                       </div>
                     </td>
-                    <td className="py-2.5 px-3">{formatMonths(snowballResult.months)}</td>
-                    <td className="py-2.5 px-3 text-[var(--accent-orange)]">{formatCurrency(snowballResult.totalInterest)}</td>
-                    <td className="py-2.5 px-3 text-[var(--accent-green)] font-semibold">{formatCurrency(minimumResult.totalInterest - snowballResult.totalInterest)}</td>
+                    <td className="py-2.5 px-1.5 md:px-3">{formatMonths(snowballResult.months)}</td>
+                    <td className="py-2.5 px-1.5 md:px-3 text-[var(--accent-orange)]">{formatCurrency(snowballResult.totalInterest)}</td>
+                    <td className="py-2.5 px-1.5 md:px-3 text-[var(--accent-green)] font-semibold">{formatCurrency(minimumResult.totalInterest - snowballResult.totalInterest)}</td>
                   </tr>
                   <tr className={`${method === 'avalanche' ? 'bg-[var(--c-blue-0-18)]' : ''}`}>
-                    <td className="py-2.5 px-3">
+                    <td className="py-2.5 px-1.5 md:px-3">
                       <div role="button" tabIndex={0} onClick={() => setMethod('avalanche')} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setMethod('avalanche') } }} className={`bg-transparent border-none cursor-pointer text-inherit font-medium ${method === 'avalanche' ? 'text-[var(--accent-green)]' : ''}`}>
-                        Avalanche (מהיקר לזול) <InfoTooltip body="שיטה שבה סוגרים קודם את החוב עם הריבית הגבוהה — חוסך הכי הרבה כסף" />
+                        <span className="hidden md:inline">Avalanche (מהיקר לזול)</span>
+                        <span className="md:hidden">Avalanche</span>
+                        {' '}<InfoTooltip body="שיטה שבה סוגרים קודם את החוב עם הריבית הגבוהה — חוסך הכי הרבה כסף" />
                       </div>
                     </td>
-                    <td className="py-2.5 px-3">{formatMonths(avalancheResult.months)}</td>
-                    <td className="py-2.5 px-3 text-[var(--accent-orange)]">{formatCurrency(avalancheResult.totalInterest)}</td>
-                    <td className="py-2.5 px-3 text-[var(--accent-green)] font-semibold">{formatCurrency(minimumResult.totalInterest - avalancheResult.totalInterest)}</td>
+                    <td className="py-2.5 px-1.5 md:px-3">{formatMonths(avalancheResult.months)}</td>
+                    <td className="py-2.5 px-1.5 md:px-3 text-[var(--accent-orange)]">{formatCurrency(avalancheResult.totalInterest)}</td>
+                    <td className="py-2.5 px-1.5 md:px-3 text-[var(--accent-green)] font-semibold">{formatCurrency(minimumResult.totalInterest - avalancheResult.totalInterest)}</td>
                   </tr>
                 </tbody>
               </table>
@@ -379,10 +429,11 @@ export default function DebtsPage() {
                 <TrendingDown size={14} className="text-[var(--accent-green)]" />
                 ירידת יתרות לאורך זמן ({method === 'snowball' ? 'Snowball' : 'Avalanche'})
               </h2>
-              <div className="relative h-48 flex items-end gap-px">
+              <div dir="ltr" className="relative h-48 flex items-end gap-px">
                 {chartData.map((row, colIdx) => {
+                  const monthNum = colIdx * step
                   return (
-                    <div key={colIdx} className="flex-1 flex flex-col-reverse" style={{ height: '100%' }}>
+                    <div key={colIdx} className="flex-1 flex flex-col justify-end relative" style={{ height: '100%' }}>
                       {row.map((val, debtIdx) => {
                         const h = chartMax > 0 ? (val / chartMax) * 100 : 0
                         return (
@@ -396,6 +447,18 @@ export default function DebtsPage() {
                           />
                         )
                       })}
+                    </div>
+                  )
+                })}
+              </div>
+              {/* X-axis labels */}
+              <div dir="ltr" className="flex gap-px text-[10px] text-[var(--c-0-50)] mt-1">
+                {chartData.map((_, colIdx) => {
+                  const monthNum = colIdx * step
+                  const showLabel = chartData.length <= 12 || colIdx % Math.ceil(chartData.length / 12) === 0 || colIdx === chartData.length - 1
+                  return (
+                    <div key={colIdx} className="flex-1 text-center">
+                      {showLabel ? monthNum : ''}
                     </div>
                   )
                 })}
@@ -477,8 +540,8 @@ export default function DebtsPage() {
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
           <div className="bg-[var(--c-0-18)] border border-[var(--border-light)] rounded-[14px] p-7 w-[400px]">
             <div className="flex justify-between items-center mb-5">
-              <span className="font-semibold text-[15px]">הוסף חוב</span>
-              <button onClick={() => setNewDebt(null)} aria-label="סגור" className="bg-transparent border-none text-[var(--text-secondary)] cursor-pointer p-2 min-w-9 min-h-9 flex items-center justify-center">
+              <span className="font-semibold text-[15px]">{editingDebtId ? 'עריכת חוב' : 'הוסף חוב'}</span>
+              <button onClick={closeModal} aria-label="סגור" className="bg-transparent border-none text-[var(--text-secondary)] cursor-pointer p-2 min-w-9 min-h-9 flex items-center justify-center">
                 <X size={18} />
               </button>
             </div>
@@ -535,13 +598,13 @@ export default function DebtsPage() {
               </label>
             </div>
             <button
-              onClick={handleAddDebt}
-              disabled={addDebt.isPending || !newDebt.name.trim() || Number(newDebt.balance) <= 0}
+              onClick={handleSaveDebt}
+              disabled={(addDebt.isPending || updateDebt.isPending) || !newDebt.name.trim() || Number(newDebt.balance) <= 0}
               className={`w-full bg-[var(--accent-orange)] border-none rounded-lg py-[11px] font-semibold text-sm text-[var(--c-0-10)] ${
-                addDebt.isPending || !newDebt.name.trim() || Number(newDebt.balance) <= 0 ? 'cursor-not-allowed opacity-50' : 'cursor-pointer opacity-100'
+                (addDebt.isPending || updateDebt.isPending) || !newDebt.name.trim() || Number(newDebt.balance) <= 0 ? 'cursor-not-allowed opacity-50' : 'cursor-pointer opacity-100'
               }`}
             >
-              {addDebt.isPending ? '...' : 'הוסף חוב'}
+              {(addDebt.isPending || updateDebt.isPending) ? '...' : editingDebtId ? 'עדכן חוב' : 'הוסף חוב'}
             </button>
           </div>
         </div>

@@ -46,12 +46,12 @@ const navSections: NavSection[] = [
       { href: '/mortgage',  label: 'משכנתא',            icon: Home },
       { href: '/debts',     label: 'מחשבון חובות',     icon: Calculator },
       { href: '/insurance', label: 'ביטוחים',           icon: Shield },
+      { href: '/subscriptions', label: 'מנויים',        icon: CreditCard },
     ],
   },
   {
     sectionLabel: 'תכנון וניתוח',
     items: [
-      { href: '/subscriptions', label: 'מנויים',           icon: CreditCard },
       { href: '/forecast',      label: 'תחזית תזרים',     icon: CalendarDays },
       { href: '/advisor',       label: 'טיפים פיננסיים',  icon: Sparkles },
       { href: '/analytics',     label: 'ניתוח שנתי',       icon: BarChart3 },

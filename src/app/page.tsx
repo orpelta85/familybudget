@@ -164,7 +164,13 @@ export default function Dashboard() {
   const totalPersonal = expenses?.reduce((s, e) => s + e.amount, 0) ?? 0
   const totalShared = shared?.reduce((s, e) => s + (e.my_share ?? e.total_amount * splitFrac), 0) ?? 0
   const sinkingMonthly = (funds ?? []).filter(f => f.is_active).reduce((s, f) => s + f.monthly_allocation, 0)
-  const totalExpenses = totalPersonal + totalShared + sinkingMonthly
+  const fundWithdrawals = (allSinkingTx ?? []).filter(t => t.period_id === selectedPeriodId && t.amount < 0).reduce((s, t) => {
+    const fund = (funds ?? []).find(f => f.id === t.fund_id)
+    const share = fund?.is_shared ? splitFrac : 1
+    return s + Math.abs(t.amount) * share
+  }, 0)
+  const sinkingNet = Math.max(0, sinkingMonthly - fundWithdrawals)
+  const totalExpenses = totalPersonal + totalShared + sinkingNet
   const netFlow = totalIncome - totalExpenses
   const savingsPct = totalIncome > 0 ? Math.round((netFlow / totalIncome) * 100) : 0
   const dataLoading = !selectedPeriodId
@@ -184,6 +190,21 @@ export default function Dashboard() {
   const savingsSpent = (categories ?? []).filter(c => c.type === 'savings').reduce((s, c) => s + (spendByCat[c.id] ?? 0), 0)
   const personalExclSavings = totalPersonal - savingsSpent
   const safeToSpend = totalIncome - personalExclSavings - totalShared - sinkingMonthly - savingsSpent
+
+  // ── Fixed vs Variable breakdown (using is_fixed override or category type) ─
+  const fixedVsVariable = useMemo(() => {
+    let fixedTotal = 0
+    let variableTotal = 0
+    for (const e of (expenses ?? [])) {
+      const cat = (categories ?? []).find(c => c.id === e.category_id)
+      const isFixed = e.is_fixed !== null && e.is_fixed !== undefined ? e.is_fixed : cat?.type === 'fixed'
+      if (isFixed) fixedTotal += e.amount
+      else variableTotal += e.amount
+    }
+    // Shared expenses are mostly fixed (rent, utilities)
+    fixedTotal += totalShared
+    return { fixedTotal, variableTotal, total: fixedTotal + variableTotal }
+  }, [expenses, categories, totalShared])
 
   // ── Year-over-year ────────────────────────────────────────────────────────
   const yearAgoIncome = allIncome?.find(i => i.period_id === yearAgoPeriodId)
@@ -381,6 +402,7 @@ export default function Dashboard() {
           goalDeposits={goalDeposits}
           funds={funds}
           allSinkingTx={allSinkingTx}
+          selectedPeriodId={selectedPeriodId}
           categories={categories}
           spendByCat={spendByCat}
           dataLoading={dataLoading}
@@ -451,7 +473,11 @@ export default function Dashboard() {
       <div className="grid-kpi">
         {[
           { label: 'הכנסה נטו', value: dataLoading ? '—' : formatCurrency(totalIncome), color: 'var(--accent-blue)', Icon: Wallet, tip: 'הכנסה אחרי מס ונכויים - הסכום שבאמת נכנס לחשבון' },
-          { label: 'הוצאות החודש', value: dataLoading ? '—' : formatCurrency(totalExpenses), color: 'var(--accent-orange)', Icon: Receipt, tip: '' },
+          { label: 'הוצאות החודש', value: dataLoading ? '—' : formatCurrency(totalPersonal + totalShared), color: 'var(--accent-orange)', Icon: Receipt, tip: '' },
+          ...(sinkingMonthly > 0 ? [{
+            label: 'כולל קרנות', value: dataLoading ? '—' : formatCurrency(totalExpenses),
+            color: 'var(--accent-teal)', Icon: PiggyBank, tip: 'הוצאות + הקצאה חודשית לקרנות צבירה',
+          }] : []),
           {
             label: 'תזרים נקי', value: dataLoading ? '—' : formatCurrency(netFlow),
             color: netFlow >= 0 ? 'var(--accent-green)' : 'var(--accent-red)', Icon: TrendingUp, tip: '',
@@ -517,6 +543,57 @@ export default function Dashboard() {
           </div>
         )}
       </div>
+
+      {/* ── Fixed vs Variable ─────────────────────────────────────────────── */}
+      {fixedVsVariable.total > 0 && (
+        <div className="card">
+          <h2 className="card-header mb-4">
+            <Receipt size={14} className="text-accent-orange" />
+            קבועות לעומת משתנות
+            <InfoTooltip body="חלוקה לפי סוג ההוצאה. קבועה = שכירות, ביטוח, מנויים. משתנה = סופר, מסעדות, קניות. ניתן לשנות ברמת עסקה בעמוד הוצאות" />
+          </h2>
+          <div className="flex gap-4 items-center">
+            {/* Bar */}
+            <div className="flex-1">
+              <div className="flex rounded-lg overflow-hidden h-7">
+                <div
+                  className="flex items-center justify-center text-[11px] font-semibold text-[var(--c-0-10)]"
+                  style={{
+                    width: `${Math.round((fixedVsVariable.fixedTotal / fixedVsVariable.total) * 100)}%`,
+                    background: 'var(--accent-orange)',
+                    minWidth: '40px',
+                  }}
+                >
+                  {Math.round((fixedVsVariable.fixedTotal / fixedVsVariable.total) * 100)}%
+                </div>
+                <div
+                  className="flex items-center justify-center text-[11px] font-semibold text-[var(--c-0-10)]"
+                  style={{
+                    width: `${Math.round((fixedVsVariable.variableTotal / fixedVsVariable.total) * 100)}%`,
+                    background: 'var(--accent-blue)',
+                    minWidth: '40px',
+                  }}
+                >
+                  {Math.round((fixedVsVariable.variableTotal / fixedVsVariable.total) * 100)}%
+                </div>
+              </div>
+              {/* Legend */}
+              <div className="flex justify-between mt-2.5 text-[12px]">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded-sm" style={{ background: 'var(--accent-orange)' }} />
+                  <span className="text-text-secondary">קבועות</span>
+                  <span className="font-semibold">{formatCurrency(fixedVsVariable.fixedTotal)}</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2.5 h-2.5 rounded-sm" style={{ background: 'var(--accent-blue)' }} />
+                  <span className="text-text-secondary">משתנות</span>
+                  <span className="font-semibold">{formatCurrency(fixedVsVariable.variableTotal)}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Budget + Year-over-year ────────────────────────────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -762,6 +839,7 @@ function FamilyDashboard({
   goalDeposits,
   funds,
   allSinkingTx,
+  selectedPeriodId,
   categories,
   spendByCat,
   dataLoading,
@@ -773,6 +851,7 @@ function FamilyDashboard({
   goalDeposits: import('@/lib/types').GoalDeposit[] | undefined
   funds: import('@/lib/types').SinkingFund[] | undefined
   allSinkingTx: import('@/lib/types').SinkingFundTransaction[] | undefined
+  selectedPeriodId: number | undefined
   categories: import('@/lib/types').BudgetCategory[] | undefined
   spendByCat: Record<number, number>
   dataLoading: boolean
@@ -782,7 +861,9 @@ function FamilyDashboard({
   }
 
   const familySinkingMonthly = (funds ?? []).filter(f => f.is_active).reduce((s, f) => s + f.monthly_allocation, 0)
-  const totalExpenses = summary.total_personal_expenses + summary.total_shared_expenses + familySinkingMonthly
+  const familyFundWithdrawals = (allSinkingTx ?? []).filter(t => t.period_id === selectedPeriodId && t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0)
+  const familySinkingNet = Math.max(0, familySinkingMonthly - familyFundWithdrawals)
+  const totalExpenses = summary.total_personal_expenses + summary.total_shared_expenses + familySinkingNet
   const familyNet = summary.total_income - totalExpenses
   const familySavingsPct = summary.total_income > 0 ? Math.round((familyNet / summary.total_income) * 100) : 0
 
@@ -813,7 +894,11 @@ function FamilyDashboard({
       <div className="grid-kpi">
         {[
           { label: 'הכנסה משפחתית', value: formatCurrency(summary.total_income), color: 'var(--accent-blue)', Icon: Wallet },
-          { label: 'הוצאות כוללות', value: formatCurrency(totalExpenses), color: 'var(--accent-orange)', Icon: Receipt },
+          { label: 'הוצאות החודש', value: formatCurrency(summary.total_personal_expenses + summary.total_shared_expenses), color: 'var(--accent-orange)', Icon: Receipt },
+          ...(familySinkingMonthly > 0 ? [{
+            label: 'כולל קרנות', value: formatCurrency(totalExpenses),
+            color: 'var(--accent-teal)', Icon: PiggyBank,
+          }] : []),
           {
             label: 'תזרים משפחתי',
             value: formatCurrency(familyNet),
@@ -821,12 +906,6 @@ function FamilyDashboard({
             Icon: TrendingUp,
             sub: `${familySavingsPct}% חיסכון`,
             subColor: familySavingsPct >= 20 ? 'var(--accent-green)' : familySavingsPct >= 0 ? 'var(--accent-orange)' : 'var(--accent-red)',
-          },
-          {
-            label: 'קופה קטנה',
-            value: formatCurrency(totalFundBal),
-            color: 'var(--accent-teal)',
-            Icon: PiggyBank,
           },
         ].map(kpi => (
           <div key={kpi.label} className="kpi-card">
@@ -923,6 +1002,55 @@ function FamilyDashboard({
           )}
         </div>
       </div>
+
+      {/* ── Family Fixed vs Variable ─────────────────────────────────────── */}
+      {(() => {
+        // Family level: shared expenses = fixed, personal = variable (approximation)
+        const familyFixedTotal = summary.total_shared_expenses
+        const familyVariableTotal = summary.total_personal_expenses
+        const familyTotal = familyFixedTotal + familyVariableTotal
+        if (familyTotal <= 0) return null
+        const fixedPct = Math.round((familyFixedTotal / familyTotal) * 100)
+        const varPct = 100 - fixedPct
+        return (
+          <div className="card">
+            <h2 className="card-header mb-4">
+              <Receipt size={14} className="text-accent-orange" />
+              קבועות לעומת משתנות (משפחתי)
+            </h2>
+            <div className="flex gap-4 items-center">
+              <div className="flex-1">
+                <div className="flex rounded-lg overflow-hidden h-7">
+                  <div
+                    className="flex items-center justify-center text-[11px] font-semibold text-[var(--c-0-10)]"
+                    style={{ width: `${fixedPct}%`, background: 'var(--accent-orange)', minWidth: '40px' }}
+                  >
+                    {fixedPct}%
+                  </div>
+                  <div
+                    className="flex items-center justify-center text-[11px] font-semibold text-[var(--c-0-10)]"
+                    style={{ width: `${varPct}%`, background: 'var(--accent-blue)', minWidth: '40px' }}
+                  >
+                    {varPct}%
+                  </div>
+                </div>
+                <div className="flex justify-between mt-2.5 text-[12px]">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2.5 h-2.5 rounded-sm" style={{ background: 'var(--accent-orange)' }} />
+                    <span className="text-text-secondary">קבועות (משותפות)</span>
+                    <span className="font-semibold">{formatCurrency(familyFixedTotal)}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2.5 h-2.5 rounded-sm" style={{ background: 'var(--accent-blue)' }} />
+                    <span className="text-text-secondary">משתנות (אישיות)</span>
+                    <span className="font-semibold">{formatCurrency(familyVariableTotal)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* Sinking Funds + Goals */}
       <div className="grid-2">
