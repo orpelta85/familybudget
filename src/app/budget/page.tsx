@@ -225,7 +225,7 @@ export default function BudgetPage() {
     return cat ? s + Number(se.my_share ?? se.total_amount * splitFrac) : s
   }, 0) + unmatchedSharedTotal
   const totalPersonalVariableActual = variableCats.reduce((s, c) => s + catSpendPersonal(c), 0)
-  const remaining = totalIncome - totalAllMy
+  const remaining = totalIncome - totalAllFull
 
   async function saveTarget(catId: number) {
     const val = Number(editValue)
