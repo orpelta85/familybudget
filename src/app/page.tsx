@@ -192,7 +192,7 @@ export default function Dashboard() {
   const safeToSpend = totalIncome - personalExclSavings - totalShared - sinkingMonthly - savingsSpent
 
   // ── Fixed vs Variable breakdown (using is_fixed override or category type) ─
-  const fixedVsVariable = useMemo(() => {
+  const fixedVsVariable = (() => {
     let fixedTotal = 0
     let variableTotal = 0
     for (const e of (expenses ?? [])) {
@@ -204,7 +204,7 @@ export default function Dashboard() {
     // Shared expenses are mostly fixed (rent, utilities)
     fixedTotal += totalShared
     return { fixedTotal, variableTotal, total: fixedTotal + variableTotal }
-  }, [expenses, categories, totalShared])
+  })()
 
   // ── Year-over-year ────────────────────────────────────────────────────────
   const yearAgoIncome = allIncome?.find(i => i.period_id === yearAgoPeriodId)
