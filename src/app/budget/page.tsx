@@ -6,12 +6,13 @@ import { useSharedExpenses } from '@/lib/queries/useShared'
 import { usePeriods, useCurrentPeriod } from '@/lib/queries/usePeriods'
 import { useIncome, useFamilyIncome } from '@/lib/queries/useIncome'
 import { formatCurrency } from '@/lib/utils'
+import { useSplitFraction } from '@/lib/queries/useProfile'
 import { useSharedPeriod } from '@/lib/context/PeriodContext'
 import { useFamilyContext } from '@/lib/context/FamilyContext'
 import { useFamilyView } from '@/contexts/FamilyViewContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useMemo } from 'react'
-import { BarChart3, Inbox, Check, Clock, Users, Download } from 'lucide-react'
+import { BarChart3, Inbox, Check, Clock, Users, Download, Pencil, ChevronDown } from 'lucide-react'
 import { toast } from 'sonner'
 import { PageInfo } from '@/components/ui/PageInfo'
 import { InfoTooltip } from '@/components/ui/InfoTooltip'
@@ -27,9 +28,10 @@ function getBarColor(pct: number): string {
 }
 
 // Shared category enum → fixed budget category name mapping
-const SHARED_TO_FIXED: Record<string, string> = {
+const SHARED_TO_BUDGET: Record<string, string> = {
+  // Fixed
   rent: 'שכירות',
-  property_tax: 'חשבונות בית',
+  property_tax: 'ארנונה',
   electricity: 'חשבונות בית',
   water_gas: 'חשבונות בית',
   building_committee: 'חשבונות בית',
@@ -39,18 +41,22 @@ const SHARED_TO_FIXED: Record<string, string> = {
   netflix: 'מנויים',
   spotify: 'מנויים',
   car_loan: 'הלוואות',
+  subscriptions: 'מנויים',
+  // Variable
   groceries: 'מכולת',
   eating_out: 'אוכל בחוץ',
   entertainment: 'בילויים ופנאי',
-  subscriptions: 'מנויים',
   shopping: 'בגדים וקניות',
   pets: 'חיות מחמד',
+  vacation: 'בילויים ופנאי',
+  misc: 'שונות',
 }
 
-// Notes-based mapping for shared expenses stored as 'misc'
-const NOTES_TO_FIXED: [RegExp, string][] = [
+// Notes-based mapping for shared expenses
+const NOTES_TO_BUDGET: [RegExp, string][] = [
   [/שכירות/i, 'שכירות'],
-  [/ארנונה|חשמל|מים|גז|ועד בית/i, 'חשבונות בית'],
+  [/ארנונה/i, 'ארנונה'],
+  [/חשמל|מים|גז|ועד בית/i, 'חשבונות בית'],
   [/אינטרגז/i, 'חשבונות בית'],
   [/מנורה|ביטוח|הכשרה/i, 'ביטוחים'],
   [/הלוואת רכב|הלוואה/i, 'הלוואות'],
@@ -58,10 +64,10 @@ const NOTES_TO_FIXED: [RegExp, string][] = [
 ]
 
 function resolveSharedToFixed(category: string, notes?: string): string | null {
-  const mapped = SHARED_TO_FIXED[category]
+  const mapped = SHARED_TO_BUDGET[category]
   if (mapped) return mapped
   if (notes) {
-    for (const [pattern, name] of NOTES_TO_FIXED) {
+    for (const [pattern, name] of NOTES_TO_BUDGET) {
       if (pattern.test(notes)) return name
     }
   }
@@ -77,6 +83,7 @@ export default function BudgetPage() {
   const { selectedPeriodId, setSelectedPeriodId } = useSharedPeriod()
   const { familyId, members } = useFamilyContext()
   const { viewMode } = useFamilyView()
+  const splitFrac = useSplitFraction(user?.id)
   const isFamily = true // Budget is always family-level
   const familyMemberIds = useMemo(() => members.map(m => m.user_id), [members])
   const { data: familyIncome } = useFamilyIncome(selectedPeriodId ?? currentPeriod?.id, familyMemberIds, isFamily && familyMemberIds.length > 0)
@@ -84,6 +91,7 @@ export default function BudgetPage() {
 
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editValue, setEditValue] = useState('')
+  const [fixedOpen, setFixedOpen] = useState(false)
 
   useEffect(() => {
     if (currentPeriod && !selectedPeriodId) setSelectedPeriodId(currentPeriod.id)
@@ -136,22 +144,23 @@ export default function BudgetPage() {
     return acc
   }, {})
 
-  // Shared expenses: map to fixed categories by name, use FULL total_amount (family budget view)
+  // Shared expenses: map to budget categories by name (both fixed AND variable)
+  const allCats = categories ?? []
   const sharedSpendByCatName = (sharedExpenses ?? []).reduce<Record<string, number>>((acc, se) => {
-    const fixedName = resolveSharedToFixed(se.category, se.notes)
-    if (fixedName) {
-      acc[fixedName] = (acc[fixedName] ?? 0) + se.total_amount
+    const catName = resolveSharedToFixed(se.category, se.notes)
+    if (catName) {
+      acc[catName] = (acc[catName] ?? 0) + Number(se.my_share ?? se.total_amount * splitFrac)
     }
     return acc
   }, {})
 
-  // Unmatched shared expenses (category not mapped to a fixed budget category)
+  // Unmatched shared expenses (category not mapped to any budget category)
   const unmatchedSharedTotal = (sharedExpenses ?? []).reduce((sum, se) => {
-    return resolveSharedToFixed(se.category, se.notes) ? sum : sum + se.total_amount
+    return resolveSharedToFixed(se.category, se.notes) ? sum : sum + Number(se.my_share ?? se.total_amount * splitFrac)
   }, 0)
 
-  // Combined spend for fixed categories: personal + shared
-  function fixedSpend(cat: BudgetCategory): number {
+  // Combined spend for any category: personal + shared
+  function catSpend(cat: BudgetCategory): number {
     return (spendByCat[cat.id] ?? 0) + (sharedSpendByCatName[cat.name] ?? 0)
   }
 
@@ -159,11 +168,10 @@ export default function BudgetPage() {
   const familyTotalIncome = (familyIncome ?? []).reduce((s, m) => s + m.total, 0)
   const personalIncome = income ? (income.salary + income.bonus + income.other) : 0
   const totalIncome = isFamily && familyTotalIncome > 0 ? familyTotalIncome : personalIncome
-  const totalFixedPersonal = fixedCats.reduce((s, c) => s + fixedSpend(c), 0)
-  const totalFixed = totalFixedPersonal + unmatchedSharedTotal
-  const totalVariableActual = allNonFixed.reduce((s, c) => s + (spendByCat[c.id] ?? 0), 0)
+  const totalFixedActual = fixedCats.reduce((s, c) => s + catSpend(c), 0) + unmatchedSharedTotal
+  const totalVariableActual = allNonFixed.reduce((s, c) => s + catSpend(c), 0)
   const totalVariableBudget = allNonFixed.reduce((s, c) => s + c.monthly_target, 0)
-  const remaining = totalIncome - totalFixed - totalVariableActual
+  const remaining = totalIncome - totalFixedActual - totalVariableActual
 
   async function saveTarget(catId: number) {
     const val = Number(editValue)
@@ -175,7 +183,7 @@ export default function BudgetPage() {
     } catch (e) { console.error('Update budget target:', e); toast.error('שגיאה בעדכון היעד') }
   }
 
-  const fixedPaidCount = fixedCats.filter(c => fixedSpend(c) > 0).length
+  const fixedPaidCount = fixedCats.filter(c => catSpend(c) > 0).length
 
   async function handleExportBudget() {
     try {
@@ -185,7 +193,7 @@ export default function BudgetPage() {
         ['תקציב משפחתי', selectedPeriod?.label ?? ''],
         [],
         ['הכנסה נטו', totalIncome],
-        ['סה"כ קבועות', totalFixed],
+        ['סה"כ קבועות', totalFixedActual],
         ['סה"כ משתנות', totalVariableActual],
         ['תקציב משתנות', totalVariableBudget],
         ['נשאר פנוי', remaining],
@@ -194,13 +202,13 @@ export default function BudgetPage() {
         ['קטגוריה', 'תקציב', 'בפועל', '% ניצול'],
       ]
       fixedCats.forEach(c => {
-        const spent = fixedSpend(c)
+        const spent = catSpend(c)
         const pct = c.monthly_target > 0 ? Math.round((spent / c.monthly_target) * 100) : 0
         rows.push([c.name, c.monthly_target, spent, `${pct}%`])
       })
       rows.push([], ['הוצאות משתנות'], ['קטגוריה', 'תקציב', 'בפועל', '% ניצול'])
       allNonFixed.forEach(c => {
-        const spent = spendByCat[c.id] ?? 0
+        const spent = catSpend(c)
         const pct = c.monthly_target > 0 ? Math.round((spent / c.monthly_target) * 100) : 0
         rows.push([c.name, c.monthly_target, spent, `${pct}%`])
       })
@@ -242,7 +250,7 @@ export default function BudgetPage() {
         </div>
         <div className="bg-card border border-border rounded-xl p-4">
           <div className="text-[11px] text-muted-foreground mb-1 uppercase tracking-wide">סה״כ קבועות</div>
-          <div className="text-[22px] font-bold text-[var(--accent-blue)] leading-none">{formatCurrency(totalFixed)}</div>
+          <div className="text-[22px] font-bold text-[var(--accent-blue)] leading-none">{formatCurrency(totalFixedActual)}</div>
         </div>
         <div className="bg-card border border-border rounded-xl p-4">
           <div className="text-[11px] text-muted-foreground mb-1 uppercase tracking-wide">סה״כ משתנות בפועל</div>
@@ -275,89 +283,7 @@ export default function BudgetPage() {
           </div>
         )
         : (
-          <div className="grid-2" style={{ alignItems: 'start' }}>
-            {/* Right column: Fixed expenses */}
-            <div className="card-transition bg-card border border-border rounded-xl p-5">
-              <div className="flex justify-between items-center mb-4 pb-3 border-b border-[var(--bg-hover)]">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full" style={{ background: 'var(--accent-blue)' }} />
-                  <span className="font-bold text-sm">הוצאות קבועות</span>
-                  <InfoTooltip body="הוצאות שלא משתנות מחודש לחודש — שכירות, ביטוח, הלוואות" />
-                  <span className="text-[11px] text-muted-foreground bg-secondary rounded px-1.5 py-px">{fixedCats.length}</span>
-                </div>
-                <div className="text-[13px] font-bold text-[var(--text-heading)]">
-                  {formatCurrency(totalFixed)}
-                </div>
-              </div>
-
-              {fixedCats.length === 0 && unmatchedSharedTotal === 0 ? (
-                <div className="text-muted-foreground text-sm text-center py-6">אין הוצאות קבועות</div>
-              ) : (
-                <div className="space-y-1">
-                  {fixedCats.map(cat => {
-                    const spent = fixedSpend(cat)
-                    const isPaid = spent > 0
-                    const hasShared = (sharedSpendByCatName[cat.name] ?? 0) > 0
-
-                    return (
-                      <div
-                        key={cat.id}
-                        className="flex justify-between items-center py-2.5 px-2 rounded-lg hover:bg-[var(--c-0-18)] transition-colors duration-150"
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <div className={`w-5 h-5 rounded-full flex items-center justify-center ${isPaid ? 'bg-[var(--accent-green)]' : 'bg-[var(--border-default)]'}`}>
-                            {isPaid
-                              ? <Check size={12} className="text-[var(--c-0-15)]" />
-                              : <Clock size={12} className="text-[var(--c-0-45)]" />
-                            }
-                          </div>
-                          <span className={`text-[13px] font-medium ${isPaid ? 'text-[var(--c-0-82)]' : 'text-[var(--c-0-50)]'}`}>
-                            {cat.name}
-                          </span>
-                          {hasShared && (
-                            <Users size={11} className="text-[var(--c-0-50)]" />
-                          )}
-                        </div>
-                        <span className={`text-[13px] font-semibold ${isPaid ? 'text-[var(--c-0-82)]' : 'text-[var(--c-0-40)]'}`}>
-                          {isPaid ? formatCurrency(spent) : '—'}
-                        </span>
-                      </div>
-                    )
-                  })}
-
-                  {/* Unmatched shared expenses */}
-                  {unmatchedSharedTotal > 0 && (
-                    <div className="flex justify-between items-center py-2.5 px-2 rounded-lg hover:bg-[var(--c-0-18)] transition-colors duration-150">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-5 h-5 rounded-full flex items-center justify-center bg-[var(--accent-green)]">
-                          <Users size={12} className="text-[var(--c-0-15)]" />
-                        </div>
-                        <span className="text-[13px] font-medium text-[var(--c-0-82)]">
-                          הוצאות משותפות
-                        </span>
-                      </div>
-                      <span className="text-[13px] font-semibold text-[var(--c-0-82)]">
-                        {formatCurrency(unmatchedSharedTotal)}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* Fixed total bar */}
-              {(fixedCats.length > 0 || unmatchedSharedTotal > 0) && (
-                <div className="flex justify-between items-center mt-4 pt-3 border-t border-[var(--bg-hover)]">
-                  <span className="text-[12px] text-muted-foreground">
-                    {fixedPaidCount}/{fixedCats.length} שולמו
-                  </span>
-                  <span className="text-[14px] font-bold text-[var(--accent-blue)]">
-                    {formatCurrency(totalFixed)}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {/* Left column: Non-fixed expenses — grouped by type */}
+          <div className="space-y-5">
             <div className="card-transition bg-card border border-border rounded-xl p-5">
               <div className="flex justify-between items-center mb-4 pb-3 border-b border-[var(--bg-hover)]">
                 <div className="flex items-center gap-2">
@@ -379,11 +305,10 @@ export default function BudgetPage() {
                 <div>
                   {groupedNonFixed.map((group, gi) => {
                     const section = TYPE_SECTION_LABELS[group.type]
-                    const sectionSpent = group.cats.reduce((s, c) => s + (spendByCat[c.id] ?? 0), 0)
+                    const sectionSpent = group.cats.reduce((s, c) => s + catSpend(c), 0)
                     const sectionBudget = group.cats.reduce((s, c) => s + c.monthly_target, 0)
                     return (
                       <div key={group.type} className={gi > 0 ? 'mt-4 pt-3 border-t border-[var(--bg-hover)]' : ''}>
-                        {/* Section header */}
                         <div className="flex justify-between items-center mb-2">
                           <div className="flex items-center gap-2">
                             <div className="w-1.5 h-1.5 rounded-full" style={{ background: section.color }} />
@@ -395,10 +320,9 @@ export default function BudgetPage() {
                             {sectionBudget > 0 && <> / {formatCurrency(sectionBudget)}</>}
                           </div>
                         </div>
-                        {/* Category rows */}
-                        <div className="space-y-0">
+                        <div>
                           {group.cats.map(cat => {
-                            const spent = spendByCat[cat.id] ?? 0
+                            const spent = catSpend(cat)
                             const pct = cat.monthly_target > 0 ? spent / cat.monthly_target : 0
                             const pctDisplay = Math.round(pct * 100)
                             const isEditing = editingId === cat.id
@@ -406,48 +330,44 @@ export default function BudgetPage() {
                             const catRemaining = cat.monthly_target - spent
 
                             return (
-                              <div key={cat.id} className="py-2.5 border-b border-[var(--c-0-18)] last:border-b-0">
-                                <div className="flex justify-between items-baseline mb-1">
-                                  <span className="font-medium text-[13px] text-[var(--c-0-82)]">{cat.name}</span>
-                                  {cat.monthly_target > 0 && (
-                                    <span className={`text-[11px] font-medium ${catRemaining >= 0 ? 'text-[var(--accent-green)]' : 'text-[var(--accent-red)]'}`}>
-                                      {catRemaining >= 0 ? `נותר ${formatCurrency(catRemaining)}` : `חריגה ${formatCurrency(Math.abs(catRemaining))}`}
-                                    </span>
-                                  )}
+                              <div key={cat.id} className="flex items-center gap-3 py-2.5 border-b border-[var(--c-0-18)] last:border-b-0 hover:bg-[var(--c-0-18)] rounded px-2 transition-colors">
+                                <span className="font-medium text-[13px] text-[var(--c-0-82)] min-w-[100px] shrink-0">{cat.name}</span>
+                                <div className="flex-1 h-[5px] rounded-full bg-[var(--c-0-20)] overflow-hidden min-w-[60px]">
+                                  <div className="h-full rounded-full transition-[width] duration-400 ease-out" style={{ width: `${Math.min(pct * 100, 100)}%`, background: barColor }} />
                                 </div>
-                                <div className="flex justify-between items-baseline mb-1">
-                                  <div className="flex items-baseline gap-1 text-[12px]">
-                                    <span className="font-semibold" style={{ color: barColor }}>{formatCurrency(spent)}</span>
-                                    <span className="text-muted-foreground">/</span>
-                                    {isEditing ? (
-                                      <input
-                                        autoFocus
-                                        type="number"
-                                        value={editValue}
-                                        onChange={e => setEditValue(e.target.value)}
-                                        onBlur={() => saveTarget(cat.id)}
-                                        onKeyDown={e => { if (e.key === 'Enter') saveTarget(cat.id); if (e.key === 'Escape') setEditingId(null) }}
-                                        className="w-20 bg-[var(--c-0-20)] border border-[var(--c-blue-0-45)] rounded-md px-1.5 py-0.5 text-inherit text-[12px] text-left"
-                                      />
-                                    ) : (
-                                      <span
+                                <div className="flex items-center gap-1 text-[12px] shrink-0">
+                                  <span className="font-semibold" style={{ color: barColor }}>{formatCurrency(spent)}</span>
+                                  <span className="text-muted-foreground">/</span>
+                                  {isEditing ? (
+                                    <input
+                                      autoFocus
+                                      type="number"
+                                      value={editValue}
+                                      onChange={e => setEditValue(e.target.value)}
+                                      onBlur={() => saveTarget(cat.id)}
+                                      onKeyDown={e => { if (e.key === 'Enter') saveTarget(cat.id); if (e.key === 'Escape') setEditingId(null) }}
+                                      className="w-24 bg-[var(--c-0-20)] border border-[var(--c-blue-0-45)] rounded-md px-2 py-0.5 text-inherit text-[12px] text-left"
+                                      title="סכום יעד"
+                                    />
+                                  ) : (
+                                    <>
+                                      <span className="text-muted-foreground">{formatCurrency(cat.monthly_target)}</span>
+                                      <button
+                                        type="button"
                                         onClick={() => { setEditingId(cat.id); setEditValue(String(cat.monthly_target)) }}
-                                        title="לחץ לעריכה"
-                                        className="text-muted-foreground cursor-pointer border-b border-dashed border-[var(--c-0-38)] pb-px transition-colors duration-150 hover:text-[var(--text-body)]"
+                                        className="p-0.5 rounded hover:bg-[var(--c-0-25)] transition-colors text-muted-foreground hover:text-[var(--text-body)]"
+                                        title="ערוך תקציב"
                                       >
-                                        {formatCurrency(cat.monthly_target)}
-                                      </span>
-                                    )}
-                                  </div>
-                                  {cat.monthly_target > 0 && (
-                                    <span className="text-[10px] font-medium" style={{ color: barColor }}>
-                                      {pctDisplay > 200 ? '200%+' : `${pctDisplay}%`}
-                                    </span>
+                                        <Pencil size={12} />
+                                      </button>
+                                    </>
                                   )}
                                 </div>
-                                <div className="h-[3px] rounded-sm bg-[var(--c-0-20)] overflow-hidden">
-                                  <div className="h-full rounded-sm transition-[width] duration-400 ease-out" style={{ width: `${Math.min(pct * 100, 100)}%`, background: barColor }} />
-                                </div>
+                                {cat.monthly_target > 0 && (
+                                  <span className={`text-[11px] font-medium shrink-0 min-w-[75px] text-left ${catRemaining >= 0 ? 'text-[var(--accent-green)]' : 'text-[var(--accent-red)]'}`}>
+                                    {catRemaining >= 0 ? `נותר ${formatCurrency(catRemaining)}` : `חריגה ${formatCurrency(Math.abs(catRemaining))}`}
+                                  </span>
+                                )}
                               </div>
                             )
                           })}
@@ -458,7 +378,6 @@ export default function BudgetPage() {
                 </div>
               )}
 
-              {/* Overall total bar */}
               {allNonFixed.length > 0 && (
                 <div className="flex justify-between items-center mt-3 pt-3 border-t border-[var(--bg-hover)]">
                   <span className="text-[12px] text-muted-foreground">
@@ -469,6 +388,89 @@ export default function BudgetPage() {
                     <span className="text-muted-foreground mx-1">/</span>
                     <span className="text-muted-foreground">{formatCurrency(totalVariableBudget)}</span>
                   </div>
+                </div>
+              )}
+            </div>
+
+            <div className="card-transition bg-card border border-border rounded-xl overflow-hidden">
+              <div role="button" tabIndex={0} onClick={() => setFixedOpen(!fixedOpen)} onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setFixedOpen(!fixedOpen) } }} className="w-full flex justify-between items-center p-5 cursor-pointer hover:bg-[var(--c-0-18)] transition-colors">
+                <div className="flex items-center gap-2">
+                  <ChevronDown size={16} className={`transition-transform duration-200 ${fixedOpen ? 'rotate-180' : ''}`} />
+                  <div className="w-2 h-2 rounded-full" style={{ background: 'var(--accent-blue)' }} />
+                  <span className="font-bold text-sm">הוצאות קבועות</span>
+                  <InfoTooltip body="הוצאות שלא משתנות מחודש לחודש — שכירות, ביטוח, הלוואות" />
+                  <span className="text-[11px] text-muted-foreground bg-secondary rounded px-1.5 py-px">{fixedCats.length}</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-[12px] text-muted-foreground">{fixedPaidCount}/{fixedCats.length} שולמו</span>
+                  <span className="text-[13px] font-bold text-[var(--text-heading)]">{formatCurrency(totalFixedActual)}</span>
+                </div>
+              </div>
+              {fixedOpen && (
+                <div className="px-5 pb-5 border-t border-[var(--bg-hover)]">
+                  {fixedCats.length === 0 && unmatchedSharedTotal === 0 ? (
+                    <div className="text-muted-foreground text-sm text-center py-6">אין הוצאות קבועות</div>
+                  ) : (
+                    <div className="space-y-1 mt-3">
+                      {fixedCats.map(cat => {
+                        const spent = catSpend(cat)
+                        const isPaid = spent > 0
+                        const hasShared = (sharedSpendByCatName[cat.name] ?? 0) > 0
+
+                        return (
+                          <div
+                            key={cat.id}
+                            className="flex justify-between items-center py-2.5 px-2 rounded-lg hover:bg-[var(--c-0-18)] transition-colors duration-150"
+                          >
+                            <div className="flex items-center gap-2.5">
+                              <div className={`w-5 h-5 rounded-full flex items-center justify-center ${isPaid ? 'bg-[var(--accent-green)]' : 'bg-[var(--border-default)]'}`}>
+                                {isPaid
+                                  ? <Check size={12} className="text-[var(--c-0-15)]" />
+                                  : <Clock size={12} className="text-[var(--c-0-45)]" />
+                                }
+                              </div>
+                              <span className={`text-[13px] font-medium ${isPaid ? 'text-[var(--c-0-82)]' : 'text-[var(--c-0-50)]'}`}>
+                                {cat.name}
+                              </span>
+                              {hasShared && (
+                                <Users size={11} className="text-[var(--c-0-50)]" />
+                              )}
+                            </div>
+                            <span className={`text-[13px] font-semibold ${isPaid ? 'text-[var(--c-0-82)]' : 'text-[var(--c-0-40)]'}`}>
+                              {isPaid ? formatCurrency(spent) : '—'}
+                            </span>
+                          </div>
+                        )
+                      })}
+
+                      {unmatchedSharedTotal > 0 && (
+                        <div className="flex justify-between items-center py-2.5 px-2 rounded-lg hover:bg-[var(--c-0-18)] transition-colors duration-150">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-5 h-5 rounded-full flex items-center justify-center bg-[var(--accent-green)]">
+                              <Users size={12} className="text-[var(--c-0-15)]" />
+                            </div>
+                            <span className="text-[13px] font-medium text-[var(--c-0-82)]">
+                              הוצאות משותפות
+                            </span>
+                          </div>
+                          <span className="text-[13px] font-semibold text-[var(--c-0-82)]">
+                            {formatCurrency(unmatchedSharedTotal)}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {(fixedCats.length > 0 || unmatchedSharedTotal > 0) && (
+                    <div className="flex justify-between items-center mt-4 pt-3 border-t border-[var(--bg-hover)]">
+                      <span className="text-[12px] text-muted-foreground">
+                        {fixedPaidCount}/{fixedCats.length} שולמו
+                      </span>
+                      <span className="text-[14px] font-bold text-[var(--accent-blue)]">
+                        {formatCurrency(totalFixedActual)}
+                      </span>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
