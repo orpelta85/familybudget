@@ -443,7 +443,11 @@ export default function BudgetPage() {
                             <span className="font-semibold" style={{ color: barColor }}>{formatCurrency(spentFull)}</span>
                             <span className="text-muted-foreground">/</span>
                             {isEditing ? (
-                              <input autoFocus type="number" value={editValue} onChange={e => setEditValue(e.target.value)} onBlur={() => { if (!savingRef.current) saveTarget(cat.id) }} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); saveTarget(cat.id) } if (e.key === 'Escape') setEditingId(null) }} className="w-24 bg-[var(--c-0-20)] border border-[var(--c-blue-0-45)] rounded-md px-2 py-0.5 text-inherit text-[12px] text-left" title="סכום יעד" />
+                              <>
+                                      <input autoFocus type="number" value={editValue} onChange={e => setEditValue(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); saveTarget(cat.id) } if (e.key === 'Escape') setEditingId(null) }} className="w-20 bg-[var(--c-0-20)] border border-[var(--c-blue-0-45)] rounded-md px-2 py-0.5 text-inherit text-[12px] text-left" title="סכום יעד" />
+                                      <button type="button" onClick={() => saveTarget(cat.id)} className="p-0.5 rounded bg-[var(--accent-green)] text-[var(--c-0-10)]" title="שמור"><Check size={12} /></button>
+                                      <button type="button" onClick={() => setEditingId(null)} className="p-0.5 rounded bg-[var(--c-0-25)] text-muted-foreground" title="ביטול"><X size={10} /></button>
+                                    </>
                             ) : (
                               <>
                                 <span className="text-muted-foreground">{formatCurrency(cat.monthly_target)}</span>
@@ -529,7 +533,11 @@ export default function BudgetPage() {
                                   <span className="font-semibold" style={{ color: barColor }}>{formatCurrency(spent)}</span>
                                   <span className="text-muted-foreground">/</span>
                                   {isEditing ? (
-                                    <input autoFocus type="number" value={editValue} onChange={e => setEditValue(e.target.value)} onBlur={() => { if (!savingRef.current) saveTarget(cat.id) }} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); saveTarget(cat.id) } if (e.key === 'Escape') setEditingId(null) }} className="w-24 bg-[var(--c-0-20)] border border-[var(--c-blue-0-45)] rounded-md px-2 py-0.5 text-inherit text-[12px] text-left" title="סכום יעד" />
+                                    <>
+                                      <input autoFocus type="number" value={editValue} onChange={e => setEditValue(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); saveTarget(cat.id) } if (e.key === 'Escape') setEditingId(null) }} className="w-20 bg-[var(--c-0-20)] border border-[var(--c-blue-0-45)] rounded-md px-2 py-0.5 text-inherit text-[12px] text-left" title="סכום יעד" />
+                                      <button type="button" onClick={() => saveTarget(cat.id)} className="p-0.5 rounded bg-[var(--accent-green)] text-[var(--c-0-10)]" title="שמור"><Check size={12} /></button>
+                                      <button type="button" onClick={() => setEditingId(null)} className="p-0.5 rounded bg-[var(--c-0-25)] text-muted-foreground" title="ביטול"><X size={10} /></button>
+                                    </>
                                   ) : (
                                     <>
                                       <span className="text-muted-foreground">{formatCurrency(cat.monthly_target)}</span>
