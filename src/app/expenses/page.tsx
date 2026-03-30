@@ -983,6 +983,60 @@ export default function ExpensesPage() {
             totalWithSinking={totalWithSinking}
           />
 
+          {/* ── Fixed vs Variable Bar ──────────────────────────────────────── */}
+          {(sortedPersonalExp.length > 0 || sortedSharedExp.length > 0) && (() => {
+            let fixedTotal = 0
+            let variableTotal = 0
+            for (const e of sortedPersonalExp) {
+              const cat = categories?.find(c => c.id === e.category_id)
+              const isFixed = e.is_fixed !== null && e.is_fixed !== undefined ? e.is_fixed : cat?.type === 'fixed'
+              if (isFixed) fixedTotal += e.amount
+              else variableTotal += e.amount
+            }
+            for (const e of sortedSharedExp) {
+              const myAmt = e.my_share ?? e.total_amount * splitFrac
+              if (isSharedExpenseFixed(e)) fixedTotal += myAmt
+              else variableTotal += myAmt
+            }
+            const total = fixedTotal + variableTotal
+            if (total <= 0) return null
+            const fixedPct = Math.round((fixedTotal / total) * 100)
+            const varPct = 100 - fixedPct
+            return (
+              <div className="bg-card border border-border rounded-xl px-4 py-3 mb-4">
+                <div className="flex items-center gap-3 mb-2">
+                  <Pin size={12} className="text-[var(--accent-orange)] shrink-0" />
+                  <div className="flex-1 flex rounded-md overflow-hidden h-5">
+                    {fixedPct > 0 && (
+                      <div className="flex items-center justify-center text-[10px] font-semibold text-[var(--c-0-10)]"
+                        style={{ width: `${fixedPct}%`, background: 'var(--accent-orange)', minWidth: '32px' }}>
+                        {fixedPct}%
+                      </div>
+                    )}
+                    {varPct > 0 && (
+                      <div className="flex items-center justify-center text-[10px] font-semibold text-[var(--c-0-10)]"
+                        style={{ width: `${varPct}%`, background: 'var(--accent-blue)', minWidth: '32px' }}>
+                        {varPct}%
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex justify-between text-[11px]">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-sm" style={{ background: 'var(--accent-orange)' }} />
+                    <span className="text-muted-foreground">קבועות</span>
+                    <span className="font-semibold">{formatCurrency(fixedTotal)}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-sm" style={{ background: 'var(--accent-blue)' }} />
+                    <span className="text-muted-foreground">משתנות</span>
+                    <span className="font-semibold">{formatCurrency(variableTotal)}</span>
+                  </div>
+                </div>
+              </div>
+            )
+          })()}
+
           {/* ── Personal + Shared side by side ──────────────────────────────── */}
           <div className="grid-2 items-start">
             <PersonalExpenseList
@@ -1010,62 +1064,6 @@ export default function ExpensesPage() {
             />
           </div>{/* close grid-2 */}
 
-          {/* ── Fixed vs Variable Summary ────────────────────────────────── */}
-          {(sortedPersonalExp.length > 0 || sortedSharedExp.length > 0) && (() => {
-            let fixedTotal = 0
-            let variableTotal = 0
-            // Personal expenses
-            for (const e of sortedPersonalExp) {
-              const cat = categories?.find(c => c.id === e.category_id)
-              const isFixed = e.is_fixed !== null && e.is_fixed !== undefined ? e.is_fixed : cat?.type === 'fixed'
-              if (isFixed) fixedTotal += e.amount
-              else variableTotal += e.amount
-            }
-            // Shared expenses (my share)
-            for (const e of sortedSharedExp) {
-              const myAmt = e.my_share ?? e.total_amount * splitFrac
-              if (isSharedExpenseFixed(e)) fixedTotal += myAmt
-              else variableTotal += myAmt
-            }
-            const total = fixedTotal + variableTotal
-            if (total <= 0) return null
-            const fixedPct = Math.round((fixedTotal / total) * 100)
-            const varPct = 100 - fixedPct
-            return (
-              <div className="bg-card border border-border rounded-xl p-5 mt-4">
-                <h2 className="text-[13px] font-semibold mb-3 flex items-center gap-2">
-                  <Pin size={13} className="text-[var(--accent-orange)]" />
-                  חלוקת הוצאות: קבועות לעומת משתנות
-                </h2>
-                <div className="flex rounded-lg overflow-hidden h-8 mb-3">
-                  {fixedPct > 0 && (
-                    <div className="flex items-center justify-center text-[11px] font-semibold text-[var(--c-0-10)]"
-                      style={{ width: `${fixedPct}%`, background: 'var(--accent-orange)', minWidth: '40px' }}>
-                      {fixedPct}%
-                    </div>
-                  )}
-                  {varPct > 0 && (
-                    <div className="flex items-center justify-center text-[11px] font-semibold text-[var(--c-0-10)]"
-                      style={{ width: `${varPct}%`, background: 'var(--accent-blue)', minWidth: '40px' }}>
-                      {varPct}%
-                    </div>
-                  )}
-                </div>
-                <div className="flex justify-between text-[12px]">
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-2.5 h-2.5 rounded-sm" style={{ background: 'var(--accent-orange)' }} />
-                    <span className="text-muted-foreground">קבועות</span>
-                    <span className="font-semibold">{formatCurrency(fixedTotal)}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-2.5 h-2.5 rounded-sm" style={{ background: 'var(--accent-blue)' }} />
-                    <span className="text-muted-foreground">משתנות</span>
-                    <span className="font-semibold">{formatCurrency(variableTotal)}</span>
-                  </div>
-                </div>
-              </div>
-            )
-          })()}
         </div>
       </div>
 

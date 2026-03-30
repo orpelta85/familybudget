@@ -1,9 +1,9 @@
 'use client'
 
-import { User, Users, Inbox } from 'lucide-react'
+import { User, Users, Inbox, Pin } from 'lucide-react'
 import type { BudgetCategory, SharedExpense } from '@/lib/types'
 import type { FamilyMemberExpenses } from '@/lib/queries/useExpenses'
-import { sharedCatLabel } from './SharedExpenseList'
+import { sharedCatLabel, isSharedExpenseFixed } from './SharedExpenseList'
 
 interface FamilyExpensesViewProps {
   familyExpenses: FamilyMemberExpenses[] | undefined
@@ -57,6 +57,63 @@ export function FamilyExpensesView({
           </div>
         )}
       </div>
+
+      {/* ── Fixed vs Variable Bar (Family) ──────────────────────────────── */}
+      {(() => {
+        let fixedTotal = 0
+        let variableTotal = 0
+        // All personal expenses from all members
+        for (const member of (familyExpenses ?? [])) {
+          for (const e of member.expenses) {
+            const cat = e.budget_categories as BudgetCategory | undefined
+            const isFixed = e.is_fixed !== null && e.is_fixed !== undefined ? e.is_fixed : cat?.type === 'fixed'
+            if (isFixed) fixedTotal += e.amount
+            else variableTotal += e.amount
+          }
+        }
+        // Shared expenses (full amount, not split)
+        for (const e of (sharedExp ?? [])) {
+          if (isSharedExpenseFixed(e)) fixedTotal += e.total_amount
+          else variableTotal += e.total_amount
+        }
+        const total = fixedTotal + variableTotal
+        if (total <= 0) return null
+        const fixedPct = Math.round((fixedTotal / total) * 100)
+        const varPct = 100 - fixedPct
+        return (
+          <div className="bg-card border border-border rounded-xl px-4 py-3 mb-5">
+            <div className="flex items-center gap-3 mb-2">
+              <Pin size={12} className="text-[var(--accent-orange)] shrink-0" />
+              <div className="flex-1 flex rounded-md overflow-hidden h-5">
+                {fixedPct > 0 && (
+                  <div className="flex items-center justify-center text-[10px] font-semibold text-[var(--c-0-10)]"
+                    style={{ width: `${fixedPct}%`, background: 'var(--accent-orange)', minWidth: '32px' }}>
+                    {fixedPct}%
+                  </div>
+                )}
+                {varPct > 0 && (
+                  <div className="flex items-center justify-center text-[10px] font-semibold text-[var(--c-0-10)]"
+                    style={{ width: `${varPct}%`, background: 'var(--accent-blue)', minWidth: '32px' }}>
+                    {varPct}%
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="flex justify-between text-[11px]">
+              <div className="flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-sm" style={{ background: 'var(--accent-orange)' }} />
+                <span className="text-muted-foreground">קבועות (לשנינו)</span>
+                <span className="font-semibold">{fmt(fixedTotal)}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-sm" style={{ background: 'var(--accent-blue)' }} />
+                <span className="text-muted-foreground">משתנות (לשנינו)</span>
+                <span className="font-semibold">{fmt(variableTotal)}</span>
+              </div>
+            </div>
+          </div>
+        )
+      })()}
 
       {/* ── Shared + Personal side by side ──────────────────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
