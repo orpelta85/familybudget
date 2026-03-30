@@ -131,6 +131,7 @@ export default function BudgetPage() {
 
   // Flat lists
   const allNonFixed = useMemo(() => (categories ?? []).filter(c => c.type !== 'fixed'), [categories])
+  const savingRef = useRef(false)
 
   if (loading || !user) return <TableSkeleton rows={8} />
 
@@ -227,7 +228,6 @@ export default function BudgetPage() {
   const totalPersonalVariableActual = variableCats.filter(c => (c.budget_scope ?? 'both') !== 'shared' && (c.monthly_target > 0 || catSpendPersonal(c) > 0)).reduce((s, c) => s + catSpendPersonal(c), 0)
   const remaining = totalIncome - totalAllFull
 
-  const savingRef = useRef(false)
   async function saveTarget(catId: number) {
     if (savingRef.current) return
     savingRef.current = true
