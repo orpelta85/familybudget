@@ -104,6 +104,18 @@ export function useUpdateCategoryTarget() {
   })
 }
 
+export function useUpdateCategoryType() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, type, user_id }: { id: number; type: 'fixed' | 'variable'; user_id: string }) => {
+      const sb = createClient()
+      const { error } = await sb.from('budget_categories').update({ type }).eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: ['budget_categories', vars.user_id] }),
+  })
+}
+
 export function useAddExpense() {
   const qc = useQueryClient()
   return useMutation({

@@ -2,7 +2,7 @@
 
 import { useUser } from '@/lib/queries/useUser'
 import { usePeriods, useCurrentPeriod } from '@/lib/queries/usePeriods'
-import { usePersonalExpenses, useBudgetCategories, useAddExpense, useDeleteExpense, useUpdateExpense, useToggleExpenseFixed, useAddBudgetCategory, useCategoryRules, useSaveCategoryRule, useUpdateRuleConfidence, useGlobalMappings, findMatchingRule, useFamilyPersonalExpenses } from '@/lib/queries/useExpenses'
+import { usePersonalExpenses, useBudgetCategories, useAddExpense, useDeleteExpense, useUpdateExpense, useToggleExpenseFixed, useUpdateCategoryType, useAddBudgetCategory, useCategoryRules, useSaveCategoryRule, useUpdateRuleConfidence, useGlobalMappings, findMatchingRule, useFamilyPersonalExpenses } from '@/lib/queries/useExpenses'
 import { categorizeTransaction } from '@/lib/categorization-engine'
 import type { MatchResult } from '@/lib/categorization-engine'
 import { useSharedExpenses, useUpsertSharedExpense, useDeleteSharedExpense, useUpdateSharedExpense } from '@/lib/queries/useShared'
@@ -73,6 +73,7 @@ export default function ExpensesPage() {
   const deleteShared  = useDeleteSharedExpense()
   const updateExpense = useUpdateExpense()
   const toggleFixed   = useToggleExpenseFixed()
+  const updateCatType = useUpdateCategoryType()
   const updateShared  = useUpdateSharedExpense()
   const addSinkingTx  = useAddSinkingTransaction()
   const addFund       = useAddSinkingFund()
@@ -713,6 +714,14 @@ export default function ExpensesPage() {
     toast.success(newValue ? 'סומן כהוצאה קבועה' : 'סומן כהוצאה משתנה')
   }
 
+  function handleToggleCategoryType(categoryId: number, currentType: string) {
+    if (!user) return
+    const newType = currentType === 'fixed' ? 'variable' : 'fixed' as 'fixed' | 'variable'
+    const catName = categories?.find(c => c.id === categoryId)?.name ?? ''
+    updateCatType.mutate({ id: categoryId, type: newType, user_id: user.id })
+    toast.success(`${catName}: ${newType === 'fixed' ? 'קבוע' : 'משתנה'}`)
+  }
+
   // ── Lock helpers ────────────────────────────────────────────────────────────
   function toggleLockPersonal(exp: { id: number; category_id: number; amount: number; description?: string }) {
     const catName = (categories ?? []).find(c => c.id === exp.category_id)?.name ?? ''
@@ -974,6 +983,7 @@ export default function ExpensesPage() {
               onDelete={handleDeletePersonal}
               onToggleLock={toggleLockPersonal}
               onToggleFixed={handleToggleFixed}
+              onToggleCategoryType={handleToggleCategoryType}
             />
 
             <SharedExpenseList

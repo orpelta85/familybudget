@@ -15,6 +15,7 @@ interface PersonalExpenseListProps {
   onDelete: (exp: { id: number; category_id: number; amount: number; description?: string }) => void
   onToggleLock: (exp: { id: number; category_id: number; amount: number; description?: string }) => void
   onToggleFixed?: (exp: PersonalExpense) => void
+  onToggleCategoryType?: (categoryId: number, currentType: string) => void
 }
 
 interface CategoryGroup {
@@ -26,7 +27,7 @@ interface CategoryGroup {
 
 export function PersonalExpenseList({
   expenses, categories, totalPersonal,
-  isLocked, getItemId, onEdit, onDelete, onToggleLock, onToggleFixed,
+  isLocked, getItemId, onEdit, onDelete, onToggleLock, onToggleFixed, onToggleCategoryType,
 }: PersonalExpenseListProps) {
   const [editingPersonal, setEditingPersonal] = useState<{ id: number; categoryId: string; amount: string; description: string } | null>(null)
   const [openCategories, setOpenCategories] = useState<Set<number>>(new Set())
@@ -169,6 +170,27 @@ export function PersonalExpenseList({
                     />
                     <span className="text-[13px] font-semibold">{group.categoryName}</span>
                     <span className="text-[11px] text-muted-foreground">({group.expenses.length})</span>
+                    {onToggleCategoryType && (() => {
+                      const cat = categories?.find(c => c.id === group.categoryId)
+                      const isFixed = cat?.type === 'fixed'
+                      return (
+                        <span
+                          role="button"
+                          tabIndex={0}
+                          onClick={(e) => { e.stopPropagation(); onToggleCategoryType(group.categoryId, cat?.type ?? 'variable') }}
+                          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.stopPropagation(); e.preventDefault(); onToggleCategoryType(group.categoryId, cat?.type ?? 'variable') } }}
+                          title={isFixed ? 'קטגוריה קבועה — לחץ לשנות למשתנה' : 'קטגוריה משתנה — לחץ לשנות לקבועה'}
+                          className={`inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded font-medium cursor-pointer ${
+                            isFixed
+                              ? 'bg-[var(--c-orange-0-20)] text-[var(--accent-orange)]'
+                              : 'bg-[var(--c-blue-0-18)] text-[var(--c-blue-0-62)]'
+                          }`}
+                        >
+                          {isFixed ? <Pin size={9} /> : <PinOff size={9} />}
+                          {isFixed ? 'קבוע' : 'משתנה'}
+                        </span>
+                      )
+                    })()}
                   </div>
                   <span className="text-[13px] font-bold text-primary">{formatCurrency(group.total)}</span>
                 </button>
