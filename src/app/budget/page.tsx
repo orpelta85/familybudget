@@ -206,10 +206,17 @@ export default function BudgetPage() {
   const familyTotalIncome = (familyIncome ?? []).reduce((s, m) => s + m.total, 0)
   const personalIncome = income ? (income.salary + income.bonus + income.other) : 0
   const totalIncome = isFamily && familyTotalIncome > 0 ? familyTotalIncome : personalIncome
+  // Raw totals from actual data (consistent with expenses page)
+  const totalPersonalAll = allFamilyExpensesList.reduce((s, e) => s + e.amount, 0)
+  const totalSharedFull = (sharedExpenses ?? []).reduce((s, e) => s + Number(e.total_amount), 0)
+  const totalSharedMy = (sharedExpenses ?? []).reduce((s, e) => s + Number(e.my_share ?? e.total_amount * splitFrac), 0)
+  const totalAllFull = totalPersonalAll + totalSharedFull
+  const totalAllMy = totalPersonalAll + totalSharedMy
+
+  // Category-level totals (for budget tracking sections)
   const totalFixedMy = fixedCats.reduce((s, c) => s + catSpend(c), 0) + unmatchedSharedTotal
   const totalFixedFull = fixedCats.reduce((s, c) => s + catSpendPersonal(c) + catSpendSharedFull(c), 0) + unmatchedSharedFull
   const totalVariableMy = allNonFixed.reduce((s, c) => s + catSpend(c), 0)
-  const totalVariableFull = allNonFixed.reduce((s, c) => s + catSpendPersonal(c) + catSpendSharedFull(c), 0)
   const totalVariableBudget = allNonFixed.reduce((s, c) => s + c.monthly_target, 0)
   const totalSharedVariableActual = (sharedExpenses ?? []).reduce((s, se) => {
     const catName = resolveSharedToFixed(se.category, se.notes)
@@ -218,7 +225,7 @@ export default function BudgetPage() {
     return cat ? s + Number(se.my_share ?? se.total_amount * splitFrac) : s
   }, 0) + unmatchedSharedTotal
   const totalPersonalVariableActual = variableCats.reduce((s, c) => s + catSpendPersonal(c), 0)
-  const remaining = totalIncome - totalFixedMy - totalVariableMy
+  const remaining = totalIncome - totalAllMy
 
   async function saveTarget(catId: number) {
     const val = Number(editValue)
@@ -354,31 +361,26 @@ export default function BudgetPage() {
           <div className="text-[22px] font-bold text-primary leading-none">{formatCurrency(totalIncome)}</div>
         </div>
         <div className="bg-card border border-border rounded-xl p-4">
-          <div className="text-[11px] text-muted-foreground mb-1 uppercase tracking-wide">סה״כ קבועות</div>
-          <div className="text-[22px] font-bold text-[var(--accent-blue)] leading-none">{formatCurrency(totalFixedFull)}</div>
-          {totalFixedFull !== totalFixedMy && (
-            <div className="text-[10px] text-muted-foreground mt-1">החלק שלי: {formatCurrency(totalFixedMy)}</div>
-          )}
+          <div className="text-[11px] text-muted-foreground mb-1 uppercase tracking-wide">הוצאות משותפות</div>
+          <div className="text-[22px] font-bold text-[var(--accent-shared)] leading-none">{formatCurrency(totalSharedFull)}</div>
+          <div className="text-[10px] text-muted-foreground mt-1">החלק שלי: {formatCurrency(totalSharedMy)}</div>
         </div>
         <div className="bg-card border border-border rounded-xl p-4">
-          <div className="text-[11px] text-muted-foreground mb-1 uppercase tracking-wide">סה״כ משתנות בפועל</div>
-          <div className="text-[22px] font-bold text-[var(--accent-orange)] leading-none">{formatCurrency(totalVariableFull)}</div>
-          {totalVariableBudget > 0 && (
-            <div className="text-[11px] text-muted-foreground mt-1">
-              מתוך {formatCurrency(totalVariableBudget)} תקציב
-            </div>
-          )}
-          {totalVariableFull !== totalVariableMy && (
-            <div className="text-[10px] text-muted-foreground">החלק שלי: {formatCurrency(totalVariableMy)}</div>
-          )}
+          <div className="text-[11px] text-muted-foreground mb-1 uppercase tracking-wide">הוצאות אישיות (כולם)</div>
+          <div className="text-[22px] font-bold text-[var(--accent-orange)] leading-none">{formatCurrency(totalPersonalAll)}</div>
         </div>
         <div className="bg-card border border-border rounded-xl p-4">
-          <div className="text-[11px] text-muted-foreground mb-1 uppercase tracking-wide flex items-center gap-1">נשאר פנוי <InfoTooltip body="הכנסה פחות הוצאות (קבועות + משתנות). זה מה שנשאר לחיסכון" /></div>
+          <div className="text-[11px] text-muted-foreground mb-1 uppercase tracking-wide">סה״כ משפחתי</div>
+          <div className="text-[22px] font-bold text-[var(--text-heading)] leading-none">{formatCurrency(totalAllFull)}</div>
+          <div className="text-[10px] text-muted-foreground mt-1">החלק שלי: {formatCurrency(totalAllMy)}</div>
+        </div>
+        <div className="bg-card border border-border rounded-xl p-4">
+          <div className="text-[11px] text-muted-foreground mb-1 uppercase tracking-wide flex items-center gap-1">נשאר פנוי <InfoTooltip body="הכנסה שלך פחות החלק שלך בהוצאות" /></div>
           <div className={`text-[22px] font-bold leading-none ${remaining >= 0 ? 'text-[var(--accent-green)]' : 'text-[var(--accent-red)]'}`}>
             {formatCurrency(remaining)}
           </div>
           {totalIncome > 0 && (
-            <div className="text-[11px] text-muted-foreground mt-1.5">
+            <div className="text-[11px] text-muted-foreground mt-1">
               {Math.round((remaining / totalIncome) * 100)}% מההכנסה
             </div>
           )}
