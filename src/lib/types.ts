@@ -21,6 +21,8 @@ export interface Period {
   is_closed: boolean
 }
 
+export type BudgetScope = 'personal' | 'shared' | 'both'
+
 export interface BudgetCategory {
   id: number
   user_id: string
@@ -31,6 +33,7 @@ export interface BudgetCategory {
   color?: string
   sort_order?: number
   year: number
+  budget_scope?: BudgetScope
 }
 
 export interface Income {

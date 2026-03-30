@@ -1,7 +1,7 @@
 'use client'
 
 import { useUser } from '@/lib/queries/useUser'
-import { useBudgetCategories, usePersonalExpenses, useFamilyPersonalExpenses, useUpdateCategoryTarget, useDeleteCategory, useInactiveCategories, useReactivateCategory, useAddBudgetCategory } from '@/lib/queries/useExpenses'
+import { useBudgetCategories, usePersonalExpenses, useFamilyPersonalExpenses, useUpdateCategoryTarget, useDeleteCategory, useUpdateCategoryScope, useInactiveCategories, useReactivateCategory, useAddBudgetCategory } from '@/lib/queries/useExpenses'
 import { useSharedExpenses } from '@/lib/queries/useShared'
 import { usePeriods, useCurrentPeriod } from '@/lib/queries/usePeriods'
 import { useIncome, useFamilyIncome } from '@/lib/queries/useIncome'
@@ -85,11 +85,13 @@ export default function BudgetPage() {
   const { data: inactiveCategories } = useInactiveCategories(user?.id)
   const reactivateCategory = useReactivateCategory()
   const addCategory = useAddBudgetCategory()
+  const updateScope = useUpdateCategoryScope()
   const confirm = useConfirmDialog()
   const [showAddModal, setShowAddModal] = useState(false)
   const [newCatName, setNewCatName] = useState('')
   const [newCatType, setNewCatType] = useState<'fixed' | 'variable'>('variable')
   const [newCatTarget, setNewCatTarget] = useState('')
+  const [newCatScope, setNewCatScope] = useState<'personal' | 'shared' | 'both'>('both')
   const { selectedPeriodId, setSelectedPeriodId } = useSharedPeriod()
   const { familyId, members } = useFamilyContext()
   const { viewMode } = useFamilyView()
@@ -222,6 +224,7 @@ export default function BudgetPage() {
         monthly_target: Number(newCatTarget) || 0,
         sort_order: maxSort + 1,
         year: new Date().getFullYear(),
+        budget_scope: newCatScope,
       })
       toast.success(`${newCatName.trim()} נוסף לתקציב`)
       setNewCatName('')
@@ -236,6 +239,23 @@ export default function BudgetPage() {
       await reactivateCategory.mutateAsync({ id: catId, user_id: user.id })
       toast.success(`${catName} חזר לתקציב`)
     } catch (e) { console.error('Reactivate:', e); toast.error('שגיאה') }
+  }
+
+  async function handleDeleteFromSection(catId: number, catName: string, section: 'personal' | 'shared') {
+    if (!(await confirm({ message: `להסיר את "${catName}" מתקציב ${section === 'shared' ? 'משותף' : 'אישי'}?` }))) return
+    const cat = (categories ?? []).find(c => c.id === catId)
+    const scope = cat?.budget_scope ?? 'both'
+    try {
+      if (scope === 'both') {
+        // Remove from one section by switching scope to the other
+        const newScope = section === 'personal' ? 'shared' : 'personal'
+        await updateScope.mutateAsync({ id: catId, budget_scope: newScope, user_id: user!.id })
+      } else {
+        // Already in one section only — hide completely
+        await deleteCategory.mutateAsync({ id: catId, user_id: user!.id })
+      }
+      toast.success(`${catName} הוסר מתקציב ${section === 'shared' ? 'משותף' : 'אישי'}`)
+    } catch (e) { console.error('Delete category:', e); toast.error('שגיאה') }
   }
 
   async function handleDeleteCategory(catId: number, catName: string) {
@@ -355,7 +375,7 @@ export default function BudgetPage() {
             {/* ── Shared Variable Budget ─────────────────────────────────────── */}
             {(() => {
               // Shared variable categories: categories that have shared spending mapped to them
-              const sharedVarCats = variableCats.filter(c => catSpendShared(c) > 0)
+              const sharedVarCats = variableCats.filter(c => (c.budget_scope ?? 'both') !== 'personal' && (catSpendShared(c) > 0 || (c.budget_scope ?? 'both') === 'shared'))
               const sharedVarBudget = sharedVarCats.reduce((s, c) => s + c.monthly_target, 0)
               const sharedVarActual = sharedVarCats.reduce((s, c) => s + catSpendShared(c), 0) + unmatchedSharedTotal
               if (sharedVarCats.length === 0 && unmatchedSharedTotal === 0) return null
@@ -406,7 +426,7 @@ export default function BudgetPage() {
                               {catRemaining >= 0 ? `נותר ${formatCurrency(catRemaining)}` : `חריגה ${formatCurrency(Math.abs(catRemaining))}`}
                             </span>
                           )}
-                          <button type="button" onClick={() => handleDeleteCategory(cat.id, cat.name)} className="p-0.5 rounded hover:bg-[var(--c-red-0-18)] transition-colors text-[var(--c-0-35)] hover:text-[var(--accent-red)] opacity-0 group-hover:opacity-100" title="הסר מהתקציב"><X size={12} /></button>
+                          <button type="button" onClick={() => handleDeleteFromSection(cat.id, cat.name, 'shared')} className="p-0.5 rounded hover:bg-[var(--c-red-0-18)] transition-colors text-[var(--c-0-35)] hover:text-[var(--accent-red)] opacity-0 group-hover:opacity-100" title="הסר מתקציב משותף"><X size={12} /></button>
                         </div>
                       )
                     })}
@@ -444,9 +464,11 @@ export default function BudgetPage() {
               ) : (
                 <div>
                   {groupedNonFixed.map((group, gi) => {
+                    const personalCats = group.cats.filter(c => (c.budget_scope ?? 'both') !== 'shared')
+                    if (personalCats.length === 0) return null
                     const section = TYPE_SECTION_LABELS[group.type]
-                    const sectionSpent = group.cats.reduce((s, c) => s + catSpendPersonal(c), 0)
-                    const sectionBudget = group.cats.reduce((s, c) => s + c.monthly_target, 0)
+                    const sectionSpent = personalCats.reduce((s, c) => s + catSpendPersonal(c), 0)
+                    const sectionBudget = personalCats.reduce((s, c) => s + c.monthly_target, 0)
                     return (
                       <div key={group.type} className={gi > 0 ? 'mt-4 pt-3 border-t border-[var(--bg-hover)]' : ''}>
                         <div className="flex justify-between items-center mb-2">
@@ -461,7 +483,7 @@ export default function BudgetPage() {
                           </div>
                         </div>
                         <div>
-                          {group.cats.map(cat => {
+                          {personalCats.map(cat => {
                             const spent = catSpendPersonal(cat)
                             const pct = cat.monthly_target > 0 ? spent / cat.monthly_target : 0
                             const isEditing = editingId === cat.id
@@ -490,7 +512,7 @@ export default function BudgetPage() {
                                     {catRemaining >= 0 ? `נותר ${formatCurrency(catRemaining)}` : `חריגה ${formatCurrency(Math.abs(catRemaining))}`}
                                   </span>
                                 )}
-                                <button type="button" onClick={() => handleDeleteCategory(cat.id, cat.name)} className="p-0.5 rounded hover:bg-[var(--c-red-0-18)] transition-colors text-[var(--c-0-35)] hover:text-[var(--accent-red)] opacity-0 group-hover:opacity-100" title="הסר מהתקציב"><X size={12} /></button>
+                                <button type="button" onClick={() => handleDeleteFromSection(cat.id, cat.name, 'personal')} className="p-0.5 rounded hover:bg-[var(--c-red-0-18)] transition-colors text-[var(--c-0-35)] hover:text-[var(--accent-red)] opacity-0 group-hover:opacity-100" title="הסר מתקציב אישי"><X size={12} /></button>
                               </div>
                             )
                           })}
@@ -652,6 +674,25 @@ export default function BudgetPage() {
                       onClick={() => setNewCatType(val)}
                       className={`flex-1 rounded-lg py-[9px] text-[12px] cursor-pointer ${
                         newCatType === val
+                          ? 'bg-[var(--c-blue-0-24)] border border-[var(--c-blue-0-40)] text-[var(--c-blue-0-75)] font-semibold'
+                          : 'bg-[var(--c-0-20)] border border-[var(--border-light)] text-muted-foreground font-normal'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">שייך ל</label>
+                <div className="flex gap-2">
+                  {([['personal', 'אישי'], ['shared', 'משותף'], ['both', 'שניהם']] as const).map(([val, label]) => (
+                    <button
+                      key={val}
+                      type="button"
+                      onClick={() => setNewCatScope(val)}
+                      className={`flex-1 rounded-lg py-[9px] text-[12px] cursor-pointer ${
+                        newCatScope === val
                           ? 'bg-[var(--c-blue-0-24)] border border-[var(--c-blue-0-40)] text-[var(--c-blue-0-75)] font-semibold'
                           : 'bg-[var(--c-0-20)] border border-[var(--border-light)] text-muted-foreground font-normal'
                       }`}

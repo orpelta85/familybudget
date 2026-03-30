@@ -137,6 +137,18 @@ export function useReactivateCategory() {
   })
 }
 
+export function useUpdateCategoryScope() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, budget_scope, user_id }: { id: number; budget_scope: string; user_id: string }) => {
+      const sb = createClient()
+      const { error } = await sb.from('budget_categories').update({ budget_scope }).eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: ['budget_categories', vars.user_id] }),
+  })
+}
+
 export function useDeleteCategory() {
   const qc = useQueryClient()
   return useMutation({
@@ -198,7 +210,7 @@ export function useDeleteAllPeriodExpenses() {
 export function useAddBudgetCategory() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (cat: { user_id: string; name: string; type: string; monthly_target: number; sort_order: number; year?: number }) => {
+    mutationFn: async (cat: { user_id: string; name: string; type: string; monthly_target: number; sort_order: number; year?: number; budget_scope?: string }) => {
       const sb = createClient()
       const { data, error } = await sb
         .from('budget_categories')
