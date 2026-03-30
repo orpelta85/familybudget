@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { formatCurrency } from '@/lib/utils'
 import { Plus, User, Users, Target, Lock } from 'lucide-react'
-import type { BudgetCategory, SinkingFund } from '@/lib/types'
+import type { BudgetCategory, SinkingFund, SinkingFundTransaction } from '@/lib/types'
 
 export type ExpType = 'personal' | 'shared'
 
@@ -30,6 +30,8 @@ export { SHARED_CATEGORIES }
 interface ExpenseFormProps {
   categories: BudgetCategory[] | undefined
   funds: SinkingFund[] | undefined
+  allSinkingTx?: SinkingFundTransaction[]
+  selectedPeriodId?: number
   splitFrac: number
   isPending: boolean
   onAdd: (data: {
@@ -45,7 +47,7 @@ interface ExpenseFormProps {
   }) => void
 }
 
-export function ExpenseForm({ categories, funds, splitFrac, isPending, onAdd }: ExpenseFormProps) {
+export function ExpenseForm({ categories, funds, allSinkingTx, selectedPeriodId, splitFrac, isPending, onAdd }: ExpenseFormProps) {
   const [expType, setExpType] = useState<ExpType>('personal')
   const [categoryId, setCategoryId] = useState('')
   const [customCat, setCustomCat] = useState('')
@@ -168,17 +170,30 @@ export function ExpenseForm({ categories, funds, splitFrac, isPending, onAdd }: 
             <Target size={12} /> קרנות שנתיות — הפרשה חודשית
             <span className="font-normal text-muted-foreground mr-1">(נעולות — לשינוי עבור לעמוד הקרנות)</span>
           </div>
-          {(funds ?? []).map(fund => (
-            <div key={fund.id} className="flex justify-between items-center py-2.5 border-b border-[var(--c-0-20)] opacity-85">
-              <div className="flex items-center gap-2">
-                <Lock size={11} className="text-[var(--accent-teal)] shrink-0" />
-                <span className="text-[13px] text-[var(--text-heading)]">{fund.name}</span>
+          {(funds ?? []).map(fund => {
+            const share = fund.is_shared ? splitFrac : 1
+            const withdrawn = (allSinkingTx ?? [])
+              .filter(t => t.fund_id === fund.id && t.period_id === selectedPeriodId && t.amount < 0)
+              .reduce((s, t) => s + Math.abs(t.amount) * share, 0)
+            return (
+              <div key={fund.id} className="flex justify-between items-center py-2.5 border-b border-[var(--c-0-20)] opacity-85">
+                <div className="flex items-center gap-2">
+                  <Lock size={11} className="text-[var(--accent-teal)] shrink-0" />
+                  <span className="text-[13px] text-[var(--text-heading)]">{fund.name}</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  {withdrawn > 0 && (
+                    <span className="text-[11px] text-[var(--accent-orange)]">
+                      -{formatCurrency(withdrawn)}
+                    </span>
+                  )}
+                  <span className="text-[13px] font-semibold text-[var(--accent-teal)]">
+                    {formatCurrency(fund.monthly_allocation)}
+                  </span>
+                </div>
               </div>
-              <span className="text-[13px] font-semibold text-[var(--accent-teal)]">
-                {formatCurrency(fund.monthly_allocation)}
-              </span>
-            </div>
-          ))}
+            )
+          })}
           <div className="flex justify-between pt-2 mt-1 text-xs text-[var(--c-0-60)]">
             <span>סה&quot;כ קרנות חודשי</span>
             <span className="font-semibold text-[var(--accent-teal)]">{formatCurrency(totalSinking)}</span>
