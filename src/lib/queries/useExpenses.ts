@@ -99,8 +99,20 @@ export function useUpdateCategoryTarget() {
       const sb = createClient()
       const { error } = await sb.from('budget_categories').update({ monthly_target }).eq('id', id)
       if (error) throw error
+      return { id, monthly_target, user_id }
     },
-    onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: ['budget_categories', vars.user_id] }),
+    onMutate: async ({ id, monthly_target, user_id }) => {
+      await qc.cancelQueries({ queryKey: ['budget_categories', user_id] })
+      const prev = qc.getQueryData<BudgetCategory[]>(['budget_categories', user_id])
+      qc.setQueryData<BudgetCategory[]>(['budget_categories', user_id], old =>
+        (old ?? []).map(c => c.id === id ? { ...c, monthly_target } : c)
+      )
+      return { prev, user_id }
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.prev) qc.setQueryData(['budget_categories', ctx.user_id], ctx.prev)
+    },
+    onSettled: (_, _err, vars) => qc.invalidateQueries({ queryKey: ['budget_categories', vars.user_id] }),
   })
 }
 
