@@ -206,9 +206,10 @@ export default function BudgetPage() {
   const familyTotalIncome = (familyIncome ?? []).reduce((s, m) => s + m.total, 0)
   const personalIncome = income ? (income.salary + income.bonus + income.other) : 0
   const totalIncome = isFamily && familyTotalIncome > 0 ? familyTotalIncome : personalIncome
-  const totalFixedActual = fixedCats.reduce((s, c) => s + catSpend(c), 0) + unmatchedSharedTotal
+  const totalFixedMy = fixedCats.reduce((s, c) => s + catSpend(c), 0) + unmatchedSharedTotal
   const totalFixedFull = fixedCats.reduce((s, c) => s + catSpendPersonal(c) + catSpendSharedFull(c), 0) + unmatchedSharedFull
-  const totalVariableActual = allNonFixed.reduce((s, c) => s + catSpend(c), 0)
+  const totalVariableMy = allNonFixed.reduce((s, c) => s + catSpend(c), 0)
+  const totalVariableFull = allNonFixed.reduce((s, c) => s + catSpendPersonal(c) + catSpendSharedFull(c), 0)
   const totalVariableBudget = allNonFixed.reduce((s, c) => s + c.monthly_target, 0)
   const totalSharedVariableActual = (sharedExpenses ?? []).reduce((s, se) => {
     const catName = resolveSharedToFixed(se.category, se.notes)
@@ -217,7 +218,7 @@ export default function BudgetPage() {
     return cat ? s + Number(se.my_share ?? se.total_amount * splitFrac) : s
   }, 0) + unmatchedSharedTotal
   const totalPersonalVariableActual = variableCats.reduce((s, c) => s + catSpendPersonal(c), 0)
-  const remaining = totalIncome - totalFixedActual - totalVariableActual
+  const remaining = totalIncome - totalFixedMy - totalVariableMy
 
   async function saveTarget(catId: number) {
     const val = Number(editValue)
@@ -292,8 +293,8 @@ export default function BudgetPage() {
         ['תקציב משפחתי', selectedPeriod?.label ?? ''],
         [],
         ['הכנסה נטו', totalIncome],
-        ['סה"כ קבועות', totalFixedActual],
-        ['סה"כ משתנות', totalVariableActual],
+        ['סה"כ קבועות', totalFixedMy],
+        ['סה"כ משתנות', totalVariableMy],
         ['תקציב משתנות', totalVariableBudget],
         ['נשאר פנוי', remaining],
         [],
@@ -354,15 +355,21 @@ export default function BudgetPage() {
         </div>
         <div className="bg-card border border-border rounded-xl p-4">
           <div className="text-[11px] text-muted-foreground mb-1 uppercase tracking-wide">סה״כ קבועות</div>
-          <div className="text-[22px] font-bold text-[var(--accent-blue)] leading-none">{formatCurrency(totalFixedActual)}</div>
+          <div className="text-[22px] font-bold text-[var(--accent-blue)] leading-none">{formatCurrency(totalFixedFull)}</div>
+          {totalFixedFull !== totalFixedMy && (
+            <div className="text-[10px] text-muted-foreground mt-1">החלק שלי: {formatCurrency(totalFixedMy)}</div>
+          )}
         </div>
         <div className="bg-card border border-border rounded-xl p-4">
           <div className="text-[11px] text-muted-foreground mb-1 uppercase tracking-wide">סה״כ משתנות בפועל</div>
-          <div className="text-[22px] font-bold text-[var(--accent-orange)] leading-none">{formatCurrency(totalVariableActual)}</div>
+          <div className="text-[22px] font-bold text-[var(--accent-orange)] leading-none">{formatCurrency(totalVariableFull)}</div>
           {totalVariableBudget > 0 && (
-            <div className="text-[11px] text-muted-foreground mt-1.5">
+            <div className="text-[11px] text-muted-foreground mt-1">
               מתוך {formatCurrency(totalVariableBudget)} תקציב
             </div>
+          )}
+          {totalVariableFull !== totalVariableMy && (
+            <div className="text-[10px] text-muted-foreground">החלק שלי: {formatCurrency(totalVariableMy)}</div>
           )}
         </div>
         <div className="bg-card border border-border rounded-xl p-4">
@@ -563,8 +570,8 @@ export default function BudgetPage() {
                     <span className="text-[12px] text-muted-foreground">{fixedPaidCount}/{fixedCats.length} שולמו</span>
                     <span className="text-[13px] font-bold text-[var(--text-heading)]">{formatCurrency(totalFixedFull)}</span>
                   </div>
-                  {totalFixedFull !== totalFixedActual && (
-                    <div className="text-[10px] text-muted-foreground text-left">החלק שלי: {formatCurrency(totalFixedActual)}</div>
+                  {totalFixedFull !== totalFixedMy && (
+                    <div className="text-[10px] text-muted-foreground text-left">החלק שלי: {formatCurrency(totalFixedMy)}</div>
                   )}
                 </div>
               </div>
@@ -645,7 +652,7 @@ export default function BudgetPage() {
                         {fixedPaidCount}/{fixedCats.length} שולמו
                       </span>
                       <span className="text-[14px] font-bold text-[var(--accent-blue)]">
-                        {formatCurrency(totalFixedActual)}
+                        {formatCurrency(totalFixedMy)}
                       </span>
                     </div>
                   )}
