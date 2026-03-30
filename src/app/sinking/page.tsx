@@ -85,15 +85,16 @@ export default function SinkingPage() {
     } catch (e) { console.error('Reset sinking funds:', e); toast.error('שגיאה באיפוס') }
   }
 
-  function getFundBalance(fundId: number) {
+  function getFundSpent(fundId: number) {
+    const txns = allTxns?.filter(t => t.fund_id === fundId) ?? []
+    return txns.filter(t => t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0)
+  }
+
+  function getFundRemaining(fundId: number) {
     const fund = (funds ?? []).find(f => f.id === fundId)
     if (!fund) return 0
-    const txns = allTxns?.filter(t => t.fund_id === fundId) ?? []
-    const currentMonth = new Date().getMonth() + 1
-    const accumulated = fund.monthly_allocation * currentMonth
-    const deposits = txns.filter(t => t.amount > 0).reduce((s, t) => s + t.amount, 0)
-    const withdrawals = txns.filter(t => t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0)
-    return accumulated + deposits - withdrawals
+    const totalAnnual = fund.yearly_target || fund.monthly_allocation * 12
+    return totalAnnual - getFundSpent(fundId)
   }
 
   async function handleDeleteFund(id: number, name: string) {
@@ -182,6 +183,8 @@ export default function SinkingPage() {
   }
 
   const totalMonthly = (funds ?? []).reduce((s, f) => s + f.monthly_allocation, 0)
+  const totalAnnualAll = (funds ?? []).reduce((s, f) => s + (f.yearly_target || f.monthly_allocation * 12), 0)
+  const totalSpentAll = (funds ?? []).reduce((s, f) => s + getFundSpent(f.id), 0)
 
   return (
     <div>
@@ -205,10 +208,16 @@ export default function SinkingPage() {
         </div>
       </div>
       <div className="text-[var(--text-secondary)] text-[13px] mb-5">
-        סה&quot;כ הפרשה חודשית <InfoTooltip body="הסכום שמפרישים כל חודש לקרן. נקבע לפי היעד השנתי חלקי 12" />: <span className="inline-block font-semibold text-[var(--accent-teal)]">{formatCurrency(totalMonthly)}</span>
+        סה&quot;כ הפרשה חודשית: <span className="inline-block font-semibold text-[var(--accent-teal)]">{formatCurrency(totalMonthly)}</span>
         <span className="mr-2 text-[var(--text-secondary)] text-xs">
-          (יעד שנתי: {formatCurrency((funds ?? []).reduce((s, f) => s + (f.yearly_target || f.monthly_allocation * 12), 0))})
+          (יעד שנתי: {formatCurrency(totalAnnualAll)})
         </span>
+        {totalSpentAll > 0 && (
+          <span className="mr-2 text-xs">
+            הוצאת: <span className="text-[var(--accent-orange)] font-semibold">{formatCurrency(totalSpentAll)}</span>
+            {' '}נשאר: <span className="text-[var(--accent-green)] font-semibold">{formatCurrency(totalAnnualAll - totalSpentAll)}</span>
+          </span>
+        )}
       </div>
 
       {/* Fund list */}
@@ -224,8 +233,9 @@ export default function SinkingPage() {
             {funds.map(fund => {
               const shared = fund.is_shared
               const totalAnnual = fund.yearly_target || fund.monthly_allocation * 12
-              const balance = getFundBalance(fund.id)
-              const pct = totalAnnual > 0 ? Math.min((balance / totalAnnual) * 100, 100) : 0
+              const spent = getFundSpent(fund.id)
+              const remaining = totalAnnual - spent
+              const spentPct = totalAnnual > 0 ? Math.min((spent / totalAnnual) * 100, 100) : 0
               const isExpanded = expandedFunds.has(fund.id)
               const fundTxns = (allTxns ?? []).filter(t => t.fund_id === fund.id).sort((a, b) => (b.transaction_date ?? '').localeCompare(a.transaction_date ?? ''))
 
@@ -245,11 +255,9 @@ export default function SinkingPage() {
                           {shared ? 'משותף' : 'אישי'}
                         </span>
                       </div>
-                      {balance > 0 && (
-                        <div className="mt-1.5 h-1 rounded-sm bg-[var(--bg-hover)] overflow-hidden max-w-[240px]">
-                          <div className="h-full rounded-sm bg-[var(--accent-teal)] transition-[width] duration-[400ms] ease-out" style={{ width: `${Math.max(0, pct)}%` }} />
-                        </div>
-                      )}
+                      <div className="mt-1.5 h-1 rounded-sm bg-[var(--bg-hover)] overflow-hidden max-w-[240px]">
+                        <div className="h-full rounded-sm bg-[var(--accent-orange)] transition-[width] duration-[400ms] ease-out" style={{ width: `${Math.max(0, spentPct)}%` }} />
+                      </div>
                     </div>
 
                     {/* Actions */}
@@ -286,26 +294,11 @@ export default function SinkingPage() {
                     </div>
                   </div>
 
-                  {/* Balance row */}
-                  {(() => {
-                    const balanceColor = balance > 0 ? 'text-[var(--accent-green)]' : balance < 0 ? 'text-[var(--accent-red)]' : 'text-[var(--text-secondary)]'
-                    const currentMonth = new Date().getMonth() + 1
-                    const expectedPct = (currentMonth / 12) * 100
-                    const trackStatus = pct >= expectedPct
-                      ? { text: 'בזמן', color: 'text-[var(--accent-green)]' }
-                      : pct >= expectedPct * 0.8
-                        ? { text: 'קצת מאחור', color: 'text-[var(--accent-orange)]' }
-                        : { text: 'מאחור', color: 'text-[var(--accent-red)]' }
-                    return (
-                      <div className="mt-2 text-xs text-[var(--text-secondary)] flex justify-between pt-2 border-t border-[var(--c-0-20)]">
-                        <span>צבור <InfoTooltip body="הצבירה האוטומטית מההפרשה החודשית + הפקדות ידניות - הוצאות" />: <span className={`${balanceColor} font-semibold inline-block`}>{formatCurrency(balance)}</span>{balance < 0 && <span className="text-[11px] text-[var(--text-secondary)] mr-1">(הוצאה גדולה מהצבירה)</span>}</span>
-                        <span className="flex items-center gap-2">
-                          {pct.toFixed(0)}% מהיעד השנתי
-                          <span className={`text-[11px] font-medium ${trackStatus.color}`}>{trackStatus.text}</span>
-                        </span>
-                      </div>
-                    )
-                  })()}
+                  {/* Spent / Remaining row */}
+                  <div className="mt-2 text-xs text-[var(--text-secondary)] flex justify-between pt-2 border-t border-[var(--c-0-20)]">
+                    <span>הוצאת: <span className="text-[var(--accent-orange)] font-semibold">{formatCurrency(spent)}</span> מתוך {formatCurrency(totalAnnual)}</span>
+                    <span>נשאר: <span className={`font-semibold ${remaining >= 0 ? 'text-[var(--accent-green)]' : 'text-[var(--accent-red)]'}`}>{formatCurrency(remaining)}</span></span>
+                  </div>
 
                   {/* Transaction history toggle */}
                   {fundTxns.length > 0 && (

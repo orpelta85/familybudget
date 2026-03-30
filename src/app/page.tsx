@@ -223,21 +223,20 @@ export default function Dashboard() {
     name: TYPE_LABELS[type] ?? type, value, color: TYPE_COLORS[type] ?? 'var(--text-secondary)',
   }))
 
-  // ── Sinking balance ───────────────────────────────────────────────────────
-  function getFundBalance(fundId: number) {
-    const fund = (funds ?? []).find(f => f.id === fundId)
+  // ── Sinking funds — spent vs annual target ─────────────────────────────────
+  function getFundSpent(fundId: number) {
     const txns = allSinkingTx?.filter(t => t.fund_id === fundId) ?? []
-    const txBalance = txns.reduce((s, t) => s + t.amount, 0)
-    if (txns.length > 0 && txBalance !== 0) return txBalance
-    if (fund && fund.monthly_allocation > 0 && fund.created_at) {
-      const created = new Date(fund.created_at)
-      const now = new Date()
-      const monthsElapsed = (now.getFullYear() - created.getFullYear()) * 12 + (now.getMonth() - created.getMonth())
-      return fund.monthly_allocation * Math.max(1, monthsElapsed)
-    }
-    return txBalance
+    return txns.filter(t => t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0)
   }
-  const totalFundBalance = (funds ?? []).reduce((s, f) => s + getFundBalance(f.id), 0)
+  function getFundRemaining(fundId: number) {
+    const fund = (funds ?? []).find(f => f.id === fundId)
+    if (!fund) return 0
+    const totalAnnual = fund.yearly_target || fund.monthly_allocation * 12
+    return totalAnnual - getFundSpent(fundId)
+  }
+  const totalFundAnnual = (funds ?? []).reduce((s, f) => s + (f.yearly_target || f.monthly_allocation * 12), 0)
+  const totalFundSpent = (funds ?? []).reduce((s, f) => s + getFundSpent(f.id), 0)
+  const totalFundRemaining = totalFundAnnual - totalFundSpent
 
   // ── Goals ────────────────────────────────────────────────────────────────
   function getGoalSaved(goalId: number) {
@@ -260,7 +259,7 @@ export default function Dashboard() {
   const nwAssets = netWorthEntries.filter(e => e.type === 'asset').reduce((s, e) => s + e.amount, 0)
   const nwLiabilities = netWorthEntries.filter(e => e.type === 'liability').reduce((s, e) => s + e.amount, 0)
   const netWorthFromEntries = nwAssets - nwLiabilities
-  const netWorth = netWorthFromEntries > 0 ? netWorthFromEntries : (totalFundBalance + totalGoalsSaved + pensionTotal)
+  const netWorth = netWorthFromEntries > 0 ? netWorthFromEntries : (totalFundRemaining + totalGoalsSaved + pensionTotal)
 
   // ── Financial Health Score (0-100) ─────────────────────────────────────────
   const healthScores: number[] = []
@@ -270,7 +269,7 @@ export default function Dashboard() {
     const underBudget = catsWithTarget.filter(c => (spendByCat[c.id] ?? 0) <= c.monthly_target).length
     healthScores.push((underBudget / catsWithTarget.length) * 20)
   }
-  const emergencyMonths = totalExpenses > 0 ? totalFundBalance / totalExpenses : 0
+  const emergencyMonths = totalExpenses > 0 ? totalFundRemaining / totalExpenses : 0
   healthScores.push(totalExpenses > 0 ? Math.min(emergencyMonths / 3 * 20, 20) : 0)
   healthScores.push(pensionTotal > 0 ? 15 : 0)
   healthScores.push(totalGoalsTarget > 0 ? Math.min((totalGoalsSaved / totalGoalsTarget) * 15, 15) : 0)
@@ -696,30 +695,31 @@ export default function Dashboard() {
               <PiggyBank size={14} className="text-accent-teal" /> קרנות צבירה
               <InfoTooltip body="כסף שמופרש מדי חודש ליעדים ספציפיים — חירום, חופשה, רכב" />
             </h2>
-            <div className="text-[13px] font-bold text-accent-teal">
-              {formatCurrency(totalFundBalance)}
+            <div className="text-[13px]">
+              <span className="font-bold text-accent-orange">{formatCurrency(totalFundSpent)}</span>
+              <span className="text-text-secondary mx-1">/</span>
+              <span className="text-text-secondary">{formatCurrency(totalFundAnnual)}</span>
             </div>
           </div>
           {!(funds?.length)
             ? <div className="text-text-secondary text-[13px]">אין קרנות</div>
             : (funds ?? []).map(fund => {
-              const balance = getFundBalance(fund.id)
+              const spent = getFundSpent(fund.id)
               const annualTarget = fund.yearly_target || fund.monthly_allocation * 12
-              const pct = annualTarget > 0 ? Math.min((balance / annualTarget) * 100, 100) : 0
+              const remaining = annualTarget - spent
+              const pct = annualTarget > 0 ? Math.min((spent / annualTarget) * 100, 100) : 0
               return (
                 <div key={fund.id} className="mb-[11px]">
                   <div className="flex justify-between text-xs mb-[3px]">
                     <span className="text-text-heading">{fund.name}</span>
-                    <span className={`font-semibold ${balance >= 0 ? 'text-accent-teal' : 'text-accent-red'}`}>
-                      {formatCurrency(balance)}
+                    <span className="text-text-secondary">
+                      <span className="text-accent-orange font-semibold">{formatCurrency(spent)}</span> / {formatCurrency(annualTarget)}
                     </span>
                   </div>
-                  {balance < 0 && (
-                    <div className="text-[10px] text-text-secondary mb-0.5">(הוצאה גדולה מהצבירה)</div>
-                  )}
                   <div className="bar-track">
-                    <div className="bar-fill bg-accent-teal" style={{ width: `${Math.max(0, pct)}%` }} />
+                    <div className="bar-fill bg-accent-orange" style={{ width: `${Math.max(0, pct)}%` }} />
                   </div>
+                  <div className="text-[10px] text-text-secondary mt-0.5">נשאר: <span className={`font-medium ${remaining >= 0 ? 'text-accent-green' : 'text-accent-red'}`}>{formatCurrency(remaining)}</span></div>
                 </div>
               )
             })
@@ -867,19 +867,14 @@ function FamilyDashboard({
   const familyNet = summary.total_income - totalExpenses
   const familySavingsPct = summary.total_income > 0 ? Math.round((familyNet / summary.total_income) * 100) : 0
 
-  // Sinking fund balance calc
+  // Sinking fund spent/remaining
   function getFundBal(fundId: number) {
-    const txns = (allSinkingTx ?? []).filter(t => t.fund_id === fundId)
-    const txBalance = txns.reduce((s, t) => s + t.amount, 0)
-    if (txns.length > 0 && txBalance !== 0) return txBalance
     const fund = (funds ?? []).find(f => f.id === fundId)
-    if (fund && fund.monthly_allocation > 0 && fund.created_at) {
-      const created = new Date(fund.created_at)
-      const now = new Date()
-      const months = (now.getFullYear() - created.getFullYear()) * 12 + (now.getMonth() - created.getMonth())
-      return fund.monthly_allocation * Math.max(1, months)
-    }
-    return txBalance
+    if (!fund) return 0
+    const txns = (allSinkingTx ?? []).filter(t => t.fund_id === fundId)
+    const spent = txns.filter(t => t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0)
+    const annualTarget = fund.yearly_target || fund.monthly_allocation * 12
+    return annualTarget - spent
   }
   const totalFundBal = (funds ?? []).reduce((s, f) => s + getFundBal(f.id), 0)
 
@@ -1061,25 +1056,26 @@ function FamilyDashboard({
               <PiggyBank size={14} className="text-accent-teal" /> קרנות צבירה
             </div>
             <div className="text-[13px] font-bold text-accent-teal">
-              {formatCurrency(totalFundBal)}
+              נשאר: {formatCurrency(totalFundBal)}
             </div>
           </div>
           {!(funds?.length)
             ? <div className="text-text-secondary text-[13px]">אין קרנות</div>
             : (funds ?? []).map(fund => {
-              const balance = getFundBal(fund.id)
+              const remaining = getFundBal(fund.id)
               const annualTarget = fund.yearly_target || fund.monthly_allocation * 12
-              const pct = annualTarget > 0 ? Math.min((balance / annualTarget) * 100, 100) : 0
+              const spent = annualTarget - remaining
+              const pct = annualTarget > 0 ? Math.min((spent / annualTarget) * 100, 100) : 0
               return (
                 <div key={fund.id} className="mb-[11px]">
                   <div className="flex justify-between text-xs mb-[3px]">
                     <span className="text-text-heading">{fund.name}</span>
-                    <span className={`font-semibold ${balance >= 0 ? 'text-accent-teal' : 'text-accent-red'}`}>
-                      {formatCurrency(balance)}
+                    <span className="text-text-secondary">
+                      <span className="text-accent-orange font-semibold">{formatCurrency(spent)}</span> / {formatCurrency(annualTarget)}
                     </span>
                   </div>
                   <div className="bar-track">
-                    <div className="bar-fill bg-accent-teal" style={{ width: `${Math.max(0, pct)}%` }} />
+                    <div className="bar-fill bg-accent-orange" style={{ width: `${Math.max(0, pct)}%` }} />
                   </div>
                 </div>
               )
