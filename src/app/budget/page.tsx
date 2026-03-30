@@ -11,7 +11,7 @@ import { useSharedPeriod } from '@/lib/context/PeriodContext'
 import { useFamilyContext } from '@/lib/context/FamilyContext'
 import { useFamilyView } from '@/contexts/FamilyViewContext'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState, useMemo, useRef } from 'react'
 import { BarChart3, Inbox, Check, Clock, Users, Download, Pencil, ChevronDown, X, Plus, RotateCcw } from 'lucide-react'
 import { toast } from 'sonner'
 import { useConfirmDialog } from '@/components/ui/ConfirmDialog'
@@ -227,14 +227,18 @@ export default function BudgetPage() {
   const totalPersonalVariableActual = variableCats.reduce((s, c) => s + catSpendPersonal(c), 0)
   const remaining = totalIncome - totalAllFull
 
+  const savingRef = useRef(false)
   async function saveTarget(catId: number) {
+    if (savingRef.current) return
+    savingRef.current = true
     const val = Number(editValue)
-    if (!val || val < 0) { setEditingId(null); return }
+    if (val < 0 || isNaN(val)) { setEditingId(null); savingRef.current = false; return }
     try {
       await updateTarget.mutateAsync({ id: catId, monthly_target: val, user_id: user!.id })
       toast.success('יעד עודכן')
-      setEditingId(null)
     } catch (e) { console.error('Update budget target:', e); toast.error('שגיאה בעדכון היעד') }
+    setEditingId(null)
+    savingRef.current = false
   }
 
   async function handleAddCategory() {
@@ -439,7 +443,7 @@ export default function BudgetPage() {
                             <span className="font-semibold" style={{ color: barColor }}>{formatCurrency(spentFull)}</span>
                             <span className="text-muted-foreground">/</span>
                             {isEditing ? (
-                              <input autoFocus type="number" value={editValue} onChange={e => setEditValue(e.target.value)} onBlur={() => saveTarget(cat.id)} onKeyDown={e => { if (e.key === 'Enter') saveTarget(cat.id); if (e.key === 'Escape') setEditingId(null) }} className="w-24 bg-[var(--c-0-20)] border border-[var(--c-blue-0-45)] rounded-md px-2 py-0.5 text-inherit text-[12px] text-left" title="סכום יעד" />
+                              <input autoFocus type="number" value={editValue} onChange={e => setEditValue(e.target.value)} onBlur={() => { if (!savingRef.current) saveTarget(cat.id) }} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); saveTarget(cat.id) } if (e.key === 'Escape') setEditingId(null) }} className="w-24 bg-[var(--c-0-20)] border border-[var(--c-blue-0-45)] rounded-md px-2 py-0.5 text-inherit text-[12px] text-left" title="סכום יעד" />
                             ) : (
                               <>
                                 <span className="text-muted-foreground">{formatCurrency(cat.monthly_target)}</span>
@@ -525,7 +529,7 @@ export default function BudgetPage() {
                                   <span className="font-semibold" style={{ color: barColor }}>{formatCurrency(spent)}</span>
                                   <span className="text-muted-foreground">/</span>
                                   {isEditing ? (
-                                    <input autoFocus type="number" value={editValue} onChange={e => setEditValue(e.target.value)} onBlur={() => saveTarget(cat.id)} onKeyDown={e => { if (e.key === 'Enter') saveTarget(cat.id); if (e.key === 'Escape') setEditingId(null) }} className="w-24 bg-[var(--c-0-20)] border border-[var(--c-blue-0-45)] rounded-md px-2 py-0.5 text-inherit text-[12px] text-left" title="סכום יעד" />
+                                    <input autoFocus type="number" value={editValue} onChange={e => setEditValue(e.target.value)} onBlur={() => { if (!savingRef.current) saveTarget(cat.id) }} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); saveTarget(cat.id) } if (e.key === 'Escape') setEditingId(null) }} className="w-24 bg-[var(--c-0-20)] border border-[var(--c-blue-0-45)] rounded-md px-2 py-0.5 text-inherit text-[12px] text-left" title="סכום יעד" />
                                   ) : (
                                     <>
                                       <span className="text-muted-foreground">{formatCurrency(cat.monthly_target)}</span>
