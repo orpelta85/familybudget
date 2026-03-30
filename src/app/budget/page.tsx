@@ -173,14 +173,32 @@ export default function BudgetPage() {
   function catSpend(cat: BudgetCategory): number {
     return (spendByCat[cat.id] ?? 0) + (sharedSpendByCatName[cat.name] ?? 0)
   }
+  function catSpendPersonal(cat: BudgetCategory): number {
+    return spendByCat[cat.id] ?? 0
+  }
+  function catSpendShared(cat: BudgetCategory): number {
+    return sharedSpendByCatName[cat.name] ?? 0
+  }
 
-  // Totals — use family income only in family view
+  // Categories with shared spending (for shared budget section)
+  const catsWithSharedSpend = variableCats.filter(c => catSpendShared(c) > 0 || sharedSpendByCatName[c.name])
+  // Categories with personal spending (for personal budget section)
+  const catsPersonalOnly = variableCats
+
+  // Totals
   const familyTotalIncome = (familyIncome ?? []).reduce((s, m) => s + m.total, 0)
   const personalIncome = income ? (income.salary + income.bonus + income.other) : 0
   const totalIncome = isFamily && familyTotalIncome > 0 ? familyTotalIncome : personalIncome
   const totalFixedActual = fixedCats.reduce((s, c) => s + catSpend(c), 0) + unmatchedSharedTotal
   const totalVariableActual = allNonFixed.reduce((s, c) => s + catSpend(c), 0)
   const totalVariableBudget = allNonFixed.reduce((s, c) => s + c.monthly_target, 0)
+  const totalSharedVariableActual = (sharedExpenses ?? []).reduce((s, se) => {
+    const catName = resolveSharedToFixed(se.category, se.notes)
+    if (!catName) return s
+    const cat = (categories ?? []).find(c => c.name === catName && c.type === 'variable')
+    return cat ? s + Number(se.my_share ?? se.total_amount * splitFrac) : s
+  }, 0) + unmatchedSharedTotal
+  const totalPersonalVariableActual = variableCats.reduce((s, c) => s + catSpendPersonal(c), 0)
   const remaining = totalIncome - totalFixedActual - totalVariableActual
 
   async function saveTarget(catId: number) {
@@ -334,18 +352,90 @@ export default function BudgetPage() {
         )
         : (
           <div className="space-y-5">
+            {/* ── Shared Variable Budget ─────────────────────────────────────── */}
+            {(() => {
+              // Shared variable categories: categories that have shared spending mapped to them
+              const sharedVarCats = variableCats.filter(c => catSpendShared(c) > 0)
+              const sharedVarBudget = sharedVarCats.reduce((s, c) => s + c.monthly_target, 0)
+              const sharedVarActual = sharedVarCats.reduce((s, c) => s + catSpendShared(c), 0) + unmatchedSharedTotal
+              if (sharedVarCats.length === 0 && unmatchedSharedTotal === 0) return null
+              return (
+                <div className="card-transition bg-card border border-border rounded-xl p-5">
+                  <div className="flex justify-between items-center mb-4 pb-3 border-b border-[var(--bg-hover)]">
+                    <div className="flex items-center gap-2">
+                      <Users size={14} className="text-[var(--accent-shared)]" />
+                      <span className="font-bold text-sm">תקציב משותף</span>
+                      <InfoTooltip body="הוצאות משתנות משותפות — מכולת, אוכל בחוץ, חיות מחמד וכו'. הסכום מציג את החלק שלך" />
+                      <span className="text-[11px] text-muted-foreground bg-secondary rounded px-1.5 py-px">{sharedVarCats.length}</span>
+                    </div>
+                    <div className="text-[13px]">
+                      <span className="font-bold text-[var(--accent-shared)]">{formatCurrency(sharedVarActual)}</span>
+                      {sharedVarBudget > 0 && <>
+                        <span className="text-muted-foreground mx-1">/</span>
+                        <span className="text-muted-foreground">{formatCurrency(sharedVarBudget)}</span>
+                      </>}
+                    </div>
+                  </div>
+                  <div>
+                    {sharedVarCats.map(cat => {
+                      const spent = catSpendShared(cat)
+                      const pct = cat.monthly_target > 0 ? spent / cat.monthly_target : 0
+                      const isEditing = editingId === cat.id
+                      const barColor = getBarColor(pct)
+                      const catRemaining = cat.monthly_target - spent
+                      return (
+                        <div key={cat.id} className="group flex items-center gap-3 py-2.5 border-b border-[var(--c-0-18)] last:border-b-0 hover:bg-[var(--c-0-18)] rounded px-2 transition-colors">
+                          <span className="font-medium text-[13px] text-[var(--c-0-82)] min-w-[100px] shrink-0">{cat.name}</span>
+                          <div className="flex-1 h-[5px] rounded-full bg-[var(--c-0-20)] overflow-hidden min-w-[60px]">
+                            <div className="h-full rounded-full transition-[width] duration-400 ease-out" style={{ width: `${Math.min(pct * 100, 100)}%`, background: barColor }} />
+                          </div>
+                          <div className="flex items-center gap-1 text-[12px] shrink-0">
+                            <span className="font-semibold" style={{ color: barColor }}>{formatCurrency(spent)}</span>
+                            <span className="text-muted-foreground">/</span>
+                            {isEditing ? (
+                              <input autoFocus type="number" value={editValue} onChange={e => setEditValue(e.target.value)} onBlur={() => saveTarget(cat.id)} onKeyDown={e => { if (e.key === 'Enter') saveTarget(cat.id); if (e.key === 'Escape') setEditingId(null) }} className="w-24 bg-[var(--c-0-20)] border border-[var(--c-blue-0-45)] rounded-md px-2 py-0.5 text-inherit text-[12px] text-left" title="סכום יעד" />
+                            ) : (
+                              <>
+                                <span className="text-muted-foreground">{formatCurrency(cat.monthly_target)}</span>
+                                <button type="button" onClick={() => { setEditingId(cat.id); setEditValue(String(cat.monthly_target)) }} className="p-0.5 rounded hover:bg-[var(--c-0-25)] transition-colors text-muted-foreground hover:text-[var(--text-body)]" title="ערוך תקציב"><Pencil size={12} /></button>
+                              </>
+                            )}
+                          </div>
+                          {cat.monthly_target > 0 && (
+                            <span className={`text-[11px] font-medium shrink-0 min-w-[75px] text-left ${catRemaining >= 0 ? 'text-[var(--accent-green)]' : 'text-[var(--accent-red)]'}`}>
+                              {catRemaining >= 0 ? `נותר ${formatCurrency(catRemaining)}` : `חריגה ${formatCurrency(Math.abs(catRemaining))}`}
+                            </span>
+                          )}
+                          <button type="button" onClick={() => handleDeleteCategory(cat.id, cat.name)} className="p-0.5 rounded hover:bg-[var(--c-red-0-18)] transition-colors text-[var(--c-0-35)] hover:text-[var(--accent-red)] opacity-0 group-hover:opacity-100" title="הסר מהתקציב"><X size={12} /></button>
+                        </div>
+                      )
+                    })}
+                    {unmatchedSharedTotal > 0 && (
+                      <div className="flex items-center gap-3 py-2.5 px-2 text-[12px] text-muted-foreground">
+                        <span className="min-w-[100px]">שונות (לא ממופה)</span>
+                        <span className="font-semibold">{formatCurrency(unmatchedSharedTotal)}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )
+            })()}
+
+            {/* ── Personal Variable Budget ────────────────────────────────────── */}
             <div className="card-transition bg-card border border-border rounded-xl p-5">
               <div className="flex justify-between items-center mb-4 pb-3 border-b border-[var(--bg-hover)]">
                 <div className="flex items-center gap-2">
                   <div className="w-2 h-2 rounded-full" style={{ background: 'var(--accent-orange)' }} />
-                  <span className="font-bold text-sm">הוצאות לא-קבועות</span>
-                  <InfoTooltip body="הוצאות משתנות, קרנות צבירה וחיסכון — מקובצות לפי סוג" />
+                  <span className="font-bold text-sm">תקציב אישי</span>
+                  <InfoTooltip body="הוצאות משתנות אישיות, קרנות צבירה וחיסכון" />
                   <span className="text-[11px] text-muted-foreground bg-secondary rounded px-1.5 py-px">{allNonFixed.length}</span>
                 </div>
                 <div className="text-[13px]">
-                  <span className="font-bold text-[var(--text-heading)]">{formatCurrency(totalVariableActual)}</span>
-                  <span className="text-muted-foreground mx-1">/</span>
-                  <span className="text-muted-foreground">{formatCurrency(totalVariableBudget)}</span>
+                  <span className="font-bold text-[var(--text-heading)]">{formatCurrency(totalPersonalVariableActual)}</span>
+                  {totalVariableBudget > 0 && <>
+                    <span className="text-muted-foreground mx-1">/</span>
+                    <span className="text-muted-foreground">{formatCurrency(totalVariableBudget)}</span>
+                  </>}
                 </div>
               </div>
 
@@ -355,7 +445,7 @@ export default function BudgetPage() {
                 <div>
                   {groupedNonFixed.map((group, gi) => {
                     const section = TYPE_SECTION_LABELS[group.type]
-                    const sectionSpent = group.cats.reduce((s, c) => s + catSpend(c), 0)
+                    const sectionSpent = group.cats.reduce((s, c) => s + catSpendPersonal(c), 0)
                     const sectionBudget = group.cats.reduce((s, c) => s + c.monthly_target, 0)
                     return (
                       <div key={group.type} className={gi > 0 ? 'mt-4 pt-3 border-t border-[var(--bg-hover)]' : ''}>
@@ -372,13 +462,11 @@ export default function BudgetPage() {
                         </div>
                         <div>
                           {group.cats.map(cat => {
-                            const spent = catSpend(cat)
+                            const spent = catSpendPersonal(cat)
                             const pct = cat.monthly_target > 0 ? spent / cat.monthly_target : 0
-                            const pctDisplay = Math.round(pct * 100)
                             const isEditing = editingId === cat.id
                             const barColor = getBarColor(pct)
                             const catRemaining = cat.monthly_target - spent
-
                             return (
                               <div key={cat.id} className="group flex items-center gap-3 py-2.5 border-b border-[var(--c-0-18)] last:border-b-0 hover:bg-[var(--c-0-18)] rounded px-2 transition-colors">
                                 <span className="font-medium text-[13px] text-[var(--c-0-82)] min-w-[100px] shrink-0">{cat.name}</span>
@@ -389,27 +477,11 @@ export default function BudgetPage() {
                                   <span className="font-semibold" style={{ color: barColor }}>{formatCurrency(spent)}</span>
                                   <span className="text-muted-foreground">/</span>
                                   {isEditing ? (
-                                    <input
-                                      autoFocus
-                                      type="number"
-                                      value={editValue}
-                                      onChange={e => setEditValue(e.target.value)}
-                                      onBlur={() => saveTarget(cat.id)}
-                                      onKeyDown={e => { if (e.key === 'Enter') saveTarget(cat.id); if (e.key === 'Escape') setEditingId(null) }}
-                                      className="w-24 bg-[var(--c-0-20)] border border-[var(--c-blue-0-45)] rounded-md px-2 py-0.5 text-inherit text-[12px] text-left"
-                                      title="סכום יעד"
-                                    />
+                                    <input autoFocus type="number" value={editValue} onChange={e => setEditValue(e.target.value)} onBlur={() => saveTarget(cat.id)} onKeyDown={e => { if (e.key === 'Enter') saveTarget(cat.id); if (e.key === 'Escape') setEditingId(null) }} className="w-24 bg-[var(--c-0-20)] border border-[var(--c-blue-0-45)] rounded-md px-2 py-0.5 text-inherit text-[12px] text-left" title="סכום יעד" />
                                   ) : (
                                     <>
                                       <span className="text-muted-foreground">{formatCurrency(cat.monthly_target)}</span>
-                                      <button
-                                        type="button"
-                                        onClick={() => { setEditingId(cat.id); setEditValue(String(cat.monthly_target)) }}
-                                        className="p-0.5 rounded hover:bg-[var(--c-0-25)] transition-colors text-muted-foreground hover:text-[var(--text-body)]"
-                                        title="ערוך תקציב"
-                                      >
-                                        <Pencil size={12} />
-                                      </button>
+                                      <button type="button" onClick={() => { setEditingId(cat.id); setEditValue(String(cat.monthly_target)) }} className="p-0.5 rounded hover:bg-[var(--c-0-25)] transition-colors text-muted-foreground hover:text-[var(--text-body)]" title="ערוך תקציב"><Pencil size={12} /></button>
                                     </>
                                   )}
                                 </div>
@@ -418,14 +490,7 @@ export default function BudgetPage() {
                                     {catRemaining >= 0 ? `נותר ${formatCurrency(catRemaining)}` : `חריגה ${formatCurrency(Math.abs(catRemaining))}`}
                                   </span>
                                 )}
-                                <button
-                                  type="button"
-                                  onClick={() => handleDeleteCategory(cat.id, cat.name)}
-                                  className="p-0.5 rounded hover:bg-[var(--c-red-0-18)] transition-colors text-[var(--c-0-35)] hover:text-[var(--accent-red)] opacity-0 group-hover:opacity-100"
-                                  title="הסר מהתקציב"
-                                >
-                                  <X size={12} />
-                                </button>
+                                <button type="button" onClick={() => handleDeleteCategory(cat.id, cat.name)} className="p-0.5 rounded hover:bg-[var(--c-red-0-18)] transition-colors text-[var(--c-0-35)] hover:text-[var(--accent-red)] opacity-0 group-hover:opacity-100" title="הסר מהתקציב"><X size={12} /></button>
                               </div>
                             )
                           })}
@@ -433,19 +498,6 @@ export default function BudgetPage() {
                       </div>
                     )
                   })}
-                </div>
-              )}
-
-              {allNonFixed.length > 0 && (
-                <div className="flex justify-between items-center mt-3 pt-3 border-t border-[var(--bg-hover)]">
-                  <span className="text-[12px] text-muted-foreground">
-                    {totalVariableBudget > 0 ? `${Math.round((totalVariableActual / totalVariableBudget) * 100)}% מהתקציב` : ''}
-                  </span>
-                  <div className="text-[14px]">
-                    <span className="font-bold text-[var(--text-heading)]">{formatCurrency(totalVariableActual)}</span>
-                    <span className="text-muted-foreground mx-1">/</span>
-                    <span className="text-muted-foreground">{formatCurrency(totalVariableBudget)}</span>
-                  </div>
                 </div>
               )}
             </div>
