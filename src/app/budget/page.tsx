@@ -224,7 +224,7 @@ export default function BudgetPage() {
     const cat = (categories ?? []).find(c => c.name === catName && c.type === 'variable')
     return cat ? s + Number(se.my_share ?? se.total_amount * splitFrac) : s
   }, 0) + unmatchedSharedTotal
-  const totalPersonalVariableActual = variableCats.reduce((s, c) => s + catSpendPersonal(c), 0)
+  const totalPersonalVariableActual = variableCats.filter(c => (c.budget_scope ?? 'both') !== 'shared' && (c.monthly_target > 0 || catSpendPersonal(c) > 0)).reduce((s, c) => s + catSpendPersonal(c), 0)
   const remaining = totalIncome - totalAllFull
 
   const savingRef = useRef(false)
@@ -243,17 +243,30 @@ export default function BudgetPage() {
 
   async function handleAddCategory() {
     if (!user || !newCatName.trim()) return
-    const maxSort = (categories ?? []).reduce((m, c) => Math.max(m, c.sort_order ?? 0), 0)
+    // Check if this is a hidden category to reactivate
+    const existing = (inactiveCategories ?? []).find(c => c.name === newCatName.trim())
     try {
-      await addCategory.mutateAsync({
-        user_id: user.id,
-        name: newCatName.trim(),
-        type: newCatType,
-        monthly_target: Number(newCatTarget) || 0,
-        sort_order: maxSort + 1,
-        year: new Date().getFullYear(),
-        budget_scope: newCatScope,
-      })
+      if (existing) {
+        await reactivateCategory.mutateAsync({ id: existing.id, user_id: user.id })
+        // Update target + scope if changed
+        if (Number(newCatTarget) > 0) {
+          await updateTarget.mutateAsync({ id: existing.id, monthly_target: Number(newCatTarget), user_id: user.id })
+        }
+        if (newCatScope !== 'both') {
+          await updateScope.mutateAsync({ id: existing.id, budget_scope: newCatScope, user_id: user.id })
+        }
+      } else {
+        const maxSort = (categories ?? []).reduce((m, c) => Math.max(m, c.sort_order ?? 0), 0)
+        await addCategory.mutateAsync({
+          user_id: user.id,
+          name: newCatName.trim(),
+          type: newCatType,
+          monthly_target: Number(newCatTarget) || 0,
+          sort_order: maxSort + 1,
+          year: new Date().getFullYear(),
+          budget_scope: newCatScope,
+        })
+      }
       toast.success(`${newCatName.trim()} נוסף לתקציב`)
       setNewCatName('')
       setNewCatTarget('')
@@ -498,7 +511,7 @@ export default function BudgetPage() {
               ) : (
                 <div>
                   {groupedNonFixed.map((group, gi) => {
-                    const personalCats = group.cats.filter(c => (c.budget_scope ?? 'both') !== 'shared')
+                    const personalCats = group.cats.filter(c => (c.budget_scope ?? 'both') !== 'shared' && (c.monthly_target > 0 || catSpendPersonal(c) > 0))
                     if (personalCats.length === 0) return null
                     const section = TYPE_SECTION_LABELS[group.type]
                     const sectionSpent = personalCats.reduce((s, c) => s + catSpendPersonal(c), 0)
@@ -700,18 +713,31 @@ export default function BudgetPage() {
             )}
 
             {/* New category form */}
+            <div className="text-[10px] text-muted-foreground mb-3 bg-[var(--c-0-20)] rounded-lg px-3 py-2">
+              בחר קטגוריה מרשימת ההוצאות הקיימות כדי שהתקציב ימשוך נתונים נכונים
+            </div>
             <div className="flex flex-col gap-3.5">
               <div>
-                <label htmlFor="cat-name" className="text-xs text-[var(--c-0-60)] block mb-[5px]">שם קטגוריה</label>
-                <input
+                <label htmlFor="cat-name" className="text-xs text-[var(--c-0-60)] block mb-[5px]">קטגוריה</label>
+                <select
                   id="cat-name"
-                  type="text"
-                  autoFocus
                   value={newCatName}
-                  onChange={e => setNewCatName(e.target.value)}
-                  placeholder="למשל: ביגוד, חינוך..."
-                  className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-sm"
-                />
+                  onChange={e => {
+                    setNewCatName(e.target.value)
+                    // Auto-set type from existing category
+                    const match = (inactiveCategories ?? []).find(c => c.name === e.target.value)
+                    if (match) setNewCatType(match.type === 'fixed' ? 'fixed' : 'variable')
+                  }}
+                  className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-[9px] text-inherit text-sm cursor-pointer"
+                >
+                  <option value="">בחר קטגוריה...</option>
+                  {(inactiveCategories ?? [])
+                    .sort((a, b) => a.name.localeCompare(b.name))
+                    .map(c => (
+                      <option key={c.id} value={c.name}>{c.name}</option>
+                    ))
+                  }
+                </select>
               </div>
               <div>
                 <label className="text-xs text-[var(--c-0-60)] block mb-[5px]">סוג</label>
