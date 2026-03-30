@@ -729,8 +729,16 @@ export default function ExpensesPage() {
     if (!user || !selectedPeriodId) return
     const label = exp.notes || sharedCatLabel(exp.category)
     try {
-      // Find or use default personal category
-      const matchCat = categories?.find(c => c.name === label) ?? categories?.find(c => c.name === 'שונות') ?? categories?.[0]
+      // Map shared category enum → personal category name
+      const SHARED_TO_PERSONAL: Record<string, string> = {
+        groceries: 'מכולת', eating_out: 'אוכל בחוץ', entertainment: 'בילויים ופנאי',
+        shopping: 'בגדים וקניות', pets: 'חיות מחמד', health: 'בריאות ורפואה',
+        insurance: 'ביטוחים', rent: 'שכירות', subscriptions: 'מנויים',
+        vacation: 'חופשה', travel: 'טיולים', car_loan: 'הלוואת רכב',
+        property_tax: 'ארנונה', clothing: 'בגדים וקניות', leisure: 'בילויים ופנאי',
+      }
+      const targetName = SHARED_TO_PERSONAL[exp.category] ?? 'שונות'
+      const matchCat = categories?.find(c => c.name === targetName) ?? categories?.find(c => c.name === 'שונות') ?? categories?.[0]
       if (!matchCat) { toast.error('אין קטגוריות אישיות'); return }
       await addExpense.mutateAsync({
         period_id: selectedPeriodId,
