@@ -63,6 +63,7 @@ export interface SharedExpense {
   total_amount: number
   my_share: number
   notes?: string
+  is_fixed?: boolean | null
 }
 
 export interface SinkingFund {

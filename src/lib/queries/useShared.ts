@@ -107,6 +107,19 @@ export function useUpdateSharedExpense() {
   })
 }
 
+export function useToggleSharedFixed() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id, period_id, is_fixed }: { id: number; period_id: number; is_fixed: boolean | null }) => {
+      const sb = createClient()
+      const { error } = await sb.from('shared_expenses').update({ is_fixed }).eq('id', id)
+      if (error) throw error
+      return period_id
+    },
+    onSuccess: (period_id) => qc.invalidateQueries({ queryKey: ['shared_expenses', period_id] }),
+  })
+}
+
 export function useUpsertSharedExpense() {
   const qc = useQueryClient()
   return useMutation({

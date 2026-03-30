@@ -5,7 +5,7 @@ import { usePeriods, useCurrentPeriod } from '@/lib/queries/usePeriods'
 import { usePersonalExpenses, useBudgetCategories, useAddExpense, useDeleteExpense, useUpdateExpense, useToggleExpenseFixed, useUpdateCategoryType, useAddBudgetCategory, useCategoryRules, useSaveCategoryRule, useUpdateRuleConfidence, useGlobalMappings, findMatchingRule, useFamilyPersonalExpenses } from '@/lib/queries/useExpenses'
 import { categorizeTransaction } from '@/lib/categorization-engine'
 import type { MatchResult } from '@/lib/categorization-engine'
-import { useSharedExpenses, useUpsertSharedExpense, useDeleteSharedExpense, useUpdateSharedExpense } from '@/lib/queries/useShared'
+import { useSharedExpenses, useUpsertSharedExpense, useDeleteSharedExpense, useUpdateSharedExpense, useToggleSharedFixed } from '@/lib/queries/useShared'
 import { useSinkingFunds, useAllSinkingTransactions, useAddSinkingTransaction, useAddSinkingFund } from '@/lib/queries/useSinking'
 import { useSplitFraction } from '@/lib/queries/useProfile'
 import { formatCurrency } from '@/lib/utils'
@@ -21,9 +21,9 @@ import { useEffect, useState, useRef, useMemo } from 'react'
 import { useFamilyView } from '@/contexts/FamilyViewContext'
 import { PeriodSelector } from '@/components/layout/PeriodSelector'
 import { toast } from 'sonner'
-import { Receipt, Upload, Download, FileSpreadsheet, Trash2, X } from 'lucide-react'
+import { Receipt, Upload, Download, FileSpreadsheet, Trash2, X, Pin } from 'lucide-react'
 import type { RawExpenseRow } from '@/lib/excel-import'
-import type { BudgetCategory, SharedCategory, PersonalExpense } from '@/lib/types'
+import type { BudgetCategory, SharedCategory, PersonalExpense, SharedExpense } from '@/lib/types'
 import { useConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { PageInfo } from '@/components/ui/PageInfo'
 import { PAGE_TIPS } from '@/lib/page-tips'
@@ -33,7 +33,7 @@ import { TableSkeleton } from '@/components/ui/Skeleton'
 import { ExpenseForm, type ExpType } from '@/components/expenses/ExpenseForm'
 import { ExpenseStats } from '@/components/expenses/ExpenseStats'
 import { PersonalExpenseList } from '@/components/expenses/PersonalExpenseList'
-import { SharedExpenseList, sharedCatLabel } from '@/components/expenses/SharedExpenseList'
+import { SharedExpenseList, sharedCatLabel, isSharedExpenseFixed } from '@/components/expenses/SharedExpenseList'
 import { ExcelImportModal, type ImportRow } from '@/components/expenses/ExcelImportModal'
 import { FamilyExpensesView } from '@/components/expenses/FamilyExpensesView'
 
@@ -74,6 +74,7 @@ export default function ExpensesPage() {
   const updateExpense = useUpdateExpense()
   const toggleFixed   = useToggleExpenseFixed()
   const updateCatType = useUpdateCategoryType()
+  const toggleSharedFixed = useToggleSharedFixed()
   const updateShared  = useUpdateSharedExpense()
   const addSinkingTx  = useAddSinkingTransaction()
   const addFund       = useAddSinkingFund()
@@ -714,6 +715,17 @@ export default function ExpensesPage() {
     toast.success(newValue ? 'סומן כהוצאה קבועה' : 'סומן כהוצאה משתנה')
   }
 
+  function handleToggleSharedFixed(exp: SharedExpense) {
+    if (!selectedPeriod) return
+    const currentlyFixed = isSharedExpenseFixed(exp)
+    toggleSharedFixed.mutate({
+      id: exp.id,
+      period_id: selectedPeriod.id,
+      is_fixed: !currentlyFixed,
+    })
+    toast.success(!currentlyFixed ? 'סומן כהוצאה קבועה' : 'סומן כהוצאה משתנה')
+  }
+
   function handleToggleCategoryType(categoryId: number, currentType: string) {
     if (!user) return
     const newType = currentType === 'fixed' ? 'variable' : 'fixed' as 'fixed' | 'variable'
@@ -994,8 +1006,66 @@ export default function ExpensesPage() {
               onEdit={handleEditShared}
               onDelete={handleDeleteShared}
               onToggleLock={toggleLockShared}
+              onToggleFixed={handleToggleSharedFixed}
             />
           </div>{/* close grid-2 */}
+
+          {/* ── Fixed vs Variable Summary ────────────────────────────────── */}
+          {(sortedPersonalExp.length > 0 || sortedSharedExp.length > 0) && (() => {
+            let fixedTotal = 0
+            let variableTotal = 0
+            // Personal expenses
+            for (const e of sortedPersonalExp) {
+              const cat = categories?.find(c => c.id === e.category_id)
+              const isFixed = e.is_fixed !== null && e.is_fixed !== undefined ? e.is_fixed : cat?.type === 'fixed'
+              if (isFixed) fixedTotal += e.amount
+              else variableTotal += e.amount
+            }
+            // Shared expenses (my share)
+            for (const e of sortedSharedExp) {
+              const myAmt = e.my_share ?? e.total_amount * splitFrac
+              if (isSharedExpenseFixed(e)) fixedTotal += myAmt
+              else variableTotal += myAmt
+            }
+            const total = fixedTotal + variableTotal
+            if (total <= 0) return null
+            const fixedPct = Math.round((fixedTotal / total) * 100)
+            const varPct = 100 - fixedPct
+            return (
+              <div className="bg-card border border-border rounded-xl p-5 mt-4">
+                <h2 className="text-[13px] font-semibold mb-3 flex items-center gap-2">
+                  <Pin size={13} className="text-[var(--accent-orange)]" />
+                  חלוקת הוצאות: קבועות לעומת משתנות
+                </h2>
+                <div className="flex rounded-lg overflow-hidden h-8 mb-3">
+                  {fixedPct > 0 && (
+                    <div className="flex items-center justify-center text-[11px] font-semibold text-[var(--c-0-10)]"
+                      style={{ width: `${fixedPct}%`, background: 'var(--accent-orange)', minWidth: '40px' }}>
+                      {fixedPct}%
+                    </div>
+                  )}
+                  {varPct > 0 && (
+                    <div className="flex items-center justify-center text-[11px] font-semibold text-[var(--c-0-10)]"
+                      style={{ width: `${varPct}%`, background: 'var(--accent-blue)', minWidth: '40px' }}>
+                      {varPct}%
+                    </div>
+                  )}
+                </div>
+                <div className="flex justify-between text-[12px]">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2.5 h-2.5 rounded-sm" style={{ background: 'var(--accent-orange)' }} />
+                    <span className="text-muted-foreground">קבועות</span>
+                    <span className="font-semibold">{formatCurrency(fixedTotal)}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2.5 h-2.5 rounded-sm" style={{ background: 'var(--accent-blue)' }} />
+                    <span className="text-muted-foreground">משתנות</span>
+                    <span className="font-semibold">{formatCurrency(variableTotal)}</span>
+                  </div>
+                </div>
+              </div>
+            )
+          })()}
         </div>
       </div>
 

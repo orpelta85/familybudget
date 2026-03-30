@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import { formatCurrency } from '@/lib/utils'
-import { Users, Lock, Unlock, X, Pencil, Check, Inbox, ChevronDown } from 'lucide-react'
+import { Users, Lock, Unlock, X, Pencil, Check, Inbox, ChevronDown, Pin, PinOff } from 'lucide-react'
 import type { SharedExpense } from '@/lib/types'
 
 const SHARED_CATEGORIES: { value: string; label: string }[] = [
@@ -64,6 +64,19 @@ export function sharedCatLabel(category: string): string {
   return SHARED_CAT_LABEL_MAP[category] ?? category
 }
 
+// Default fixed/variable by shared category
+const SHARED_FIXED_DEFAULTS: Record<string, boolean> = {
+  rent: true, property_tax: true, electricity: true, water_gas: true,
+  building_committee: true, internet: true, home_insurance: true,
+  insurance: true, loans: true, car_loan: true, subscriptions: true,
+  netflix: true, spotify: true,
+}
+
+export function isSharedExpenseFixed(e: SharedExpense): boolean {
+  if (e.is_fixed !== null && e.is_fixed !== undefined) return e.is_fixed
+  return SHARED_FIXED_DEFAULTS[e.category] ?? false
+}
+
 interface SharedExpenseListProps {
   expenses: SharedExpense[]
   splitFrac: number
@@ -72,11 +85,12 @@ interface SharedExpenseListProps {
   onEdit: (data: { id: number; category: string; total_amount: number; notes: string; period_id: number }) => Promise<void>
   onDelete: (id: number) => void
   onToggleLock: (exp: { id: number; category: string; total_amount: number; notes?: string | null }) => void
+  onToggleFixed?: (exp: SharedExpense) => void
 }
 
 export function SharedExpenseList({
   expenses, splitFrac, totalSharedMy,
-  isLocked, onEdit, onDelete, onToggleLock,
+  isLocked, onEdit, onDelete, onToggleLock, onToggleFixed,
 }: SharedExpenseListProps) {
   const [editingShared, setEditingShared] = useState<{ id: number; category: string; totalAmount: string; notes: string } | null>(null)
   const [openCategories, setOpenCategories] = useState<Set<string>>(new Set())
@@ -136,6 +150,19 @@ export function SharedExpenseList({
                     <ChevronDown size={14} className={`text-muted-foreground transition-transform duration-200 ${isOpen ? 'rotate-0' : '-rotate-90'}`} />
                     <span className="text-[13px] font-semibold">{group.label}</span>
                     <span className="text-[11px] text-muted-foreground">({group.expenses.length})</span>
+                    {(() => {
+                      const allFixed = group.expenses.every(e => isSharedExpenseFixed(e))
+                      const allVariable = group.expenses.every(e => !isSharedExpenseFixed(e))
+                      const isFixed = allFixed
+                      return (
+                        <span className={`inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded font-medium ${
+                          isFixed ? 'bg-[var(--c-orange-0-20)] text-[var(--accent-orange)]' : allVariable ? 'bg-[var(--c-blue-0-18)] text-[var(--c-blue-0-62)]' : 'bg-[var(--c-0-20)] text-[var(--c-0-60)]'
+                        }`}>
+                          {isFixed ? <Pin size={9} /> : <PinOff size={9} />}
+                          {isFixed ? 'קבוע' : allVariable ? 'משתנה' : 'מעורב'}
+                        </span>
+                      )
+                    })()}
                   </div>
                   <span className="text-[13px] font-bold text-[var(--accent-shared)]">{formatCurrency(group.myTotal)}</span>
                 </button>
@@ -181,6 +208,16 @@ export function SharedExpenseList({
                           <div className="flex items-center gap-1.5">
                             <span className="text-[12px] font-semibold text-[var(--accent-shared)]">{formatCurrency(myAmt)}</span>
                             <button onClick={() => setEditingShared({ id: e.id, category: e.category, totalAmount: String(e.total_amount), notes: e.notes ?? '' })} aria-label="ערוך הוצאה" className="bg-transparent border-none cursor-pointer flex items-center justify-center p-1 min-w-6 min-h-6 text-[var(--c-0-45)] hover:text-[var(--c-0-70)]"><Pencil size={10} /></button>
+                            {onToggleFixed && (() => {
+                              const fixed = isSharedExpenseFixed(e)
+                              const hasOverride = e.is_fixed !== null && e.is_fixed !== undefined
+                              return (
+                                <button onClick={() => onToggleFixed(e)} title={fixed ? 'סמן כמשתנה' : 'סמן כקבוע'} aria-label={fixed ? 'סמן כמשתנה' : 'סמן כקבוע'}
+                                  className={`bg-transparent border-none cursor-pointer flex items-center justify-center p-1 min-w-6 min-h-6 ${fixed ? 'text-[var(--accent-orange)]' : 'text-[var(--c-0-35)]'} ${hasOverride ? 'opacity-100' : 'opacity-60'}`}>
+                                  {fixed ? <Pin size={11} /> : <PinOff size={11} />}
+                                </button>
+                              )
+                            })()}
                             <button onClick={() => onToggleLock(e)} title={locked ? 'בטל נעילה' : 'נעל לחודשים הבאים'} aria-label={locked ? 'בטל נעילה' : 'נעל לחודשים הבאים'} className={`bg-transparent border-none cursor-pointer flex items-center justify-center p-1 min-w-6 min-h-6 ${locked ? 'text-[var(--accent-teal)]' : 'text-[var(--c-0-35)]'}`}>{locked ? <Lock size={11} /> : <Unlock size={11} />}</button>
                             <button onClick={() => onDelete(e.id)} aria-label="מחק הוצאה" className="bg-transparent border-none cursor-pointer flex items-center justify-center p-1 min-w-6 min-h-6 text-muted-foreground"><X size={12} /></button>
                           </div>
