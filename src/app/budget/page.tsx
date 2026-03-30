@@ -373,17 +373,9 @@ export default function BudgetPage() {
           <div className="text-[11px] text-muted-foreground mb-1 uppercase tracking-wide">סה״כ משפחתי</div>
           <div className="text-[22px] font-bold text-[var(--text-heading)] leading-none">{formatCurrency(totalAllFull)}</div>
           <div className="text-[10px] text-muted-foreground mt-1">החלק שלי: {formatCurrency(totalAllMy)}</div>
-        </div>
-        <div className="bg-card border border-border rounded-xl p-4">
-          <div className="text-[11px] text-muted-foreground mb-1 uppercase tracking-wide flex items-center gap-1">נשאר פנוי <InfoTooltip body="הכנסה שלך פחות החלק שלך בהוצאות" /></div>
-          <div className={`text-[22px] font-bold leading-none ${remaining >= 0 ? 'text-[var(--accent-green)]' : 'text-[var(--accent-red)]'}`}>
-            {formatCurrency(remaining)}
+          <div className={`text-[13px] font-bold mt-2 pt-2 border-t border-[var(--c-0-20)] ${remaining >= 0 ? 'text-[var(--accent-green)]' : 'text-[var(--accent-red)]'}`}>
+            נשאר פנוי: {formatCurrency(remaining)}
           </div>
-          {totalIncome > 0 && (
-            <div className="text-[11px] text-muted-foreground mt-1">
-              {Math.round((remaining / totalIncome) * 100)}% מההכנסה
-            </div>
-          )}
         </div>
       </div>
 
