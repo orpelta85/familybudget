@@ -1,7 +1,7 @@
 'use client'
 
 import { useUser } from '@/lib/queries/useUser'
-import { useBudgetCategories, usePersonalExpenses, useFamilyPersonalExpenses, useUpdateCategoryTarget } from '@/lib/queries/useExpenses'
+import { useBudgetCategories, usePersonalExpenses, useFamilyPersonalExpenses, useUpdateCategoryTarget, useDeleteCategory } from '@/lib/queries/useExpenses'
 import { useSharedExpenses } from '@/lib/queries/useShared'
 import { usePeriods, useCurrentPeriod } from '@/lib/queries/usePeriods'
 import { useIncome, useFamilyIncome } from '@/lib/queries/useIncome'
@@ -12,8 +12,9 @@ import { useFamilyContext } from '@/lib/context/FamilyContext'
 import { useFamilyView } from '@/contexts/FamilyViewContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useMemo } from 'react'
-import { BarChart3, Inbox, Check, Clock, Users, Download, Pencil, ChevronDown } from 'lucide-react'
+import { BarChart3, Inbox, Check, Clock, Users, Download, Pencil, ChevronDown, X } from 'lucide-react'
 import { toast } from 'sonner'
+import { useConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { PageInfo } from '@/components/ui/PageInfo'
 import { InfoTooltip } from '@/components/ui/InfoTooltip'
 import { PAGE_TIPS } from '@/lib/page-tips'
@@ -80,6 +81,8 @@ export default function BudgetPage() {
   const currentPeriod = useCurrentPeriod()
   const { data: periods } = usePeriods()
   const updateTarget = useUpdateCategoryTarget()
+  const deleteCategory = useDeleteCategory()
+  const confirm = useConfirmDialog()
   const { selectedPeriodId, setSelectedPeriodId } = useSharedPeriod()
   const { familyId, members } = useFamilyContext()
   const { viewMode } = useFamilyView()
@@ -181,6 +184,14 @@ export default function BudgetPage() {
       toast.success('יעד עודכן')
       setEditingId(null)
     } catch (e) { console.error('Update budget target:', e); toast.error('שגיאה בעדכון היעד') }
+  }
+
+  async function handleDeleteCategory(catId: number, catName: string) {
+    if (!(await confirm({ message: `להסתיר את "${catName}" מהתקציב?` }))) return
+    try {
+      await deleteCategory.mutateAsync({ id: catId, user_id: user!.id })
+      toast.success(`${catName} הוסר מהתקציב`)
+    } catch (e) { console.error('Delete category:', e); toast.error('שגיאה במחיקה') }
   }
 
   const fixedPaidCount = fixedCats.filter(c => catSpend(c) > 0).length
@@ -330,7 +341,7 @@ export default function BudgetPage() {
                             const catRemaining = cat.monthly_target - spent
 
                             return (
-                              <div key={cat.id} className="flex items-center gap-3 py-2.5 border-b border-[var(--c-0-18)] last:border-b-0 hover:bg-[var(--c-0-18)] rounded px-2 transition-colors">
+                              <div key={cat.id} className="group flex items-center gap-3 py-2.5 border-b border-[var(--c-0-18)] last:border-b-0 hover:bg-[var(--c-0-18)] rounded px-2 transition-colors">
                                 <span className="font-medium text-[13px] text-[var(--c-0-82)] min-w-[100px] shrink-0">{cat.name}</span>
                                 <div className="flex-1 h-[5px] rounded-full bg-[var(--c-0-20)] overflow-hidden min-w-[60px]">
                                   <div className="h-full rounded-full transition-[width] duration-400 ease-out" style={{ width: `${Math.min(pct * 100, 100)}%`, background: barColor }} />
@@ -368,6 +379,14 @@ export default function BudgetPage() {
                                     {catRemaining >= 0 ? `נותר ${formatCurrency(catRemaining)}` : `חריגה ${formatCurrency(Math.abs(catRemaining))}`}
                                   </span>
                                 )}
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteCategory(cat.id, cat.name)}
+                                  className="p-0.5 rounded hover:bg-[var(--c-red-0-18)] transition-colors text-[var(--c-0-35)] hover:text-[var(--accent-red)] opacity-0 group-hover:opacity-100"
+                                  title="הסר מהתקציב"
+                                >
+                                  <X size={12} />
+                                </button>
                               </div>
                             )
                           })}
@@ -420,7 +439,7 @@ export default function BudgetPage() {
                         return (
                           <div
                             key={cat.id}
-                            className="flex justify-between items-center py-2.5 px-2 rounded-lg hover:bg-[var(--c-0-18)] transition-colors duration-150"
+                            className="group flex justify-between items-center py-2.5 px-2 rounded-lg hover:bg-[var(--c-0-18)] transition-colors duration-150"
                           >
                             <div className="flex items-center gap-2.5">
                               <div className={`w-5 h-5 rounded-full flex items-center justify-center ${isPaid ? 'bg-[var(--accent-green)]' : 'bg-[var(--border-default)]'}`}>
@@ -436,9 +455,19 @@ export default function BudgetPage() {
                                 <Users size={11} className="text-[var(--c-0-50)]" />
                               )}
                             </div>
-                            <span className={`text-[13px] font-semibold ${isPaid ? 'text-[var(--c-0-82)]' : 'text-[var(--c-0-40)]'}`}>
-                              {isPaid ? formatCurrency(spent) : '—'}
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className={`text-[13px] font-semibold ${isPaid ? 'text-[var(--c-0-82)]' : 'text-[var(--c-0-40)]'}`}>
+                                {isPaid ? formatCurrency(spent) : '—'}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteCategory(cat.id, cat.name)}
+                                className="p-0.5 rounded hover:bg-[var(--c-red-0-18)] transition-colors text-[var(--c-0-35)] hover:text-[var(--accent-red)] opacity-0 group-hover:opacity-100"
+                                title="הסר מהתקציב"
+                              >
+                                <X size={12} />
+                              </button>
+                            </div>
                           </div>
                         )
                       })}
