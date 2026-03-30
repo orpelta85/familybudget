@@ -156,7 +156,7 @@ export default function BudgetPage() {
     return acc
   }, {})
 
-  // Shared expenses: map to budget categories by name (both fixed AND variable)
+  // Shared expenses: map to budget categories by name — MY SHARE
   const allCats = categories ?? []
   const sharedSpendByCatName = (sharedExpenses ?? []).reduce<Record<string, number>>((acc, se) => {
     const catName = resolveSharedToFixed(se.category, se.notes)
@@ -166,9 +166,21 @@ export default function BudgetPage() {
     return acc
   }, {})
 
-  // Unmatched shared expenses (category not mapped to any budget category)
+  // Shared expenses: FULL amount (both partners)
+  const sharedSpendFullByCatName = (sharedExpenses ?? []).reduce<Record<string, number>>((acc, se) => {
+    const catName = resolveSharedToFixed(se.category, se.notes)
+    if (catName) {
+      acc[catName] = (acc[catName] ?? 0) + Number(se.total_amount)
+    }
+    return acc
+  }, {})
+
+  // Unmatched shared expenses
   const unmatchedSharedTotal = (sharedExpenses ?? []).reduce((sum, se) => {
     return resolveSharedToFixed(se.category, se.notes) ? sum : sum + Number(se.my_share ?? se.total_amount * splitFrac)
+  }, 0)
+  const unmatchedSharedFull = (sharedExpenses ?? []).reduce((sum, se) => {
+    return resolveSharedToFixed(se.category, se.notes) ? sum : sum + Number(se.total_amount)
   }, 0)
 
   // Combined spend for any category: personal + shared
@@ -181,6 +193,9 @@ export default function BudgetPage() {
   function catSpendShared(cat: BudgetCategory): number {
     return sharedSpendByCatName[cat.name] ?? 0
   }
+  function catSpendSharedFull(cat: BudgetCategory): number {
+    return sharedSpendFullByCatName[cat.name] ?? 0
+  }
 
   // Categories with shared spending (for shared budget section)
   const catsWithSharedSpend = variableCats.filter(c => catSpendShared(c) > 0 || sharedSpendByCatName[c.name])
@@ -192,6 +207,7 @@ export default function BudgetPage() {
   const personalIncome = income ? (income.salary + income.bonus + income.other) : 0
   const totalIncome = isFamily && familyTotalIncome > 0 ? familyTotalIncome : personalIncome
   const totalFixedActual = fixedCats.reduce((s, c) => s + catSpend(c), 0) + unmatchedSharedTotal
+  const totalFixedFull = fixedCats.reduce((s, c) => s + catSpendPersonal(c) + catSpendSharedFull(c), 0) + unmatchedSharedFull
   const totalVariableActual = allNonFixed.reduce((s, c) => s + catSpend(c), 0)
   const totalVariableBudget = allNonFixed.reduce((s, c) => s + c.monthly_target, 0)
   const totalSharedVariableActual = (sharedExpenses ?? []).reduce((s, se) => {
@@ -377,40 +393,49 @@ export default function BudgetPage() {
               // Shared variable categories: categories that have shared spending mapped to them
               const sharedVarCats = variableCats.filter(c => (c.budget_scope ?? 'both') !== 'personal' && (catSpendShared(c) > 0 || (c.budget_scope ?? 'both') === 'shared'))
               const sharedVarBudget = sharedVarCats.reduce((s, c) => s + c.monthly_target, 0)
-              const sharedVarActual = sharedVarCats.reduce((s, c) => s + catSpendShared(c), 0) + unmatchedSharedTotal
-              if (sharedVarCats.length === 0 && unmatchedSharedTotal === 0) return null
+              const sharedVarFullActual = sharedVarCats.reduce((s, c) => s + catSpendSharedFull(c), 0) + unmatchedSharedFull
+              const sharedVarMyShare = sharedVarCats.reduce((s, c) => s + catSpendShared(c), 0) + unmatchedSharedTotal
+              if (sharedVarCats.length === 0 && unmatchedSharedFull === 0) return null
+              const splitPctLabel = Math.round(splitFrac * 100)
               return (
                 <div className="card-transition bg-card border border-border rounded-xl p-5">
-                  <div className="flex justify-between items-center mb-4 pb-3 border-b border-[var(--bg-hover)]">
+                  <div className="flex justify-between items-center mb-1 pb-3 border-b border-[var(--bg-hover)]">
                     <div className="flex items-center gap-2">
                       <Users size={14} className="text-[var(--accent-shared)]" />
                       <span className="font-bold text-sm">תקציב משותף</span>
-                      <InfoTooltip body="הוצאות משתנות משותפות — מכולת, אוכל בחוץ, חיות מחמד וכו'. הסכום מציג את החלק שלך" />
+                      <InfoTooltip body="הוצאות משתנות משותפות לשני בני הזוג. הסכום הראשי הוא הסה״כ, מתחתיו החלק שלך" />
                       <span className="text-[11px] text-muted-foreground bg-secondary rounded px-1.5 py-px">{sharedVarCats.length}</span>
                     </div>
-                    <div className="text-[13px]">
-                      <span className="font-bold text-[var(--accent-shared)]">{formatCurrency(sharedVarActual)}</span>
-                      {sharedVarBudget > 0 && <>
-                        <span className="text-muted-foreground mx-1">/</span>
-                        <span className="text-muted-foreground">{formatCurrency(sharedVarBudget)}</span>
-                      </>}
+                    <div className="text-left">
+                      <div className="text-[13px]">
+                        <span className="font-bold text-[var(--accent-shared)]">{formatCurrency(sharedVarFullActual)}</span>
+                        {sharedVarBudget > 0 && <>
+                          <span className="text-muted-foreground mx-1">/</span>
+                          <span className="text-muted-foreground">{formatCurrency(sharedVarBudget)}</span>
+                        </>}
+                      </div>
+                      <div className="text-[10px] text-muted-foreground">החלק שלי ({splitPctLabel}%): {formatCurrency(sharedVarMyShare)}</div>
                     </div>
                   </div>
                   <div>
                     {sharedVarCats.map(cat => {
-                      const spent = catSpendShared(cat)
-                      const pct = cat.monthly_target > 0 ? spent / cat.monthly_target : 0
+                      const spentFull = catSpendSharedFull(cat)
+                      const spentMy = catSpendShared(cat)
+                      const pct = cat.monthly_target > 0 ? spentFull / cat.monthly_target : 0
                       const isEditing = editingId === cat.id
                       const barColor = getBarColor(pct)
-                      const catRemaining = cat.monthly_target - spent
+                      const catRemaining = cat.monthly_target - spentFull
                       return (
                         <div key={cat.id} className="group flex items-center gap-3 py-2.5 border-b border-[var(--c-0-18)] last:border-b-0 hover:bg-[var(--c-0-18)] rounded px-2 transition-colors">
-                          <span className="font-medium text-[13px] text-[var(--c-0-82)] min-w-[100px] shrink-0">{cat.name}</span>
+                          <div className="min-w-[100px] shrink-0">
+                            <span className="font-medium text-[13px] text-[var(--c-0-82)] block">{cat.name}</span>
+                            {spentMy !== spentFull && <span className="text-[10px] text-muted-foreground">חלקי: {formatCurrency(spentMy)}</span>}
+                          </div>
                           <div className="flex-1 h-[5px] rounded-full bg-[var(--c-0-20)] overflow-hidden min-w-[60px]">
                             <div className="h-full rounded-full transition-[width] duration-400 ease-out" style={{ width: `${Math.min(pct * 100, 100)}%`, background: barColor }} />
                           </div>
                           <div className="flex items-center gap-1 text-[12px] shrink-0">
-                            <span className="font-semibold" style={{ color: barColor }}>{formatCurrency(spent)}</span>
+                            <span className="font-semibold" style={{ color: barColor }}>{formatCurrency(spentFull)}</span>
                             <span className="text-muted-foreground">/</span>
                             {isEditing ? (
                               <input autoFocus type="number" value={editValue} onChange={e => setEditValue(e.target.value)} onBlur={() => saveTarget(cat.id)} onKeyDown={e => { if (e.key === 'Enter') saveTarget(cat.id); if (e.key === 'Escape') setEditingId(null) }} className="w-24 bg-[var(--c-0-20)] border border-[var(--c-blue-0-45)] rounded-md px-2 py-0.5 text-inherit text-[12px] text-left" title="סכום יעד" />
@@ -533,9 +558,14 @@ export default function BudgetPage() {
                   <InfoTooltip body="הוצאות שלא משתנות מחודש לחודש — שכירות, ביטוח, הלוואות" />
                   <span className="text-[11px] text-muted-foreground bg-secondary rounded px-1.5 py-px">{fixedCats.length}</span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-[12px] text-muted-foreground">{fixedPaidCount}/{fixedCats.length} שולמו</span>
-                  <span className="text-[13px] font-bold text-[var(--text-heading)]">{formatCurrency(totalFixedActual)}</span>
+                <div className="text-left">
+                  <div className="flex items-center gap-3">
+                    <span className="text-[12px] text-muted-foreground">{fixedPaidCount}/{fixedCats.length} שולמו</span>
+                    <span className="text-[13px] font-bold text-[var(--text-heading)]">{formatCurrency(totalFixedFull)}</span>
+                  </div>
+                  {totalFixedFull !== totalFixedActual && (
+                    <div className="text-[10px] text-muted-foreground text-left">החלק שלי: {formatCurrency(totalFixedActual)}</div>
+                  )}
                 </div>
               </div>
               {fixedOpen && (
@@ -545,9 +575,10 @@ export default function BudgetPage() {
                   ) : (
                     <div className="space-y-1 mt-3">
                       {fixedCats.map(cat => {
-                        const spent = catSpend(cat)
-                        const isPaid = spent > 0
-                        const hasShared = (sharedSpendByCatName[cat.name] ?? 0) > 0
+                        const spentTotal = catSpendPersonal(cat) + catSpendSharedFull(cat)
+                        const spentMy = catSpend(cat)
+                        const isPaid = spentTotal > 0
+                        const hasShared = catSpendSharedFull(cat) > 0
 
                         return (
                           <div
@@ -561,16 +592,21 @@ export default function BudgetPage() {
                                   : <Clock size={12} className="text-[var(--c-0-45)]" />
                                 }
                               </div>
-                              <span className={`text-[13px] font-medium ${isPaid ? 'text-[var(--c-0-82)]' : 'text-[var(--c-0-50)]'}`}>
-                                {cat.name}
-                              </span>
+                              <div>
+                                <span className={`text-[13px] font-medium ${isPaid ? 'text-[var(--c-0-82)]' : 'text-[var(--c-0-50)]'}`}>
+                                  {cat.name}
+                                </span>
+                                {hasShared && spentMy !== spentTotal && (
+                                  <div className="text-[10px] text-muted-foreground">חלקי: {formatCurrency(spentMy)}</div>
+                                )}
+                              </div>
                               {hasShared && (
                                 <Users size={11} className="text-[var(--c-0-50)]" />
                               )}
                             </div>
                             <div className="flex items-center gap-2">
                               <span className={`text-[13px] font-semibold ${isPaid ? 'text-[var(--c-0-82)]' : 'text-[var(--c-0-40)]'}`}>
-                                {isPaid ? formatCurrency(spent) : '—'}
+                                {isPaid ? formatCurrency(spentTotal) : '—'}
                               </span>
                               <button
                                 type="button"
