@@ -34,6 +34,7 @@ interface ExpenseFormProps {
   selectedPeriodId?: number
   splitFrac: number
   isPending: boolean
+  isSolo?: boolean
   onAdd: (data: {
     expType: ExpType
     categoryId: string
@@ -47,7 +48,7 @@ interface ExpenseFormProps {
   }) => void
 }
 
-export function ExpenseForm({ categories, funds, allSinkingTx, selectedPeriodId, splitFrac, isPending, onAdd }: ExpenseFormProps) {
+export function ExpenseForm({ categories, funds, allSinkingTx, selectedPeriodId, splitFrac, isPending, isSolo, onAdd }: ExpenseFormProps) {
   const [expType, setExpType] = useState<ExpType>('personal')
   const [categoryId, setCategoryId] = useState('')
   const [customCat, setCustomCat] = useState('')
@@ -74,20 +75,22 @@ export function ExpenseForm({ categories, funds, allSinkingTx, selectedPeriodId,
         <h2 className="font-semibold text-[13px] m-0">הוספה ידנית</h2>
       </div>
 
-      {/* Type toggle */}
-      <div className="flex gap-1.5 mb-3 bg-secondary rounded-[9px] p-[3px]">
-        {(['personal', 'shared'] as ExpType[]).map(t => (
-          <button key={t} onClick={() => setExpType(t)} className={`flex-1 flex items-center justify-center gap-1 border-none rounded-[7px] py-1.5 text-xs cursor-pointer ${
-            expType === t
-              ? (t === 'personal'
-                ? 'bg-primary text-primary-foreground font-semibold'
-                : 'bg-[var(--c-purple-0-55)] text-primary-foreground font-semibold')
-              : 'bg-transparent text-muted-foreground font-normal'
-          }`}>
-            {t === 'personal' ? <><User size={11} /> אישית</> : <><Users size={11} /> משותפת</>}
-          </button>
-        ))}
-      </div>
+      {/* Type toggle — hidden in solo mode */}
+      {!isSolo && (
+        <div className="flex gap-1.5 mb-3 bg-secondary rounded-[9px] p-[3px]">
+          {(['personal', 'shared'] as ExpType[]).map(t => (
+            <button key={t} onClick={() => setExpType(t)} className={`flex-1 flex items-center justify-center gap-1 border-none rounded-[7px] py-1.5 text-xs cursor-pointer ${
+              expType === t
+                ? (t === 'personal'
+                  ? 'bg-primary text-primary-foreground font-semibold'
+                  : 'bg-[var(--c-purple-0-55)] text-primary-foreground font-semibold')
+                : 'bg-transparent text-muted-foreground font-normal'
+            }`}>
+              {t === 'personal' ? <><User size={11} /> אישית</> : <><Users size={11} /> משותפת</>}
+            </button>
+          ))}
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-2.5">
         {/* Detail mode toggle */}

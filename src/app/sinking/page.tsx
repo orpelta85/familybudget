@@ -24,7 +24,7 @@ type FundForm = { name: string; totalAnnual: string; isShared: boolean }
 export default function SinkingPage() {
   const { user, loading } = useUser()
   const router = useRouter()
-  const { members } = useFamilyContext()
+  const { members, isSolo } = useFamilyContext()
   const { viewMode } = useFamilyView()
   const isFamily = viewMode === 'family'
   const familyMemberIds = useMemo(() => members.map(m => m.user_id), [members])
@@ -32,7 +32,9 @@ export default function SinkingPage() {
   const { data: periods } = usePeriods()
   const { data: myFunds } = useSinkingFunds(user?.id)
   const { data: familyFundsData } = useFamilySinkingFunds(familyMemberIds, isFamily)
-  const funds = isFamily ? familyFundsData : myFunds
+  const rawFunds = isFamily ? familyFundsData : myFunds
+  // In solo mode, hide shared funds
+  const funds = isSolo ? rawFunds?.filter(f => !f.is_shared) : rawFunds
   const { data: myTxns } = useAllSinkingTransactions(user?.id)
   const { data: familyTxnsData } = useFamilySinkingTransactions(familyMemberIds, isFamily)
   const allTxns = isFamily ? familyTxnsData : myTxns

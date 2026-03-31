@@ -77,7 +77,9 @@ export interface FamilyMemberExpenses {
   user_id: string
   display_name: string
   expenses: PersonalExpense[]
+  categories?: { name: string; total: number }[]
   total: number
+  privacy?: 'full' | 'summary' | 'hidden'
 }
 
 export function useFamilyPersonalExpenses(periodId: number | undefined, memberIds: string[], enabled: boolean) {

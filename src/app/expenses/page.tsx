@@ -44,7 +44,7 @@ export default function ExpensesPage() {
   const currentPeriod = useCurrentPeriod()
   const { selectedPeriodId, setSelectedPeriodId } = useSharedPeriod()
   const fileRef = useRef<HTMLInputElement>(null)
-  const { familyId, members } = useFamilyContext()
+  const { familyId, members, isSolo } = useFamilyContext()
   const splitFrac = useSplitFraction(user?.id)
   const { viewMode } = useFamilyView()
   const familyMemberIds = useMemo(() => members.map(m => m.user_id), [members])
@@ -63,7 +63,7 @@ export default function ExpensesPage() {
   }, [periods, selectedPeriodId])
 
   const { data: personalExp } = usePersonalExpenses(selectedPeriodId, user?.id)
-  const { data: sharedExp }   = useSharedExpenses(selectedPeriodId, familyId)
+  const { data: sharedExp }   = useSharedExpenses(selectedPeriodId, isSolo ? undefined : familyId)
   const { data: categories }  = useBudgetCategories(user?.id)
   const { data: funds }       = useSinkingFunds(user?.id)
   const { data: allSinkingTx } = useAllSinkingTransactions(user?.id)
@@ -142,7 +142,7 @@ export default function ExpensesPage() {
   const totalPersonal  = (personalExp ?? []).reduce((s, e) => s + e.amount, 0)
   const totalSharedMy  = (sharedExp ?? []).reduce((s, e) => s + (e.my_share ?? e.total_amount * splitFrac), 0)
   const totalAll       = totalPersonal + totalSharedMy
-  const sinkingMonthly = (funds ?? []).filter(f => f.is_active).reduce((s, f) => s + f.monthly_allocation, 0)
+  const sinkingMonthly = (funds ?? []).filter(f => f.is_active && (!isSolo || !f.is_shared)).reduce((s, f) => s + f.monthly_allocation, 0)
   const fundWithdrawals = (allSinkingTx ?? []).filter(t => t.period_id === selectedPeriodId && t.amount < 0).reduce((s, t) => {
     const fund = (funds ?? []).find(f => f.id === t.fund_id)
     const share = fund?.is_shared ? splitFrac : 1
@@ -1023,6 +1023,7 @@ export default function ExpensesPage() {
           selectedPeriodId={selectedPeriodId}
           splitFrac={splitFrac}
           isPending={isPending}
+          isSolo={isSolo}
           onAdd={handleAdd}
         />
 
@@ -1034,6 +1035,7 @@ export default function ExpensesPage() {
             totalAll={totalAll}
             sinkingMonthly={sinkingMonthly}
             totalWithSinking={totalWithSinking}
+            isSolo={isSolo}
           />
 
           {/* ── Fixed vs Variable Bar ──────────────────────────────────────── */}
@@ -1091,7 +1093,7 @@ export default function ExpensesPage() {
           })()}
 
           {/* ── Personal + Shared side by side ──────────────────────────────── */}
-          <div className="grid-2 items-start">
+          <div className={isSolo ? '' : 'grid-2 items-start'}>
             <PersonalExpenseList
               expenses={sortedPersonalExp}
               categories={categories}
@@ -1106,17 +1108,19 @@ export default function ExpensesPage() {
               onConvertToShared={handleConvertToShared}
             />
 
-            <SharedExpenseList
-              expenses={sortedSharedExp}
-              splitFrac={splitFrac}
-              totalSharedMy={totalSharedMy}
-              isLocked={recurringShared.isLocked}
-              onEdit={handleEditShared}
-              onDelete={handleDeleteShared}
-              onToggleLock={toggleLockShared}
-              onToggleFixed={handleToggleSharedFixed}
-              onConvertToPersonal={handleConvertToPersonal}
-            />
+            {!isSolo && (
+              <SharedExpenseList
+                expenses={sortedSharedExp}
+                splitFrac={splitFrac}
+                totalSharedMy={totalSharedMy}
+                isLocked={recurringShared.isLocked}
+                onEdit={handleEditShared}
+                onDelete={handleDeleteShared}
+                onToggleLock={toggleLockShared}
+                onToggleFixed={handleToggleSharedFixed}
+                onConvertToPersonal={handleConvertToPersonal}
+              />
+            )}
           </div>{/* close grid-2 */}
 
         </div>

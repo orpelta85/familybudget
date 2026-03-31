@@ -90,8 +90,11 @@ export async function GET(req: NextRequest) {
     const isCurrentUser = m.user_id === effective.userId
     const privacyMode = isCurrentUser ? 'full_access' : ((m as Record<string, unknown>).privacy_mode as string ?? 'summary_only')
 
-    totalIncome += income
-    totalPersonalExpenses += personalExpenses
+    // Only include in family totals if not hidden
+    if (privacyMode !== 'hidden') {
+      totalIncome += income
+      totalPersonalExpenses += personalExpenses
+    }
 
     return {
       user_id: m.user_id,

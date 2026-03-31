@@ -93,7 +93,7 @@ export default function BudgetPage() {
   const [newCatTarget, setNewCatTarget] = useState('')
   const [newCatScope, setNewCatScope] = useState<'personal' | 'shared' | 'both'>('both')
   const { selectedPeriodId, setSelectedPeriodId } = useSharedPeriod()
-  const { familyId, members } = useFamilyContext()
+  const { familyId, members, isSolo } = useFamilyContext()
   const { viewMode } = useFamilyView()
   const splitFrac = useSplitFraction(user?.id)
   const isFamily = true // Budget is always family-level
@@ -118,7 +118,7 @@ export default function BudgetPage() {
 
   const { data: categories } = useBudgetCategories(user?.id)
   const { data: expenses } = usePersonalExpenses(activePeriodId, user?.id)
-  const { data: sharedExpenses } = useSharedExpenses(activePeriodId, familyId)
+  const { data: sharedExpenses } = useSharedExpenses(activePeriodId, isSolo ? undefined : familyId)
   const { data: income } = useIncome(activePeriodId, user?.id)
 
   // Personal spending by category — aggregate family members' expenses only in family view
@@ -353,7 +353,7 @@ export default function BudgetPage() {
       <div className="flex justify-between items-start mb-1.5">
         <div className="flex items-center gap-2">
           <BarChart3 size={18} className="text-primary" />
-          <h1 className="text-xl font-bold tracking-tight">תקציב משפחתי</h1>
+          <h1 className="text-xl font-bold tracking-tight">{isSolo ? 'תקציב' : 'תקציב משפחתי'}</h1>
           <PageInfo {...PAGE_TIPS.budget} />
         </div>
         <div className="flex items-center gap-2">
@@ -377,19 +377,21 @@ export default function BudgetPage() {
           <div className="text-[11px] text-muted-foreground mb-1 uppercase tracking-wide flex items-center gap-1">הכנסה נטו <InfoTooltip body="הכנסה אחרי מס ונכויים — הסכום שבאמת נכנס לחשבון" /></div>
           <div className="text-[22px] font-bold text-primary leading-none">{formatCurrency(totalIncome)}</div>
         </div>
+        {!isSolo && (
+          <div className="bg-card border border-border rounded-xl p-4">
+            <div className="text-[11px] text-muted-foreground mb-1 uppercase tracking-wide">הוצאות משותפות</div>
+            <div className="text-[22px] font-bold text-[var(--accent-shared)] leading-none">{formatCurrency(totalSharedFull)}</div>
+            <div className="text-[10px] text-muted-foreground mt-1">החלק שלי: {formatCurrency(totalSharedMy)}</div>
+          </div>
+        )}
         <div className="bg-card border border-border rounded-xl p-4">
-          <div className="text-[11px] text-muted-foreground mb-1 uppercase tracking-wide">הוצאות משותפות</div>
-          <div className="text-[22px] font-bold text-[var(--accent-shared)] leading-none">{formatCurrency(totalSharedFull)}</div>
-          <div className="text-[10px] text-muted-foreground mt-1">החלק שלי: {formatCurrency(totalSharedMy)}</div>
-        </div>
-        <div className="bg-card border border-border rounded-xl p-4">
-          <div className="text-[11px] text-muted-foreground mb-1 uppercase tracking-wide">הוצאות אישיות (כולם)</div>
+          <div className="text-[11px] text-muted-foreground mb-1 uppercase tracking-wide">{isSolo ? 'הוצאות אישיות' : 'הוצאות אישיות (כולם)'}</div>
           <div className="text-[22px] font-bold text-[var(--accent-orange)] leading-none">{formatCurrency(totalPersonalAll)}</div>
         </div>
         <div className="bg-card border border-border rounded-xl p-4">
-          <div className="text-[11px] text-muted-foreground mb-1 uppercase tracking-wide">סה״כ משפחתי</div>
-          <div className="text-[22px] font-bold text-[var(--text-heading)] leading-none">{formatCurrency(totalAllFull)}</div>
-          <div className="text-[10px] text-muted-foreground mt-1">החלק שלי: {formatCurrency(totalAllMy)}</div>
+          <div className="text-[11px] text-muted-foreground mb-1 uppercase tracking-wide">{isSolo ? 'סה״כ הוצאות' : 'סה״כ משפחתי'}</div>
+          <div className="text-[22px] font-bold text-[var(--text-heading)] leading-none">{formatCurrency(isSolo ? totalPersonalAll : totalAllFull)}</div>
+          {!isSolo && <div className="text-[10px] text-muted-foreground mt-1">החלק שלי: {formatCurrency(totalAllMy)}</div>}
           <div className={`text-[13px] font-bold mt-2 pt-2 border-t border-[var(--c-0-20)] ${remaining >= 0 ? 'text-[var(--accent-green)]' : 'text-[var(--accent-red)]'}`}>
             נשאר פנוי: {formatCurrency(remaining)}
           </div>
@@ -407,7 +409,7 @@ export default function BudgetPage() {
         : (
           <div className="space-y-5">
             {/* ── Shared Variable Budget ─────────────────────────────────────── */}
-            {(() => {
+            {!isSolo && (() => {
               // Shared variable categories: categories that have shared spending mapped to them
               const sharedVarCats = variableCats.filter(c => (c.budget_scope ?? 'both') !== 'personal' && (catSpendShared(c) > 0 || (c.budget_scope ?? 'both') === 'shared'))
               const sharedVarBudget = sharedVarCats.reduce((s, c) => s + c.monthly_target, 0)

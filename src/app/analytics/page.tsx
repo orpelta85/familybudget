@@ -79,7 +79,7 @@ function buildAllPeriodLabels(periods: { id: number; year_number: number; start_
 export default function AnalyticsPage() {
   const { user, loading } = useUser()
   const router = useRouter()
-  const { familyId, members } = useFamilyContext()
+  const { familyId, members, isSolo } = useFamilyContext()
   const { viewMode } = useFamilyView()
   const isFamily = viewMode === 'family'
   const familyMemberIds = useMemo(() => members.map(m => m.user_id), [members])
@@ -91,7 +91,7 @@ export default function AnalyticsPage() {
   const { data: myPersonal } = useAllPersonalExpenses(user?.id)
   const { data: familyPersonalData } = useFamilyAllPersonalExpenses(familyMemberIds, isFamily)
   const allPersonal = isFamily ? familyPersonalData : myPersonal
-  const { data: allShared } = useAllSharedExpenses(familyId)
+  const { data: allShared } = useAllSharedExpenses(isSolo ? undefined : familyId)
   const { data: deposits } = useApartmentDeposits(familyId)
   const { data: categories } = useBudgetCategories(user?.id)
   const { data: sinkingFunds } = useSinkingFunds(user?.id)

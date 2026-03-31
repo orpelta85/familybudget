@@ -169,13 +169,22 @@ export function FamilyExpensesView({
                     <span className="text-[13px] font-semibold text-[var(--text-heading)]">{member.display_name}</span>
                     <span className="text-[13px] font-bold text-primary">{fmt(member.total)}</span>
                   </div>
-                  {member.expenses.length > 0 && (() => {
-                    const catMap = new Map<string, number>()
-                    for (const e of member.expenses) {
-                      const catName = (e.budget_categories as BudgetCategory)?.name ?? 'כללי'
-                      catMap.set(catName, (catMap.get(catName) ?? 0) + e.amount)
+                  {(() => {
+                    // Use categories from API (summary mode) or compute from expenses (full mode)
+                    let catGroups: [string, number][]
+                    if (member.categories && member.categories.length > 0) {
+                      catGroups = member.categories.map(c => [c.name, c.total] as [string, number]).sort((a, b) => b[1] - a[1])
+                    } else if (member.expenses.length > 0) {
+                      const catMap = new Map<string, number>()
+                      for (const e of member.expenses) {
+                        const catName = (e.budget_categories as BudgetCategory)?.name ?? 'כללי'
+                        catMap.set(catName, (catMap.get(catName) ?? 0) + e.amount)
+                      }
+                      catGroups = [...catMap.entries()].sort((a, b) => b[1] - a[1])
+                    } else {
+                      catGroups = []
                     }
-                    const catGroups = [...catMap.entries()].sort((a, b) => b[1] - a[1])
+                    if (catGroups.length === 0) return null
                     return (
                       <div className="flex flex-col">
                         {catGroups.map(([name, total]) => (
@@ -184,6 +193,9 @@ export function FamilyExpensesView({
                             <span className="text-[11px] font-medium">{fmt(total)}</span>
                           </div>
                         ))}
+                        {member.privacy === 'summary' && (
+                          <div className="text-[10px] text-[var(--c-0-50)] italic mt-1.5">סיכום לפי קטגוריות - ללא פירוט עסקאות</div>
+                        )}
                       </div>
                     )
                   })()}

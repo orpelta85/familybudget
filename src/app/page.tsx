@@ -107,8 +107,8 @@ export default function Dashboard() {
   const { data: income } = useIncome(selectedPeriodId, user?.id)
   const { data: allIncome } = useAllIncome(user?.id)
   const { data: expenses } = usePersonalExpenses(selectedPeriodId, user?.id)
-  const { data: shared } = useSharedExpenses(selectedPeriodId, familyId)
-  const { data: allShared } = useAllSharedExpenses(familyId)
+  const { data: shared } = useSharedExpenses(selectedPeriodId, isSolo ? undefined : familyId)
+  const { data: allShared } = useAllSharedExpenses(isSolo ? undefined : familyId)
   const { data: savingsGoals } = useSavingsGoals(user?.id, familyId)
   const goalIds = useMemo(() => (savingsGoals ?? []).map(g => g.id), [savingsGoals])
   const { data: goalDeposits } = useAllGoalDeposits(goalIds)
@@ -168,7 +168,8 @@ export default function Dashboard() {
   const totalIncome = (income?.salary ?? 0) + (income?.bonus ?? 0) + (income?.other ?? 0)
   const totalPersonal = expenses?.reduce((s, e) => s + e.amount, 0) ?? 0
   const totalShared = shared?.reduce((s, e) => s + (e.my_share ?? e.total_amount * splitFrac), 0) ?? 0
-  const sinkingMonthly = (funds ?? []).filter(f => f.is_active).reduce((s, f) => s + f.monthly_allocation, 0)
+  const activeFunds = (funds ?? []).filter(f => f.is_active && (!isSolo || !f.is_shared))
+  const sinkingMonthly = activeFunds.reduce((s, f) => s + f.monthly_allocation, 0)
   const fundWithdrawals = (allSinkingTx ?? []).filter(t => t.period_id === selectedPeriodId && t.amount < 0).reduce((s, t) => {
     const fund = (funds ?? []).find(f => f.id === t.fund_id)
     const share = fund?.is_shared ? splitFrac : 1
@@ -807,7 +808,7 @@ function FamilyMemberCard({ member, memberShared, memberSinking }: {
             הנתונים האישיים מוסתרים
           </div>
         </div>
-      ) : member.show_details ? (
+      ) : (
         <div className="flex flex-col gap-2 text-[13px]">
           <div className="flex justify-between">
             <span className="text-text-secondary">הכנסה</span>
@@ -842,18 +843,6 @@ function FamilyMemberCard({ member, memberShared, memberSinking }: {
               {showSinking ? 'הסתר קרנות' : 'הצג קרנות'}
             </button>
           )}
-        </div>
-      ) : (
-        <div className="text-[13px] text-text-secondary">
-          <div className="flex justify-between mb-2">
-            <span>הכנסה</span>
-            <span className="font-medium text-accent-green">+{formatCurrency(income)}</span>
-          </div>
-          <div className="flex justify-between mb-2">
-            <span>הוצאות אישיות</span>
-            <span className="font-medium text-accent-orange">-{formatCurrency(personalExpenses)}</span>
-          </div>
-          <div className="text-xs text-text-secondary italic">פירוט עסקאות מוסתר</div>
         </div>
       )}
     </div>

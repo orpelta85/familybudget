@@ -48,6 +48,9 @@ export default function JointPage() {
     if (!familyLoading && isSolo) router.push('/')
   }, [familyLoading, isSolo, router])
 
+  // Don't fire queries while loading or in solo mode
+  if (familyLoading || isSolo) return <TableSkeleton rows={6} />
+
   const { data: poolIncome } = useJointPoolIncome(selectedPeriodId, familyId)
   const { data: poolExpenses } = useJointPoolExpenses(selectedPeriodId, familyId)
   const upsertIncome = useUpsertJointIncome()
