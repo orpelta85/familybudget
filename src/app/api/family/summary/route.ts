@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
   // Get all family members
   const { data: members } = await sb
     .from('family_members')
-    .select('user_id, role, show_personal_to_family')
+    .select('user_id, role, show_personal_to_family, privacy_mode')
     .eq('family_id', membership.family_id)
     .order('joined_at')
 
@@ -88,7 +88,7 @@ export async function GET(req: NextRequest) {
     const income = incomeMap.get(m.user_id) ?? 0
     const personalExpenses = expenseMap.get(m.user_id) ?? 0
     const isCurrentUser = m.user_id === effective.userId
-    const showDetails = isCurrentUser || m.show_personal_to_family
+    const privacyMode = isCurrentUser ? 'full_access' : ((m as Record<string, unknown>).privacy_mode as string ?? 'summary_only')
 
     totalIncome += income
     totalPersonalExpenses += personalExpenses
@@ -96,9 +96,10 @@ export async function GET(req: NextRequest) {
     return {
       user_id: m.user_id,
       display_name: profileMap.get(m.user_id) ?? 'חבר/ת משפחה',
-      income,
-      personal_expenses: personalExpenses,
-      show_details: showDetails,
+      income: privacyMode !== 'hidden' ? income : undefined,
+      personal_expenses: privacyMode !== 'hidden' ? personalExpenses : undefined,
+      show_details: privacyMode === 'full_access',
+      privacy_mode: privacyMode,
     }
   })
 

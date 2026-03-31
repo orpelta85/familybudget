@@ -2,9 +2,10 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react'
 import { cn } from '@/lib/utils'
 import { LayoutDashboard, Receipt, Home, Menu, Wallet, BarChart3, Settings, TrendingUp, CreditCard, Sparkles, CalendarDays, Calculator, Shield, Crosshair, Archive, Baby, Landmark, Banknote, ListChecks, X } from 'lucide-react'
+import { useFamilyContext } from '@/lib/context/FamilyContext'
 
 const nav = [
   { href: '/',          label: 'דשבורד',  icon: LayoutDashboard },
@@ -54,9 +55,11 @@ const moreSections: MoreSection[] = [
 ]
 
 const allMoreLinks = moreSections.flatMap(s => s.items)
+const soloHiddenPaths = ['/joint']
 
 export function BottomNav() {
   const pathname = usePathname()
+  const { isSolo } = useFamilyContext()
   const [showMore, setShowMore] = useState(false)
   const sheetRef = useRef<HTMLDivElement>(null)
   const touchStartY = useRef<number | null>(null)
@@ -124,7 +127,15 @@ export function BottomNav() {
     touchStartY.current = null
   }, [closeSheet])
 
-  const isMoreActive = allMoreLinks.some(l => pathname === l.href)
+  // Filter out family-only pages in solo mode
+  const filteredMoreSections = useMemo(() =>
+    isSolo
+      ? moreSections.map(s => ({ ...s, items: s.items.filter(l => !soloHiddenPaths.includes(l.href)) })).filter(s => s.items.length > 0)
+      : moreSections,
+    [isSolo]
+  )
+  const filteredAllMoreLinks = useMemo(() => filteredMoreSections.flatMap(s => s.items), [filteredMoreSections])
+  const isMoreActive = filteredAllMoreLinks.some(l => pathname === l.href)
 
   return (
     <>
@@ -197,7 +208,7 @@ export function BottomNav() {
 
             {/* Sections */}
             <div className="px-5 pb-8">
-              {moreSections.map((section, si) => (
+              {filteredMoreSections.map((section, si) => (
                 <div key={section.sectionLabel} className={si > 0 ? 'mt-5' : ''}>
                   <div className="text-[10px] uppercase tracking-[0.05em] text-[var(--text-muted)] mb-2.5 select-none">
                     {section.sectionLabel}

@@ -49,6 +49,15 @@ export async function GET(req: NextRequest) {
 
   const profileMap = new Map((profiles ?? []).map(p => [p.id, p.name]))
 
+  // Get privacy settings for all members
+  const { data: privacyRows } = await sb
+    .from('family_members')
+    .select('user_id, privacy_mode')
+    .eq('family_id', membership.family_id)
+    .in('user_id', memberIds)
+
+  const privacyMap = new Map((privacyRows ?? []).map(m => [m.user_id, m.privacy_mode as string]))
+
   // Get income for all members in this period
   const { data: incomeRows } = await sb
     .from('income')
@@ -58,13 +67,31 @@ export async function GET(req: NextRequest) {
 
   const result = memberIds.map(uid => {
     const inc = (incomeRows ?? []).find(i => i.user_id === uid)
+    const total = Number(inc?.salary ?? 0) + Number(inc?.bonus ?? 0) + Number(inc?.other ?? 0)
+    const isCurrentUser = uid === effective.userId
+    const privacyMode = isCurrentUser ? 'full_access' : (privacyMap.get(uid) ?? 'summary_only')
+
+    if (privacyMode === 'full_access') {
+      return {
+        user_id: uid,
+        display_name: profileMap.get(uid) ?? 'חבר/ת משפחה',
+        salary: Number(inc?.salary ?? 0),
+        bonus: Number(inc?.bonus ?? 0),
+        other: Number(inc?.other ?? 0),
+        total,
+        privacy: 'full' as const,
+      }
+    }
+
+    // summary_only or hidden — return only total, no breakdown
     return {
       user_id: uid,
       display_name: profileMap.get(uid) ?? 'חבר/ת משפחה',
-      salary: Number(inc?.salary ?? 0),
-      bonus: Number(inc?.bonus ?? 0),
-      other: Number(inc?.other ?? 0),
-      total: Number(inc?.salary ?? 0) + Number(inc?.bonus ?? 0) + Number(inc?.other ?? 0),
+      salary: 0,
+      bonus: 0,
+      other: 0,
+      total,
+      privacy: privacyMode as 'summary' | 'hidden',
     }
   })
 

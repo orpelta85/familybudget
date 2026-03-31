@@ -7,9 +7,10 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import {
-  Users, Copy, Mail, Send, X, Link2, Pencil, Check, Shield, Eye, EyeOff, Sparkles, Key, Trash2,
+  Users, Copy, Mail, Send, X, Link2, Pencil, Check, Shield, Eye, EyeOff, BarChart3, Sparkles, Key, Trash2,
   Sun, Moon,
 } from 'lucide-react'
+import type { PrivacyMode } from '@/lib/types'
 import { useTheme } from '@/contexts/ThemeContext'
 import { TableSkeleton } from '@/components/ui/Skeleton'
 import { PageInfo } from '@/components/ui/PageInfo'
@@ -73,12 +74,15 @@ export default function FamilyPage() {
     onError: () => toast.error('שגיאה בהסרת חבר'),
   })
 
-  const togglePrivacy = useMutation({
-    mutationFn: async (value: boolean) => {
+  const updatePrivacy = useMutation({
+    mutationFn: async (mode: PrivacyMode) => {
       const sb = createClient()
       const { error } = await sb
         .from('family_members')
-        .update({ show_personal_to_family: value })
+        .update({
+          privacy_mode: mode,
+          show_personal_to_family: mode === 'full_access',
+        })
         .eq('user_id', user!.id)
         .eq('family_id', familyId!)
       if (error) throw error
@@ -365,39 +369,62 @@ export default function FamilyPage() {
           <h2 className="text-sm font-semibold mb-4 mt-0">
             פרטיות
           </h2>
+          <p className="text-[11px] text-[var(--text-secondary)] m-0 mb-4 leading-relaxed">
+            בחר/י מה חברי המשפחה האחרים יראו מהנתונים האישיים שלך.
+          </p>
 
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex-1">
-              <div className="text-[13px] font-medium mb-1 flex items-center gap-1.5">
-                {myMembership?.show_personal_to_family ? (
-                  <Eye size={14} className="text-[var(--c-green-0-70)]" />
-                ) : (
-                  <EyeOff size={14} className="text-[var(--text-secondary)]" />
-                )}
-                הצג הוצאות אישיות למשפחה
-              </div>
-              <p className="text-[11px] text-[var(--text-secondary)] m-0 leading-relaxed">
-                כאשר מופעל, חברי המשפחה האחרים יוכלו לראות את ההוצאות האישיות שלך בדשבורד המשפחתי.
-              </p>
-            </div>
-
-            {/* Toggle */}
-            <button
-              onClick={() => togglePrivacy.mutate(!myMembership?.show_personal_to_family)}
-              disabled={togglePrivacy.isPending}
-              className={`w-11 h-6 rounded-xl border-none cursor-pointer relative shrink-0 transition-colors duration-200 ${
-                myMembership?.show_personal_to_family
-                  ? 'bg-[var(--c-green-0-55)]'
-                  : 'bg-[var(--border-default)]'
-              }`}
-              aria-label="הצג הוצאות אישיות למשפחה"
-              role="switch"
-              aria-checked={myMembership?.show_personal_to_family ?? false}
-            >
-              <div className={`w-[18px] h-[18px] rounded-full bg-[var(--c-0-92)] absolute top-[3px] transition-all duration-200 ${
-                myMembership?.show_personal_to_family ? 'left-[3px] right-auto' : 'right-[3px] left-auto'
-              }`} />
-            </button>
+          <div className="flex flex-col gap-2">
+            {([
+              {
+                mode: 'full_access' as PrivacyMode,
+                icon: Eye,
+                iconColor: 'text-[var(--c-green-0-70)]',
+                label: 'גישה מלאה',
+                desc: 'בן/בת הזוג רואה הכל - כולל פירוט עסקאות והכנסות',
+              },
+              {
+                mode: 'summary_only' as PrivacyMode,
+                icon: BarChart3,
+                iconColor: 'text-[var(--accent-blue)]',
+                label: 'סיכום בלבד',
+                desc: 'סכומים לפי קטגוריה, בלי פירוט עסקאות בודדות',
+              },
+              {
+                mode: 'hidden' as PrivacyMode,
+                icon: EyeOff,
+                iconColor: 'text-[var(--text-secondary)]',
+                label: 'מוסתר',
+                desc: 'רק הסכום הכולל נראה בתמונה המשפחתית',
+              },
+            ]).map(opt => {
+              const Icon = opt.icon
+              const isActive = (myMembership?.privacy_mode ?? 'summary_only') === opt.mode
+              return (
+                <button
+                  key={opt.mode}
+                  onClick={() => updatePrivacy.mutate(opt.mode)}
+                  disabled={updatePrivacy.isPending}
+                  className={`flex items-center gap-3 px-3.5 py-3 rounded-lg text-right cursor-pointer transition-colors border ${
+                    isActive
+                      ? 'bg-[var(--c-blue-0-20)] border-[var(--c-blue-0-40)]'
+                      : 'bg-[var(--bg-base)] border-[var(--border-default)] hover:bg-[var(--bg-hover)]'
+                  }`}
+                >
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                    isActive ? 'bg-[var(--c-blue-0-30)]' : 'bg-[var(--bg-hover)]'
+                  }`}>
+                    <Icon size={16} className={isActive ? 'text-[var(--accent-blue)]' : opt.iconColor} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-[13px] font-medium">{opt.label}</div>
+                    <div className="text-[11px] text-[var(--text-secondary)] mt-0.5">{opt.desc}</div>
+                  </div>
+                  {isActive && (
+                    <div className="w-2 h-2 rounded-full bg-[var(--accent-blue)] shrink-0" />
+                  )}
+                </button>
+              )
+            })}
           </div>
         </div>
 

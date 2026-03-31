@@ -33,7 +33,7 @@ export default function JointPage() {
   const { data: periods } = usePeriods()
   const currentPeriod = useCurrentPeriod()
   const { selectedPeriodId, setSelectedPeriodId } = useSharedPeriod()
-  const { familyId } = useFamilyContext()
+  const { familyId, isSolo, loading: familyLoading } = useFamilyContext()
 
   useEffect(() => {
     if (currentPeriod && !selectedPeriodId) setSelectedPeriodId(currentPeriod.id)
@@ -42,6 +42,11 @@ export default function JointPage() {
   useEffect(() => {
     if (!loading && !user) router.push('/login')
   }, [user, loading, router])
+
+  // Solo mode: redirect to dashboard (wait for family data to load)
+  useEffect(() => {
+    if (!familyLoading && isSolo) router.push('/')
+  }, [familyLoading, isSolo, router])
 
   const { data: poolIncome } = useJointPoolIncome(selectedPeriodId, familyId)
   const { data: poolExpenses } = useJointPoolExpenses(selectedPeriodId, familyId)

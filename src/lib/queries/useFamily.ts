@@ -8,6 +8,7 @@ export interface FamilyMemberProfile {
   name: string
   role: 'admin' | 'member'
   show_personal_to_family: boolean
+  privacy_mode: 'full_access' | 'summary_only' | 'hidden'
 }
 
 export function useFamilyMemberProfiles(memberIds: string[], enabled: boolean) {
@@ -22,7 +23,7 @@ export function useFamilyMemberProfiles(memberIds: string[], enabled: boolean) {
         .in('id', memberIds)
       const { data: memberships } = await sb
         .from('family_members')
-        .select('user_id, role, show_personal_to_family')
+        .select('user_id, role, show_personal_to_family, privacy_mode')
         .in('user_id', memberIds)
       const membershipMap = new Map((memberships ?? []).map(m => [m.user_id, m]))
       return (profiles ?? []).map(p => ({
@@ -30,6 +31,7 @@ export function useFamilyMemberProfiles(memberIds: string[], enabled: boolean) {
         name: p.name ?? 'חבר/ת משפחה',
         role: (membershipMap.get(p.id)?.role ?? 'member') as 'admin' | 'member',
         show_personal_to_family: membershipMap.get(p.id)?.show_personal_to_family ?? false,
+        privacy_mode: (membershipMap.get(p.id)?.privacy_mode ?? 'summary_only') as 'full_access' | 'summary_only' | 'hidden',
       }))
     },
     staleTime: 1000 * 60 * 5,
@@ -39,9 +41,10 @@ export function useFamilyMemberProfiles(memberIds: string[], enabled: boolean) {
 export interface FamilyMemberSummary {
   user_id: string
   display_name: string
-  income: number
-  personal_expenses: number
+  income?: number
+  personal_expenses?: number
   show_details: boolean
+  privacy_mode: 'full_access' | 'summary_only' | 'hidden'
 }
 
 export interface FamilySummary {

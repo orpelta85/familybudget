@@ -49,6 +49,15 @@ export async function GET(req: NextRequest) {
 
   const profileMap = new Map((profiles ?? []).map(p => [p.id, p.name]))
 
+  // Get privacy settings for all members
+  const { data: privacyRows } = await sb
+    .from('family_members')
+    .select('user_id, privacy_mode')
+    .eq('family_id', membership.family_id)
+    .in('user_id', memberIds)
+
+  const privacyMap = new Map((privacyRows ?? []).map(m => [m.user_id, m.privacy_mode as string]))
+
   // Get expenses for all members in this period
   const { data: expenseRows } = await sb
     .from('personal_expenses')
@@ -57,15 +66,52 @@ export async function GET(req: NextRequest) {
     .in('user_id', memberIds)
     .order('created_at', { ascending: false })
 
-  // Group by user
+  // Group by user — respect privacy settings
   const result = memberIds.map(uid => {
     const userExpenses = (expenseRows ?? []).filter(e => e.user_id === uid)
     const total = userExpenses.reduce((s, e) => s + Number(e.amount), 0)
+    const isCurrentUser = uid === effective.userId
+    const privacyMode = isCurrentUser ? 'full_access' : (privacyMap.get(uid) ?? 'summary_only')
+
+    if (privacyMode === 'full_access') {
+      // Full access — return all transactions
+      return {
+        user_id: uid,
+        display_name: profileMap.get(uid) ?? 'חבר/ת משפחה',
+        expenses: userExpenses,
+        total,
+        privacy: 'full' as const,
+      }
+    }
+
+    if (privacyMode === 'hidden') {
+      // Hidden — return only total, no categories or transactions
+      return {
+        user_id: uid,
+        display_name: profileMap.get(uid) ?? 'חבר/ת משפחה',
+        expenses: [],
+        categories: [],
+        total,
+        privacy: 'hidden' as const,
+      }
+    }
+
+    // summary_only — return category aggregates, no transaction details
+    const categoryTotals = new Map<string, { name: string; total: number }>()
+    for (const e of userExpenses) {
+      const catName = e.budget_categories?.name ?? 'אחר'
+      const existing = categoryTotals.get(catName) ?? { name: catName, total: 0 }
+      existing.total += Number(e.amount)
+      categoryTotals.set(catName, existing)
+    }
+
     return {
       user_id: uid,
       display_name: profileMap.get(uid) ?? 'חבר/ת משפחה',
-      expenses: userExpenses,
+      expenses: [],
+      categories: Array.from(categoryTotals.values()),
       total,
+      privacy: 'summary' as const,
     }
   })
 

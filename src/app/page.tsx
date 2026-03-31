@@ -22,7 +22,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState, useRef } from 'react'
 import { useFamilyView } from '@/contexts/FamilyViewContext'
 import { PeriodSelector } from '@/components/layout/PeriodSelector'
-import { Wallet, Receipt, TrendingUp, PiggyBank, Target, AlertTriangle, CalendarDays, Users, X, Download, MoreHorizontal, Home, Car, Plane, GraduationCap, ShieldAlert, Heart, Baby } from 'lucide-react'
+import { Wallet, Receipt, TrendingUp, PiggyBank, Target, AlertTriangle, CalendarDays, Users, X, Download, MoreHorizontal, Home, Car, Plane, GraduationCap, ShieldAlert, Heart, Baby, EyeOff } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
 const GOAL_ICON_MAP: Record<string, LucideIcon> = {
@@ -71,10 +71,15 @@ export default function Dashboard() {
   const { data: periods } = usePeriods()
   const currentPeriod = useCurrentPeriod()
   const { selectedPeriodId, setSelectedPeriodId } = useSharedPeriod()
-  const { familyId } = useFamilyContext()
+  const { familyId, isSolo, loading: familyLoading } = useFamilyContext()
   const splitFrac = useSplitFraction(user?.id)
   const { data: profile } = useProfile(user?.id)
-  const { viewMode } = useFamilyView()
+  const { viewMode, setViewMode } = useFamilyView()
+
+  // Reset to personal view when becoming solo (partner removed)
+  useEffect(() => {
+    if (!familyLoading && isSolo && viewMode !== 'personal') setViewMode('personal')
+  }, [familyLoading, isSolo, viewMode, setViewMode])
   const { data: familySummary } = useFamilySummary(selectedPeriodId, viewMode !== 'personal')
   const { data: dashboardAlerts } = useAlerts(user?.id)
   const markAlertRead = useMarkAlertRead()
@@ -262,19 +267,24 @@ export default function Dashboard() {
   const netWorth = netWorthFromEntries > 0 ? netWorthFromEntries : (totalFundRemaining + totalGoalsSaved + pensionTotal)
 
   // ── Financial Health Score (0-100) ─────────────────────────────────────────
+  // Sinking funds are treated as savings (planned allocation), not real expenses
+  const coreExpenses = totalPersonal + totalShared
+  const coreSavingsPct = totalIncome > 0 ? Math.round(((totalIncome - coreExpenses) / totalIncome) * 100) : 0
   const healthScores: number[] = []
-  if (totalIncome > 0) healthScores.push(Math.min(savingsPct / 20 * 30, 30))
+  if (totalIncome > 0) healthScores.push(Math.min(coreSavingsPct / 20 * 30, 30))
   const catsWithTarget = (categories ?? []).filter(c => c.monthly_target > 0)
   if (catsWithTarget.length > 0) {
     const underBudget = catsWithTarget.filter(c => (spendByCat[c.id] ?? 0) <= c.monthly_target).length
     healthScores.push((underBudget / catsWithTarget.length) * 20)
   }
-  const emergencyMonths = totalExpenses > 0 ? totalFundRemaining / totalExpenses : 0
-  healthScores.push(totalExpenses > 0 ? Math.min(emergencyMonths / 3 * 20, 20) : 0)
+  const emergencyMonths = coreExpenses > 0 ? totalFundRemaining / coreExpenses : 0
+  healthScores.push(coreExpenses > 0 ? Math.min(emergencyMonths / 3 * 20, 20) : 0)
   healthScores.push(pensionTotal > 0 ? 15 : 0)
   healthScores.push(totalGoalsTarget > 0 ? Math.min((totalGoalsSaved / totalGoalsTarget) * 15, 15) : 0)
+  // Bonus: having active sinking funds shows financial planning discipline
+  healthScores.push(sinkingNet > 0 ? Math.min(5, 5) : 0)
 
-  const healthScore = Math.round(healthScores.reduce((s, v) => s + v, 0))
+  const healthScore = Math.min(100, Math.round(healthScores.reduce((s, v) => s + v, 0)))
   const healthColor = healthScore >= 75 ? 'var(--accent-green)' : healthScore >= 50 ? 'var(--accent-orange)' : 'var(--accent-red)'
   const healthLabel = healthScore >= 75 ? 'מצוין' : healthScore >= 50 ? 'סביר' : 'דורש שיפור'
 
@@ -426,7 +436,7 @@ export default function Dashboard() {
           <span className="text-[13px] text-text-body">
             {healthScore >= 70 ? 'מצב פיננסי טוב' : healthScore >= 40 ? 'מצב פיננסי סביר - יש מקום לשיפור' : 'מצב פיננסי דורש תשומת לב'}
           </span>
-          <InfoTooltip body="ציון מ-0 עד 100 שמשקלל: חיסכון, חירום, חובות, תקציב" />
+          <InfoTooltip body="ציון מ-0 עד 100 שמשקלל: חיסכון (ללא קרנות), עמידה בתקציב, קרן חירום, פנסיה, יעדים, קרנות צבירה" />
         </div>
       )}
 
@@ -767,29 +777,45 @@ export default function Dashboard() {
 
 // ── Family Member Card ──────────────────────────────────────────────────────
 function FamilyMemberCard({ member, memberShared, memberSinking }: {
-  member: { user_id: string; display_name: string; income: number; personal_expenses: number; show_details: boolean }
+  member: { user_id: string; display_name: string; income?: number; personal_expenses?: number; show_details: boolean; privacy_mode: string }
   memberShared: number
   memberSinking: number
 }) {
   const [showSinking, setShowSinking] = useState(true)
-  const netBefore = member.income - member.personal_expenses - memberShared
+  const income = member.income ?? 0
+  const personalExpenses = member.personal_expenses ?? 0
+  const netBefore = income - personalExpenses - memberShared
   const netAfter = netBefore - memberSinking
+  const privacyMode = member.privacy_mode ?? 'summary_only'
 
   return (
     <div className="card">
       <div className="flex items-center gap-2 mb-3.5">
         <Users size={14} className="text-accent-blue" />
         <span className="font-semibold text-sm">{member.display_name}</span>
+        {privacyMode === 'summary_only' && (
+          <span className="text-[10px] text-text-secondary bg-[var(--bg-hover)] px-1.5 py-0.5 rounded" title="מציג סיכום בלבד">סיכום</span>
+        )}
+        {privacyMode === 'hidden' && (
+          <span className="text-[10px] text-text-secondary bg-[var(--bg-hover)] px-1.5 py-0.5 rounded" title="נתונים מוסתרים">מוסתר</span>
+        )}
       </div>
-      {member.show_details ? (
+      {privacyMode === 'hidden' ? (
+        <div className="text-[13px] text-text-secondary">
+          <div className="text-xs text-text-secondary italic flex items-center gap-1.5">
+            <EyeOff size={12} />
+            הנתונים האישיים מוסתרים
+          </div>
+        </div>
+      ) : member.show_details ? (
         <div className="flex flex-col gap-2 text-[13px]">
           <div className="flex justify-between">
             <span className="text-text-secondary">הכנסה</span>
-            <span className="font-medium text-accent-green">+{formatCurrency(member.income)}</span>
+            <span className="font-medium text-accent-green">+{formatCurrency(income)}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-text-secondary">הוצאות אישיות</span>
-            <span className="font-medium text-accent-orange">-{formatCurrency(member.personal_expenses)}</span>
+            <span className="font-medium text-accent-orange">-{formatCurrency(personalExpenses)}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-text-secondary">הוצאות משותפות</span>
@@ -821,9 +847,13 @@ function FamilyMemberCard({ member, memberShared, memberSinking }: {
         <div className="text-[13px] text-text-secondary">
           <div className="flex justify-between mb-2">
             <span>הכנסה</span>
-            <span className="font-medium text-accent-green">+{formatCurrency(member.income)}</span>
+            <span className="font-medium text-accent-green">+{formatCurrency(income)}</span>
           </div>
-          <div className="text-xs text-text-secondary italic">פרטי הוצאות מוסתרים</div>
+          <div className="flex justify-between mb-2">
+            <span>הוצאות אישיות</span>
+            <span className="font-medium text-accent-orange">-{formatCurrency(personalExpenses)}</span>
+          </div>
+          <div className="text-xs text-text-secondary italic">פירוט עסקאות מוסתר</div>
         </div>
       )}
     </div>

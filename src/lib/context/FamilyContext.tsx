@@ -11,6 +11,7 @@ interface FamilyContextValue {
   members: FamilyMember[]
   myMembership: FamilyMember | null
   isAdmin: boolean
+  isSolo: boolean
   loading: boolean
 }
 
@@ -20,6 +21,7 @@ const Ctx = createContext<FamilyContextValue>({
   members: [],
   myMembership: null,
   isAdmin: false,
+  isSolo: true,
   loading: true,
 })
 
@@ -32,6 +34,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
   const members = data?.members ?? []
   const myMembership = members.find(m => m.user_id === user?.id) ?? null
   const isAdmin = myMembership?.role === 'admin'
+  const isSolo = members.length <= 1
 
   // When impersonating, override familyId from the impersonation context
   const effectiveFamilyId = impersonation ? impersonation.familyId : family?.id
@@ -43,6 +46,7 @@ export function FamilyProvider({ children }: { children: React.ReactNode }) {
       members,
       myMembership,
       isAdmin,
+      isSolo,
       loading: isLoading,
     }}>
       {children}

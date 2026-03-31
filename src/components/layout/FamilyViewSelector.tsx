@@ -35,7 +35,9 @@ export function FamilyViewSelector() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [showDropdown])
 
-  if (!familyId) return null
+  const { isSolo } = useFamilyContext()
+
+  if (!familyId || isSolo) return null
 
   const hasMembers = otherMembers.length > 0 || (kids ?? []).length > 0
 

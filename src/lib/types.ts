@@ -189,12 +189,15 @@ export interface Family {
   created_at: string
 }
 
+export type PrivacyMode = 'full_access' | 'summary_only' | 'hidden'
+
 export interface FamilyMember {
   id: number
   family_id: string
   user_id: string
   role: 'admin' | 'member'
   show_personal_to_family: boolean
+  privacy_mode: PrivacyMode
   joined_at: string
 }
 
