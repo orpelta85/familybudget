@@ -61,7 +61,7 @@ const navSections: NavSection[] = [
 
 export function Sidebar() {
   const pathname = usePathname()
-  const { family, isAdmin } = useFamilyContext()
+  const { family, isAdmin, isSolo } = useFamilyContext()
   const { user } = useUser()
   const { data: alerts } = useAlerts(user?.id)
   const { data: unreadCount } = useUnreadAlertCount(user?.id)
@@ -119,9 +119,8 @@ export function Sidebar() {
       {/* Logo */}
       <div className="px-5 pt-5 pb-4 border-b border-[var(--c-0-20)]">
         <div className="mb-1.5 flex flex-col items-center">
-          <img src="/logo-familyplan.png" alt="Family Plan" width={158} height={158} className="w-[158px] h-[158px] object-contain logo-dark" />
-          <img src="/logo-familyplan-light.png" alt="Family Plan" width={158} height={158} className="w-[158px] h-[158px] object-contain logo-light" style={{ filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.10)) contrast(1.1) saturate(1.15)' }} />
-          <div className="text-[10px] text-[var(--text-muted)] -mt-4 tracking-wide">סדר בבית, שקט בכיס.</div>
+          <img src="/logo-familyplan.png?v=3" alt="Family Plan" width={180} height={180} className="w-[180px] h-[180px] object-contain logo-dark" />
+          <img src="/logo-familyplan-light.png?v=3" alt="Family Plan" width={180} height={167} className="w-[180px] h-auto object-contain logo-light" style={{ filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.10)) contrast(1.1) saturate(1.15)' }} />
         </div>
         {/* Family name + Bell */}
         <div className="flex items-center justify-between min-h-[24px]">
@@ -190,39 +189,45 @@ export function Sidebar() {
 
       {/* Nav */}
       <nav className="flex-1 p-2 px-2.5 overflow-y-auto flex flex-col">
-        {navSections.map((section, si) => (
-          <div key={section.sectionLabel}>
-            <div
-              className={cn(
-                'text-[10px] uppercase tracking-[0.05em] text-[var(--text-muted)] font-medium px-3 pb-2 select-none',
-                si === 0 ? 'pt-2' : 'pt-5'
-              )}
-            >
-              {section.sectionLabel}
+        {navSections.map((section, si) => {
+          // Hide family-only pages in solo mode
+          const soloHidden = ['/joint']
+          const items = isSolo ? section.items.filter(l => !soloHidden.includes(l.href)) : section.items
+          if (items.length === 0) return null
+          return (
+            <div key={section.sectionLabel}>
+              <div
+                className={cn(
+                  'text-[10px] uppercase tracking-[0.05em] text-[var(--text-muted)] font-medium px-3 pb-2 select-none',
+                  si === 0 ? 'pt-2' : 'pt-5'
+                )}
+              >
+                {section.sectionLabel}
+              </div>
+              <div className="flex flex-col gap-0.5">
+                {items.map(link => {
+                  const active = pathname === link.href
+                  const Icon = link.icon
+                  return (
+                    <Link
+                      key={link.href}
+                      href={link.href}
+                      className={cn(
+                        'flex items-center gap-2.5 py-2 px-3 rounded-lg text-[13px] no-underline transition-all duration-150 border-r-2 font-medium',
+                        active
+                          ? 'text-[var(--c-0-92)] bg-[var(--c-0-22)] border-r-[var(--accent-blue)] border-r-[3px]'
+                          : 'text-[var(--text-secondary)] bg-transparent border-r-transparent'
+                      )}
+                    >
+                      <Icon size={15} className="shrink-0" />
+                      <span>{link.label}</span>
+                    </Link>
+                  )
+                })}
+              </div>
             </div>
-            <div className="flex flex-col gap-0.5">
-              {section.items.map(link => {
-                const active = pathname === link.href
-                const Icon = link.icon
-                return (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className={cn(
-                      'flex items-center gap-2.5 py-2 px-3 rounded-lg text-[13px] no-underline transition-all duration-150 border-r-2 font-medium',
-                      active
-                        ? 'text-[var(--c-0-92)] bg-[var(--c-0-22)] border-r-[var(--accent-blue)] border-r-[3px]'
-                        : 'text-[var(--text-secondary)] bg-transparent border-r-transparent'
-                    )}
-                  >
-                    <Icon size={15} className="shrink-0" />
-                    <span>{link.label}</span>
-                  </Link>
-                )
-              })}
-            </div>
-          </div>
-        ))}
+          )
+        })}
         <div className="h-px bg-[var(--bg-hover)] my-2" />
         <Link
           href="/family"
@@ -257,13 +262,22 @@ export function Sidebar() {
 
       {/* Footer */}
       <div className="px-5 py-3 border-t border-[var(--c-0-20)] flex flex-col gap-2">
-        {isAdmin && family && (
+        {isAdmin && family && !isSolo && (
           <button
             onClick={() => setShowInvite(true)}
             className="flex items-center gap-1.5 bg-transparent border border-[var(--border-default)] rounded-md px-2.5 py-1.5 text-[var(--c-blue-0-60)] text-[11px] font-medium cursor-pointer"
           >
             <Users size={12} />
             הזמן חבר משפחה
+          </button>
+        )}
+        {isSolo && isAdmin && family && (
+          <button
+            onClick={() => setShowInvite(true)}
+            className="flex items-center gap-1.5 bg-transparent border border-dashed border-[var(--c-blue-0-40)] rounded-md px-2.5 py-1.5 text-[var(--c-blue-0-60)] text-[11px] font-medium cursor-pointer"
+          >
+            <Users size={12} />
+            הזמן בן/בת זוג
           </button>
         )}
         <div className="text-[11px] text-[var(--text-secondary)] leading-normal">

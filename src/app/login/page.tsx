@@ -91,8 +91,8 @@ function LoginForm() {
     <div className="min-h-screen flex items-center justify-center p-4 ml-0 max-w-[100vw]">
       <div className="w-[380px] bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-8">
         <div className="flex flex-col items-center mb-6">
-          <img src="/logo-familyplan.png" alt="Family Plan" className="logo-dark" style={{ width: 180, height: 'auto' }} />
-          <img src="/logo-familyplan-light.png" alt="Family Plan" className="logo-light" style={{ width: 180, height: 'auto' }} />
+          <img src="/logo-familyplan.png?v=3" alt="Family Plan" className="logo-dark" style={{ width: 180, height: 'auto' }} />
+          <img src="/logo-familyplan-light.png?v=3" alt="Family Plan" className="logo-light" style={{ width: 180, height: 'auto' }} />
           <div className="text-[13px] text-[var(--text-muted)] mt-1.5 tracking-wide">סדר בבית, שקט בכיס.</div>
         </div>
         <p className="text-[var(--c-0-60)] text-sm mb-7 text-center">
