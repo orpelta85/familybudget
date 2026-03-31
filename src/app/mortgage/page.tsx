@@ -464,7 +464,7 @@ export default function MortgagePage() {
               <span className="text-[var(--text-secondary)] text-sm">₪ נוספים לחודש</span>
             </div>
             {whatIfResults && extra > 0 && (
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 <div className="bg-[var(--c-0-14)] border border-[var(--bg-hover)] rounded-lg p-3">
                   <div className="text-[10px] text-[var(--text-secondary)] mb-1">חיסכון בזמן</div>
                   <div className="text-base font-bold text-[var(--accent-green)]">{formatMonths(whatIfResults.savedMonths)}</div>
@@ -491,8 +491,8 @@ export default function MortgagePage() {
 
       {/* Add Mortgage Modal */}
       {showAddMortgage && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-[var(--c-0-18)] border border-[var(--border-light)] rounded-[14px] p-7 w-[400px]">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-[var(--c-0-18)] border border-[var(--border-light)] rounded-[14px] p-7 w-full max-w-[400px]">
             <div className="flex justify-between items-center mb-5">
               <span className="font-semibold text-[15px]">הוסף משכנתא</span>
               <button onClick={() => setShowAddMortgage(false)} aria-label="סגור" className="bg-transparent border-none text-[var(--text-secondary)] cursor-pointer p-2"><X size={18} /></button>
@@ -540,8 +540,8 @@ export default function MortgagePage() {
 
       {/* Add Track Modal */}
       {showAddTrack && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-[var(--c-0-18)] border border-[var(--border-light)] rounded-[14px] p-7 w-[420px]">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-[var(--c-0-18)] border border-[var(--border-light)] rounded-[14px] p-7 w-full max-w-[420px]">
             <div className="flex justify-between items-center mb-5">
               <span className="font-semibold text-[15px]">הוסף מסלול</span>
               <button onClick={() => setShowAddTrack(null)} aria-label="סגור" className="bg-transparent border-none text-[var(--text-secondary)] cursor-pointer p-2"><X size={18} /></button>

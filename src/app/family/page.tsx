@@ -13,6 +13,7 @@ import {
 import type { PrivacyMode } from '@/lib/types'
 import { useTheme } from '@/contexts/ThemeContext'
 import { TableSkeleton } from '@/components/ui/Skeleton'
+import { useConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { PageInfo } from '@/components/ui/PageInfo'
 import { PAGE_TIPS } from '@/lib/page-tips'
 
@@ -31,6 +32,7 @@ export default function FamilyPage() {
   const { user } = useUser()
   const qc = useQueryClient()
   const { theme, setTheme } = useTheme()
+  const confirm = useConfirmDialog()
 
   const [editingName, setEditingName] = useState(false)
   const [nameValue, setNameValue] = useState('')
@@ -146,6 +148,9 @@ export default function FamilyPage() {
         <p className="text-[13px] text-[var(--text-secondary)] m-0">
           {family.name}
         </p>
+        <a href="#privacy" className="md:hidden inline-flex items-center gap-1 mt-2 text-[11px] text-[var(--accent-blue)] no-underline">
+          <Shield size={11} /> הגדרות פרטיות ↓
+        </a>
       </div>
 
       <div className="flex flex-col gap-4">
@@ -365,7 +370,7 @@ export default function FamilyPage() {
         </div>
 
         {/* Privacy Setting Card */}
-        <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5">
+        <div id="privacy" className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5 scroll-mt-4">
           <h2 className="text-sm font-semibold mb-4 mt-0">
             פרטיות
           </h2>
@@ -402,8 +407,13 @@ export default function FamilyPage() {
               return (
                 <button
                   key={opt.mode}
-                  onClick={() => updatePrivacy.mutate(opt.mode)}
+                  onClick={async () => {
+                    if (isActive) return
+                    const ok = await confirm({ message: `לשנות מצב פרטיות ל"${opt.label}"?`, confirmText: 'שנה', cancelText: 'ביטול' })
+                    if (ok) updatePrivacy.mutate(opt.mode)
+                  }}
                   disabled={updatePrivacy.isPending}
+                  aria-pressed={isActive}
                   className={`flex items-center gap-3 px-3.5 py-3 rounded-lg text-right cursor-pointer transition-colors border ${
                     isActive
                       ? 'bg-[var(--c-blue-0-20)] border-[var(--c-blue-0-40)]'

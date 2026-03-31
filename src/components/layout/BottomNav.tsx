@@ -9,52 +9,30 @@ import { useFamilyContext } from '@/lib/context/FamilyContext'
 
 const nav = [
   { href: '/',          label: 'דשבורד',  icon: LayoutDashboard },
+  { href: '/income',    label: 'הכנסות',  icon: Wallet },
   { href: '/expenses',  label: 'הוצאות',  icon: Receipt },
-  { href: '/goals',     label: 'יעדים',   icon: Crosshair },
-  { href: '/analytics', label: 'שנתי',    icon: BarChart3 },
+  { href: '/budget',    label: 'תקציב',   icon: ListChecks },
 ]
 
 type MoreLink = { href: string; label: string; icon: typeof LayoutDashboard }
-type MoreSection = { sectionLabel: string; items: MoreLink[] }
 
-const moreSections: MoreSection[] = [
-  {
-    sectionLabel: 'פעילות שוטפת',
-    items: [
-      { href: '/income',   label: 'הכנסות',       icon: Wallet },
-      { href: '/budget',   label: 'תקציב',        icon: ListChecks },
-      { href: '/joint',    label: 'קופה קטנה',    icon: Banknote },
-      { href: '/kids',     label: 'ילדים',         icon: Baby },
-    ],
-  },
-  {
-    sectionLabel: 'חיסכון ויעדים',
-    items: [
-      { href: '/sinking',  label: 'קרנות צבירה',  icon: Archive },
-      { href: '/pension',  label: 'פנסיה',         icon: Landmark },
-    ],
-  },
-  {
-    sectionLabel: 'נכסים והתחייבויות',
-    items: [
-      { href: '/net-worth',  label: 'שווי נקי',    icon: TrendingUp },
-      { href: '/mortgage',   label: 'משכנתא',       icon: Home },
-      { href: '/debts',      label: 'חובות',        icon: Calculator },
-      { href: '/insurance',  label: 'ביטוחים',      icon: Shield },
-    ],
-  },
-  {
-    sectionLabel: 'תכנון וניתוח',
-    items: [
-      { href: '/subscriptions', label: 'מנויים',   icon: CreditCard },
-      { href: '/forecast',      label: 'תחזית',    icon: CalendarDays },
-      { href: '/advisor',       label: 'יועץ',     icon: Sparkles },
-      { href: '/family',        label: 'הגדרות',   icon: Settings },
-    ],
-  },
+const moreLinks: MoreLink[] = [
+  { href: '/joint',         label: 'קופה קטנה',    icon: Banknote },
+  { href: '/kids',          label: 'ילדים',         icon: Baby },
+  { href: '/sinking',       label: 'קרנות צבירה',  icon: Archive },
+  { href: '/goals',         label: 'יעדים',         icon: Crosshair },
+  { href: '/pension',       label: 'פנסיה',         icon: Landmark },
+  { href: '/net-worth',     label: 'שווי נקי',     icon: TrendingUp },
+  { href: '/mortgage',      label: 'משכנתא',        icon: Home },
+  { href: '/debts',         label: 'חובות',         icon: Calculator },
+  { href: '/insurance',     label: 'ביטוחים',       icon: Shield },
+  { href: '/subscriptions', label: 'מנויים',        icon: CreditCard },
+  { href: '/forecast',      label: 'תחזית',         icon: CalendarDays },
+  { href: '/analytics',     label: 'ניתוח שנתי',   icon: BarChart3 },
+  { href: '/advisor',       label: 'יועץ',          icon: Sparkles },
+  { href: '/family',        label: 'הגדרות',        icon: Settings },
 ]
 
-const allMoreLinks = moreSections.flatMap(s => s.items)
 const soloHiddenPaths = ['/joint']
 
 export function BottomNav() {
@@ -128,14 +106,11 @@ export function BottomNav() {
   }, [closeSheet])
 
   // Filter out family-only pages in solo mode
-  const filteredMoreSections = useMemo(() =>
-    isSolo
-      ? moreSections.map(s => ({ ...s, items: s.items.filter(l => !soloHiddenPaths.includes(l.href)) })).filter(s => s.items.length > 0)
-      : moreSections,
+  const filteredMoreLinks = useMemo(() =>
+    isSolo ? moreLinks.filter(l => !soloHiddenPaths.includes(l.href)) : moreLinks,
     [isSolo]
   )
-  const filteredAllMoreLinks = useMemo(() => filteredMoreSections.flatMap(s => s.items), [filteredMoreSections])
-  const isMoreActive = filteredAllMoreLinks.some(l => pathname === l.href)
+  const isMoreActive = filteredMoreLinks.some(l => pathname === l.href)
 
   return (
     <>
@@ -149,7 +124,7 @@ export function BottomNav() {
               href={item.href}
               className={cn(
                 'flex-1 flex flex-col items-center gap-1 py-2 no-underline transition-colors duration-150 text-[10px]',
-                active ? 'text-[var(--accent-blue)]' : 'text-[var(--text-secondary)]'
+                active ? 'text-[var(--accent-green)]' : 'text-[var(--text-secondary)]'
               )}
             >
               <Icon size={18} />
@@ -163,7 +138,7 @@ export function BottomNav() {
           onClick={() => setShowMore(v => !v)}
           className={cn(
             'flex-1 flex flex-col items-center gap-1 py-2 bg-transparent border-none cursor-pointer transition-colors duration-150 text-[10px]',
-            isMoreActive ? 'text-[var(--accent-blue)]' : 'text-[var(--text-secondary)]'
+            isMoreActive ? 'text-[var(--accent-green)]' : 'text-[var(--text-secondary)]'
           )}
         >
           <Menu size={18} />
@@ -206,37 +181,30 @@ export function BottomNav() {
               </button>
             </div>
 
-            {/* Sections */}
+            {/* Grid */}
             <div className="px-5 pb-8">
-              {filteredMoreSections.map((section, si) => (
-                <div key={section.sectionLabel} className={si > 0 ? 'mt-5' : ''}>
-                  <div className="text-[10px] uppercase tracking-[0.05em] text-[var(--text-muted)] mb-2.5 select-none">
-                    {section.sectionLabel}
-                  </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    {section.items.map(item => {
-                      const active = pathname === item.href
-                      const Icon = item.icon
-                      return (
-                        <Link
-                          key={item.href}
-                          href={item.href}
-                          onClick={closeSheet}
-                          className={cn(
-                            'flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl no-underline transition-colors duration-150',
-                            active
-                              ? 'bg-[var(--c-blue-0-22)] text-[var(--accent-blue)]'
-                              : 'bg-transparent text-[var(--text-secondary)]'
-                          )}
-                        >
-                          <Icon size={20} />
-                          <span className="text-[11px] leading-tight text-center">{item.label}</span>
-                        </Link>
-                      )
-                    })}
-                  </div>
-                </div>
-              ))}
+              <div className="grid grid-cols-3 gap-2">
+                {filteredMoreLinks.map(item => {
+                  const active = pathname === item.href
+                  const Icon = item.icon
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      onClick={closeSheet}
+                      className={cn(
+                        'flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl no-underline transition-colors duration-150',
+                        active
+                          ? 'bg-[var(--c-green-0-22)] text-[var(--accent-green)]'
+                          : 'bg-transparent text-[var(--text-secondary)]'
+                      )}
+                    >
+                      <Icon size={20} />
+                      <span className="text-[11px] leading-tight text-center">{item.label}</span>
+                    </Link>
+                  )
+                })}
+              </div>
             </div>
           </div>
         </div>

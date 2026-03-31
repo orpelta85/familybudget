@@ -353,7 +353,7 @@ export default function NetWorthPage() {
             <TrendingUp size={14} className="text-[var(--accent-blue)]" />
             <span className="font-bold text-sm">סיכום תשואות</span>
           </div>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <div>
               <div className="text-[11px] text-[var(--text-secondary)] mb-1 tracking-wide flex items-center gap-1">תשואה חודשית <InfoTooltip body="כמה הכסף שלכם הרוויח (או הפסיד). תשואה שנתית של 8% = ממוצע שוק המניות" /></div>
               <div className={`text-xl font-bold ${returnsSummary.monthlyReturn >= 0 ? 'text-[var(--accent-green)]' : 'text-[var(--accent-red)]'}`}>
@@ -581,8 +581,8 @@ export default function NetWorthPage() {
 
       {/* Add Modal */}
       {newEntry && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-[var(--c-0-18)] border border-[var(--border-light)] rounded-[14px] p-7 w-[380px] max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-[var(--c-0-18)] border border-[var(--border-light)] rounded-[14px] p-7 w-full max-w-[380px] max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-5">
               <span className="font-semibold text-[15px]">הוסף {newEntry.type === 'asset' ? 'נכס' : 'התחייבות'}</span>
               <button onClick={() => setNewEntry(null)} aria-label="סגור" className="bg-transparent border-none text-[var(--text-secondary)] cursor-pointer p-2"><X size={18} /></button>

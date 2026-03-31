@@ -537,8 +537,8 @@ export default function DebtsPage() {
 
       {/* Add Debt Modal */}
       {newDebt && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-[var(--c-0-18)] border border-[var(--border-light)] rounded-[14px] p-7 w-[400px]">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-[var(--c-0-18)] border border-[var(--border-light)] rounded-[14px] p-7 w-full max-w-[400px]">
             <div className="flex justify-between items-center mb-5">
               <span className="font-semibold text-[15px]">{editingDebtId ? 'עריכת חוב' : 'הוסף חוב'}</span>
               <button onClick={closeModal} aria-label="סגור" className="bg-transparent border-none text-[var(--text-secondary)] cursor-pointer p-2 min-w-9 min-h-9 flex items-center justify-center">

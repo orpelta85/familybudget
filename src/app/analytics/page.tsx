@@ -223,11 +223,11 @@ export default function AnalyticsPage() {
           <button onClick={() => {
             const yearNum = selectedYearIdx === 0 ? 2 : selectedYearIdx
             window.open(`/api/reports/annual?year=${yearNum}`, '_blank')
-          }} className="flex items-center gap-1.5 bg-[var(--c-shared-0-20)] border border-[var(--c-shared-0-32)] rounded-lg px-3.5 py-[7px] text-[var(--c-shared-0-70)] text-[13px] font-medium cursor-pointer">
-            <Download size={13} /> דוח שנתי PDF
+          }} className="flex items-center gap-1.5 bg-[var(--c-shared-0-20)] border border-[var(--c-shared-0-32)] rounded-lg px-2.5 sm:px-3.5 py-[7px] text-[var(--c-shared-0-70)] text-[13px] font-medium cursor-pointer" title="דוח שנתי PDF">
+            <Download size={13} className="shrink-0" /> <span className="hidden sm:inline ml-1.5">דוח שנתי PDF</span>
           </button>
-          <button onClick={handleDownloadReport} className="flex items-center gap-1.5 bg-[var(--c-blue-0-20)] border border-[var(--c-blue-0-32)] rounded-lg px-3.5 py-[7px] text-[var(--accent-blue)] text-[13px] font-medium cursor-pointer">
-            <FileText size={13} /> הורד Excel
+          <button onClick={handleDownloadReport} className="flex items-center gap-1.5 bg-[var(--c-blue-0-20)] border border-[var(--c-blue-0-32)] rounded-lg px-2.5 sm:px-3.5 py-[7px] text-[var(--accent-blue)] text-[13px] font-medium cursor-pointer" title="הורד Excel">
+            <FileText size={13} className="shrink-0" /> <span className="hidden sm:inline ml-1.5">הורד Excel</span>
           </button>
         </div>
       </div>

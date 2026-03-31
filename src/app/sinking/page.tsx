@@ -352,8 +352,8 @@ export default function SinkingPage() {
 
       {/* Add Fund Modal */}
       {newFund && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-[var(--c-0-18)] border border-[var(--border-light)] rounded-[14px] p-7 w-[360px]">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-[var(--c-0-18)] border border-[var(--border-light)] rounded-[14px] p-7 w-full max-w-[360px]">
             <ModalHeader title="קרן שנתית חדשה" onClose={() => setNewFund(null)} />
             <FundFormFields form={newFund} onChange={setNewFund} splitFrac={splitFrac} />
             <button
@@ -369,8 +369,8 @@ export default function SinkingPage() {
 
       {/* Edit Fund Modal */}
       {editFund && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-[var(--c-0-18)] border border-[var(--border-light)] rounded-[14px] p-7 w-[360px]">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-[var(--c-0-18)] border border-[var(--border-light)] rounded-[14px] p-7 w-full max-w-[360px]">
             <ModalHeader title="עריכת קרן" onClose={() => setEditFund(null)} />
             <FundFormFields form={editFund} onChange={f => setEditFund(prev => prev && { ...prev, ...f })} splitFrac={splitFrac} />
             <button
@@ -386,8 +386,8 @@ export default function SinkingPage() {
 
       {/* Log Transaction Modal */}
       {txModal && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-[var(--c-0-18)] border border-[var(--border-light)] rounded-[14px] p-7 w-[360px]">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-[var(--c-0-18)] border border-[var(--border-light)] rounded-[14px] p-7 w-full max-w-[360px]">
             <ModalHeader title={`${txModal.fundName} — הוצאה`} onClose={() => setTxModal(null)} />
             <div className="flex flex-col gap-3">
               <div>

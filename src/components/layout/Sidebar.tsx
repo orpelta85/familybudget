@@ -151,7 +151,7 @@ export function Sidebar() {
                       alert.severity === 'danger' ? 'border-r-[var(--accent-red)]'
                       : alert.severity === 'warning' ? 'border-r-[var(--accent-orange)]'
                       : alert.severity === 'success' ? 'border-r-[var(--accent-green)]'
-                      : 'border-r-[var(--accent-blue)]'
+                      : 'border-r-[var(--accent-green)]'
                     return (
                       <div
                         key={alert.id}
@@ -215,7 +215,7 @@ export function Sidebar() {
                       className={cn(
                         'flex items-center gap-2.5 py-2 px-3 rounded-lg text-[13px] no-underline transition-all duration-150 border-r-2 font-medium',
                         active
-                          ? 'text-[var(--c-0-92)] bg-[var(--c-0-22)] border-r-[var(--accent-blue)] border-r-[3px]'
+                          ? 'text-[var(--c-0-92)] bg-[var(--c-0-22)] border-r-[var(--accent-green)] border-r-[3px]'
                           : 'text-[var(--text-secondary)] bg-transparent border-r-transparent'
                       )}
                     >
@@ -234,7 +234,7 @@ export function Sidebar() {
           className={cn(
             'flex items-center gap-2.5 py-2 px-3 rounded-lg text-[13px] no-underline transition-all duration-150 border-r-2 font-medium',
             pathname === '/family'
-              ? 'text-[var(--c-0-92)] bg-[var(--c-0-22)] border-r-[var(--accent-blue)] border-r-[3px]'
+              ? 'text-[var(--c-0-92)] bg-[var(--c-0-22)] border-r-[var(--accent-green)] border-r-[3px]'
               : 'text-[var(--text-secondary)] bg-transparent border-r-transparent'
           )}
         >
@@ -288,8 +288,8 @@ export function Sidebar() {
 
     {/* Invite Modal */}
     {showInvite && (
-      <div className="fixed inset-0 bg-black/70 z-[1000] flex items-center justify-center">
-        <div className="bg-[var(--c-0-14)] rounded-2xl p-7 w-[400px] border border-[var(--border-default)]">
+      <div className="fixed inset-0 bg-black/70 z-[1000] flex items-center justify-center p-4">
+        <div className="bg-[var(--c-0-14)] rounded-2xl p-7 w-full max-w-[400px] border border-[var(--border-default)]">
           <div className="flex justify-between items-center mb-5">
             <h3 className="text-base font-bold">הזמן חבר משפחה</h3>
             <button onClick={() => setShowInvite(false)} aria-label="סגור"

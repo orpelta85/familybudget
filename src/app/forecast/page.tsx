@@ -487,7 +487,7 @@ export default function ForecastPage() {
       )}
 
       {/* KPIs */}
-      <div className="grid grid-cols-3 gap-3 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
         <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5">
           <div className="text-[11px] text-[var(--text-secondary)] mb-1.5 tracking-wide">יתרה נמוכה ביותר</div>
           <div className={`text-2xl font-bold ${(minDay?.balance ?? 0) >= 0 ? 'text-[var(--accent-green)]' : 'text-[var(--accent-red)]'}`}>

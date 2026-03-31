@@ -120,7 +120,7 @@ export default function SubscriptionsPage() {
       <p className="text-[var(--text-secondary)] text-[13px] mb-5">מעקב אחר חיובים חודשיים קבועים</p>
 
       {/* KPIs */}
-      <div className="grid grid-cols-3 gap-3 mb-6">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
         <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5">
           <div className="text-[11px] text-[var(--text-secondary)] mb-1.5 uppercase tracking-wide">מנויים פעילים</div>
           <div className="text-2xl font-bold text-[var(--c-shared-0-65)]">{activeSubs.length}</div>
@@ -139,7 +139,8 @@ export default function SubscriptionsPage() {
       {activeSubs.length > 0 && (
         <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5 mb-4">
           <div className="font-bold text-sm mb-3">לוח חיובים חודשי</div>
-          <div className="flex gap-[3px]">
+          <div className="overflow-x-auto">
+          <div className="flex gap-[3px] min-w-[600px]">
             {Array.from({ length: 31 }, (_, i) => {
               const day = i + 1
               const daySubs = activeSubs.filter(s => s.billing_day === day)
@@ -161,6 +162,7 @@ export default function SubscriptionsPage() {
                 </div>
               )
             })}
+          </div>
           </div>
           <div className="flex gap-4 mt-2.5 text-[10px] text-[var(--text-muted)]">
             <div className="flex items-center gap-1">
@@ -237,8 +239,8 @@ export default function SubscriptionsPage() {
 
       {/* Add Modal */}
       {newSub && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-[var(--c-0-18)] border border-[var(--border-light)] rounded-[14px] p-7 w-[360px]">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-[var(--c-0-18)] border border-[var(--border-light)] rounded-[14px] p-7 w-full max-w-[360px]">
             <div className="flex justify-between items-center mb-5">
               <span className="font-semibold text-[15px]">מנוי חדש</span>
               <button onClick={() => setNewSub(null)} aria-label="סגור" className="bg-transparent border-none text-[var(--text-secondary)] cursor-pointer p-2"><X size={18} /></button>

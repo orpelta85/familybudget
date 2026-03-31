@@ -224,111 +224,186 @@ export function ExcelImportModal({
               const conf = row.matchConfidence ?? 0
               const dateStr = formatDate(row.date)
               return (
-                <div key={i} className="flex items-center gap-2 py-1.5 px-1 border-b border-[var(--c-0-12)] hover:bg-[var(--c-0-10)] transition-colors text-[12px]">
-                  {/* Checkbox */}
-                  <input
-                    type="checkbox"
-                    checked={selectedRows.has(i)}
-                    onChange={() => setSelectedRows(prev => {
-                      const next = new Set(prev)
-                      if (next.has(i)) next.delete(i); else next.add(i)
-                      return next
-                    })}
-                    className="cursor-pointer shrink-0 w-3.5 h-3.5"
-                  />
-                  {/* Confidence dot */}
-                  <span
-                    className={`shrink-0 w-1.5 h-1.5 rounded-full ${
-                      conf >= 0.8 ? 'bg-[var(--c-teal-0-65)]' : conf >= 0.3 ? 'bg-[var(--accent-orange)]' : 'bg-[var(--c-red-0-55)]'
-                    }`}
-                  />
-                  {/* Date */}
-                  <span className="shrink-0 text-[10px] text-[var(--c-0-55)] font-mono w-[32px] text-center" title={row.date}>
-                    {dateStr}
-                  </span>
-                  {/* Description - takes available space */}
-                  <span className="text-[var(--text-heading)] truncate min-w-0 flex-1" title={row.description}>
-                    {row.description}
-                  </span>
-                  {/* Source badge */}
-                  {row.sourceFile && (
-                    <span className="hidden lg:inline shrink-0 text-[9px] bg-[var(--c-0-18)] text-[var(--c-0-50)] px-1 py-0.5 rounded" title={row.sourceFile}>
-                      {row.sourceFile.length > 10 ? row.sourceFile.substring(0, 10) + '..' : row.sourceFile}
+                <div key={i} className="py-1.5 px-1 border-b border-[var(--c-0-12)] hover:bg-[var(--c-0-10)] transition-colors text-[12px]">
+                  {/* Desktop: single row | Mobile: 2 lines */}
+                  {/* Line 1: checkbox + confidence + description + amount (mobile: full width) */}
+                  <div className="flex items-center gap-2">
+                    {/* Checkbox */}
+                    <input
+                      type="checkbox"
+                      checked={selectedRows.has(i)}
+                      onChange={() => setSelectedRows(prev => {
+                        const next = new Set(prev)
+                        if (next.has(i)) next.delete(i); else next.add(i)
+                        return next
+                      })}
+                      className="cursor-pointer shrink-0 w-3.5 h-3.5"
+                    />
+                    {/* Confidence dot */}
+                    <span
+                      className={`shrink-0 w-1.5 h-1.5 rounded-full ${
+                        conf >= 0.8 ? 'bg-[var(--c-teal-0-65)]' : conf >= 0.3 ? 'bg-[var(--accent-orange)]' : 'bg-[var(--c-red-0-55)]'
+                      }`}
+                    />
+                    {/* Date - hidden on mobile line 1, shown on desktop */}
+                    <span className="hidden md:inline shrink-0 text-[10px] text-[var(--c-0-55)] font-mono w-[32px] text-center" title={row.date}>
+                      {dateStr}
                     </span>
-                  )}
-                  {/* Installment */}
-                  {row.installmentInfo && (
-                    <span className="shrink-0 text-[9px] bg-[var(--c-purple-0-22)] text-[var(--c-purple-0-75)] px-1 py-0.5 rounded whitespace-nowrap">
-                      {row.installmentInfo}
+                    {/* Description - takes available space */}
+                    <span className="text-[var(--text-heading)] truncate min-w-0 flex-1" title={row.description}>
+                      {row.description}
                     </span>
-                  )}
-                  {/* Amount */}
-                  <span className="shrink-0 w-[60px] text-left font-semibold text-[var(--accent-orange)] tabular-nums">
-                    {formatCurrency(row.amount)}
-                  </span>
-                  {/* Personal/Shared toggle */}
-                  <button
-                    onClick={() => setImportRows(p => p.map((r, j) => j === i ? { ...r, is_shared: !r.is_shared } : r))}
-                    className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold cursor-pointer whitespace-nowrap w-[48px] text-center ${
-                      row.is_shared
-                        ? 'bg-[var(--c-purple-0-22)] border border-[var(--c-purple-0-40)] text-[var(--c-purple-0-75)]'
-                        : 'bg-secondary border border-[var(--border-light)] text-muted-foreground'
-                    }`}
-                  >
-                    {row.is_shared ? 'משותף' : 'אישי'}
-                  </button>
-                  {/* Category */}
-                  <select
-                    value={row.categoryId?.startsWith('__new__') ? '__new__' : (row.categoryId || '')}
-                    onChange={e => {
-                      const val = e.target.value
-                      if (val === '__manual__') {
-                        showTextInput('שם קטגוריה חדשה:').then(name => {
-                          if (name?.trim()) {
-                            setImportRows(p => p.map((r, j) => j === i ? { ...r, categoryId: `__new__${name.trim()}`, category: name.trim() } : r))
-                          }
-                        })
-                      } else {
-                        const text = e.target.selectedOptions[0]?.text || ''
-                        setImportRows(p => p.map((r, j) => j === i ? { ...r, categoryId: val === '__new__' ? `__new__${r.category}` : val, category: val === '__new__' ? r.category : text } : r))
-                      }
-                    }}
-                    aria-label="קטגוריה"
-                    className={`shrink-0 w-[110px] bg-[var(--c-0-20)] border rounded px-1 py-0.5 text-[11px] text-inherit outline-none cursor-pointer appearance-auto ${
-                      isAutoMatched ? 'border-[var(--c-teal-0-50)] text-[var(--c-teal-0-75)]'
-                      : isNewCat ? 'border-[var(--c-orange-0-50)] text-[var(--c-orange-0-80)]'
-                      : 'border-[var(--c-0-40)] text-[var(--text-secondary)]'
-                    }`}>
-                    {isNewCat && <option value="__new__">{row.category} (חדש)</option>}
-                    {!isNewCat && !row.categoryId && <option value="">— בחר —</option>}
-                    {categories?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                    <option value="__manual__">+ חדשה...</option>
-                  </select>
-                  {/* Fund */}
-                  <select
-                    value={row.fund_name?.startsWith('__new_fund__') ? '__new_fund__' : (row.fund_name || '')}
-                    onChange={e => {
-                      const val = e.target.value
-                      if (val === '__manual_fund__') {
-                        showTextInput('שם קרן חדשה:').then(name => {
-                          if (name?.trim()) {
-                            setImportRows(p => p.map((r, j) => j === i ? { ...r, fund_name: `__new_fund__${name.trim()}` } : r))
-                          }
-                        })
-                      } else {
-                        setImportRows(p => p.map((r, j) => j === i ? { ...r, fund_name: val === '__new_fund__' ? r.fund_name : (val || undefined) } : r))
-                      }
-                    }}
-                    aria-label="קרן"
-                    className={`shrink-0 w-[85px] bg-[var(--c-0-20)] border rounded px-1 py-0.5 text-[11px] text-inherit outline-none cursor-pointer appearance-auto ${
-                      row.fund_name?.startsWith('__new_fund__') ? 'border-[var(--c-teal-0-50)] text-[var(--c-teal-0-75)]' : 'border-[var(--c-0-30)]'
-                    }`}
-                  >
-                    {row.fund_name?.startsWith('__new_fund__') && <option value="__new_fund__">{row.fund_name.replace('__new_fund__', '')} (חדש)</option>}
-                    <option value="">ללא קרן</option>
-                    {funds?.map(f => <option key={f.id} value={f.name}>{f.name}</option>)}
-                    <option value="__manual_fund__">+ חדשה...</option>
-                  </select>
+                    {/* Source badge */}
+                    {row.sourceFile && (
+                      <span className="hidden lg:inline shrink-0 text-[9px] bg-[var(--c-0-18)] text-[var(--c-0-50)] px-1 py-0.5 rounded" title={row.sourceFile}>
+                        {row.sourceFile.length > 10 ? row.sourceFile.substring(0, 10) + '..' : row.sourceFile}
+                      </span>
+                    )}
+                    {/* Installment */}
+                    {row.installmentInfo && (
+                      <span className="shrink-0 text-[9px] bg-[var(--c-purple-0-22)] text-[var(--c-purple-0-75)] px-1 py-0.5 rounded whitespace-nowrap">
+                        {row.installmentInfo}
+                      </span>
+                    )}
+                    {/* Amount */}
+                    <span className="shrink-0 w-[60px] text-left font-semibold text-[var(--accent-orange)] tabular-nums">
+                      {formatCurrency(row.amount)}
+                    </span>
+                    {/* Desktop-only: shared toggle, category, fund inline */}
+                    {/* Personal/Shared toggle */}
+                    <button
+                      onClick={() => setImportRows(p => p.map((r, j) => j === i ? { ...r, is_shared: !r.is_shared } : r))}
+                      className={`hidden md:inline-block shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold cursor-pointer whitespace-nowrap w-[48px] text-center ${
+                        row.is_shared
+                          ? 'bg-[var(--c-purple-0-22)] border border-[var(--c-purple-0-40)] text-[var(--c-purple-0-75)]'
+                          : 'bg-secondary border border-[var(--border-light)] text-muted-foreground'
+                      }`}
+                    >
+                      {row.is_shared ? 'משותף' : 'אישי'}
+                    </button>
+                    {/* Category - desktop */}
+                    <select
+                      value={row.categoryId?.startsWith('__new__') ? '__new__' : (row.categoryId || '')}
+                      onChange={e => {
+                        const val = e.target.value
+                        if (val === '__manual__') {
+                          showTextInput('שם קטגוריה חדשה:').then(name => {
+                            if (name?.trim()) {
+                              setImportRows(p => p.map((r, j) => j === i ? { ...r, categoryId: `__new__${name.trim()}`, category: name.trim() } : r))
+                            }
+                          })
+                        } else {
+                          const text = e.target.selectedOptions[0]?.text || ''
+                          setImportRows(p => p.map((r, j) => j === i ? { ...r, categoryId: val === '__new__' ? `__new__${r.category}` : val, category: val === '__new__' ? r.category : text } : r))
+                        }
+                      }}
+                      aria-label="קטגוריה"
+                      className={`hidden md:inline shrink-0 w-[110px] bg-[var(--c-0-20)] border rounded px-1 py-0.5 text-[11px] text-inherit outline-none cursor-pointer appearance-auto ${
+                        isAutoMatched ? 'border-[var(--c-teal-0-50)] text-[var(--c-teal-0-75)]'
+                        : isNewCat ? 'border-[var(--c-orange-0-50)] text-[var(--c-orange-0-80)]'
+                        : 'border-[var(--c-0-40)] text-[var(--text-secondary)]'
+                      }`}>
+                      {isNewCat && <option value="__new__">{row.category} (חדש)</option>}
+                      {!isNewCat && !row.categoryId && <option value="">— בחר —</option>}
+                      {categories?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                      <option value="__manual__">+ חדשה...</option>
+                    </select>
+                    {/* Fund - desktop */}
+                    <select
+                      value={row.fund_name?.startsWith('__new_fund__') ? '__new_fund__' : (row.fund_name || '')}
+                      onChange={e => {
+                        const val = e.target.value
+                        if (val === '__manual_fund__') {
+                          showTextInput('שם קרן חדשה:').then(name => {
+                            if (name?.trim()) {
+                              setImportRows(p => p.map((r, j) => j === i ? { ...r, fund_name: `__new_fund__${name.trim()}` } : r))
+                            }
+                          })
+                        } else {
+                          setImportRows(p => p.map((r, j) => j === i ? { ...r, fund_name: val === '__new_fund__' ? r.fund_name : (val || undefined) } : r))
+                        }
+                      }}
+                      aria-label="קרן"
+                      className={`hidden md:inline shrink-0 w-[85px] bg-[var(--c-0-20)] border rounded px-1 py-0.5 text-[11px] text-inherit outline-none cursor-pointer appearance-auto ${
+                        row.fund_name?.startsWith('__new_fund__') ? 'border-[var(--c-teal-0-50)] text-[var(--c-teal-0-75)]' : 'border-[var(--c-0-30)]'
+                      }`}
+                    >
+                      {row.fund_name?.startsWith('__new_fund__') && <option value="__new_fund__">{row.fund_name.replace('__new_fund__', '')} (חדש)</option>}
+                      <option value="">ללא קרן</option>
+                      {funds?.map(f => <option key={f.id} value={f.name}>{f.name}</option>)}
+                      <option value="__manual_fund__">+ חדשה...</option>
+                    </select>
+                  </div>
+                  {/* Line 2: mobile only - date + shared toggle + category + fund */}
+                  <div className="flex md:hidden items-center gap-1.5 mt-1 pr-7">
+                    {/* Date */}
+                    <span className="shrink-0 text-[10px] text-[var(--c-0-55)] font-mono" title={row.date}>
+                      {dateStr}
+                    </span>
+                    {/* Personal/Shared toggle */}
+                    <button
+                      onClick={() => setImportRows(p => p.map((r, j) => j === i ? { ...r, is_shared: !r.is_shared } : r))}
+                      className={`shrink-0 rounded px-1.5 py-0.5 text-[10px] font-semibold cursor-pointer whitespace-nowrap text-center ${
+                        row.is_shared
+                          ? 'bg-[var(--c-purple-0-22)] border border-[var(--c-purple-0-40)] text-[var(--c-purple-0-75)]'
+                          : 'bg-secondary border border-[var(--border-light)] text-muted-foreground'
+                      }`}
+                    >
+                      {row.is_shared ? 'משותף' : 'אישי'}
+                    </button>
+                    {/* Category */}
+                    <select
+                      value={row.categoryId?.startsWith('__new__') ? '__new__' : (row.categoryId || '')}
+                      onChange={e => {
+                        const val = e.target.value
+                        if (val === '__manual__') {
+                          showTextInput('שם קטגוריה חדשה:').then(name => {
+                            if (name?.trim()) {
+                              setImportRows(p => p.map((r, j) => j === i ? { ...r, categoryId: `__new__${name.trim()}`, category: name.trim() } : r))
+                            }
+                          })
+                        } else {
+                          const text = e.target.selectedOptions[0]?.text || ''
+                          setImportRows(p => p.map((r, j) => j === i ? { ...r, categoryId: val === '__new__' ? `__new__${r.category}` : val, category: val === '__new__' ? r.category : text } : r))
+                        }
+                      }}
+                      aria-label="קטגוריה"
+                      className={`min-w-0 flex-1 bg-[var(--c-0-20)] border rounded px-1 py-0.5 text-[11px] text-inherit outline-none cursor-pointer appearance-auto ${
+                        isAutoMatched ? 'border-[var(--c-teal-0-50)] text-[var(--c-teal-0-75)]'
+                        : isNewCat ? 'border-[var(--c-orange-0-50)] text-[var(--c-orange-0-80)]'
+                        : 'border-[var(--c-0-40)] text-[var(--text-secondary)]'
+                      }`}>
+                      {isNewCat && <option value="__new__">{row.category} (חדש)</option>}
+                      {!isNewCat && !row.categoryId && <option value="">— בחר —</option>}
+                      {categories?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                      <option value="__manual__">+ חדשה...</option>
+                    </select>
+                    {/* Fund */}
+                    <select
+                      value={row.fund_name?.startsWith('__new_fund__') ? '__new_fund__' : (row.fund_name || '')}
+                      onChange={e => {
+                        const val = e.target.value
+                        if (val === '__manual_fund__') {
+                          showTextInput('שם קרן חדשה:').then(name => {
+                            if (name?.trim()) {
+                              setImportRows(p => p.map((r, j) => j === i ? { ...r, fund_name: `__new_fund__${name.trim()}` } : r))
+                            }
+                          })
+                        } else {
+                          setImportRows(p => p.map((r, j) => j === i ? { ...r, fund_name: val === '__new_fund__' ? r.fund_name : (val || undefined) } : r))
+                        }
+                      }}
+                      aria-label="קרן"
+                      className={`shrink-0 w-[80px] bg-[var(--c-0-20)] border rounded px-1 py-0.5 text-[11px] text-inherit outline-none cursor-pointer appearance-auto ${
+                        row.fund_name?.startsWith('__new_fund__') ? 'border-[var(--c-teal-0-50)] text-[var(--c-teal-0-75)]' : 'border-[var(--c-0-30)]'
+                      }`}
+                    >
+                      {row.fund_name?.startsWith('__new_fund__') && <option value="__new_fund__">{row.fund_name.replace('__new_fund__', '')} (חדש)</option>}
+                      <option value="">ללא קרן</option>
+                      {funds?.map(f => <option key={f.id} value={f.name}>{f.name}</option>)}
+                      <option value="__manual_fund__">+ חדשה...</option>
+                    </select>
+                  </div>
                 </div>
               )
             })}

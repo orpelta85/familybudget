@@ -10,7 +10,7 @@ import { useUser } from '@/lib/queries/useUser'
 
 export function MobileViewSelector() {
   const { viewMode, selectedMemberName, setViewMode, selectMember } = useFamilyView()
-  const { familyId, members } = useFamilyContext()
+  const { familyId, members, isSolo } = useFamilyContext()
   const { user } = useUser()
   const [showDropdown, setShowDropdown] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -34,7 +34,7 @@ export function MobileViewSelector() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [showDropdown])
 
-  if (!familyId) return null
+  if (!familyId || isSolo) return null
 
   const hasMembers = otherMembers.length > 0 || (kids ?? []).length > 0
 

@@ -374,8 +374,8 @@ export default function InsurancePage() {
 
       {/* Add/Edit Modal */}
       {showForm && (
-        <div className="fixed inset-0 bg-black/70 z-[1000] flex items-center justify-center">
-          <div className="bg-[var(--c-0-14)] rounded-2xl p-6 w-[440px] max-h-[90vh] overflow-y-auto border border-[var(--border-default)]">
+        <div className="fixed inset-0 bg-black/70 z-[1000] flex items-center justify-center p-4">
+          <div className="bg-[var(--c-0-14)] rounded-2xl p-6 w-full max-w-[440px] max-h-[90vh] overflow-y-auto border border-[var(--border-default)]">
             <div className="flex justify-between items-center mb-5">
               <h3 className="text-base font-bold">{editId ? 'עריכת פוליסה' : 'הוספת פוליסה'}</h3>
               <button onClick={() => { setShowForm(false); setEditId(null) }} aria-label="סגור"

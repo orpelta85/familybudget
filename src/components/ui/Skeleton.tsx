@@ -1,7 +1,7 @@
 'use client'
 
 const shimmerStyle: React.CSSProperties = {
-  background: 'linear-gradient(90deg, var(--c-0-18) 25%, var(--bg-hover) 50%, var(--c-0-18) 75%)',
+  background: 'linear-gradient(90deg, var(--c-0-22) 25%, var(--c-0-30) 50%, var(--c-0-22) 75%)',
   backgroundSize: '200% 100%',
   animation: 'skeleton-shimmer 1.8s ease-in-out infinite',
   borderRadius: 8,

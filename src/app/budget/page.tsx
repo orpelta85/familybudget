@@ -357,11 +357,11 @@ export default function BudgetPage() {
           <PageInfo {...PAGE_TIPS.budget} />
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={() => setShowAddModal(true)} className="flex items-center gap-1.5 bg-[var(--c-green-0-20)] border border-[var(--c-green-0-32)] rounded-lg px-3 py-[7px] text-[var(--accent-green)] text-[13px] font-medium cursor-pointer">
-            <Plus size={13} /> הוסף קטגוריה
+          <button onClick={() => setShowAddModal(true)} className="flex items-center gap-1.5 bg-[var(--c-green-0-20)] border border-[var(--c-green-0-32)] rounded-lg px-2.5 sm:px-3 py-[7px] text-[var(--accent-green)] text-[13px] font-medium cursor-pointer" title="הוסף קטגוריה">
+            <Plus size={13} className="shrink-0" /> <span className="hidden sm:inline">הוסף קטגוריה</span>
           </button>
-          <button onClick={handleExportBudget} className="flex items-center gap-1.5 bg-[var(--c-blue-0-20)] border border-[var(--c-blue-0-32)] rounded-lg px-3 py-[7px] text-[var(--accent-blue)] text-[13px] font-medium cursor-pointer">
-            <Download size={13} /> הורד לאקסל
+          <button onClick={handleExportBudget} className="flex items-center gap-1.5 bg-[var(--c-blue-0-20)] border border-[var(--c-blue-0-32)] rounded-lg px-2.5 sm:px-3 py-[7px] text-[var(--accent-blue)] text-[13px] font-medium cursor-pointer" title="הורד לאקסל">
+            <Download size={13} className="shrink-0" /> <span className="hidden sm:inline">הורד לאקסל</span>
           </button>
         </div>
       </div>
@@ -447,7 +447,7 @@ export default function BudgetPage() {
                       const catRemaining = cat.monthly_target - spentFull
                       return (
                         <div key={cat.id} className="group flex items-center gap-3 py-2.5 border-b border-[var(--c-0-18)] last:border-b-0 hover:bg-[var(--c-0-18)] rounded px-2 transition-colors">
-                          <div className="min-w-[100px] shrink-0">
+                          <div className="shrink-0 max-w-[100px]">
                             <span className="font-medium text-[13px] text-[var(--c-0-82)] block">{cat.name}</span>
                             {spentMy !== spentFull && <span className="text-[10px] text-muted-foreground">חלקי: {formatCurrency(spentMy)}</span>}
                           </div>
@@ -471,7 +471,7 @@ export default function BudgetPage() {
                             )}
                           </div>
                           {cat.monthly_target > 0 && (
-                            <span className={`text-[11px] font-medium shrink-0 min-w-[75px] text-left ${catRemaining >= 0 ? 'text-[var(--accent-green)]' : 'text-[var(--accent-red)]'}`}>
+                            <span className={`text-[11px] font-medium shrink-0 text-left ${catRemaining >= 0 ? 'text-[var(--accent-green)]' : 'text-[var(--accent-red)]'}`}>
                               {catRemaining >= 0 ? `נותר ${formatCurrency(catRemaining)}` : `חריגה ${formatCurrency(Math.abs(catRemaining))}`}
                             </span>
                           )}
@@ -481,7 +481,7 @@ export default function BudgetPage() {
                     })}
                     {unmatchedSharedTotal > 0 && (
                       <div className="flex items-center gap-3 py-2.5 px-2 text-[12px] text-muted-foreground">
-                        <span className="min-w-[100px]">שונות (לא ממופה)</span>
+                        <span className="shrink-0 max-w-[100px]">שונות (לא ממופה)</span>
                         <span className="font-semibold">{formatCurrency(unmatchedSharedTotal)}</span>
                       </div>
                     )}
@@ -540,7 +540,7 @@ export default function BudgetPage() {
                             const catRemaining = cat.monthly_target - spent
                             return (
                               <div key={cat.id} className="group flex items-center gap-3 py-2.5 border-b border-[var(--c-0-18)] last:border-b-0 hover:bg-[var(--c-0-18)] rounded px-2 transition-colors">
-                                <span className="font-medium text-[13px] text-[var(--c-0-82)] min-w-[100px] shrink-0">{cat.name}</span>
+                                <span className="font-medium text-[13px] text-[var(--c-0-82)] shrink-0 max-w-[100px]">{cat.name}</span>
                                 <div className="flex-1 h-[5px] rounded-full bg-[var(--c-0-20)] overflow-hidden min-w-[60px]">
                                   <div className="h-full rounded-full transition-[width] duration-400 ease-out" style={{ width: `${Math.min(pct * 100, 100)}%`, background: barColor }} />
                                 </div>
@@ -561,7 +561,7 @@ export default function BudgetPage() {
                                   )}
                                 </div>
                                 {cat.monthly_target > 0 && (
-                                  <span className={`text-[11px] font-medium shrink-0 min-w-[75px] text-left ${catRemaining >= 0 ? 'text-[var(--accent-green)]' : 'text-[var(--accent-red)]'}`}>
+                                  <span className={`text-[11px] font-medium shrink-0 text-left ${catRemaining >= 0 ? 'text-[var(--accent-green)]' : 'text-[var(--accent-red)]'}`}>
                                     {catRemaining >= 0 ? `נותר ${formatCurrency(catRemaining)}` : `חריגה ${formatCurrency(Math.abs(catRemaining))}`}
                                   </span>
                                 )}
@@ -685,8 +685,8 @@ export default function BudgetPage() {
       }
       {/* Add Category Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-[var(--c-0-18)] border border-[var(--border-light)] rounded-[14px] p-7 w-[420px] max-h-[85vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-[var(--c-0-18)] border border-[var(--border-light)] rounded-[14px] p-7 w-full max-w-[420px] max-h-[85vh] overflow-y-auto">
             <div className="flex justify-between items-center mb-5">
               <span className="font-semibold text-[15px]">הוסף קטגוריה לתקציב</span>
               <button onClick={() => setShowAddModal(false)} aria-label="סגור" className="bg-transparent border-none text-muted-foreground cursor-pointer p-2">

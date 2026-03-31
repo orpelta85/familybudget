@@ -36,6 +36,10 @@ export function OrenAvatar() {
   const hiddenPages = ['/login', '/setup', '/reset-password', '/auth']
   const isHidden = hiddenPages.some(p => pathname.startsWith(p))
 
+  // Pages with bottom CTA buttons - minimize avatar to avoid overlap
+  const ctaPages = ['/income', '/debts', '/forecast']
+  const hasBottomCTA = ctaPages.some(p => pathname === p)
+
   // Fetch tip data when user/period changes
   useEffect(() => {
     if (!user?.id || !selectedPeriodId || isHidden) return
@@ -89,7 +93,7 @@ export function OrenAvatar() {
   return (
     <>
       {/* Floating Oren character */}
-      <div className="fixed left-4 bottom-[76px] md:bottom-6 z-40 flex flex-col items-center gap-0 max-[430px]:bottom-[68px] max-[430px]:left-2 max-[430px]:scale-90 max-[430px]:origin-bottom-left">
+      <div className={`fixed left-4 bottom-[76px] md:bottom-6 z-30 flex flex-col items-center gap-0 max-[430px]:bottom-[68px] max-[430px]:left-2 max-[430px]:origin-bottom-left transition-all duration-300 ${hasBottomCTA ? 'max-md:scale-[0.65] max-md:opacity-60 max-md:bottom-[100px]' : 'max-[430px]:scale-90'}`}>
         {/* AI badge above character */}
         <div className="flex items-center gap-1 bg-[var(--c-green-0-30)] text-[var(--c-green-0-85)] text-[9px] font-bold tracking-wider px-2 py-0.5 rounded-full mb-[-6px] z-10 border border-[var(--c-green-0-40)]">
           <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>

@@ -89,7 +89,7 @@ function LoginForm() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 ml-0 max-w-[100vw]">
-      <div className="w-[380px] bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-8">
+      <div className="w-full max-w-[380px] bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-8">
         <div className="flex flex-col items-center mb-6">
           <img src="/logo-familyplan.png?v=3" alt="Family Plan" className="logo-dark" style={{ width: 180, height: 'auto' }} />
           <img src="/logo-familyplan-light.png?v=3" alt="Family Plan" className="logo-light" style={{ width: 180, height: 'auto' }} />
