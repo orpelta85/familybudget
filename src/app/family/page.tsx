@@ -132,8 +132,40 @@ export default function FamilyPage() {
 
   if (!family) {
     return (
-      <div className="flex justify-center items-center min-h-[50vh]">
+      <div className="flex flex-col justify-center items-center min-h-[50vh] gap-4">
+        <Users size={40} className="text-[var(--text-muted)]" />
         <div className="text-[var(--text-secondary)] text-sm">לא נמצאה משפחה</div>
+        <p className="text-[var(--text-muted)] text-[13px] max-w-[320px] text-center">
+          צור משפחה כדי לנהל תקציב משותף עם בן/בת הזוג
+        </p>
+        <button
+          onClick={async () => {
+            if (!user) return
+            try {
+              const sb = createClient()
+              const { data: newFamily, error } = await sb
+                .from('families')
+                .insert({ name: 'המשפחה שלי', created_by: user.id })
+                .select()
+                .single()
+              if (error) throw error
+              await sb.from('family_members').insert({
+                family_id: newFamily.id,
+                user_id: user.id,
+                role: 'admin',
+                show_personal_to_family: true,
+              })
+              toast.success('משפחה נוצרה בהצלחה!')
+              qc.invalidateQueries({ queryKey: ['family'] })
+            } catch (e) {
+              console.error(e)
+              toast.error('שגיאה ביצירת משפחה')
+            }
+          }}
+          className="bg-[var(--accent-blue)] text-white border-none rounded-lg px-6 py-2.5 font-semibold text-[14px] cursor-pointer hover:opacity-90 transition-opacity"
+        >
+          צור משפחה
+        </button>
       </div>
     )
   }
