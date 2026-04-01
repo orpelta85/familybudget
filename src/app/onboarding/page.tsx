@@ -171,6 +171,7 @@ export default function OnboardingPage() {
           const isCurrent = progressIndex === idx
           const label = STEP_LABELS[stepNum]
 
+          const canClick = isCompleted
           return (
             <div key={stepNum} className="flex-1 flex flex-col items-center gap-1.5">
               <div className="flex items-center w-full">
@@ -179,13 +180,15 @@ export default function OnboardingPage() {
                     isCompleted ? 'bg-[var(--accent-green)]' : 'bg-[var(--c-0-25)]'
                   }`} />
                 )}
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-semibold shrink-0 transition-all duration-300 ${
-                  isCompleted
-                    ? 'bg-[var(--accent-green)] text-white'
-                    : isCurrent
-                      ? 'bg-[var(--accent-blue)] text-white ring-4 ring-[var(--c-blue-0-22)]'
-                      : 'bg-[var(--c-0-20)] text-[var(--text-muted)]'
-                }`}>
+                <div
+                  onClick={() => canClick && setCurrentStep(stepNum)}
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-semibold shrink-0 transition-all duration-300 ${
+                    isCompleted
+                      ? 'bg-[var(--accent-green)] text-white cursor-pointer hover:ring-4 hover:ring-[var(--c-green-0-25)]'
+                      : isCurrent
+                        ? 'bg-[var(--accent-blue)] text-white ring-4 ring-[var(--c-blue-0-22)]'
+                        : 'bg-[var(--c-0-20)] text-[var(--text-muted)]'
+                  }`}>
                   {isCompleted ? <Check size={16} /> : idx + 1}
                 </div>
                 {idx < totalSteps - 1 && (
@@ -194,9 +197,11 @@ export default function OnboardingPage() {
                   }`} />
                 )}
               </div>
-              <span className={`text-[11px] whitespace-nowrap transition-colors ${
-                isCurrent ? 'text-[var(--accent-blue)] font-semibold' : 'text-[var(--text-muted)]'
-              }`}>
+              <span
+                onClick={() => canClick && setCurrentStep(stepNum)}
+                className={`text-[11px] whitespace-nowrap transition-colors ${
+                  isCurrent ? 'text-[var(--accent-blue)] font-semibold' : 'text-[var(--text-muted)]'
+                } ${canClick ? 'cursor-pointer hover:text-[var(--accent-green)]' : ''}`}>
                 {label}
               </span>
             </div>

@@ -283,8 +283,11 @@ export default function FamilyPage() {
           {/* Create Family Card */}
           <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5">
             <h2 className="text-sm font-semibold mb-3 mt-0">הגדרת משפחה</h2>
+            <p className="text-[var(--text-muted)] text-[13px] mb-2">
+              המערכת עובדת מצוין גם ביחיד - אין צורך בבן/בת זוג.
+            </p>
             <p className="text-[var(--text-muted)] text-[13px] mb-4">
-              צור משפחה כדי לנהל תקציב משותף עם בן/בת הזוג
+              אם בכל זאת רוצה לנהל תקציב משותף, צור משפחה והזמן את בן/בת הזוג.
             </p>
             <button
               type="button"
