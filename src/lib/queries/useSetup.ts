@@ -46,18 +46,18 @@ export function useHasSetup(userId: string | undefined) {
 export function useRunSetup() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (userId: string) => {
+    mutationFn: async ({ userId, inviteCode }: { userId: string; inviteCode?: string }) => {
       const res = await fetch('/api/setup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId }),
+        body: JSON.stringify({ userId, inviteCode }),
       })
       if (!res.ok) {
         const { error } = await res.json()
         throw new Error(error ?? 'setup failed')
       }
     },
-    onSuccess: (_, userId) => {
+    onSuccess: (_, { userId }) => {
       qc.invalidateQueries({ queryKey: ['has_setup', userId] })
       qc.invalidateQueries({ queryKey: ['budget_categories', userId] })
       qc.invalidateQueries({ queryKey: ['sinking_funds', userId] })

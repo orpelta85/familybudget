@@ -2,14 +2,20 @@
 
 import { useUser } from '@/lib/queries/useUser'
 import { useHasSetup, useRunSetup } from '@/lib/queries/useSetup'
-import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useEffect, Suspense } from 'react'
 import { toast } from 'sonner'
 import { CheckCircle, Loader } from 'lucide-react'
 
 export default function SetupPage() {
+  return <Suspense fallback={null}><SetupForm /></Suspense>
+}
+
+function SetupForm() {
   const { user, loading } = useUser()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const inviteCode = searchParams.get('invite') || ''
   const { data: hasSetup, isLoading: checkingSetup } = useHasSetup(user?.id)
   const runSetup = useRunSetup()
 
@@ -26,8 +32,8 @@ export default function SetupPage() {
   async function handleSetup() {
     if (!user) return
     try {
-      await runSetup.mutateAsync(user.id)
-      toast.success('הגדרות אתחול הושלמו!')
+      await runSetup.mutateAsync({ userId: user.id, inviteCode })
+      toast.success(inviteCode ? 'הצטרפת למשפחה!' : 'הגדרות אתחול הושלמו!')
       window.location.href = '/'
     } catch (e) {
       toast.error('שגיאה בהגדרה — נסה שוב')
