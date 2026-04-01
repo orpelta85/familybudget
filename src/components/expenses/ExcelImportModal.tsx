@@ -216,7 +216,25 @@ export function ExcelImportModal({
             </div>
           )}
 
-          {/* Rows list */}
+          {/* Select all + Rows list */}
+          <div className="flex items-center gap-2 mb-2 px-1">
+            <input
+              type="checkbox"
+              aria-label="בחר הכל"
+              checked={selectedRows.size === importRows.length && importRows.length > 0}
+              onChange={() => {
+                if (selectedRows.size === importRows.length) {
+                  setSelectedRows(new Set())
+                } else {
+                  setSelectedRows(new Set(importRows.map((_, i) => i)))
+                }
+              }}
+              className="cursor-pointer w-3.5 h-3.5"
+            />
+            <span className="text-[11px] text-[var(--text-muted)]">
+              {selectedRows.size === importRows.length ? 'בטל בחירה' : 'בחר הכל'}
+            </span>
+          </div>
           <div className="max-h-[520px] overflow-y-auto">
             {importRows.map((row, i) => {
               const isAutoMatched = row.categoryId && !row.categoryId.startsWith('__new__') && row.category
