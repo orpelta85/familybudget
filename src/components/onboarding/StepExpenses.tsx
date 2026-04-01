@@ -176,7 +176,25 @@ export function StepExpenses({ data, updateData, onNext, onSkip, onBack, userId,
   }, [processFiles])
 
   async function handleImportSave() {
-    if (!periodId) {
+    let effectivePeriodId = periodId
+    if (!effectivePeriodId) {
+      // Fallback: fetch current period directly
+      const sb = createClient()
+      const today = new Date().toISOString().split('T')[0]
+      const { data: periods } = await sb
+        .from('periods')
+        .select('id')
+        .lte('start_date', today)
+        .gte('end_date', today)
+        .limit(1)
+      effectivePeriodId = periods?.[0]?.id
+      if (!effectivePeriodId) {
+        // Last resort: get latest period
+        const { data: latest } = await sb.from('periods').select('id').order('id', { ascending: false }).limit(1)
+        effectivePeriodId = latest?.[0]?.id
+      }
+    }
+    if (!effectivePeriodId) {
       toast.error('לא נמצאה תקופה נוכחית')
       return
     }
@@ -184,7 +202,7 @@ export function StepExpenses({ data, updateData, onNext, onSkip, onBack, userId,
     setImporting(true)
     try {
       const sb = createClient()
-      const validRows = importRows.filter(r => (r.categoryId || r.category) && r.amount > 0)
+      const validRows = importRows.filter(r => r.amount > 0)
       let savedCount = 0
 
       // Create new categories first
@@ -212,8 +230,13 @@ export function StepExpenses({ data, updateData, onNext, onSkip, onBack, userId,
           catId = Number(row.categoryId)
         }
         const today = new Date().toISOString().split('T')[0]
+        // If no category assigned, use שונות
+        if (!catId || catId <= 0) {
+          const miscCat = categories?.find(c => c.name === 'שונות')
+          if (miscCat) catId = miscCat.id
+        }
         return {
-          period_id: periodId,
+          period_id: effectivePeriodId,
           user_id: userId,
           category_id: catId,
           amount: Number(row.amount),
