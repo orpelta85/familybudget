@@ -270,7 +270,9 @@ export function StepExpenses({ data, updateData, onNext, onSkip, onBack, userId,
       {/* Download template */}
       <button
         type="button"
-        onClick={async () => {
+        onClick={async (e) => {
+          e.stopPropagation()
+          e.preventDefault()
           const { createExpenseTemplate } = await import('@/lib/excel-import')
           const catNames = categories?.map(c => c.name) ?? []
           const fundNames = funds?.map(f => f.name) ?? []
