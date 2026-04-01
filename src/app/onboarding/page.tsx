@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useUser } from '@/lib/queries/useUser'
 import { usePeriods, useCurrentPeriod } from '@/lib/queries/usePeriods'
 import { useFamily } from '@/lib/queries/useFamily'
@@ -47,6 +47,8 @@ const STEP_LABELS = [
 export default function OnboardingPage() {
   const { user, loading } = useUser()
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const inviteCode = searchParams.get('invite') || ''
   const { data: periods } = usePeriods()
   const currentPeriod = useCurrentPeriod()
   const { data: familyData } = useFamily(user?.id)
@@ -55,7 +57,7 @@ export default function OnboardingPage() {
   const [initialLoading, setInitialLoading] = useState(true)
   const [data, setData] = useState<OnboardingData>({
     name: '',
-    familyStatus: null,
+    familyStatus: inviteCode ? 'family' : null,
     familyName: '',
     partnerEmail: '',
     splitPct: 50,
@@ -233,6 +235,7 @@ export default function OnboardingPage() {
             onNext={goNext}
             onSkip={skipStep}
             onBack={goBack}
+            inviteCode={inviteCode}
           />
         )}
         {currentStep === 2 && (

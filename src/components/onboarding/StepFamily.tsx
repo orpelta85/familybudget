@@ -11,37 +11,50 @@ interface Props {
   onNext: () => void
   onSkip: () => void
   onBack: () => void
+  inviteCode?: string
 }
 
-export function StepFamily({ data, updateData, onNext, onSkip, onBack }: Props) {
+export function StepFamily({ data, updateData, onNext, onSkip, onBack, inviteCode }: Props) {
   const [saving, setSaving] = useState(false)
   const [familyName, setFamilyName] = useState(data.familyName || `משפחת ${data.name?.split(' ').pop() || ''}`)
   const [partnerEmail, setPartnerEmail] = useState(data.partnerEmail)
   const [splitPct, setSplitPct] = useState(data.splitPct)
+  const isJoining = !!inviteCode
 
   async function handleContinue() {
-    if (!familyName.trim()) {
-      toast.error('נא להזין שם משפחה')
-      return
-    }
-
     setSaving(true)
     try {
-      const res = await fetch('/api/onboarding', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'save_family',
-          familyName: familyName.trim(),
-          partnerEmail: partnerEmail.trim(),
-          splitPct,
-        }),
-      })
-      if (!res.ok) throw new Error()
+      if (isJoining) {
+        // Join existing family via invite code
+        const res = await fetch('/api/family/join', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ inviteCode }),
+        })
+        if (!res.ok) throw new Error()
+        toast.success('הצטרפת למשפחה בהצלחה!')
+      } else {
+        if (!familyName.trim()) {
+          toast.error('נא להזין שם משפחה')
+          setSaving(false)
+          return
+        }
+        const res = await fetch('/api/onboarding', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'save_family',
+            familyName: familyName.trim(),
+            partnerEmail: partnerEmail.trim(),
+            splitPct,
+          }),
+        })
+        if (!res.ok) throw new Error()
+      }
       updateData({ familyName: familyName.trim(), partnerEmail: partnerEmail.trim(), splitPct })
       onNext()
     } catch {
-      toast.error('שגיאה בשמירה')
+      toast.error(isJoining ? 'שגיאה בהצטרפות למשפחה' : 'שגיאה בשמירה')
     }
     setSaving(false)
   }
@@ -58,67 +71,74 @@ export function StepFamily({ data, updateData, onNext, onSkip, onBack }: Props) 
 
       <div className="flex items-center gap-3 mb-2">
         <Users size={24} className="text-[var(--accent-purple)]" />
-        <h1 className="text-[22px] font-bold text-[var(--text-heading)]">הגדרת המשפחה</h1>
+        <h1 className="text-[22px] font-bold text-[var(--text-heading)]">
+          {isJoining ? 'הצטרפות למשפחה' : 'הגדרת המשפחה'}
+        </h1>
       </div>
       <p className="text-[var(--text-secondary)] text-[14px] leading-relaxed mb-7">
-        מצב משפחה מאפשר לך ולבן/בת הזוג לנהל תקציב משותף - כל אחד מזין את הנתונים שלו, ורואים את התמונה המלאה ביחד.
+        {isJoining
+          ? 'קיבלת הזמנה להצטרף למשפחה קיימת. לחץ המשך כדי להצטרף ולנהל תקציב משותף.'
+          : 'מצב משפחה מאפשר לך ולבן/בת הזוג לנהל תקציב משותף - כל אחד מזין את הנתונים שלו, ורואים את התמונה המלאה ביחד.'}
       </p>
 
-      <div className="flex flex-col gap-5">
-        <div>
-          <label className="text-[13px] font-medium text-[var(--text-body)] block mb-1.5">שם המשפחה</label>
-          <input
-            type="text"
-            value={familyName}
-            onChange={e => setFamilyName(e.target.value)}
-            placeholder="משפחת כהן"
-            className="w-full bg-[var(--bg-input)] border border-[var(--border-light)] rounded-lg px-3 py-2.5 text-inherit text-sm outline-none focus:border-[var(--accent-blue)] transition-colors"
-          />
-        </div>
-
-        <div>
-          <label className="text-[13px] font-medium text-[var(--text-body)] block mb-1.5">
-            <span className="flex items-center gap-1.5">
-              <Mail size={13} />
-              אימייל בן/בת הזוג
-            </span>
-          </label>
-          <input
-            type="email"
-            value={partnerEmail}
-            onChange={e => setPartnerEmail(e.target.value)}
-            placeholder="partner@email.com"
-            dir="ltr"
-            className="w-full bg-[var(--bg-input)] border border-[var(--border-light)] rounded-lg px-3 py-2.5 text-inherit text-sm outline-none focus:border-[var(--accent-blue)] transition-colors text-left"
-          />
-          <span className="text-[11px] text-[var(--text-muted)] mt-1 block">
-            נשלח הזמנה להצטרף למשפחה (אופציונלי)
-          </span>
-        </div>
-
-        <div>
-          <label className="text-[13px] font-medium text-[var(--text-body)] block mb-2">
-            חלוקת הוצאות משותפות
-          </label>
-          <div className="flex items-center gap-4">
-            <span className="text-[13px] text-[var(--text-secondary)] w-12 text-center">{splitPct}%</span>
+      {!isJoining && (
+        <div className="flex flex-col gap-5">
+          <div>
+            <label className="text-[13px] font-medium text-[var(--text-body)] block mb-1.5">שם המשפחה</label>
             <input
-              type="range"
-              min={10}
-              max={90}
-              step={5}
-              value={splitPct}
-              onChange={e => setSplitPct(Number(e.target.value))}
-              className="flex-1 accent-[var(--accent-blue)]"
+              type="text"
+              value={familyName}
+              onChange={e => setFamilyName(e.target.value)}
+              placeholder="משפחת כהן"
+              className="w-full bg-[var(--bg-input)] border border-[var(--border-light)] rounded-lg px-3 py-2.5 text-inherit text-sm outline-none focus:border-[var(--accent-blue)] transition-colors"
             />
-            <span className="text-[13px] text-[var(--text-secondary)] w-12 text-center">{100 - splitPct}%</span>
           </div>
-          <div className="flex justify-between text-[11px] text-[var(--text-muted)] mt-1 px-12">
-            <span>אני</span>
-            <span>בן/בת הזוג</span>
+
+          <div>
+            <label className="text-[13px] font-medium text-[var(--text-body)] block mb-1.5">
+              <span className="flex items-center gap-1.5">
+                <Mail size={13} />
+                אימייל בן/בת הזוג
+              </span>
+            </label>
+            <input
+              type="email"
+              value={partnerEmail}
+              onChange={e => setPartnerEmail(e.target.value)}
+              placeholder="partner@email.com"
+              dir="ltr"
+              className="w-full bg-[var(--bg-input)] border border-[var(--border-light)] rounded-lg px-3 py-2.5 text-inherit text-sm outline-none focus:border-[var(--accent-blue)] transition-colors text-left"
+            />
+            <span className="text-[11px] text-[var(--text-muted)] mt-1 block">
+              נשלח הזמנה להצטרף למשפחה (אופציונלי)
+            </span>
+          </div>
+
+          <div>
+            <label className="text-[13px] font-medium text-[var(--text-body)] block mb-2">
+              חלוקת הוצאות משותפות
+            </label>
+            <div className="flex items-center gap-4">
+              <span className="text-[13px] text-[var(--text-secondary)] w-12 text-center">{splitPct}%</span>
+              <input
+                type="range"
+                aria-label="חלוקת הוצאות"
+                min={10}
+                max={90}
+                step={5}
+                value={splitPct}
+                onChange={e => setSplitPct(Number(e.target.value))}
+                className="flex-1 accent-[var(--accent-blue)]"
+              />
+              <span className="text-[13px] text-[var(--text-secondary)] w-12 text-center">{100 - splitPct}%</span>
+            </div>
+            <div className="flex justify-between text-[11px] text-[var(--text-muted)] mt-1 px-12">
+              <span>אני</span>
+              <span>בן/בת הזוג</span>
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       <div className="flex gap-3 mt-8">
         <button
