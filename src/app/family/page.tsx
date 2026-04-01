@@ -294,19 +294,16 @@ export default function FamilyPage() {
               onClick={async () => {
                 if (!user) return
                 try {
-                  const sb = createClient()
-                  const { data: newFamily, error } = await sb
-                    .from('families')
-                    .insert({ name: 'המשפחה שלי', created_by: user.id })
-                    .select()
-                    .single()
-                  if (error) throw error
-                  await sb.from('family_members').insert({
-                    family_id: newFamily.id,
-                    user_id: user.id,
-                    role: 'admin',
-                    show_personal_to_family: true,
+                  const res = await fetch('/api/onboarding', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      action: 'save_family',
+                      familyName: 'המשפחה שלי',
+                      splitPct: 50,
+                    }),
                   })
+                  if (!res.ok) throw new Error()
                   toast.success('משפחה נוצרה בהצלחה!')
                   qc.invalidateQueries({ queryKey: ['family'] })
                 } catch (e) {

@@ -11,7 +11,7 @@ interface ThemeContextValue {
 }
 
 const ThemeCtx = createContext<ThemeContextValue>({
-  theme: 'dark',
+  theme: 'light',
   toggleTheme: () => {},
   setTheme: () => {},
 })
@@ -22,7 +22,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       const saved = localStorage.getItem('theme')
       if (saved === 'light' || saved === 'dark') return saved
     }
-    return 'dark'
+    return 'light'
   })
 
   useEffect(() => {
