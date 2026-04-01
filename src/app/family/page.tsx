@@ -130,42 +130,194 @@ export default function FamilyPage() {
     return <TableSkeleton rows={4} />
   }
 
+  // General settings cards (theme + AI) - shown for ALL users
+  const generalSettings = (
+    <>
+      {/* Theme Toggle Card */}
+      <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5">
+        <h2 className="text-sm font-semibold mb-4 mt-0">
+          מצב תצוגה
+        </h2>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setTheme('light')}
+            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-[13px] font-medium transition-colors cursor-pointer border ${
+              theme === 'light'
+                ? 'bg-[var(--accent-blue)] text-white border-[var(--accent-blue)]'
+                : 'bg-[var(--c-0-20)] text-[var(--text-secondary)] border-[var(--border-default)] hover:bg-[var(--bg-hover)]'
+            }`}
+          >
+            <Sun size={15} />
+            בהיר
+          </button>
+          <button
+            onClick={() => setTheme('dark')}
+            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-[13px] font-medium transition-colors cursor-pointer border ${
+              theme === 'dark'
+                ? 'bg-[var(--accent-blue)] text-white border-[var(--accent-blue)]'
+                : 'bg-[var(--c-0-20)] text-[var(--text-secondary)] border-[var(--border-default)] hover:bg-[var(--bg-hover)]'
+            }`}
+          >
+            <Moon size={15} />
+            כהה
+          </button>
+        </div>
+      </div>
+
+      {/* AI Advisor Settings Card */}
+      <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5">
+        <h2 className="text-sm font-semibold mb-4 mt-0 flex items-center gap-2">
+          <Sparkles size={16} className="text-[var(--c-green-0-75)]" />
+          יועץ AI מתקדם
+        </h2>
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-2 h-2 rounded-full bg-[var(--c-green-0-65)]" />
+            <span className="text-[13px] text-[var(--text-body)]">
+              טיפים בסיסיים: <span className="font-semibold text-[var(--c-green-0-75)]">פעיל (חינם)</span>
+            </span>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className={`w-2 h-2 rounded-full ${aiApiKey ? 'bg-[var(--c-green-0-65)]' : 'bg-[var(--c-0-40)]'}`} />
+            <span className="text-[13px] text-[var(--text-body)]">
+              צ'אט מתקדם: {aiApiKey ? (
+                <span className="font-semibold text-[var(--c-green-0-75)]">מחובר</span>
+              ) : (
+                <span className="text-[var(--text-muted)]">לא מחובר</span>
+              )}
+            </span>
+          </div>
+          {aiApiKey ? (
+            <div className="flex items-center justify-between bg-[var(--bg-base)] border border-[var(--bg-hover)] rounded-lg px-3 py-2.5">
+              <div className="flex items-center gap-2">
+                <Key size={13} className="text-[var(--text-muted)]" />
+                <span className="text-[12px] text-[var(--text-muted)] ltr" dir="ltr">
+                  {aiApiKey.slice(0, 8)}...{aiApiKey.slice(-4)}
+                </span>
+              </div>
+              <button
+                onClick={() => {
+                  localStorage.removeItem('oren_gemini_api_key')
+                  setAiApiKey('')
+                  toast.success('API Key הוסר')
+                }}
+                className="bg-transparent border-none cursor-pointer text-[var(--text-muted)] p-1 hover:text-[var(--c-red-0-70)]"
+                aria-label="הסר API Key"
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
+          ) : showAiKeyInput ? (
+            <div className="flex flex-col gap-2">
+              <div className="flex gap-2">
+                <input
+                  type="password"
+                  value={aiKeyDraft}
+                  onChange={e => setAiKeyDraft(e.target.value)}
+                  placeholder="AIza..."
+                  className="flex-1 bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-2 text-inherit text-[13px] outline-none ltr"
+                  dir="ltr"
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && aiKeyDraft.trim()) {
+                      localStorage.setItem('oren_gemini_api_key', aiKeyDraft.trim())
+                      setAiApiKey(aiKeyDraft.trim())
+                      setAiKeyDraft('')
+                      setShowAiKeyInput(false)
+                      toast.success('API Key נשמר בהצלחה')
+                    }
+                  }}
+                />
+                <button
+                  onClick={() => {
+                    if (aiKeyDraft.trim()) {
+                      localStorage.setItem('oren_gemini_api_key', aiKeyDraft.trim())
+                      setAiApiKey(aiKeyDraft.trim())
+                      setAiKeyDraft('')
+                      setShowAiKeyInput(false)
+                      toast.success('API Key נשמר בהצלחה')
+                    }
+                  }}
+                  disabled={!aiKeyDraft.trim()}
+                  className="bg-[var(--c-green-0-55)] border-none rounded-lg px-3 py-2 cursor-pointer text-[var(--c-0-10)] font-semibold text-[12px] disabled:opacity-50"
+                >
+                  שמור
+                </button>
+              </div>
+              <a
+                href="https://aistudio.google.com/apikey"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[11px] text-[var(--c-blue-0-60)] underline"
+              >
+                קבל API key בחינם מ-Google AI Studio
+              </a>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowAiKeyInput(true)}
+              className="flex items-center justify-center gap-2 bg-[var(--c-0-20)] border border-[var(--border-light)] rounded-lg px-4 py-2.5 cursor-pointer text-[var(--c-0-70)] text-[13px] font-medium hover:bg-[var(--bg-hover)] transition-colors"
+            >
+              <Key size={14} />
+              חבר Google Gemini API Key
+            </button>
+          )}
+          <p className="text-[11px] text-[var(--c-0-50)] m-0 leading-relaxed">
+            ה-API Key נשמר מקומית בדפדפן שלך בלבד ולא נשלח לשרתים שלנו.
+            הוא משמש לתקשורת ישירה עם Google Gemini.
+          </p>
+        </div>
+      </div>
+    </>
+  )
+
   if (!family) {
     return (
-      <div className="flex flex-col justify-center items-center min-h-[50vh] gap-4">
-        <Users size={40} className="text-[var(--text-muted)]" />
-        <div className="text-[var(--text-secondary)] text-sm">לא נמצאה משפחה</div>
-        <p className="text-[var(--text-muted)] text-[13px] max-w-[320px] text-center">
-          צור משפחה כדי לנהל תקציב משותף עם בן/בת הזוג
-        </p>
-        <button
-          onClick={async () => {
-            if (!user) return
-            try {
-              const sb = createClient()
-              const { data: newFamily, error } = await sb
-                .from('families')
-                .insert({ name: 'המשפחה שלי', created_by: user.id })
-                .select()
-                .single()
-              if (error) throw error
-              await sb.from('family_members').insert({
-                family_id: newFamily.id,
-                user_id: user.id,
-                role: 'admin',
-                show_personal_to_family: true,
-              })
-              toast.success('משפחה נוצרה בהצלחה!')
-              qc.invalidateQueries({ queryKey: ['family'] })
-            } catch (e) {
-              console.error(e)
-              toast.error('שגיאה ביצירת משפחה')
-            }
-          }}
-          className="bg-[var(--accent-blue)] text-white border-none rounded-lg px-6 py-2.5 font-semibold text-[14px] cursor-pointer hover:opacity-90 transition-opacity"
-        >
-          צור משפחה
-        </button>
+      <div className="max-w-[680px] mx-auto">
+        <div className="mb-7">
+          <div className="flex items-center gap-2.5 mb-1">
+            <Users size={20} className="text-[var(--accent-blue)]" />
+            <h1 className="text-[22px] font-bold tracking-tight m-0">הגדרות</h1>
+          </div>
+        </div>
+        <div className="flex flex-col gap-4">
+          {/* Create Family Card */}
+          <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5">
+            <h2 className="text-sm font-semibold mb-3 mt-0">הגדרת משפחה</h2>
+            <p className="text-[var(--text-muted)] text-[13px] mb-4">
+              צור משפחה כדי לנהל תקציב משותף עם בן/בת הזוג
+            </p>
+            <button
+              type="button"
+              onClick={async () => {
+                if (!user) return
+                try {
+                  const sb = createClient()
+                  const { data: newFamily, error } = await sb
+                    .from('families')
+                    .insert({ name: 'המשפחה שלי', created_by: user.id })
+                    .select()
+                    .single()
+                  if (error) throw error
+                  await sb.from('family_members').insert({
+                    family_id: newFamily.id,
+                    user_id: user.id,
+                    role: 'admin',
+                    show_personal_to_family: true,
+                  })
+                  toast.success('משפחה נוצרה בהצלחה!')
+                  qc.invalidateQueries({ queryKey: ['family'] })
+                } catch (e) {
+                  console.error(e)
+                  toast.error('שגיאה ביצירת משפחה')
+                }
+              }}
+              className="bg-[var(--accent-blue)] text-white border-none rounded-lg px-6 py-2.5 font-semibold text-[14px] cursor-pointer hover:opacity-90 transition-opacity"
+            >
+              צור משפחה
+            </button>
+          </div>
+          {generalSettings}
+        </div>
       </div>
     )
   }
@@ -474,148 +626,7 @@ export default function FamilyPage() {
           </div>
         </div>
 
-        {/* Theme Toggle Card */}
-        <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5">
-          <h2 className="text-sm font-semibold mb-4 mt-0">
-            מצב תצוגה
-          </h2>
-
-          <div className="flex gap-2">
-            <button
-              onClick={() => setTheme('light')}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-[13px] font-medium transition-colors cursor-pointer border ${
-                theme === 'light'
-                  ? 'bg-[var(--accent-blue)] text-white border-[var(--accent-blue)]'
-                  : 'bg-[var(--c-0-20)] text-[var(--text-secondary)] border-[var(--border-default)] hover:bg-[var(--bg-hover)]'
-              }`}
-            >
-              <Sun size={15} />
-              בהיר
-            </button>
-            <button
-              onClick={() => setTheme('dark')}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-[13px] font-medium transition-colors cursor-pointer border ${
-                theme === 'dark'
-                  ? 'bg-[var(--accent-blue)] text-white border-[var(--accent-blue)]'
-                  : 'bg-[var(--c-0-20)] text-[var(--text-secondary)] border-[var(--border-default)] hover:bg-[var(--bg-hover)]'
-              }`}
-            >
-              <Moon size={15} />
-              כהה
-            </button>
-          </div>
-        </div>
-
-        {/* AI Advisor Settings Card */}
-        <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5">
-          <h2 className="text-sm font-semibold mb-4 mt-0 flex items-center gap-2">
-            <Sparkles size={16} className="text-[var(--c-green-0-75)]" />
-            יועץ AI מתקדם
-          </h2>
-
-          <div className="flex flex-col gap-4">
-            {/* Free tips status */}
-            <div className="flex items-center gap-3">
-              <div className="w-2 h-2 rounded-full bg-[var(--c-green-0-65)]" />
-              <span className="text-[13px] text-[var(--text-body)]">
-                טיפים בסיסיים: <span className="font-semibold text-[var(--c-green-0-75)]">פעיל (חינם)</span>
-              </span>
-            </div>
-
-            {/* API key status & management */}
-            <div className="flex items-center gap-3">
-              <div className={`w-2 h-2 rounded-full ${aiApiKey ? 'bg-[var(--c-green-0-65)]' : 'bg-[var(--c-0-40)]'}`} />
-              <span className="text-[13px] text-[var(--text-body)]">
-                צ'אט מתקדם: {aiApiKey ? (
-                  <span className="font-semibold text-[var(--c-green-0-75)]">מחובר</span>
-                ) : (
-                  <span className="text-[var(--text-muted)]">לא מחובר</span>
-                )}
-              </span>
-            </div>
-
-            {/* Key input or status */}
-            {aiApiKey ? (
-              <div className="flex items-center justify-between bg-[var(--bg-base)] border border-[var(--bg-hover)] rounded-lg px-3 py-2.5">
-                <div className="flex items-center gap-2">
-                  <Key size={13} className="text-[var(--text-muted)]" />
-                  <span className="text-[12px] text-[var(--text-muted)] ltr" dir="ltr">
-                    {aiApiKey.slice(0, 8)}...{aiApiKey.slice(-4)}
-                  </span>
-                </div>
-                <button
-                  onClick={() => {
-                    localStorage.removeItem('oren_gemini_api_key')
-                    setAiApiKey('')
-                    toast.success('API Key הוסר')
-                  }}
-                  className="bg-transparent border-none cursor-pointer text-[var(--text-muted)] p-1 hover:text-[var(--c-red-0-70)]"
-                  aria-label="הסר API Key"
-                >
-                  <Trash2 size={14} />
-                </button>
-              </div>
-            ) : showAiKeyInput ? (
-              <div className="flex flex-col gap-2">
-                <div className="flex gap-2">
-                  <input
-                    type="password"
-                    value={aiKeyDraft}
-                    onChange={e => setAiKeyDraft(e.target.value)}
-                    placeholder="AIza..."
-                    className="flex-1 bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-2 text-inherit text-[13px] outline-none ltr"
-                    dir="ltr"
-                    onKeyDown={e => {
-                      if (e.key === 'Enter' && aiKeyDraft.trim()) {
-                        localStorage.setItem('oren_gemini_api_key', aiKeyDraft.trim())
-                        setAiApiKey(aiKeyDraft.trim())
-                        setAiKeyDraft('')
-                        setShowAiKeyInput(false)
-                        toast.success('API Key נשמר בהצלחה')
-                      }
-                    }}
-                  />
-                  <button
-                    onClick={() => {
-                      if (aiKeyDraft.trim()) {
-                        localStorage.setItem('oren_gemini_api_key', aiKeyDraft.trim())
-                        setAiApiKey(aiKeyDraft.trim())
-                        setAiKeyDraft('')
-                        setShowAiKeyInput(false)
-                        toast.success('API Key נשמר בהצלחה')
-                      }
-                    }}
-                    disabled={!aiKeyDraft.trim()}
-                    className="bg-[var(--c-green-0-55)] border-none rounded-lg px-3 py-2 cursor-pointer text-[var(--c-0-10)] font-semibold text-[12px] disabled:opacity-50"
-                  >
-                    שמור
-                  </button>
-                </div>
-                <a
-                  href="https://aistudio.google.com/apikey"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-[11px] text-[var(--c-blue-0-60)] underline"
-                >
-                  קבל API key בחינם מ-Google AI Studio
-                </a>
-              </div>
-            ) : (
-              <button
-                onClick={() => setShowAiKeyInput(true)}
-                className="flex items-center justify-center gap-2 bg-[var(--c-0-20)] border border-[var(--border-light)] rounded-lg px-4 py-2.5 cursor-pointer text-[var(--c-0-70)] text-[13px] font-medium hover:bg-[var(--bg-hover)] transition-colors"
-              >
-                <Key size={14} />
-                חבר Google Gemini API Key
-              </button>
-            )}
-
-            <p className="text-[11px] text-[var(--c-0-50)] m-0 leading-relaxed">
-              ה-API Key נשמר מקומית בדפדפן שלך בלבד ולא נשלח לשרתים שלנו.
-              הוא משמש לתקשורת ישירה עם Google Gemini.
-            </p>
-          </div>
-        </div>
+        {generalSettings}
       </div>
     </div>
   )

@@ -9,6 +9,9 @@ import type { OnboardingData } from '@/app/onboarding/page'
 import type { BudgetCategory, SinkingFund } from '@/lib/types'
 import type { ParseResult } from '@/lib/excel-import'
 import { ExcelImportModal, type ImportRow } from '@/components/expenses/ExcelImportModal'
+import { categorizeTransaction } from '@/lib/categorization-engine'
+import type { MatchResult } from '@/lib/categorization-engine'
+import { useGlobalMappings } from '@/lib/queries/useExpenses'
 
 interface Props {
   data: OnboardingData
@@ -57,6 +60,8 @@ export function StepExpenses({ data, updateData, onNext, onSkip, onBack, userId,
     },
   })
 
+  const { data: globalMappings } = useGlobalMappings()
+
   const { data: funds } = useQuery<SinkingFund[]>({
     queryKey: ['sinking_funds', userId, 'onboarding'],
     queryFn: async () => {
@@ -100,25 +105,52 @@ export function StepExpenses({ data, updateData, onNext, onSkip, onBack, userId,
         const result: ParseResult = await parseExpenseExcelDetailed(files[i])
         if (result.rows.length > 0) {
           setDetectedFormat(result.detectedFormat?.label ?? null)
+          const CATEGORY_ALIASES: Record<string, string> = {
+            'דוגווקרס': 'חיות מחמד', 'כלבים': 'חיות מחמד',
+            'הלוואת רכב': 'הלוואות', 'מים+גז': 'חשבונות בית',
+            'בילויים': 'בילויים ופנאי', 'בגדים': 'בגדים וקניות',
+            'בריאות': 'בריאות ורפואה', 'השקעות': 'חיסכון והשקעות',
+          }
+          const cats = categories ?? []
+          const globals = (globalMappings ?? []) as import('@/lib/categorization-engine').GlobalMapping[]
+
           const mapped = result.rows.map(r => {
-            // Simple category matching by name
             let categoryId = ''
             let matchConfidence = 0
-            const catName = (r.category || '').trim().toLowerCase()
-            if (catName && categories) {
-              const exact = categories.find(c => c.name.toLowerCase() === catName)
-              if (exact) {
-                categoryId = String(exact.id)
-                matchConfidence = 1.0
+            let matchSource: ImportRow['matchSource'] = 'none'
+
+            if (r.category) {
+              const catName = CATEGORY_ALIASES[r.category.trim()] ?? r.category.trim()
+              const exactMatch = cats.find(c => c.name === catName)
+                || cats.find(c => c.name.trim().toLowerCase() === catName.toLowerCase())
+              if (exactMatch) {
+                categoryId = String(exactMatch.id); matchConfidence = 1.0; matchSource = 'user-exact'
               } else {
-                const partial = categories.find(c => catName.includes(c.name.toLowerCase()) || c.name.toLowerCase().includes(catName))
-                if (partial) {
-                  categoryId = String(partial.id)
-                  matchConfidence = 0.6
+                const partialMatch = cats.find(c => c.name.includes(catName) || catName.includes(c.name))
+                if (partialMatch) {
+                  categoryId = String(partialMatch.id); matchConfidence = 0.85; matchSource = 'user-exact'
+                } else {
+                  categoryId = `__new__${catName}`; matchConfidence = 0.9; matchSource = 'user-exact'
                 }
               }
             }
-            return { ...r, categoryId, matchConfidence, sourceFile: files[i].name } as ImportRow
+
+            if (!categoryId && r.description) {
+              const matchResult: MatchResult = categorizeTransaction(r.description, [], globals, cats)
+              if (matchResult.matchSource !== 'none') {
+                if (matchResult.categoryId) categoryId = String(matchResult.categoryId)
+                else if (matchResult.categoryName) categoryId = `__new__${matchResult.categoryName}`
+                matchConfidence = matchResult.confidence
+                matchSource = matchResult.matchSource
+              }
+            }
+
+            if (!categoryId) {
+              categoryId = String(cats.find(c => c.name === 'שונות')?.id ?? '')
+              if (categoryId) { matchConfidence = 0.1; matchSource = 'none' }
+            }
+
+            return { ...r, categoryId, matchConfidence, matchSource, sourceFile: files[i].name } as ImportRow
           })
           allRows = [...allRows, ...mapped]
         }
