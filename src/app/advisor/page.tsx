@@ -228,9 +228,15 @@ export default function AdvisorPage() {
     const pickCount = newTips.length >= 3 ? 3 : 4
     newTips.push(...generalTips.slice(0, pickCount))
 
-    // Sort by priority
-    const order = { high: 0, medium: 1, low: 2 }
-    newTips.sort((a, b) => order[a.priority] - order[b.priority])
+    // Keep high-priority alerts at top, shuffle the rest
+    const highTips = newTips.filter(t => t.priority === 'high')
+    const otherTips = newTips.filter(t => t.priority !== 'high')
+    for (let i = otherTips.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [otherTips[i], otherTips[j]] = [otherTips[j], otherTips[i]]
+    }
+    newTips.length = 0
+    newTips.push(...highTips, ...otherTips)
 
     setTips(newTips)
     setGenerating(false)
