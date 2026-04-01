@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useCallback } from 'react'
-import { FileSpreadsheet, Upload, ArrowRight, CheckCircle2 } from 'lucide-react'
+import { FileSpreadsheet, Upload, ArrowRight, CheckCircle2, Download } from 'lucide-react'
 import { toast } from 'sonner'
 import { useQuery } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
@@ -77,22 +77,7 @@ export function StepExpenses({ data, updateData, onNext, onSkip, onBack, userId,
 
   const importTotal = importRows.reduce((sum, r) => sum + Number(r.amount), 0)
 
-  const handleFileDrop = useCallback(async (e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(false)
-    const files = Array.from(e.dataTransfer.files)
-    if (files.length === 0) return
-    await processFiles(files)
-  }, [categories])
-
-  const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files ?? [])
-    if (files.length === 0) return
-    await processFiles(files)
-    e.target.value = ''
-  }, [categories])
-
-  async function processFiles(files: File[]) {
+  const processFiles = useCallback(async (files: File[]) => {
     setParsingFiles(true)
     setParseProgress({ current: 0, total: files.length })
 
@@ -164,13 +149,31 @@ export function StepExpenses({ data, updateData, onNext, onSkip, onBack, userId,
 
       setImportRows(allRows)
       setShowImport(true)
-    } catch (err) {
-      console.error('Parse error:', err)
+    } catch {
       toast.error('שגיאה בקריאת הקובץ')
     }
     setParsingFiles(false)
     setParseProgress(null)
+  }, [categories, globalMappings])
+
+  function showTextInput(title: string): Promise<string | null> {
+    return Promise.resolve(window.prompt(title))
   }
+
+  const handleFileDrop = useCallback(async (e: React.DragEvent) => {
+    e.preventDefault()
+    setIsDragging(false)
+    const files = Array.from(e.dataTransfer.files)
+    if (files.length === 0) return
+    await processFiles(files)
+  }, [processFiles])
+
+  const handleFileSelect = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files ?? [])
+    if (files.length === 0) return
+    await processFiles(files)
+    e.target.value = ''
+  }, [processFiles])
 
   async function handleImportSave() {
     if (!periodId) {
@@ -230,23 +233,16 @@ export function StepExpenses({ data, updateData, onNext, onSkip, onBack, userId,
       setShowImport(false)
       updateData({ expensesImported: true, importedCount: savedCount })
       toast.success(`יובאו ${savedCount} הוצאות בהצלחה`)
-    } catch (err) {
-      console.error('Import error:', err)
+    } catch {
       toast.error('שגיאה בייבוא ההוצאות')
     }
     setImporting(false)
   }
 
-  function showTextInput(title: string): Promise<string | null> {
-    return new Promise(resolve => {
-      const result = window.prompt(title)
-      resolve(result)
-    })
-  }
-
   return (
     <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-8">
       <button
+        type="button"
         onClick={onBack}
         className="flex items-center gap-1 text-[13px] text-[var(--text-muted)] mb-4 bg-transparent border-none cursor-pointer hover:text-[var(--text-secondary)] transition-colors"
       >
@@ -263,13 +259,31 @@ export function StepExpenses({ data, updateData, onNext, onSkip, onBack, userId,
       </p>
 
       {/* Supported banks */}
-      <div className="flex flex-wrap gap-2 mb-6">
+      <div className="flex flex-wrap gap-2 mb-4">
         {SUPPORTED_BANKS.map(bank => (
           <span key={bank} className="text-[11px] bg-[var(--c-0-14)] text-[var(--text-secondary)] px-2.5 py-1 rounded-md">
             {bank}
           </span>
         ))}
       </div>
+
+      {/* Download template */}
+      <button
+        type="button"
+        onClick={async () => {
+          const { createExpenseTemplate } = await import('@/lib/excel-import')
+          const catNames = categories?.map(c => c.name) ?? []
+          const fundNames = funds?.map(f => f.name) ?? []
+          const blob = await createExpenseTemplate(catNames, fundNames)
+          const url = URL.createObjectURL(blob)
+          const a = document.createElement('a'); a.href = url; a.download = 'תבנית_הוצאות.xlsx'; a.click()
+          URL.revokeObjectURL(url)
+        }}
+        className="flex items-center justify-center gap-2 w-full mb-4 bg-[var(--c-0-18)] border border-[var(--border-default)] rounded-lg px-4 py-2.5 text-[13px] text-[var(--text-secondary)] font-medium cursor-pointer hover:bg-[var(--bg-hover)] transition-colors"
+      >
+        <Download size={15} />
+        הורד תבנית Excel להזנת הוצאות
+      </button>
 
       {importDone ? (
         <div className="flex flex-col items-center gap-3 py-8">
@@ -284,7 +298,9 @@ export function StepExpenses({ data, updateData, onNext, onSkip, onBack, userId,
       ) : (
         <>
           {/* Hidden file input */}
+          <label htmlFor="onboarding-file-input" className="sr-only">בחר קובץ Excel לייבוא</label>
           <input
+            id="onboarding-file-input"
             ref={fileRef}
             type="file"
             accept=".xlsx,.xls,.csv"
@@ -317,12 +333,14 @@ export function StepExpenses({ data, updateData, onNext, onSkip, onBack, userId,
 
       <div className="flex gap-3 mt-6">
         <button
+          type="button"
           onClick={onNext}
           className="flex-1 bg-[var(--accent-blue)] text-white border-none rounded-lg py-3 font-semibold text-[15px] cursor-pointer hover:opacity-90 transition-opacity"
         >
           המשך
         </button>
         <button
+          type="button"
           onClick={onSkip}
           className="px-5 bg-transparent border border-[var(--border-default)] text-[var(--text-secondary)] rounded-lg py-3 text-[13px] cursor-pointer hover:bg-[var(--bg-hover)] transition-colors"
         >
