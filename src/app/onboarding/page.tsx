@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@/lib/queries/useUser'
 import { usePeriods, useCurrentPeriod } from '@/lib/queries/usePeriods'
@@ -89,48 +89,56 @@ export default function OnboardingPage() {
   }, [user, router])
 
   useEffect(() => {
-    if (!loading && !user) router.push('/login')
+    if (!loading && !user) {
+      setInitialLoading(false)
+      router.push('/login')
+    }
   }, [user, loading, router])
+
+  // Use ref to always have latest data for callbacks
+  const dataRef = useRef(data)
+  dataRef.current = data
 
   const updateData = useCallback((updates: Partial<OnboardingData>) => {
     setData(prev => ({ ...prev, ...updates }))
   }, [])
 
-  const goNext = useCallback(() => {
+  const goNext = useCallback((overrideFamilyStatus?: FamilyStatus | null) => {
+    const status = overrideFamilyStatus ?? dataRef.current.familyStatus
     setCurrentStep(prev => {
       const next = prev + 1
       // Auto-skip family step if single
-      if (next === 1 && data.familyStatus === 'single') {
-        fetch('/api/onboarding', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'save_step', step: 2 }),
-        })
+      if (next === 1 && status === 'single') {
         return 2
       }
       return next
     })
-  }, [data.familyStatus])
+    // Save step outside the updater
+    const nextStep = (currentStep + 1 === 1 && status === 'single') ? 2 : currentStep + 1
+    fetch('/api/onboarding', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'save_step', step: nextStep }),
+    })
+  }, [currentStep])
 
   const goBack = useCallback(() => {
     setCurrentStep(prev => {
       const next = prev - 1
-      if (next === 1 && data.familyStatus === 'single') return 0
+      if (next === 1 && dataRef.current.familyStatus === 'single') return 0
       return Math.max(0, next)
     })
-  }, [data.familyStatus])
+  }, [])
 
   const skipStep = useCallback(() => {
-    setCurrentStep(prev => {
-      const next = prev + 1
-      fetch('/api/onboarding', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'save_step', step: next }),
-      })
-      return next
+    const next = currentStep + 1
+    setCurrentStep(next)
+    fetch('/api/onboarding', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'save_step', step: next }),
     })
-  }, [])
+  }, [currentStep])
 
   const handleComplete = useCallback(async () => {
     try {

@@ -70,6 +70,7 @@ function LoginForm() {
         return
       }
       const invite = inviteCode || localStorage.getItem('familyInvite') || ''
+      localStorage.removeItem('familyInvite')
       const onboardingUrl = invite ? `/onboarding?invite=${invite}` : '/onboarding'
       const { error } = await sb.auth.signUp({
         email, password,

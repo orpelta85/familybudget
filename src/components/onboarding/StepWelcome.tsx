@@ -8,7 +8,7 @@ import type { OnboardingData, FamilyStatus } from '@/app/onboarding/page'
 interface Props {
   data: OnboardingData
   updateData: (updates: Partial<OnboardingData>) => void
-  onNext: () => void
+  onNext: (familyStatus?: FamilyStatus | null) => void
 }
 
 export function StepWelcome({ data, updateData, onNext }: Props) {
@@ -39,7 +39,7 @@ export function StepWelcome({ data, updateData, onNext }: Props) {
       })
       if (!res.ok) throw new Error()
       updateData({ name: name.trim(), familyStatus: status })
-      onNext()
+      onNext(status)
     } catch {
       toast.error('שגיאה בשמירה')
     }

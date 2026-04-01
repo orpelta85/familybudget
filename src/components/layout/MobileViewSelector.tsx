@@ -2,13 +2,18 @@
 
 import { useState, useRef, useEffect, useMemo } from 'react'
 import { User, Users, ChevronDown } from 'lucide-react'
+import { usePathname } from 'next/navigation'
 import { useFamilyView } from '@/contexts/FamilyViewContext'
 import { useFamilyContext } from '@/lib/context/FamilyContext'
 import { useFamilyMemberProfiles } from '@/lib/queries/useFamily'
 import { useKids } from '@/lib/queries/useKids'
 import { useUser } from '@/lib/queries/useUser'
 
+const hiddenPages = ['/login', '/setup', '/onboarding', '/reset-password', '/auth']
+
 export function MobileViewSelector() {
+  const pathname = usePathname()
+  if (hiddenPages.some(p => pathname.startsWith(p))) return null
   const { viewMode, selectedMemberName, setViewMode, selectMember } = useFamilyView()
   const { familyId, members, isSolo } = useFamilyContext()
   const { user } = useUser()
