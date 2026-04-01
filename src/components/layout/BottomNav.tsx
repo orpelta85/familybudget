@@ -35,9 +35,13 @@ const moreLinks: MoreLink[] = [
 
 const soloHiddenPaths = ['/joint']
 
+const hiddenPages = ['/login', '/setup', '/onboarding', '/reset-password', '/auth']
+
 export function BottomNav() {
   const pathname = usePathname()
   const { isSolo } = useFamilyContext()
+
+  if (hiddenPages.some(p => pathname.startsWith(p))) return null
   const [showMore, setShowMore] = useState(false)
   const sheetRef = useRef<HTMLDivElement>(null)
   const touchStartY = useRef<number | null>(null)

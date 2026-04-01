@@ -70,10 +70,10 @@ function LoginForm() {
         return
       }
       const invite = inviteCode || localStorage.getItem('familyInvite') || ''
-      const setupUrl = invite ? `/setup?invite=${invite}` : '/setup'
+      const onboardingUrl = invite ? `/onboarding?invite=${invite}` : '/onboarding'
       const { error } = await sb.auth.signUp({
         email, password,
-        options: { emailRedirectTo: `${window.location.origin}/auth/callback?next=${setupUrl}` }
+        options: { emailRedirectTo: `${window.location.origin}/auth/callback?next=${onboardingUrl}` }
       })
       if (error) { toast.error(error.message); setLoading(false); return }
       toast.success('נרשמת! בדוק את המייל לאימות ולחץ על הקישור.')

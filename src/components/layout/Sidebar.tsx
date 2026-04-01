@@ -72,7 +72,7 @@ export function Sidebar() {
   const [sendingEmail, setSendingEmail] = useState(false)
   const alertRef = useRef<HTMLDivElement>(null)
 
-  const hiddenPages = ['/login', '/setup', '/reset-password', '/auth']
+  const hiddenPages = ['/login', '/setup', '/onboarding', '/reset-password', '/auth']
   const isHidden = hiddenPages.some(p => pathname.startsWith(p))
 
   useEffect(() => {

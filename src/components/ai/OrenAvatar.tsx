@@ -33,7 +33,7 @@ export function OrenAvatar() {
   const [hasFetched, setHasFetched] = useState(false)
 
   // Skip on login/setup pages
-  const hiddenPages = ['/login', '/setup', '/reset-password', '/auth']
+  const hiddenPages = ['/login', '/setup', '/onboarding', '/reset-password', '/auth']
   const isHidden = hiddenPages.some(p => pathname.startsWith(p))
 
   // Pages with bottom CTA buttons - minimize avatar to avoid overlap

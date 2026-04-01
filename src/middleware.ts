@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'orpelta85@gmail.com'
 
-const publicPaths = ['/login', '/auth/callback', '/setup', '/reset-password']
+const publicPaths = ['/login', '/auth/callback', '/setup', '/onboarding', '/reset-password']
 
 function isPublicPath(pathname: string) {
   return publicPaths.some(p => pathname.startsWith(p))
