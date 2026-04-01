@@ -250,7 +250,7 @@ export function ExcelImportModal({
                       {dateStr}
                     </span>
                     {/* Description - takes available space */}
-                    <span className="text-[var(--text-heading)] truncate min-w-0 flex-1" title={row.description}>
+                    <span className="text-[var(--text-heading)] min-w-0 flex-1 break-words" title={row.description}>
                       {row.description}
                     </span>
                     {/* Source badge */}
