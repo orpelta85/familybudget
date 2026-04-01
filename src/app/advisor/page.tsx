@@ -10,7 +10,7 @@ import { useFamilyContext } from '@/lib/context/FamilyContext'
 import { useFamilyView } from '@/contexts/FamilyViewContext'
 import { formatCurrency } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Sparkles, RefreshCw, Lightbulb, TrendingDown, TrendingUp, PiggyBank, AlertTriangle, Info } from 'lucide-react'
 import { TableSkeleton } from '@/components/ui/Skeleton'
 import { PageInfo } from '@/components/ui/PageInfo'
@@ -55,13 +55,15 @@ export default function AdvisorPage() {
 
   const [tips, setTips] = useState<Tip[]>([])
   const [generating, setGenerating] = useState(false)
+  const hasInitialized = useRef(false)
 
   useEffect(() => {
     if (!loading && !user) router.push('/login')
   }, [user, loading, router])
 
   useEffect(() => {
-    if (user && allExpenses && allIncome && categories) {
+    if (!hasInitialized.current && user && allExpenses && allIncome && categories) {
+      hasInitialized.current = true
       generateTips()
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
