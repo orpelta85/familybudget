@@ -10,7 +10,8 @@ import { useFamilyContext } from '@/lib/context/FamilyContext'
 import { useFamilyView } from '@/contexts/FamilyViewContext'
 import { formatCurrency } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
+import { usePathname } from 'next/navigation'
 import { Sparkles, RefreshCw, Lightbulb, TrendingDown, TrendingUp, PiggyBank, AlertTriangle, Info } from 'lucide-react'
 import { TableSkeleton } from '@/components/ui/Skeleton'
 import { PageInfo } from '@/components/ui/PageInfo'
@@ -55,19 +56,24 @@ export default function AdvisorPage() {
 
   const [tips, setTips] = useState<Tip[]>([])
   const [generating, setGenerating] = useState(false)
-  const hasInitialized = useRef(false)
+  const pathname = usePathname()
 
   useEffect(() => {
     if (!loading && !user) router.push('/login')
   }, [user, loading, router])
 
+  // Reset tips when navigating to this page so fresh tips generate
   useEffect(() => {
-    if (!hasInitialized.current && user && allExpenses && allIncome && categories) {
-      hasInitialized.current = true
+    setTips([])
+  }, [pathname])
+
+  // Generate tips once when data is ready and tips are empty
+  useEffect(() => {
+    if (user && allExpenses && allIncome && categories && tips.length === 0 && !generating) {
       generateTips()
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, allExpenses, allIncome, categories, funds, subs])
+  }, [user, allExpenses, allIncome, categories, funds, subs, tips.length])
 
   async function generateTips() {
     setGenerating(true)
