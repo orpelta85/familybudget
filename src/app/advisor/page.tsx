@@ -56,15 +56,17 @@ export default function AdvisorPage() {
 
   const [tips, setTips] = useState<Tip[]>([])
   const [generating, setGenerating] = useState(false)
+  const [shownTitles, setShownTitles] = useState<Set<string>>(new Set())
   const pathname = usePathname()
 
   useEffect(() => {
     if (!loading && !user) router.push('/login')
   }, [user, loading, router])
 
-  // Reset tips when navigating to this page so fresh tips generate
+  // Reset tips and history when navigating to this page
   useEffect(() => {
     setTips([])
+    setShownTitles(new Set())
   }, [pathname])
 
   // Generate tips once when data is ready and tips are empty
@@ -220,13 +222,28 @@ export default function AdvisorPage() {
       { icon: 'growth', title: 'השכלה פיננסית', body: 'קרא ספר אחד בשנה על כסף. המלצות: "אבא עשיר אבא עני", "המשקיע הנבון", "נבל דרך ככלב".', priority: 'low' },
     ]
 
-    // Fisher-Yates shuffle for reliable randomization
-    for (let i = generalTips.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [generalTips[i], generalTips[j]] = [generalTips[j], generalTips[i]]
+    // Filter out already-shown tips, reset if pool exhausted
+    let available = generalTips.filter(t => !shownTitles.has(t.title))
+    if (available.length < 4) {
+      available = generalTips
+      setShownTitles(new Set())
     }
-    const pickCount = newTips.length >= 3 ? 3 : 4
-    newTips.push(...generalTips.slice(0, pickCount))
+
+    // Fisher-Yates shuffle
+    for (let i = available.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [available[i], available[j]] = [available[j], available[i]]
+    }
+    const picked = available.slice(0, 4)
+    newTips.push(...picked)
+
+    // Track shown titles
+    setShownTitles(prev => {
+      const next = new Set(prev)
+      for (const t of picked) next.add(t.title)
+      for (const t of newTips) next.add(t.title)
+      return next
+    })
 
     // Keep high-priority alerts at top, shuffle the rest
     const highTips = newTips.filter(t => t.priority === 'high')
