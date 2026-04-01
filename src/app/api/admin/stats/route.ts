@@ -18,7 +18,10 @@ export async function GET(req: NextRequest) {
   const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000).toISOString()
 
   // Total users
-  const { data: allUsers } = await sb.auth.admin.listUsers({ perPage: 1000 })
+  const { data: allUsers, error: usersError } = await sb.auth.admin.listUsers({ perPage: 1000 })
+  if (usersError) {
+    console.error('Admin listUsers failed:', usersError.message)
+  }
   const users = allUsers?.users ?? []
   const totalUsers = users.length
 

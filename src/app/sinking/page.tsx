@@ -291,7 +291,7 @@ export default function SinkingPage() {
                       <div className="text-base font-bold text-[var(--c-0-88)]">{formatCurrency(fund.monthly_allocation)}<span className="text-[11px] font-normal text-[var(--text-secondary)] mr-[3px]">/חודש</span></div>
                       <div className="text-xs text-[var(--text-secondary)]">
                         תקציב שנתי: {formatCurrency(totalAnnual)}
-                        {shared && <span className="mr-1 text-[var(--text-secondary)]">(חלקי: {formatCurrency(fund.monthly_allocation * 12)})</span>}
+                        {shared && <span className="hidden sm:inline mr-1 text-[var(--text-secondary)]">(חלקי: {formatCurrency(fund.monthly_allocation * 12)})</span>}
                       </div>
                     </div>
                   </div>
