@@ -54,7 +54,7 @@ const ExpenseDonut = dynamic(() => import('@/components/dashboard/ExpenseDonut')
 })
 
 const TYPE_COLORS: Record<string, string> = {
-  fixed: 'var(--accent-blue)',
+  fixed: 'var(--accent-green)',
   variable: 'var(--accent-orange)',
   sinking: 'var(--accent-teal)',
   savings: 'var(--accent-green)',
@@ -444,7 +444,7 @@ export default function Dashboard() {
       {/* ── Empty state for new users ──────────────────────────────────────── */}
       {!dataLoading && totalIncome === 0 && totalExpenses === 0 && !(categories?.length) && (
         <div className="bg-card border border-border rounded-xl p-8 mb-5 text-center">
-          <Wallet size={36} className="text-accent-blue mx-auto mb-3 opacity-70" />
+          <Wallet size={36} className="text-accent-green mx-auto mb-3 opacity-70" />
           <h2 className="text-lg font-bold mb-2">ברוכים הבאים לדשבורד</h2>
           <p className="text-sm text-text-secondary mb-5 max-w-md mx-auto">
             כדי להתחיל לראות נתונים, הזן את ההכנסה החודשית שלך ואת קטגוריות התקציב.
@@ -452,7 +452,7 @@ export default function Dashboard() {
           <div className="flex gap-3 justify-center flex-wrap">
             <Link
               href="/income"
-              className="flex items-center gap-1.5 bg-accent-blue text-primary-foreground rounded-lg px-4 py-2.5 text-sm font-semibold no-underline"
+              className="flex items-center gap-1.5 bg-accent-green text-primary-foreground rounded-lg px-4 py-2.5 text-sm font-semibold no-underline"
             >
               <Wallet size={14} />
               הזן הכנסה
@@ -482,7 +482,7 @@ export default function Dashboard() {
       {/* ── KPI cards ──────────────────────────────────────────────────────── */}
       <div className="grid-kpi">
         {[
-          { label: 'הכנסה נטו', value: dataLoading ? '—' : formatCurrency(totalIncome), color: 'var(--accent-blue)', Icon: Wallet, tip: 'הכנסה אחרי מס ונכויים - הסכום שבאמת נכנס לחשבון' },
+          { label: 'הכנסה נטו', value: dataLoading ? '—' : formatCurrency(totalIncome), color: 'var(--accent-green)', Icon: Wallet, tip: 'הכנסה אחרי מס ונכויים - הסכום שבאמת נכנס לחשבון' },
           { label: 'הוצאות החודש', value: dataLoading ? '—' : formatCurrency(totalPersonal + totalShared), color: 'var(--accent-orange)', Icon: Receipt, tip: '' },
           ...(sinkingMonthly > 0 ? [{
             label: 'כולל קרנות', value: dataLoading ? '—' : formatCurrency(totalExpenses),
@@ -514,7 +514,7 @@ export default function Dashboard() {
         {/* Card 1: Summary table (1/3) */}
         <div className="card">
           <h2 className="card-header mb-4">
-            <CalendarDays size={14} className="text-accent-blue" />
+            <CalendarDays size={14} className="text-accent-green" />
             מבט על החודש
           </h2>
           {dataLoading
@@ -580,7 +580,7 @@ export default function Dashboard() {
                   className="flex items-center justify-center text-[11px] font-semibold text-[var(--c-0-10)]"
                   style={{
                     width: `${Math.round((fixedVsVariable.variableTotal / fixedVsVariable.total) * 100)}%`,
-                    background: 'var(--accent-blue)',
+                    background: 'var(--accent-green)',
                     minWidth: '40px',
                   }}
                 >
@@ -595,7 +595,7 @@ export default function Dashboard() {
                   <span className="font-semibold">{formatCurrency(fixedVsVariable.fixedTotal)}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <div className="w-2.5 h-2.5 rounded-sm" style={{ background: 'var(--accent-blue)' }} />
+                  <div className="w-2.5 h-2.5 rounded-sm" style={{ background: 'var(--accent-green)' }} />
                   <span className="text-text-secondary">משתנות</span>
                   <span className="font-semibold">{formatCurrency(fixedVsVariable.variableTotal)}</span>
                 </div>
@@ -610,7 +610,7 @@ export default function Dashboard() {
         {/* Right (in RTL): Budget utilization */}
         <div className="card">
           <h2 className="card-header mb-3.5">
-            <Target size={14} className="text-accent-blue" /> ניצול תקציב
+            <Target size={14} className="text-accent-green" /> ניצול תקציב
           </h2>
           {!(categories?.length)
             ? <div className="text-text-secondary text-[13px]">אין קטגוריות</div>
@@ -623,7 +623,7 @@ export default function Dashboard() {
                 const rawPct = spent / cat.monthly_target
                 const pct = Math.min(rawPct, 1)
                 const pctDisplay = Math.round(rawPct * 100)
-                const barColor = rawPct >= 1 ? 'var(--accent-red)' : rawPct >= 0.9 ? 'var(--accent-orange)' : 'var(--accent-blue)'
+                const barColor = rawPct >= 1 ? 'var(--accent-red)' : rawPct >= 0.9 ? 'var(--accent-orange)' : 'var(--accent-green)'
                 const avg = avgByCat[cat.id]
                 const deviation = avg && avg > 0 ? Math.round(((spent - avg) / avg) * 100) : null
                 return (
@@ -792,7 +792,7 @@ function FamilyMemberCard({ member, memberShared, memberSinking }: {
   return (
     <div className="card">
       <div className="flex items-center gap-2 mb-3.5">
-        <Users size={14} className="text-accent-blue" />
+        <Users size={14} className="text-accent-green" />
         <span className="font-semibold text-sm">{member.display_name}</span>
         {privacyMode === 'summary_only' && (
           <span className="text-[10px] text-text-secondary bg-[var(--bg-hover)] px-1.5 py-0.5 rounded" title="מציג סיכום בלבד">סיכום</span>
@@ -907,7 +907,7 @@ function FamilyDashboard({
       {/* Family KPIs */}
       <div className="grid-kpi">
         {[
-          { label: 'הכנסה משפחתית', value: formatCurrency(summary.total_income), color: 'var(--accent-blue)', Icon: Wallet },
+          { label: 'הכנסה משפחתית', value: formatCurrency(summary.total_income), color: 'var(--accent-green)', Icon: Wallet },
           { label: 'הוצאות החודש', value: formatCurrency(summary.total_personal_expenses + summary.total_shared_expenses), color: 'var(--accent-orange)', Icon: Receipt },
           ...(familySinkingMonthly > 0 ? [{
             label: 'כולל קרנות', value: formatCurrency(totalExpenses),
@@ -950,7 +950,7 @@ function FamilyDashboard({
         {/* Family donut */}
         <div className="card flex flex-col items-center justify-center">
           <h2 className="card-header mb-3 self-end">
-            <CalendarDays size={14} className="text-accent-blue" />
+            <CalendarDays size={14} className="text-accent-green" />
             חלוקת הוצאות
           </h2>
           <ExpenseDonut data={[
@@ -968,7 +968,7 @@ function FamilyDashboard({
         {/* Budget summary */}
         <div className="card">
           <div className="card-header mb-3.5">
-            <Target size={14} className="text-accent-blue" /> סיכום תקציב
+            <Target size={14} className="text-accent-green" /> סיכום תקציב
           </div>
           <div className="flex items-baseline gap-2 mb-3">
             <span className={`text-[22px] font-bold tracking-tight ${budgetPct <= 100 ? 'text-accent-green' : 'text-accent-red'}`}>
@@ -1043,7 +1043,7 @@ function FamilyDashboard({
                   </div>
                   <div
                     className="flex items-center justify-center text-[11px] font-semibold text-[var(--c-0-10)]"
-                    style={{ width: `${varPct}%`, background: 'var(--accent-blue)', minWidth: '40px' }}
+                    style={{ width: `${varPct}%`, background: 'var(--accent-green)', minWidth: '40px' }}
                   >
                     {varPct}%
                   </div>
@@ -1055,7 +1055,7 @@ function FamilyDashboard({
                     <span className="font-semibold">{formatCurrency(familyFixedTotal)}</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <div className="w-2.5 h-2.5 rounded-sm" style={{ background: 'var(--accent-blue)' }} />
+                    <div className="w-2.5 h-2.5 rounded-sm" style={{ background: 'var(--accent-green)' }} />
                     <span className="text-text-secondary">משתנות (אישיות)</span>
                     <span className="font-semibold">{formatCurrency(familyVariableTotal)}</span>
                   </div>

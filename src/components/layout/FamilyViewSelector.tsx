@@ -49,7 +49,7 @@ export function FamilyViewSelector() {
           onClick={() => setViewMode('personal')}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium cursor-pointer border-none transition-all duration-150 ${
             viewMode === 'personal'
-              ? 'bg-[var(--c-blue-0-22)] text-[var(--accent-blue)] shadow-[inset_0_0_0_1px_var(--c-blue-0-35)]'
+              ? 'bg-[var(--c-green-0-22)] text-[var(--accent-green)] shadow-[inset_0_0_0_1px_var(--c-green-0-35)]'
               : 'bg-transparent text-[var(--text-muted)] hover:bg-[var(--c-0-18)]'
           }`}
         >
@@ -62,7 +62,7 @@ export function FamilyViewSelector() {
           onClick={() => setViewMode('family')}
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium cursor-pointer border-none transition-all duration-150 ${
             viewMode === 'family'
-              ? 'bg-[var(--c-blue-0-22)] text-[var(--accent-blue)] shadow-[inset_0_0_0_1px_var(--c-blue-0-35)]'
+              ? 'bg-[var(--c-green-0-22)] text-[var(--accent-green)] shadow-[inset_0_0_0_1px_var(--c-green-0-35)]'
               : 'bg-transparent text-[var(--text-muted)] hover:bg-[var(--c-0-18)]'
           }`}
         >
@@ -77,7 +77,7 @@ export function FamilyViewSelector() {
               onClick={() => setShowDropdown(v => !v)}
               className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-[11px] font-medium cursor-pointer border-none transition-all duration-150 ${
                 viewMode === 'member'
-                  ? 'bg-[var(--c-blue-0-22)] text-[var(--accent-blue)] shadow-[inset_0_0_0_1px_var(--c-blue-0-35)]'
+                  ? 'bg-[var(--c-green-0-22)] text-[var(--accent-green)] shadow-[inset_0_0_0_1px_var(--c-green-0-35)]'
                   : 'bg-transparent text-[var(--text-muted)] hover:bg-[var(--c-0-18)]'
               }`}
             >
