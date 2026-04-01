@@ -277,6 +277,16 @@ export default function ExpensesPage() {
         }
       }
 
+      // Fallback: unmatched rows go to "שונות"
+      if (!categoryId) {
+        const miscCat = cats.find(c => c.name === 'שונות')
+        if (miscCat) {
+          categoryId = String(miscCat.id)
+          matchConfidence = 0.1
+          matchSource = 'none'
+        }
+      }
+
       return { ...row, categoryId, matchConfidence, matchSource, matchRuleId, originalCategoryId: categoryId }
     })
 
