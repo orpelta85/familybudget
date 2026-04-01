@@ -14,6 +14,7 @@ import type { PrivacyMode } from '@/lib/types'
 import { useTheme } from '@/contexts/ThemeContext'
 import { TableSkeleton } from '@/components/ui/Skeleton'
 import { useConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { useFamilyMemberProfiles } from '@/lib/queries/useFamily'
 import { PageInfo } from '@/components/ui/PageInfo'
 import { PAGE_TIPS } from '@/lib/page-tips'
 
@@ -33,6 +34,9 @@ export default function FamilyPage() {
   const qc = useQueryClient()
   const { theme, setTheme } = useTheme()
   const confirm = useConfirmDialog()
+  const memberIds = members.map(m => m.user_id)
+  const { data: memberProfiles } = useFamilyMemberProfiles(memberIds, !!familyId)
+  const profileMap = new Map((memberProfiles ?? []).map(p => [p.user_id, p.name]))
 
   const [editingName, setEditingName] = useState(false)
   const [nameValue, setNameValue] = useState('')
@@ -256,7 +260,7 @@ export default function FamilyPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="text-[13px] font-medium">
-                        {member.user_id.slice(0, 8)}...
+                        {profileMap.get(member.user_id) ?? member.user_id.slice(0, 8)}
                         {isMe && (
                           <span className="text-[var(--text-secondary)] font-normal"> (את/ה)</span>
                         )}
