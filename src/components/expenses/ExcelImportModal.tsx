@@ -133,7 +133,7 @@ export function ExcelImportModal({
 
       {/* Excel import preview */}
       {showImport && (
-        <div className="relative bg-card border border-[var(--accent-blue)] rounded-xl p-4 mb-4">
+        <div className="relative bg-card border border-[var(--accent-blue)] rounded-xl p-4 mb-4 min-w-0 overflow-x-auto">
           {/* Header */}
           <div className="flex justify-between items-center mb-2">
             <div className="flex items-center gap-2">
@@ -217,7 +217,7 @@ export function ExcelImportModal({
           )}
 
           {/* Rows list */}
-          <div className="max-h-[420px] overflow-y-auto">
+          <div className="max-h-[520px] overflow-y-auto">
             {importRows.map((row, i) => {
               const isAutoMatched = row.categoryId && !row.categoryId.startsWith('__new__') && row.category
               const isNewCat = row.categoryId?.startsWith('__new__')
@@ -250,7 +250,7 @@ export function ExcelImportModal({
                       {dateStr}
                     </span>
                     {/* Description - takes available space */}
-                    <span className="text-[var(--text-heading)] min-w-0 flex-1 break-words" title={row.description}>
+                    <span className="text-[var(--text-heading)] truncate min-w-[120px] max-w-[200px] md:max-w-[300px]" title={row.description}>
                       {row.description}
                     </span>
                     {/* Source badge */}

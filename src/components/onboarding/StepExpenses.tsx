@@ -208,13 +208,14 @@ export function StepExpenses({ data, updateData, onNext, onSkip, onBack, userId,
         } else {
           catId = Number(row.categoryId)
         }
+        const today = new Date().toISOString().split('T')[0]
         return {
           period_id: periodId,
           user_id: userId,
           category_id: catId,
           amount: Number(row.amount),
           description: row.description || '',
-          expense_date: row.date || null,
+          expense_date: row.date || today,
         }
       }).filter(e => e.category_id > 0)
 
