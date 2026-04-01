@@ -235,13 +235,33 @@ export function StepExpenses({ data, updateData, onNext, onSkip, onBack, userId,
           const miscCat = categories?.find(c => c.name === 'שונות')
           if (miscCat) catId = miscCat.id
         }
+        // Normalize date to ISO format (YYYY-MM-DD)
+        let expDate = today
+        if (row.date) {
+          const d = row.date.trim()
+          if (/^\d{4}-\d{2}-\d{2}$/.test(d)) {
+            expDate = d // Already ISO
+          } else if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(d)) {
+            const [day, month, year] = d.split('/')
+            expDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
+          } else if (/^\d{1,2}\/\d{1,2}\/\d{2}$/.test(d)) {
+            const [day, month, year] = d.split('/')
+            expDate = `20${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
+          } else if (/^\d{1,2}\/\d{1,2}$/.test(d)) {
+            const [day, month] = d.split('/')
+            expDate = `${new Date().getFullYear()}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`
+          } else {
+            const parsed = new Date(d)
+            if (!isNaN(parsed.getTime())) expDate = parsed.toISOString().split('T')[0]
+          }
+        }
         return {
           period_id: effectivePeriodId,
           user_id: userId,
           category_id: catId,
           amount: Number(row.amount),
           description: row.description || '',
-          expense_date: row.date || today,
+          expense_date: expDate,
         }
       }).filter(e => e.category_id > 0)
 
