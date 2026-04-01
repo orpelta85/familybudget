@@ -23,6 +23,14 @@ function SetupForm() {
     if (!loading && !user) router.push('/login')
   }, [user, loading, router])
 
+  // Redirect to onboarding wizard for new users
+  useEffect(() => {
+    if (user && !hasSetup && !checkingSetup) {
+      const onboardingUrl = inviteCode ? `/onboarding?invite=${inviteCode}` : '/onboarding'
+      router.push(onboardingUrl)
+    }
+  }, [user, hasSetup, checkingSetup, inviteCode, router])
+
   useEffect(() => {
     if (hasSetup) router.push('/')
   }, [hasSetup, router])
