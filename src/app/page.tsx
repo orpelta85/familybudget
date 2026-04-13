@@ -483,7 +483,7 @@ export default function Dashboard() {
       <div className="grid-kpi">
         {[
           { label: 'הכנסה נטו', value: dataLoading ? '—' : formatCurrency(totalIncome), color: 'var(--accent-green)', Icon: Wallet, tip: 'הכנסה אחרי מס ונכויים - הסכום שבאמת נכנס לחשבון' },
-          { label: 'הוצאות החודש', value: dataLoading ? '—' : formatCurrency(totalPersonal + totalShared), color: 'var(--accent-orange)', Icon: Receipt, tip: '' },
+          { label: 'הוצאות החודש', value: dataLoading ? '—' : formatCurrency(totalPersonal + totalShared), color: 'var(--accent-orange)', Icon: Receipt, tip: 'הוצאות החודש מציגות הוצאות אישיות בלבד (ללא קרנות צבירה). "כולל קרנות" מראה את הסך הכולל כולל הסכום שהועבר לקרנות השונות שלך.' },
           ...(sinkingMonthly > 0 ? [{
             label: 'כולל קרנות', value: dataLoading ? '—' : formatCurrency(totalExpenses),
             color: 'var(--accent-teal)', Icon: PiggyBank, tip: 'הוצאות + הקצאה חודשית לקרנות צבירה',

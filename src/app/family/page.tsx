@@ -46,6 +46,10 @@ export default function FamilyPage() {
   const [aiApiKey, setAiApiKey] = useState('')
   const [aiKeyDraft, setAiKeyDraft] = useState('')
   const [showAiKeyInput, setShowAiKeyInput] = useState(false)
+  const [showAiKeyValue, setShowAiKeyValue] = useState(false)
+  const [origin, setOrigin] = useState('')
+  const [showInviteCode, setShowInviteCode] = useState(false)
+  useEffect(() => { setOrigin(window.location.origin) }, [])
 
   // Load stored AI API key
   useEffect(() => {
@@ -210,23 +214,33 @@ export default function FamilyPage() {
           ) : showAiKeyInput ? (
             <div className="flex flex-col gap-2">
               <div className="flex gap-2">
-                <input
-                  type="password"
-                  value={aiKeyDraft}
-                  onChange={e => setAiKeyDraft(e.target.value)}
-                  placeholder="AIza..."
-                  className="flex-1 bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-2 text-inherit text-[13px] outline-none ltr"
-                  dir="ltr"
-                  onKeyDown={e => {
-                    if (e.key === 'Enter' && aiKeyDraft.trim()) {
-                      localStorage.setItem('oren_gemini_api_key', aiKeyDraft.trim())
-                      setAiApiKey(aiKeyDraft.trim())
-                      setAiKeyDraft('')
-                      setShowAiKeyInput(false)
-                      toast.success('API Key נשמר בהצלחה')
-                    }
-                  }}
-                />
+                <div className="relative flex-1">
+                  <input
+                    type={showAiKeyValue ? 'text' : 'password'}
+                    value={aiKeyDraft}
+                    onChange={e => setAiKeyDraft(e.target.value)}
+                    placeholder="AIza..."
+                    className="w-full bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-2 pl-9 text-inherit text-[13px] outline-none ltr"
+                    dir="ltr"
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' && aiKeyDraft.trim()) {
+                        localStorage.setItem('oren_gemini_api_key', aiKeyDraft.trim())
+                        setAiApiKey(aiKeyDraft.trim())
+                        setAiKeyDraft('')
+                        setShowAiKeyInput(false)
+                        toast.success('API Key נשמר בהצלחה')
+                      }
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowAiKeyValue(v => !v)}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-transparent border-none cursor-pointer text-[var(--text-muted)] p-1 hover:text-[var(--text-body)]"
+                    aria-label={showAiKeyValue ? 'הסתר מפתח' : 'הצג מפתח'}
+                  >
+                    {showAiKeyValue ? <EyeOff size={14} /> : <Eye size={14} />}
+                  </button>
+                </div>
                 <button
                   onClick={() => {
                     if (aiKeyDraft.trim()) {
@@ -249,7 +263,7 @@ export default function FamilyPage() {
                 rel="noopener noreferrer"
                 className="text-[11px] text-[var(--c-blue-0-60)] underline"
               >
-                קבל API key בחינם מ-Google AI Studio
+                איך לקבל מפתח API חינמי? (Google AI Studio)
               </a>
             </div>
           ) : (
@@ -399,9 +413,22 @@ export default function FamilyPage() {
             {/* Invite Code */}
             <div>
               <div className="text-[11px] text-[var(--text-secondary)] block mb-1 font-medium">קוד הזמנה</div>
-              <span className="text-[13px] font-mono tracking-[0.05em] text-[var(--accent-blue)] ltr inline-block">
-                {family.invite_code}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-[13px] font-mono tracking-[0.05em] text-[var(--accent-blue)] ltr inline-block">
+                  {showInviteCode ? family.invite_code : '••••••••'}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowInviteCode(v => !v)}
+                  className="bg-transparent border-none cursor-pointer text-[var(--text-muted)] p-1 hover:text-[var(--text-body)]"
+                  aria-label={showInviteCode ? 'הסתר קוד הזמנה' : 'הצג קוד הזמנה'}
+                >
+                  {showInviteCode ? <EyeOff size={14} /> : <Eye size={14} />}
+                </button>
+              </div>
+              <p className="text-[11px] text-[var(--c-0-50)] m-0 mt-1.5 leading-relaxed">
+                אל תשתף את הקוד ברשתות חברתיות - מי שיש לו אותו יוכל להצטרף למשפחה שלך.
+              </p>
             </div>
 
             {/* Created Date */}
@@ -515,7 +542,7 @@ export default function FamilyPage() {
             <div className="flex gap-2">
               <input
                 readOnly
-                value={`${typeof window !== 'undefined' ? window.location.origin : ''}/login?invite=${family.invite_code}`}
+                value={`${origin}/login?invite=${family.invite_code}`}
                 className="flex-1 bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-2 text-inherit text-xs outline-none ltr text-[var(--c-0-70)]"
               />
               <button onClick={copyInviteLink} className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg px-3 py-2 cursor-pointer text-[var(--c-0-70)] text-xs flex items-center gap-1">
