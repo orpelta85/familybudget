@@ -1,0 +1,5 @@
+<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="he-IL">
+<prosody rate="+10%" pitch="+5Hz">
+חופשה? שיפוץ? קרן חירום?<break time="300ms"/>יש <emphasis level="strong">קופות חיסכון ייעודיות</emphasis>!<break time="200ms"/>מפרישים כל חודש ורואים כמה נשאר עד היעד.<break time="200ms"/><emphasis level="moderate">כיף לראות את זה גדל</emphasis>, והחלומות פתאום מרגישים קרובים.
+</prosody>
+</speak>

@@ -1,0 +1,5 @@
+<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="he-IL">
+<prosody rate="+10%" pitch="+5Hz">
+ועכשיו - תקשיבו טוב, זה <emphasis level="strong">הכוכב</emphasis>!<break time="300ms"/>קוראים לו אורן, והוא היועץ הפיננסי החכם שלכם.<break time="200ms"/>שואלים אותו כל שאלה - איך לחסוך, לסגור את המינוס, מה עם הפנסיה.<break time="300ms"/>הוא מכיר את הנתונים שלכם ונותן תשובות <emphasis level="strong">אישיות</emphasis>.<break time="200ms"/>כמו יועץ פרטי, אבל זמין 24/7.<break time="200ms"/><emphasis level="moderate">לא ייאמן כמה זה עוזר!</emphasis>
+</prosody>
+</speak>

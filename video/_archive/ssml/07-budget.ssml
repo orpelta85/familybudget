@@ -1,0 +1,5 @@
+<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="he-IL">
+<prosody rate="+10%" pitch="+5Hz">
+קובעים תקציב חודשי לכל קטגוריה, ורואים בזמן אמת איפה עומדים.<break time="300ms"/>ירוק? אלופים!<break time="200ms"/>אדום? רגע, אולי כדאי לעצור.<break time="300ms"/>פתאום יש <emphasis level="strong">שליטה</emphasis>.<break time="200ms"/>תמיד יודעים בדיוק איפה נמצאים.
+</prosody>
+</speak>

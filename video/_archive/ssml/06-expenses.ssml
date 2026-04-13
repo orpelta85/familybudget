@@ -1,0 +1,5 @@
+<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="he-IL">
+<prosody rate="+10%" pitch="+5Hz">
+אבל ההוצאות - זה <emphasis level="strong">הלב של הכל</emphasis>!<break time="300ms"/>מייבאים קובץ מהבנק או האשראי, והמערכת מזהה אוטומטית -<break time="200ms"/>סופר, דלק, חינוך, בילויים.<break time="200ms"/>בלי להקליד שום דבר.<break time="300ms"/>תהיו בשוק מאיך שזה עובד.<break time="200ms"/><emphasis level="moderate">איזה חיסכון בזמן!</emphasis>
+</prosody>
+</speak>

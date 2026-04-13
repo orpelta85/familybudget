@@ -1,0 +1,5 @@
+<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="he-IL">
+<prosody rate="+10%" pitch="+5Hz">
+יעדים לטווח ארוך -<break time="200ms"/>לצאת מהמינוס, לחסוך למקדמה על דירה, להגיע ל-<emphasis level="strong">100,000 ₪</emphasis> חיסכון.<break time="300ms"/>המערכת מראה לכם את הדרך ואת הקצב.<break time="200ms"/><emphasis level="moderate">הרגשה מטורפת של שליטה על העתיד!</emphasis>
+</prosody>
+</speak>

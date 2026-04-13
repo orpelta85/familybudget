@@ -1,0 +1,5 @@
+<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="he-IL">
+<prosody rate="+10%" pitch="+5Hz">
+תחזית תזרים מזומנים - רואים לאן הולכים.<break time="200ms"/>חודש קדימה, חודשיים, שלושה.<break time="300ms"/>אם יש בעיה באופק? יודעים מראש.<break time="200ms"/><emphasis level="moderate">כמה כאב ראש זה חוסך</emphasis>, אי אפשר לתאר.
+</prosody>
+</speak>

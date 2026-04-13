@@ -1,0 +1,5 @@
+<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="he-IL">
+<prosody rate="+10%" pitch="+5Hz">
+מכירים את הסיוט הזה?<break time="300ms"/>אקסלים מבולגנים, חישובים בראש, וכל סוף חודש - לחץ!<break time="400ms"/>אז <emphasis level="strong">Family Plan</emphasis> מעיפה את כל זה.<break time="200ms"/>הכל במקום אחד, אוטומטי.<break time="200ms"/><emphasis level="moderate">איזו הקלה!</emphasis>
+</prosody>
+</speak>

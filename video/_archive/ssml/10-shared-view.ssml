@@ -1,0 +1,5 @@
+<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="he-IL">
+<prosody rate="+10%" pitch="+5Hz">
+והקטע המגניב?<break time="300ms"/>כל עמוד עובד בשני מצבים - <emphasis level="strong">אישי ומשפחתי</emphasis>.<break time="200ms"/>לחיצה אחת, ורואים את התמונה המלאה של כל המשפחה.<break time="200ms"/>לחיצה נוספת - רק את שלכם.<break time="200ms"/>חכם ושקוף.
+</prosody>
+</speak>

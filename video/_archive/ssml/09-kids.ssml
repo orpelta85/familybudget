@@ -1,0 +1,5 @@
+<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="he-IL">
+<prosody rate="+10%" pitch="+5Hz">
+ולילדים - לכל ילד כרטיס נפרד!<break time="200ms"/>חוגים, בגדים, חינוך, רופא.<break time="300ms"/>פתאום רואים בדיוק כמה עולה כל ילד, ומה אפשר לייעל.<break time="200ms"/>תאמינו לי, <emphasis level="moderate">איזה שקט נפשי!</emphasis>
+</prosody>
+</speak>

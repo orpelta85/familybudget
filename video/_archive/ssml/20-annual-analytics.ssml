@@ -1,0 +1,5 @@
+<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="he-IL">
+<prosody rate="+10%" pitch="+5Hz">
+ניתוח שנתי - איפה הייתם בינואר, ואיפה אתם עכשיו.<break time="200ms"/>מגמות, חריגות, שיפורים.<break time="300ms"/>כל הסיפור הכלכלי של השנה בתצוגה אחת.<break time="200ms"/><emphasis level="moderate">איזה סיפוק לראות את ההתקדמות!</emphasis>
+</prosody>
+</speak>

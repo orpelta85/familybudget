@@ -1,0 +1,5 @@
+<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="he-IL">
+<prosody rate="+10%" pitch="+5Hz">
+מכירים את הקטנות האלה? חלב, ארוחת צהריים, מונית?<break time="300ms"/>עכשיו יש קופה משותפת למשפחה לכל המזומן הזה.<break time="200ms"/>כל שקל מתועד.<break time="200ms"/><emphasis level="moderate">נגמרו הלאן הכסף נעלם.</emphasis>
+</prosody>
+</speak>

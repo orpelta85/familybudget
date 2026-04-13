@@ -1,0 +1,5 @@
+<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="he-IL">
+<prosody rate="+10%" pitch="+5Hz">
+מעקב פנסיה - זה <emphasis level="strong">העתיד שלכם</emphasis>!<break time="200ms"/>כמה נצבר, כמה מפרישים כל חודש, תחזית לגיל הפרישה.<break time="300ms"/>רואים את הכסף גדל לאורך זמן.<break time="200ms"/><emphasis level="moderate">כיף לדעת שהעתיד מסודר</emphasis>, לא?
+</prosody>
+</speak>

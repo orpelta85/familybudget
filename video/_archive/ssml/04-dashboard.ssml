@@ -1,0 +1,5 @@
+<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="he-IL">
+<prosody rate="+10%" pitch="+5Hz">
+הדשבורד שלהם? <emphasis level="moderate">וואו</emphasis>.<break time="300ms"/>מקבלים את כל התמונה במבט אחד.<break time="200ms"/>כמה נכנס, כמה יצא, ובעיקר - לאן הכסף הולך!<break time="300ms"/>הגרף מראה לכם את המגמות, אתם ישר רואים אם החודש הזה טוב יותר.<break time="200ms"/><emphasis level="moderate">איזו שליטה!</emphasis>
+</prosody>
+</speak>

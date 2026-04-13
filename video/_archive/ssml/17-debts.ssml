@@ -1,0 +1,5 @@
+<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="he-IL">
+<prosody rate="+10%" pitch="+5Hz">
+כל ההלוואות שלכם? הכל במקום אחד.<break time="200ms"/>תאריכי תשלום, ריביות, יתרות.<break time="300ms"/>ככה אף פעם לא שוכחים תשלום, ותמיד יודעים מה המצב.<break time="200ms"/><emphasis level="moderate">סוף סוף שקט נפשי.</emphasis>
+</prosody>
+</speak>

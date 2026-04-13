@@ -1,0 +1,5 @@
+<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="he-IL">
+<prosody rate="+10%" pitch="+5Hz">
+בן או בת הזוג? מזמינים בלחיצה אחת.<break time="300ms"/>ניהול משותף, שקוף, בלי סודות.<break time="200ms"/><emphasis level="moderate">פתאום יש ביטחון ושקט ביחד.</emphasis>
+</prosody>
+</speak>

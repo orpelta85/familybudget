@@ -1,0 +1,5 @@
+<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="he-IL">
+<prosody rate="+10%" pitch="+5Hz">
+ותקשיבו טוב - ההרשמה לוקחת <emphasis level="strong">דקה</emphasis>.<break time="300ms"/>אתם קולטים? דקה!<break time="300ms"/>בוחרים שם, מגדירים משפחה, מכניסים הכנסות, מייבאים קובץ מהבנק - הכל בכמה קליקים.<break time="200ms"/>בוחרים מודולים שמתאימים לכם, וזהו.<break time="200ms"/><emphasis level="moderate">אתם בפנים!</emphasis>
+</prosody>
+</speak>

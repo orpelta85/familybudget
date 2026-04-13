@@ -1,0 +1,5 @@
+<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="he-IL">
+<prosody rate="+10%" pitch="+5Hz">
+משכנתא?<break time="200ms"/>רואים הכל לפי מסלולים - פריים, קבועה, משתנה.<break time="200ms"/>כמה שילמתם, כמה נשאר, ומתי נגמר הסיפור.<break time="300ms"/><emphasis level="moderate">אתם רואים את הסוף!</emphasis><break time="200ms"/>איזו הקלה.
+</prosody>
+</speak>

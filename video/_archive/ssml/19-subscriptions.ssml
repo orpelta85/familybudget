@@ -1,0 +1,5 @@
+<speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="he-IL">
+<prosody rate="+10%" pitch="+5Hz">
+כל המנויים האלה!<break time="200ms"/>נטפליקס, ספוטיפיי, חדר כושר, אפליקציות.<break time="300ms"/>רואים כמה זה עולה ביחד, ופתאום קולטים איפה אפשר לחסוך.<break time="200ms"/><emphasis level="moderate">פתאום יש בחירה!</emphasis>
+</prosody>
+</speak>
