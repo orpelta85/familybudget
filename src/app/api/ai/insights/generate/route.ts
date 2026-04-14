@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
+import { GoogleGenAI, Type } from '@google/genai'
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { getAuthUser } from '@/lib/supabase/auth'
 
-const MODEL = 'claude-sonnet-4-5-20250929'
+const MODEL = 'gemini-2.0-flash'
 
 type InsightCategory = 'spending' | 'saving' | 'alert' | 'achievement' | 'action'
 type InsightSeverity = 'info' | 'warning' | 'positive'
@@ -53,11 +53,11 @@ export async function POST(_request: NextRequest) {
       return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
     }
 
-    const apiKey = process.env.ANTHROPIC_API_KEY
+    const apiKey = process.env.GEMINI_API_KEY
     if (!apiKey) {
       return NextResponse.json(
         {
-          error: 'תובנות AI לא מוגדרות. הוסף ANTHROPIC_API_KEY ל-.env.local',
+          error: 'תובנות AI לא מוגדרות. הוסף GEMINI_API_KEY ל-.env.local',
           needsKey: true,
         },
         { status: 503 }
@@ -147,27 +147,46 @@ export async function POST(_request: NextRequest) {
       expense_count: expenses.length + shared.length,
     }
 
-    const anthropic = new Anthropic({ apiKey })
+    const ai = new GoogleGenAI({ apiKey })
 
-    const response = await anthropic.messages.create({
+    const response = await ai.models.generateContent({
       model: MODEL,
-      max_tokens: 1500,
-      system: SYSTEM_PROMPT,
-      messages: [
-        {
-          role: 'user',
-          content: `נתוני המשפחה:\n\n${JSON.stringify(summary, null, 2)}\n\nתן 3-5 תובנות פיננסיות בעברית. החזר JSON בלבד.`,
+      contents: `נתוני המשפחה:\n\n${JSON.stringify(summary, null, 2)}\n\nתן 3-5 תובנות פיננסיות בעברית. החזר JSON בלבד.`,
+      config: {
+        systemInstruction: SYSTEM_PROMPT,
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            insights: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  text: { type: Type.STRING },
+                  category: {
+                    type: Type.STRING,
+                    enum: ['spending', 'saving', 'alert', 'achievement', 'action'],
+                  },
+                  severity: {
+                    type: Type.STRING,
+                    enum: ['info', 'warning', 'positive'],
+                  },
+                },
+                required: ['text', 'category', 'severity'],
+              },
+            },
+          },
+          required: ['insights'],
         },
-      ],
+      },
     })
 
-    const textBlock = response.content.find(b => b.type === 'text')
-    const raw = textBlock && textBlock.type === 'text' ? textBlock.text : ''
+    const raw = response.text ?? ''
 
     let parsed: { insights?: GeneratedInsight[] } = {}
     try {
-      const match = raw.match(/\{[\s\S]*\}/)
-      parsed = match ? JSON.parse(match[0]) : {}
+      parsed = raw ? JSON.parse(raw) : {}
     } catch (e) {
       console.error('AI insights parse error:', e, raw)
       return NextResponse.json({ error: 'שגיאה בפענוח תשובת ה-AI' }, { status: 500 })

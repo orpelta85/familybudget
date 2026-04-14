@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
+import { GoogleGenAI, Type } from '@google/genai'
 import { getAuthUser } from '@/lib/supabase/auth'
 
 type ExpenseInput = { description: string; amount: number }
 type CategoryInput = { id: string; name: string }
 type MappingRow = { description: string; categoryId: string | null; confidence: number }
 
-const MODEL = 'claude-haiku-4-5-20251001'
+const MODEL = 'gemini-2.0-flash'
 const MAX_ROWS = 200
 
 function buildSystemPrompt(categories: CategoryInput[]): string {
@@ -34,11 +34,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
     }
 
-    const apiKey = process.env.ANTHROPIC_API_KEY
+    const apiKey = process.env.GEMINI_API_KEY
     if (!apiKey) {
       return NextResponse.json(
         {
-          error: 'סיווג AI לא מוגדר. הוסף ANTHROPIC_API_KEY ל-.env.local',
+          error: 'סיווג AI לא מוגדר. הוסף GEMINI_API_KEY ל-.env.local',
           needsKey: true,
         },
         { status: 503 }
@@ -61,26 +61,42 @@ export async function POST(request: NextRequest) {
     const categories = body.categories
     const validIds = new Set(categories.map(c => c.id))
 
-    const anthropic = new Anthropic({ apiKey })
+    const ai = new GoogleGenAI({ apiKey })
     const systemPrompt = buildSystemPrompt(categories)
     const userPayload = JSON.stringify({ expenses }, null, 2)
 
-    const response = await anthropic.messages.create({
+    const response = await ai.models.generateContent({
       model: MODEL,
-      max_tokens: 4096,
-      system: systemPrompt,
-      messages: [
-        { role: 'user', content: `סווג את ההוצאות הבאות:\n\n${userPayload}\n\nהחזר JSON בלבד.` },
-      ],
+      contents: `סווג את ההוצאות הבאות:\n\n${userPayload}\n\nהחזר JSON בלבד.`,
+      config: {
+        systemInstruction: systemPrompt,
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: Type.OBJECT,
+          properties: {
+            mapping: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  description: { type: Type.STRING },
+                  categoryId: { type: Type.STRING, nullable: true },
+                  confidence: { type: Type.NUMBER },
+                },
+                required: ['description', 'confidence'],
+              },
+            },
+          },
+          required: ['mapping'],
+        },
+      },
     })
 
-    const textBlock = response.content.find(b => b.type === 'text')
-    const raw = textBlock && textBlock.type === 'text' ? textBlock.text : ''
+    const raw = response.text ?? ''
 
     let parsed: { mapping?: MappingRow[] } = {}
     try {
-      const match = raw.match(/\{[\s\S]*\}/)
-      parsed = match ? JSON.parse(match[0]) : {}
+      parsed = raw ? JSON.parse(raw) : {}
     } catch (e) {
       console.error('AI categorize parse error:', e, raw)
       return NextResponse.json({ error: 'שגיאה בפענוח תשובת ה-AI' }, { status: 500 })
