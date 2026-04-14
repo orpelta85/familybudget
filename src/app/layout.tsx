@@ -8,7 +8,6 @@ import { ImpersonationBanner } from "@/components/layout/ImpersonationBanner";
 import { MobileViewSelector } from "@/components/layout/MobileViewSelector";
 import { Toaster } from "@/components/ui/sonner";
 import { PwaRegister } from "@/components/PwaRegister";
-import { OrenAvatar } from "@/components/ai/OrenAvatar";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_URL || 'https://familyplan.co.il'),
@@ -52,7 +51,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </main>
           </div>
           <BottomNav />
-          <OrenAvatar />
           <Toaster position="top-center" richColors />
           <PwaRegister />
         </Providers>

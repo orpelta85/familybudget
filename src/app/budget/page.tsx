@@ -446,36 +446,46 @@ export default function BudgetPage() {
                       const barColor = getBarColor(pct)
                       const catRemaining = cat.monthly_target - spentFull
                       return (
-                        <div key={cat.id} className="group flex items-center gap-3 py-2.5 border-b border-[var(--c-0-18)] last:border-b-0 hover:bg-[var(--c-0-18)] rounded px-2 transition-colors">
-                          <div className="shrink-0 max-w-[100px]">
-                            <span className="font-medium text-[13px] text-[var(--c-0-82)] block">{cat.name}</span>
-                            {spentMy !== spentFull && <span className="text-[10px] text-muted-foreground">חלקי: {formatCurrency(spentMy)}</span>}
+                        <div key={cat.id} className="group py-2.5 border-b border-[var(--c-0-18)] last:border-b-0 hover:bg-[var(--c-0-18)] rounded px-2 transition-colors">
+                          <div className="flex items-center justify-between gap-2 mb-1 sm:mb-0">
+                            <div className="shrink-0 max-w-[100px]">
+                              <span className="font-medium text-[13px] text-[var(--c-0-82)] block">{cat.name}</span>
+                              {spentMy !== spentFull && <span className="text-[10px] text-muted-foreground">חלקי: {formatCurrency(spentMy)}</span>}
+                            </div>
+                            <div className="flex items-center gap-1.5 sm:hidden">
+                              {cat.monthly_target > 0 && (
+                                <span className={`text-[11px] font-medium ${catRemaining >= 0 ? 'text-[var(--accent-green)]' : 'text-[var(--accent-red)]'}`}>
+                                  {catRemaining >= 0 ? `נותר ${formatCurrency(catRemaining)}` : `חריגה ${formatCurrency(Math.abs(catRemaining))}`}
+                                </span>
+                              )}
+                              <button type="button" onClick={() => handleDeleteFromSection(cat.id, cat.name, 'shared')} className="p-0.5 rounded hover:bg-[var(--c-red-0-18)] transition-colors text-[var(--c-0-35)] hover:text-[var(--accent-red)]" title="הסר מתקציב משותף"><X size={12} /></button>
+                            </div>
                           </div>
-                          <div className="flex-1 h-[5px] rounded-full bg-[var(--c-0-20)] overflow-hidden min-w-[60px]">
-                            <div className="h-full rounded-full transition-[width] duration-400 ease-out" style={{ width: `${Math.min(pct * 100, 100)}%`, background: barColor }} />
-                          </div>
-                          <div className="flex items-center gap-1 text-[12px] shrink-0">
-                            <span className="font-semibold" style={{ color: barColor }}>{formatCurrency(spentFull)}</span>
-                            <span className="text-muted-foreground">/</span>
-                            {isEditing ? (
-                              <>
-                                      <input autoFocus type="number" value={editValue} onChange={e => setEditValue(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); saveTarget(cat.id) } if (e.key === 'Escape') setEditingId(null) }} className="w-20 bg-[var(--c-0-20)] border border-[var(--c-blue-0-45)] rounded-md px-2 py-0.5 text-inherit text-[12px] text-left" title="סכום יעד" />
-                                      <button type="button" onClick={() => saveTarget(cat.id)} className="p-0.5 rounded bg-[var(--accent-green)] text-[var(--c-0-10)]" title="שמור"><Check size={12} /></button>
-                                      <button type="button" onClick={() => setEditingId(null)} className="p-0.5 rounded bg-[var(--c-0-25)] text-muted-foreground" title="ביטול"><X size={10} /></button>
-                                    </>
-                            ) : (
-                              <>
-                                <span className="text-muted-foreground">{formatCurrency(cat.monthly_target)}</span>
-                                <button type="button" onClick={() => { setEditingId(cat.id); setEditValue(String(cat.monthly_target)) }} className="p-0.5 rounded hover:bg-[var(--c-0-25)] transition-colors text-muted-foreground hover:text-[var(--text-body)]" title="ערוך תקציב"><Pencil size={12} /></button>
-                              </>
-                            )}
-                          </div>
-                          {cat.monthly_target > 0 && (
-                            <span className={`text-[11px] font-medium shrink-0 text-left ${catRemaining >= 0 ? 'text-[var(--accent-green)]' : 'text-[var(--accent-red)]'}`}>
-                              {catRemaining >= 0 ? `נותר ${formatCurrency(catRemaining)}` : `חריגה ${formatCurrency(Math.abs(catRemaining))}`}
+                          <div className="flex items-center gap-3">
+                            <div className="flex-1 h-[5px] rounded-full bg-[var(--c-0-20)] overflow-hidden min-w-[40px]">
+                              <div className="h-full rounded-full transition-[width] duration-400 ease-out" style={{ width: `${Math.min(pct * 100, 100)}%`, background: barColor }} />
+                            </div>
+                            <div className="flex items-center gap-1 text-[12px] shrink-0">
+                              <span className="font-semibold" style={{ color: barColor }}>{formatCurrency(spentFull)}</span>
+                              <span className="text-muted-foreground">/</span>
+                              {isEditing ? (
+                                <>
+                                  <input autoFocus type="number" value={editValue} onChange={e => setEditValue(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); saveTarget(cat.id) } if (e.key === 'Escape') setEditingId(null) }} className="w-16 sm:w-20 bg-[var(--c-0-20)] border border-[var(--c-blue-0-45)] rounded-md px-2 py-0.5 text-inherit text-[12px] text-left" title="סכום יעד" />
+                                  <button type="button" onClick={() => saveTarget(cat.id)} className="p-0.5 rounded bg-[var(--accent-green)] text-[var(--c-0-10)]" title="שמור"><Check size={12} /></button>
+                                  <button type="button" onClick={() => setEditingId(null)} className="p-0.5 rounded bg-[var(--c-0-25)] text-muted-foreground" title="ביטול"><X size={10} /></button>
+                                </>
+                              ) : (
+                                <>
+                                  <span className="text-muted-foreground">{formatCurrency(cat.monthly_target)}</span>
+                                  <button type="button" onClick={() => { setEditingId(cat.id); setEditValue(String(cat.monthly_target)) }} className="p-0.5 rounded hover:bg-[var(--c-0-25)] transition-colors text-muted-foreground hover:text-[var(--text-body)]" title="ערוך תקציב"><Pencil size={12} /></button>
+                                </>
+                              )}
+                            </div>
+                            <span className={`text-[11px] font-medium shrink-0 text-left hidden sm:inline ${catRemaining >= 0 ? 'text-[var(--accent-green)]' : 'text-[var(--accent-red)]'}`}>
+                              {cat.monthly_target > 0 && (catRemaining >= 0 ? `נותר ${formatCurrency(catRemaining)}` : `חריגה ${formatCurrency(Math.abs(catRemaining))}`)}
                             </span>
-                          )}
-                          <button type="button" onClick={() => handleDeleteFromSection(cat.id, cat.name, 'shared')} className="p-0.5 rounded hover:bg-[var(--c-red-0-18)] transition-colors text-[var(--c-0-35)] hover:text-[var(--accent-red)] opacity-0 group-hover:opacity-100" title="הסר מתקציב משותף"><X size={12} /></button>
+                            <button type="button" onClick={() => handleDeleteFromSection(cat.id, cat.name, 'shared')} className="p-0.5 rounded hover:bg-[var(--c-red-0-18)] transition-colors text-[var(--c-0-35)] hover:text-[var(--accent-red)] opacity-0 group-hover:opacity-100 hidden sm:block" title="הסר מתקציב משותף"><X size={12} /></button>
+                          </div>
                         </div>
                       )
                     })}
@@ -539,33 +549,43 @@ export default function BudgetPage() {
                             const barColor = getBarColor(pct)
                             const catRemaining = cat.monthly_target - spent
                             return (
-                              <div key={cat.id} className="group flex items-center gap-3 py-2.5 border-b border-[var(--c-0-18)] last:border-b-0 hover:bg-[var(--c-0-18)] rounded px-2 transition-colors">
-                                <span className="font-medium text-[13px] text-[var(--c-0-82)] shrink-0 max-w-[100px]">{cat.name}</span>
-                                <div className="flex-1 h-[5px] rounded-full bg-[var(--c-0-20)] overflow-hidden min-w-[60px]">
-                                  <div className="h-full rounded-full transition-[width] duration-400 ease-out" style={{ width: `${Math.min(pct * 100, 100)}%`, background: barColor }} />
+                              <div key={cat.id} className="group py-2.5 border-b border-[var(--c-0-18)] last:border-b-0 hover:bg-[var(--c-0-18)] rounded px-2 transition-colors">
+                                <div className="flex items-center justify-between gap-2 mb-1 sm:mb-0">
+                                  <span className="font-medium text-[13px] text-[var(--c-0-82)] shrink-0 max-w-[100px]">{cat.name}</span>
+                                  <div className="flex items-center gap-1.5 sm:hidden">
+                                    {cat.monthly_target > 0 && (
+                                      <span className={`text-[11px] font-medium ${catRemaining >= 0 ? 'text-[var(--accent-green)]' : 'text-[var(--accent-red)]'}`}>
+                                        {catRemaining >= 0 ? `נותר ${formatCurrency(catRemaining)}` : `חריגה ${formatCurrency(Math.abs(catRemaining))}`}
+                                      </span>
+                                    )}
+                                    <button type="button" onClick={() => handleDeleteFromSection(cat.id, cat.name, 'personal')} className="p-0.5 rounded hover:bg-[var(--c-red-0-18)] transition-colors text-[var(--c-0-35)] hover:text-[var(--accent-red)]" title="הסר מתקציב אישי"><X size={12} /></button>
+                                  </div>
                                 </div>
-                                <div className="flex items-center gap-1 text-[12px] shrink-0">
-                                  <span className="font-semibold" style={{ color: barColor }}>{formatCurrency(spent)}</span>
-                                  <span className="text-muted-foreground">/</span>
-                                  {isEditing ? (
-                                    <>
-                                      <input autoFocus type="number" value={editValue} onChange={e => setEditValue(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); saveTarget(cat.id) } if (e.key === 'Escape') setEditingId(null) }} className="w-20 bg-[var(--c-0-20)] border border-[var(--c-blue-0-45)] rounded-md px-2 py-0.5 text-inherit text-[12px] text-left" title="סכום יעד" />
-                                      <button type="button" onClick={() => saveTarget(cat.id)} className="p-0.5 rounded bg-[var(--accent-green)] text-[var(--c-0-10)]" title="שמור"><Check size={12} /></button>
-                                      <button type="button" onClick={() => setEditingId(null)} className="p-0.5 rounded bg-[var(--c-0-25)] text-muted-foreground" title="ביטול"><X size={10} /></button>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <span className="text-muted-foreground">{formatCurrency(cat.monthly_target)}</span>
-                                      <button type="button" onClick={() => { setEditingId(cat.id); setEditValue(String(cat.monthly_target)) }} className="p-0.5 rounded hover:bg-[var(--c-0-25)] transition-colors text-muted-foreground hover:text-[var(--text-body)]" title="ערוך תקציב"><Pencil size={12} /></button>
-                                    </>
-                                  )}
-                                </div>
-                                {cat.monthly_target > 0 && (
-                                  <span className={`text-[11px] font-medium shrink-0 text-left ${catRemaining >= 0 ? 'text-[var(--accent-green)]' : 'text-[var(--accent-red)]'}`}>
-                                    {catRemaining >= 0 ? `נותר ${formatCurrency(catRemaining)}` : `חריגה ${formatCurrency(Math.abs(catRemaining))}`}
+                                <div className="flex items-center gap-3">
+                                  <div className="flex-1 h-[5px] rounded-full bg-[var(--c-0-20)] overflow-hidden min-w-[40px]">
+                                    <div className="h-full rounded-full transition-[width] duration-400 ease-out" style={{ width: `${Math.min(pct * 100, 100)}%`, background: barColor }} />
+                                  </div>
+                                  <div className="flex items-center gap-1 text-[12px] shrink-0">
+                                    <span className="font-semibold" style={{ color: barColor }}>{formatCurrency(spent)}</span>
+                                    <span className="text-muted-foreground">/</span>
+                                    {isEditing ? (
+                                      <>
+                                        <input autoFocus type="number" value={editValue} onChange={e => setEditValue(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); saveTarget(cat.id) } if (e.key === 'Escape') setEditingId(null) }} className="w-16 sm:w-20 bg-[var(--c-0-20)] border border-[var(--c-blue-0-45)] rounded-md px-2 py-0.5 text-inherit text-[12px] text-left" title="סכום יעד" />
+                                        <button type="button" onClick={() => saveTarget(cat.id)} className="p-0.5 rounded bg-[var(--accent-green)] text-[var(--c-0-10)]" title="שמור"><Check size={12} /></button>
+                                        <button type="button" onClick={() => setEditingId(null)} className="p-0.5 rounded bg-[var(--c-0-25)] text-muted-foreground" title="ביטול"><X size={10} /></button>
+                                      </>
+                                    ) : (
+                                      <>
+                                        <span className="text-muted-foreground">{formatCurrency(cat.monthly_target)}</span>
+                                        <button type="button" onClick={() => { setEditingId(cat.id); setEditValue(String(cat.monthly_target)) }} className="p-0.5 rounded hover:bg-[var(--c-0-25)] transition-colors text-muted-foreground hover:text-[var(--text-body)]" title="ערוך תקציב"><Pencil size={12} /></button>
+                                      </>
+                                    )}
+                                  </div>
+                                  <span className={`text-[11px] font-medium shrink-0 text-left hidden sm:inline ${catRemaining >= 0 ? 'text-[var(--accent-green)]' : 'text-[var(--accent-red)]'}`}>
+                                    {cat.monthly_target > 0 && (catRemaining >= 0 ? `נותר ${formatCurrency(catRemaining)}` : `חריגה ${formatCurrency(Math.abs(catRemaining))}`)}
                                   </span>
-                                )}
-                                <button type="button" onClick={() => handleDeleteFromSection(cat.id, cat.name, 'personal')} className="p-0.5 rounded hover:bg-[var(--c-red-0-18)] transition-colors text-[var(--c-0-35)] hover:text-[var(--accent-red)] opacity-0 group-hover:opacity-100" title="הסר מתקציב אישי"><X size={12} /></button>
+                                  <button type="button" onClick={() => handleDeleteFromSection(cat.id, cat.name, 'personal')} className="p-0.5 rounded hover:bg-[var(--c-red-0-18)] transition-colors text-[var(--c-0-35)] hover:text-[var(--accent-red)] opacity-0 group-hover:opacity-100 hidden sm:block" title="הסר מתקציב אישי"><X size={12} /></button>
+                                </div>
                               </div>
                             )
                           })}

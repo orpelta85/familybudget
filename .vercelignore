@@ -1,0 +1,14 @@
+video/
+website-project/
+_gen_tmp/
+docs/
+*.png
+*.jpeg
+*.jpg
+!public/**/*.png
+!public/**/*.jpeg
+!public/**/*.jpg
+!src/**/*.png
+*.docx
+*.xlsx
+.tmp-*

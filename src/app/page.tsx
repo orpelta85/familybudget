@@ -47,6 +47,7 @@ import { PAGE_TIPS } from '@/lib/page-tips'
 import { sharedCatLabel } from '@/components/expenses/SharedExpenseList'
 import dynamic from 'next/dynamic'
 import { DashboardSkeleton, ChartSkeleton } from '@/components/ui/Skeleton'
+import { InsightsCard } from '@/components/dashboard/InsightsCard'
 
 const ExpenseDonut = dynamic(() => import('@/components/dashboard/ExpenseDonut').then(m => ({ default: m.ExpenseDonut })), {
   loading: () => <ChartSkeleton height={150} />,
@@ -362,6 +363,11 @@ export default function Dashboard() {
       </div>
 
       {periods && <PeriodSelector periods={periods} selectedId={selectedPeriodId} onChange={setSelectedPeriodId} />}
+
+      {/* ── AI Insights Card (weekly Oren insights) ─────────────────────── */}
+      <div className="mb-4">
+        <InsightsCard userId={user?.id} />
+      </div>
 
       {/* ── Alert banners (from alert system) ───────────────────────────── */}
       {(() => {

@@ -641,6 +641,11 @@
     font-size: 11px !important;
   }
 }
+@media (max-width: 420px) {
+  .grid-kpi {
+    grid-template-columns: 1fr !important;
+  }
+}
 
 /* Number/currency — always LTR */
 .ltr { direction: ltr; unicode-bidi: embed; }

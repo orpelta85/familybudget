@@ -5,6 +5,7 @@ import { formatCurrency } from '@/lib/utils'
 import { Upload, X, FileSpreadsheet, CheckCircle2, AlertCircle, HelpCircle, Sparkles, Loader2 } from 'lucide-react'
 import type { RawExpenseRow } from '@/lib/excel-import'
 import type { BudgetCategory, SinkingFund } from '@/lib/types'
+import { SmartCategorizeButton } from './SmartCategorizeButton'
 
 export type ImportRow = RawExpenseRow & {
   categoryId: string
@@ -171,6 +172,8 @@ export function ExcelImportModal({
                     </button>
                   </>
                 )}
+                <span className="text-[var(--c-0-45)]">|</span>
+                <SmartCategorizeButton importRows={importRows} setImportRows={setImportRows} categories={categories} />
               </div>
             )
           })()}

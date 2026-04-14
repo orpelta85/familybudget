@@ -17,23 +17,20 @@ const ThemeCtx = createContext<ThemeContextValue>({
 })
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeRaw] = useState<Theme>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('theme')
-      if (saved === 'light' || saved === 'dark') return saved
-    }
-    return 'light'
-  })
+  const [theme, setThemeRaw] = useState<Theme>('light')
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+    const saved = typeof window !== 'undefined' ? localStorage.getItem('theme') : null
+    if (saved === 'light' || saved === 'dark') setThemeRaw(saved)
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (!mounted) return
     localStorage.setItem('theme', theme)
     document.documentElement.setAttribute('data-theme', theme)
-  }, [theme])
-
-  // Set initial theme on mount (for SSR hydration)
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme)
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [theme, mounted])
 
   const toggleTheme = useCallback(() => {
     setThemeRaw(prev => prev === 'light' ? 'dark' : 'light')

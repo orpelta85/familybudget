@@ -2,3 +2,22 @@ node_modules/
 .next/
 .env.local
 *.log
+
+.vercel
+
+# Screenshots and generated images (keep only public/src ones)
+/*.png
+/*.jpeg
+/*.jpg
+
+# temp/generated files
+.tmp-*
+_gen_tmp/
+_content_*.json
+~$*.docx
+
+# separate project (has its own git if needed)
+website-project/
+
+# PDFs and other binary uploads at root
+/*.pdf
