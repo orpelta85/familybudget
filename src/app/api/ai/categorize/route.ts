@@ -4,27 +4,33 @@ import { getAuthUser } from '@/lib/supabase/auth'
 
 type ExpenseInput = { description: string; amount: number }
 type CategoryInput = { id: string; name: string }
+type HistoryExample = { merchant: string; categoryId: string }
 type MappingRow = { description: string; categoryId: string | null; confidence: number }
 
 const MODEL = 'gemini-2.0-flash'
 const MAX_ROWS = 200
+const MAX_HISTORY = 60
 
-function buildSystemPrompt(categories: CategoryInput[]): string {
+function buildSystemPrompt(categories: CategoryInput[], history: HistoryExample[]): string {
   const catList = categories.map(c => `- ${c.name} (id: ${c.id})`).join('\n')
+  const historyBlock = history.length
+    ? `\nדוגמאות מהחודשים הקודמים - כך המשתמש סיווג עסקים דומים בעבר (חשוב - עקוב אחרי זה):\n${history.map(h => `- "${h.merchant}" → categoryId: ${h.categoryId}`).join('\n')}\n`
+    : ''
   return `אתה מומחה לסיווג הוצאות של משפחה ישראלית.
 תקבל רשימת הוצאות (תיאור + סכום) ואת רשימת הקטגוריות הזמינות.
 עבור כל הוצאה, החזר את הקטגוריה המתאימה ביותר מתוך הרשימה.
 
 הקטגוריות הזמינות:
 ${catList}
-
+${historyBlock}
 כללים:
 1. החזר JSON בלבד, בפורמט { "mapping": [{ "description": "...", "categoryId": "...", "confidence": 0.0-1.0 }] }
 2. categoryId חייב להיות אחד מה-ids שלמעלה בלבד, או null אם אין התאמה
 3. confidence: 0.9+ ברור לחלוטין, 0.7-0.9 בטוח, 0.4-0.7 סביר, מתחת ל-0.4 החזר null ל-categoryId
-4. זהה שמות עסקים ישראליים נפוצים (שופרסל, רמי לוי, יינות ביתן = סופר; פז, סונול, דלק = דלק; וכו')
-5. אל תמציא קטגוריות חדשות - השתמש רק במה שקיים ברשימה
-6. החזר את כל ההוצאות שנשלחו, באותו סדר`
+4. אם ההוצאה דומה לדוגמה מההיסטוריה - סווג אותה לאותה קטגוריה עם confidence גבוה (0.9+)
+5. זהה שמות עסקים ישראליים נפוצים (שופרסל, רמי לוי, יינות ביתן = סופר; פז, סונול, דלק = דלק; וכו')
+6. אל תמציא קטגוריות חדשות - השתמש רק במה שקיים ברשימה
+7. החזר את כל ההוצאות שנשלחו, באותו סדר`
 }
 
 export async function POST(request: NextRequest) {
@@ -48,6 +54,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json().catch(() => null) as {
       expenses?: ExpenseInput[]
       categories?: CategoryInput[]
+      history?: HistoryExample[]
     } | null
 
     if (!body?.expenses || !Array.isArray(body.expenses) || body.expenses.length === 0) {
@@ -60,9 +67,15 @@ export async function POST(request: NextRequest) {
     const expenses = body.expenses.slice(0, MAX_ROWS)
     const categories = body.categories
     const validIds = new Set(categories.map(c => c.id))
+    const history = Array.isArray(body.history)
+      ? body.history
+          .filter(h => h?.merchant && h?.categoryId && validIds.has(String(h.categoryId)))
+          .slice(0, MAX_HISTORY)
+          .map(h => ({ merchant: String(h.merchant), categoryId: String(h.categoryId) }))
+      : []
 
     const ai = new GoogleGenAI({ apiKey })
-    const systemPrompt = buildSystemPrompt(categories)
+    const systemPrompt = buildSystemPrompt(categories, history)
     const userPayload = JSON.stringify({ expenses }, null, 2)
 
     const response = await ai.models.generateContent({

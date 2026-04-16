@@ -34,8 +34,26 @@ export interface MatchResult {
   ruleId?: number
 }
 
+/**
+ * Strip volatile tokens (dates, amounts, currency, trailing IDs) so the same merchant
+ * stored in January matches the same merchant imported in February.
+ * Keeps Hebrew/English/basic punctuation.
+ */
+export function cleanMerchantPattern(text: string): string {
+  return text
+    .trim()
+    .toLowerCase()
+    .replace(/\d{1,2}[-/.]\d{1,2}(?:[-/.]\d{2,4})?/g, ' ')
+    .replace(/\d+(?:[.,]\d+)?/g, ' ')
+    .replace(/[₪$€£]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
 function normalize(text: string): string {
-  return text.trim().toLowerCase().replace(/\s+/g, ' ')
+  const cleaned = cleanMerchantPattern(text)
+  // If cleaning removed everything meaningful (pure-numeric input), fall back to raw lowercase
+  return cleaned.length >= 2 ? cleaned : text.trim().toLowerCase().replace(/\s+/g, ' ')
 }
 
 export function categorizeTransaction(

@@ -692,7 +692,9 @@ export default function ExpensesPage() {
       queryClient.invalidateQueries({ queryKey: ['personal_expenses'] })
       queryClient.invalidateQueries({ queryKey: ['shared_expenses'] })
       queryClient.invalidateQueries({ queryKey: ['all_sinking_transactions'] })
+      if (newCatNames.length) queryClient.invalidateQueries({ queryKey: ['budget_categories'] })
       if (newFundNames.length) queryClient.invalidateQueries({ queryKey: ['sinking_funds'] })
+      queryClient.invalidateQueries({ queryKey: ['category_rules'] })
 
       const newCount = newCatNames.length
       const newFundCount = newFundNames.length
@@ -1009,6 +1011,7 @@ export default function ExpensesPage() {
         importTotal={importTotal}
         categories={categories}
         funds={funds}
+        categoryRules={categoryRules}
         isDragging={isDragging}
         setIsDragging={setIsDragging}
         fileRef={fileRef}

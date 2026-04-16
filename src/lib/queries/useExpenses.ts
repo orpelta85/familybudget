@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { createClient } from '@/lib/supabase/client'
 import { withImpersonation } from '@/lib/impersonate-client'
+import { cleanMerchantPattern } from '@/lib/categorization-engine'
 import type { PersonalExpense, BudgetCategory } from '@/lib/types'
 
 export function usePersonalExpenses(periodId: number | undefined, userId: string | undefined) {
@@ -333,10 +334,15 @@ export function useSaveCategoryRule() {
       source?: string
     }) => {
       const sb = createClient()
+      // Store a cleaned merchant pattern (dates/amounts stripped) so it matches
+      // the same merchant across months. Skip if nothing meaningful is left.
+      const cleaned = cleanMerchantPattern(rule.merchant_pattern)
+      if (cleaned.length < 2) return
       const { error } = await sb
         .from('category_rules')
         .upsert({
           ...rule,
+          merchant_pattern: cleaned,
           confidence: rule.confidence ?? 0.5,
           source: rule.source ?? 'user',
           updated_at: new Date().toISOString(),

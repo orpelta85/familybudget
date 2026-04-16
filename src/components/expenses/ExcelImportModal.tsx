@@ -25,6 +25,7 @@ interface ExcelImportModalProps {
   importTotal: number
   categories: BudgetCategory[] | undefined
   funds: SinkingFund[] | undefined
+  categoryRules?: Array<{ merchant_pattern: string; category_id: number | null; confidence: number; times_used: number }>
   isDragging: boolean
   setIsDragging: (v: boolean) => void
   fileRef: React.RefObject<HTMLInputElement | null>
@@ -60,7 +61,7 @@ function formatDate(d: string | undefined): string {
 export function ExcelImportModal({
   importRows, setImportRows, showImport, setShowImport,
   importing, detectedFormat, importTotal,
-  categories, funds,
+  categories, funds, categoryRules,
   isDragging, setIsDragging, fileRef,
   onDrop, onImportSave, showTextInput, onAcceptAllSuggestions,
   parsingFiles = false, parseProgress,
@@ -91,6 +92,13 @@ export function ExcelImportModal({
   }
 
   const validCount = importRows.filter(r => (r.categoryId || r.category) && r.amount > 0).length
+
+  const sessionNewCategories = Array.from(new Set(
+    importRows
+      .map(r => r.categoryId)
+      .filter((c): c is string => !!c && c.startsWith('__new__'))
+      .map(c => c.replace('__new__', ''))
+  )).sort()
 
   return (
     <>
@@ -173,7 +181,7 @@ export function ExcelImportModal({
                   </>
                 )}
                 <span className="text-[var(--c-0-45)]">|</span>
-                <SmartCategorizeButton importRows={importRows} setImportRows={setImportRows} categories={categories} />
+                <SmartCategorizeButton importRows={importRows} setImportRows={setImportRows} categories={categories} categoryRules={categoryRules} />
               </div>
             )
           })()}
@@ -188,6 +196,13 @@ export function ExcelImportModal({
                 className="bg-[var(--c-0-20)] border border-[var(--border-light)] rounded-md px-1.5 py-1 text-[11px] text-inherit cursor-pointer">
                 <option value="">קטגוריה...</option>
                 {categories?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                {sessionNewCategories.length > 0 && (
+                  <optgroup label="חדשות (ייוצרו בשמירה)">
+                    {sessionNewCategories.map(name => (
+                      <option key={`new-${name}`} value={`__new__${name}`}>{name} (חדשה)</option>
+                    ))}
+                  </optgroup>
+                )}
               </select>
               <button onClick={applyBulkCategory} disabled={!bulkCategory}
                 className="bg-[var(--accent-blue)] border-none rounded-md px-2 py-1 text-[10px] font-semibold text-[var(--c-0-10)] cursor-pointer disabled:opacity-40">
@@ -304,7 +319,7 @@ export function ExcelImportModal({
                     </button>
                     {/* Category - desktop */}
                     <select
-                      value={row.categoryId?.startsWith('__new__') ? '__new__' : (row.categoryId || '')}
+                      value={row.categoryId || ''}
                       onChange={e => {
                         const val = e.target.value
                         if (val === '__manual__') {
@@ -313,9 +328,12 @@ export function ExcelImportModal({
                               setImportRows(p => p.map((r, j) => j === i ? { ...r, categoryId: `__new__${name.trim()}`, category: name.trim() } : r))
                             }
                           })
+                        } else if (val.startsWith('__new__')) {
+                          const name = val.replace('__new__', '')
+                          setImportRows(p => p.map((r, j) => j === i ? { ...r, categoryId: val, category: name } : r))
                         } else {
                           const text = e.target.selectedOptions[0]?.text || ''
-                          setImportRows(p => p.map((r, j) => j === i ? { ...r, categoryId: val === '__new__' ? `__new__${r.category}` : val, category: val === '__new__' ? r.category : text } : r))
+                          setImportRows(p => p.map((r, j) => j === i ? { ...r, categoryId: val, category: text } : r))
                         }
                       }}
                       aria-label="קטגוריה"
@@ -324,9 +342,15 @@ export function ExcelImportModal({
                         : isNewCat ? 'border-[var(--c-orange-0-50)] text-[var(--c-orange-0-80)]'
                         : 'border-[var(--c-0-40)] text-[var(--text-secondary)]'
                       }`}>
-                      {isNewCat && <option value="__new__">{row.category} (חדש)</option>}
-                      {!isNewCat && !row.categoryId && <option value="">— בחר —</option>}
+                      {!row.categoryId && <option value="">— בחר —</option>}
                       {categories?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                      {sessionNewCategories.length > 0 && (
+                        <optgroup label="חדשות (ייוצרו בשמירה)">
+                          {sessionNewCategories.map(name => (
+                            <option key={`new-${name}`} value={`__new__${name}`}>{name} (חדשה)</option>
+                          ))}
+                        </optgroup>
+                      )}
                       <option value="__manual__">+ חדשה...</option>
                     </select>
                     {/* Fund - desktop */}
@@ -374,7 +398,7 @@ export function ExcelImportModal({
                     </button>
                     {/* Category */}
                     <select
-                      value={row.categoryId?.startsWith('__new__') ? '__new__' : (row.categoryId || '')}
+                      value={row.categoryId || ''}
                       onChange={e => {
                         const val = e.target.value
                         if (val === '__manual__') {
@@ -383,9 +407,12 @@ export function ExcelImportModal({
                               setImportRows(p => p.map((r, j) => j === i ? { ...r, categoryId: `__new__${name.trim()}`, category: name.trim() } : r))
                             }
                           })
+                        } else if (val.startsWith('__new__')) {
+                          const name = val.replace('__new__', '')
+                          setImportRows(p => p.map((r, j) => j === i ? { ...r, categoryId: val, category: name } : r))
                         } else {
                           const text = e.target.selectedOptions[0]?.text || ''
-                          setImportRows(p => p.map((r, j) => j === i ? { ...r, categoryId: val === '__new__' ? `__new__${r.category}` : val, category: val === '__new__' ? r.category : text } : r))
+                          setImportRows(p => p.map((r, j) => j === i ? { ...r, categoryId: val, category: text } : r))
                         }
                       }}
                       aria-label="קטגוריה"
@@ -394,9 +421,15 @@ export function ExcelImportModal({
                         : isNewCat ? 'border-[var(--c-orange-0-50)] text-[var(--c-orange-0-80)]'
                         : 'border-[var(--c-0-40)] text-[var(--text-secondary)]'
                       }`}>
-                      {isNewCat && <option value="__new__">{row.category} (חדש)</option>}
-                      {!isNewCat && !row.categoryId && <option value="">— בחר —</option>}
+                      {!row.categoryId && <option value="">— בחר —</option>}
                       {categories?.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                      {sessionNewCategories.length > 0 && (
+                        <optgroup label="חדשות (ייוצרו בשמירה)">
+                          {sessionNewCategories.map(name => (
+                            <option key={`new-${name}`} value={`__new__${name}`}>{name} (חדשה)</option>
+                          ))}
+                        </optgroup>
+                      )}
                       <option value="__manual__">+ חדשה...</option>
                     </select>
                     {/* Fund */}

@@ -18,10 +18,18 @@ type Suggestion = {
   accept: boolean
 }
 
+type RuleHistory = {
+  merchant_pattern: string
+  category_id: number | null
+  confidence: number
+  times_used: number
+}
+
 interface SmartCategorizeButtonProps {
   importRows: ImportRow[]
   setImportRows: React.Dispatch<React.SetStateAction<ImportRow[]>>
   categories: BudgetCategory[] | undefined
+  categoryRules?: RuleHistory[]
 }
 
 const MISC_NAMES = ['שונות', 'אחר', 'כללי']
@@ -34,7 +42,7 @@ function isMiscOrEmpty(row: ImportRow, categories: BudgetCategory[] | undefined)
   return false
 }
 
-export function SmartCategorizeButton({ importRows, setImportRows, categories }: SmartCategorizeButtonProps) {
+export function SmartCategorizeButton({ importRows, setImportRows, categories, categoryRules }: SmartCategorizeButtonProps) {
   const [loading, setLoading] = useState(false)
   const [suggestions, setSuggestions] = useState<Suggestion[] | null>(null)
 
@@ -58,11 +66,17 @@ export function SmartCategorizeButton({ importRows, setImportRows, categories }:
         amount: importRows[i].amount,
       }))
       const categoriesToSend = categories!.map(c => ({ id: String(c.id), name: c.name }))
+      const validCatIds = new Set(categoriesToSend.map(c => c.id))
+      const history = (categoryRules ?? [])
+        .filter(r => r.category_id != null && validCatIds.has(String(r.category_id)))
+        .sort((a, b) => (b.confidence * (b.times_used + 1)) - (a.confidence * (a.times_used + 1)))
+        .slice(0, 60)
+        .map(r => ({ merchant: r.merchant_pattern, categoryId: String(r.category_id) }))
 
       const res = await fetch('/api/ai/categorize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ expenses: expensesToSend, categories: categoriesToSend }),
+        body: JSON.stringify({ expenses: expensesToSend, categories: categoriesToSend, history }),
       })
       const data = await res.json()
 
