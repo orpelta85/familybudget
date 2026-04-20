@@ -119,8 +119,8 @@ export function Sidebar() {
       {/* Logo */}
       <div className="px-5 pt-5 pb-4 border-b border-[var(--c-0-20)]">
         <div className="mb-1.5 flex flex-col items-center">
-          <img src="/logo-familyplan.png?v=4" alt="Family Plan" width={180} height={180} className="w-[180px] h-[180px] object-contain logo-dark" />
-          <img src="/logo-familyplan-light.png?v=4" alt="Family Plan" width={180} height={167} className="w-[180px] h-auto object-contain logo-light" style={{ filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.10)) contrast(1.1) saturate(1.15)' }} />
+          <img src="/logo-familyplan.png?v=5" alt="Family Plan" width={180} height={180} className="w-[180px] h-[180px] object-contain logo-dark" />
+          <img src="/logo-familyplan-light.png?v=5" alt="Family Plan" width={180} height={167} className="w-[180px] h-auto object-contain logo-light" style={{ filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.10)) contrast(1.1) saturate(1.15)' }} />
         </div>
         {/* Family name + Bell */}
         <div className="flex items-center justify-between min-h-[24px]">
