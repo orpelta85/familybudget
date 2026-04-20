@@ -7,7 +7,7 @@ type CategoryInput = { id: string; name: string }
 type HistoryExample = { merchant: string; categoryId: string }
 type MappingRow = { description: string; categoryId: string | null; confidence: number }
 
-const MODEL = 'gemini-2.5-flash'
+const MODEL = 'gemini-2.5-flash-lite'
 const MAX_ROWS = 200
 const MAX_HISTORY = 60
 

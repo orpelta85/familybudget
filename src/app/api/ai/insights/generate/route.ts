@@ -4,7 +4,7 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { getAuthUser } from '@/lib/supabase/auth'
 
-const MODEL = 'gemini-2.5-flash'
+const MODEL = 'gemini-2.5-flash-lite'
 
 type InsightCategory = 'spending' | 'saving' | 'alert' | 'achievement' | 'action'
 type InsightSeverity = 'info' | 'warning' | 'positive'
