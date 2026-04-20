@@ -92,8 +92,8 @@ function LoginForm() {
     <div className="min-h-screen flex items-center justify-center p-4 ml-0 max-w-[100vw]">
       <div className="w-full max-w-[380px] bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-8">
         <div className="flex flex-col items-center mb-6">
-          <img src="/logo-familyplan.png?v=3" alt="Family Plan" className="logo-dark" style={{ width: 180, height: 'auto' }} />
-          <img src="/logo-familyplan-light.png?v=3" alt="Family Plan" className="logo-light" style={{ width: 180, height: 'auto' }} />
+          <img src="/logo-familyplan.png?v=4" alt="Family Plan" className="logo-dark" style={{ width: 180, height: 'auto' }} />
+          <img src="/logo-familyplan-light.png?v=4" alt="Family Plan" className="logo-light" style={{ width: 180, height: 'auto' }} />
           <div className="text-[13px] text-[var(--text-muted)] mt-1.5 tracking-wide">סדר בבית, שקט בכיס.</div>
         </div>
         <p className="text-[var(--c-0-60)] text-sm mb-7 text-center">
@@ -126,7 +126,7 @@ function LoginForm() {
           <button
             type="submit"
             disabled={loading}
-            className={`w-full bg-[var(--accent-blue)] text-[var(--c-0-10)] border-none rounded-lg py-[11px] font-semibold text-[15px] ${loading ? 'cursor-not-allowed opacity-70' : 'cursor-pointer opacity-100'}`}
+            className={`w-full bg-[var(--primary)] text-[var(--primary-foreground)] border-none rounded-lg py-[11px] font-semibold text-[15px] ${loading ? 'cursor-not-allowed opacity-70' : 'cursor-pointer opacity-100'}`}
           >
             {loading ? '...' : isSignup ? 'הרשמה' : 'התחברות'}
           </button>
@@ -134,7 +134,7 @@ function LoginForm() {
 
         <button
           onClick={() => setIsSignup(!isSignup)}
-          className="mt-5 w-full bg-transparent border-none text-[var(--accent-blue)] cursor-pointer text-[13px]"
+          className="mt-5 w-full bg-transparent border-none text-[var(--primary)] cursor-pointer text-[13px]"
         >
           {isSignup ? 'יש לי כבר חשבון — התחברות' : 'אין לי חשבון — הרשמה'}
         </button>

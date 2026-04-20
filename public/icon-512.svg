@@ -6,7 +6,7 @@
   <!-- House roof -->
   <path d="M60 280L256 96L452 280" stroke="#4a7dff" stroke-width="28" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
   <!-- Growth arrow -->
-  <path d="M136 420L200 292L272 344L376 216" stroke="#50c878" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M136 420L200 292L272 344L376 216" stroke="#4a7dff" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
   <!-- Arrow tip -->
-  <path d="M332 216L376 216L376 260" stroke="#50c878" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <path d="M332 216L376 216L376 260" stroke="#4a7dff" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
 </svg>

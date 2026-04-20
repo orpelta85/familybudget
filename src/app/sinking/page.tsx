@@ -243,27 +243,39 @@ export default function SinkingPage() {
 
               return (
                 <div key={fund.id} className="card-hover card-transition bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl px-[18px] py-3.5">
-                  <div className="flex items-center gap-2.5">
-                    {/* Name + type - right side in RTL (first in DOM) */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="font-semibold text-sm">{fund.name}</span>
-                        <span className={`inline-flex items-center gap-[3px] rounded-[20px] px-2 py-0.5 text-[11px] ${
-                          shared
-                            ? 'bg-[var(--c-blue-0-20)] border border-[var(--c-blue-0-32)] text-[var(--accent-blue)]'
-                            : 'bg-[var(--c-teal-0-20)] border border-[var(--c-teal-0-32)] text-[var(--c-teal-0-65)]'
-                        }`}>
-                          {shared ? <Users size={10} /> : <User size={10} />}
-                          {shared ? 'משותף' : 'אישי'}
-                        </span>
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-2.5">
+                    {/* Row 1 on mobile: title (right) + amount (left). On desktop: both become flex children of the outer row. */}
+                    <div className="flex items-start justify-between gap-2 sm:contents">
+                      {/* Name + type + progress */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-semibold text-sm">{fund.name}</span>
+                          <span className={`inline-flex items-center gap-[3px] rounded-[20px] px-2 py-0.5 text-[11px] ${
+                            shared
+                              ? 'bg-[var(--c-blue-0-20)] border border-[var(--c-blue-0-32)] text-[var(--accent-blue)]'
+                              : 'bg-[var(--c-teal-0-20)] border border-[var(--c-teal-0-32)] text-[var(--c-teal-0-65)]'
+                          }`}>
+                            {shared ? <Users size={10} /> : <User size={10} />}
+                            {shared ? 'משותף' : 'אישי'}
+                          </span>
+                        </div>
+                        <div className="mt-1.5 h-1 rounded-sm bg-[var(--bg-hover)] overflow-hidden max-w-full sm:max-w-[240px]">
+                          <div className="h-full rounded-sm bg-[var(--accent-orange)] transition-[width] duration-[400ms] ease-out" style={{ width: `${Math.max(0, spentPct)}%` }} />
+                        </div>
                       </div>
-                      <div className="mt-1.5 h-1 rounded-sm bg-[var(--bg-hover)] overflow-hidden max-w-[240px]">
-                        <div className="h-full rounded-sm bg-[var(--accent-orange)] transition-[width] duration-[400ms] ease-out" style={{ width: `${Math.max(0, spentPct)}%` }} />
+
+                      {/* Amounts - left side in RTL. On mobile sits in row 1; on desktop keeps its original third position. */}
+                      <div className="text-left shrink-0 sm:order-last">
+                        <div className="text-base font-bold text-[var(--c-0-88)]">{formatCurrency(fund.monthly_allocation)}<span className="text-[11px] font-normal text-[var(--text-secondary)] mr-[3px]">/חודש</span></div>
+                        <div className="text-xs text-[var(--text-secondary)]">
+                          תקציב שנתי: {formatCurrency(totalAnnual)}
+                          {shared && <span className="hidden sm:inline mr-1 text-[var(--text-secondary)]">(חלקי: {formatCurrency(fund.monthly_allocation * 12)})</span>}
+                        </div>
                       </div>
                     </div>
 
-                    {/* Actions */}
-                    <div className="flex gap-1.5 shrink-0">
+                    {/* Actions: below on mobile, inline on desktop */}
+                    <div className="flex gap-1.5 justify-end sm:shrink-0">
                       <button
                         onClick={() => { setTxModal({ fundId: fund.id, fundName: fund.name, type: 'use' }); setTxAmount(''); setTxDate(new Date().toISOString().split('T')[0]) }}
                         className="flex items-center justify-center gap-1 bg-[var(--c-orange-0-20)] border border-[var(--c-orange-0-28)] rounded-[7px] px-2.5 py-2 min-h-9 text-[var(--accent-orange)] text-xs cursor-pointer"
@@ -284,15 +296,6 @@ export default function SinkingPage() {
                       >
                         <Trash2 size={12} />
                       </button>
-                    </div>
-
-                    {/* Amounts - left side in RTL (last in DOM) */}
-                    <div className="text-left shrink-0">
-                      <div className="text-base font-bold text-[var(--c-0-88)]">{formatCurrency(fund.monthly_allocation)}<span className="text-[11px] font-normal text-[var(--text-secondary)] mr-[3px]">/חודש</span></div>
-                      <div className="text-xs text-[var(--text-secondary)]">
-                        תקציב שנתי: {formatCurrency(totalAnnual)}
-                        {shared && <span className="hidden sm:inline mr-1 text-[var(--text-secondary)]">(חלקי: {formatCurrency(fund.monthly_allocation * 12)})</span>}
-                      </div>
                     </div>
                   </div>
 

@@ -84,7 +84,7 @@
   --card-foreground: oklch(0.14 0.02 250);
   --popover: oklch(0.995 0.003 250);
   --popover-foreground: oklch(0.14 0.02 250);
-  --primary: oklch(0.42 0.12 152);
+  --primary: oklch(0.38 0.20 264);
   --primary-foreground: oklch(0.99 0.003 250);
   --secondary: oklch(0.93 0.005 250);
   --secondary-foreground: oklch(0.14 0.02 250);
@@ -95,8 +95,8 @@
   --destructive: oklch(0.55 0.22 27);
   --border: oklch(0.85 0.008 250);
   --input: oklch(0.96 0.005 250);
-  --ring: oklch(0.42 0.12 152);
-  --chart-1: oklch(0.42 0.12 152);
+  --ring: oklch(0.38 0.20 264);
+  --chart-1: oklch(0.38 0.20 264);
   --chart-2: oklch(0.75 0.14 85);
   --chart-3: oklch(0.55 0.18 250);
   --chart-4: oklch(0.55 0.18 290);
@@ -104,12 +104,12 @@
   --radius: 0.75rem;
   --sidebar: oklch(0.935 0.008 250);
   --sidebar-foreground: oklch(0.14 0.02 250);
-  --sidebar-primary: oklch(0.42 0.12 152);
+  --sidebar-primary: oklch(0.38 0.20 264);
   --sidebar-primary-foreground: oklch(0.99 0.003 250);
   --sidebar-accent: oklch(0.91 0.005 250);
   --sidebar-accent-foreground: oklch(0.14 0.02 250);
   --sidebar-border: oklch(0.85 0.008 250);
-  --sidebar-ring: oklch(0.42 0.12 152);
+  --sidebar-ring: oklch(0.38 0.20 264);
   --sidebar-width: 240px;
   --color-green: oklch(0.55 0.18 145);
   --color-orange: oklch(0.68 0.16 55);
@@ -132,7 +132,7 @@
   --text-body: oklch(0.28 0.015 250);
   --text-heading: oklch(0.16 0.025 250);
   --accent-blue: oklch(0.55 0.18 250);
-  --accent-green: oklch(0.42 0.12 152);
+  --accent-green: oklch(0.38 0.20 264);
   --accent-gold: oklch(0.72 0.14 85);
   --accent-red: oklch(0.52 0.22 27);
   --accent-orange: oklch(0.65 0.18 55);
@@ -201,23 +201,23 @@
   --c-blue-0-80: oklch(0.38 0.14 250);
   --c-blue-0-85: oklch(0.33 0.12 250);
 
-  /* ── Extended palette (accent green shades) ────────────────────────────── */
-  --c-green-0-18: oklch(0.97 0.03 145);
-  --c-green-0-20: oklch(0.94 0.05 145);
-  --c-green-0-22: oklch(0.90 0.07 145);
-  --c-green-0-25: oklch(0.85 0.10 145);
-  --c-green-0-26: oklch(0.83 0.10 145);
-  --c-green-0-30: oklch(0.78 0.12 145);
-  --c-green-0-35: oklch(0.72 0.14 145);
-  --c-green-0-40: oklch(0.62 0.16 145);
-  --c-green-0-45: oklch(0.55 0.16 145);
-  --c-green-0-50: oklch(0.50 0.15 145);
-  --c-green-0-55: oklch(0.45 0.14 145);
-  --c-green-0-60: oklch(0.40 0.12 145);
-  --c-green-0-65: oklch(0.55 0.18 145);
-  --c-green-0-70: oklch(0.55 0.18 145);
-  --c-green-0-75: oklch(0.48 0.16 145);
-  --c-green-0-80: oklch(0.42 0.14 145);
+  /* ── Extended palette (brand shades - was green, now royal blue) ──────── */
+  --c-green-0-18: oklch(0.96 0.04 264);
+  --c-green-0-20: oklch(0.93 0.06 264);
+  --c-green-0-22: oklch(0.89 0.08 264);
+  --c-green-0-25: oklch(0.84 0.11 264);
+  --c-green-0-26: oklch(0.82 0.12 264);
+  --c-green-0-30: oklch(0.76 0.14 264);
+  --c-green-0-35: oklch(0.68 0.17 264);
+  --c-green-0-40: oklch(0.58 0.19 264);
+  --c-green-0-45: oklch(0.50 0.20 264);
+  --c-green-0-50: oklch(0.44 0.20 264);
+  --c-green-0-55: oklch(0.40 0.20 264);
+  --c-green-0-60: oklch(0.36 0.19 264);
+  --c-green-0-65: oklch(0.44 0.20 264);
+  --c-green-0-70: oklch(0.42 0.20 264);
+  --c-green-0-75: oklch(0.38 0.20 264);
+  --c-green-0-80: oklch(0.34 0.18 264);
 
   /* ── Extended palette (accent red shades) ──────────────────────────────── */
   --c-red-0-15: oklch(0.97 0.02 27);
@@ -335,7 +335,7 @@
   --card-foreground: oklch(0.92 0.01 250);
   --popover: oklch(0.16 0.01 250);
   --popover-foreground: oklch(0.92 0.01 250);
-  --primary: oklch(0.62 0.14 152);
+  --primary: oklch(0.68 0.20 264);
   --primary-foreground: oklch(0.12 0.01 250);
   --secondary: oklch(0.22 0.01 250);
   --secondary-foreground: oklch(0.92 0.01 250);
@@ -346,20 +346,20 @@
   --destructive: oklch(0.60 0.22 27);
   --border: oklch(0.25 0.01 250);
   --input: oklch(0.22 0.01 250);
-  --ring: oklch(0.62 0.14 152);
-  --chart-1: oklch(0.62 0.14 152);
+  --ring: oklch(0.68 0.20 264);
+  --chart-1: oklch(0.68 0.20 264);
   --chart-2: oklch(0.78 0.14 85);
   --chart-3: oklch(0.65 0.18 250);
   --chart-4: oklch(0.65 0.18 290);
   --chart-5: oklch(0.65 0.18 25);
   --sidebar: oklch(0.14 0.01 250);
   --sidebar-foreground: oklch(0.92 0.01 250);
-  --sidebar-primary: oklch(0.62 0.14 152);
+  --sidebar-primary: oklch(0.68 0.20 264);
   --sidebar-primary-foreground: oklch(0.12 0.01 250);
   --sidebar-accent: oklch(0.20 0.01 250);
   --sidebar-accent-foreground: oklch(0.92 0.01 250);
   --sidebar-border: oklch(0.22 0.01 250);
-  --sidebar-ring: oklch(0.62 0.14 152);
+  --sidebar-ring: oklch(0.68 0.20 264);
   --color-green: oklch(0.70 0.18 145);
   --color-orange: oklch(0.72 0.18 55);
   --color-red: oklch(0.62 0.22 27);
@@ -381,7 +381,7 @@
   --text-body: oklch(0.75 0.01 250);
   --text-heading: oklch(0.80 0.01 250);
   --accent-blue: oklch(0.65 0.18 250);
-  --accent-green: oklch(0.62 0.14 152);
+  --accent-green: oklch(0.68 0.20 264);
   --accent-gold: oklch(0.78 0.14 85);
   --accent-red: oklch(0.62 0.22 27);
   --accent-orange: oklch(0.72 0.18 55);
@@ -446,23 +446,23 @@
   --c-blue-0-80: oklch(0.80 0.12 250);
   --c-blue-0-85: oklch(0.85 0.10 250);
 
-  /* ── Extended palette (accent green shades) ────────────────────────────── */
-  --c-green-0-18: oklch(0.18 0.03 145);
-  --c-green-0-20: oklch(0.20 0.04 145);
-  --c-green-0-22: oklch(0.22 0.06 145);
-  --c-green-0-25: oklch(0.25 0.05 145);
-  --c-green-0-26: oklch(0.26 0.06 145);
-  --c-green-0-30: oklch(0.30 0.08 145);
-  --c-green-0-35: oklch(0.35 0.10 145);
-  --c-green-0-40: oklch(0.40 0.15 145);
-  --c-green-0-45: oklch(0.45 0.15 145);
-  --c-green-0-50: oklch(0.50 0.18 145);
-  --c-green-0-55: oklch(0.55 0.18 145);
-  --c-green-0-60: oklch(0.60 0.18 145);
-  --c-green-0-65: oklch(0.65 0.18 145);
-  --c-green-0-70: oklch(0.70 0.18 145);
-  --c-green-0-75: oklch(0.75 0.15 145);
-  --c-green-0-80: oklch(0.80 0.12 145);
+  /* ── Extended palette (brand shades - was green, now royal blue) ──────── */
+  --c-green-0-18: oklch(0.18 0.04 264);
+  --c-green-0-20: oklch(0.20 0.05 264);
+  --c-green-0-22: oklch(0.22 0.07 264);
+  --c-green-0-25: oklch(0.25 0.07 264);
+  --c-green-0-26: oklch(0.26 0.08 264);
+  --c-green-0-30: oklch(0.30 0.10 264);
+  --c-green-0-35: oklch(0.35 0.13 264);
+  --c-green-0-40: oklch(0.40 0.17 264);
+  --c-green-0-45: oklch(0.45 0.19 264);
+  --c-green-0-50: oklch(0.52 0.20 264);
+  --c-green-0-55: oklch(0.58 0.20 264);
+  --c-green-0-60: oklch(0.62 0.20 264);
+  --c-green-0-65: oklch(0.66 0.20 264);
+  --c-green-0-70: oklch(0.70 0.20 264);
+  --c-green-0-75: oklch(0.75 0.17 264);
+  --c-green-0-80: oklch(0.80 0.14 264);
 
   /* ── Extended palette (accent red shades) ──────────────────────────────── */
   --c-red-0-15: oklch(0.15 0.02 27);
