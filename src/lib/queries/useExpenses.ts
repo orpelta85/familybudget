@@ -28,14 +28,19 @@ export function useBudgetCategories(userId: string | undefined) {
     enabled: !!userId,
     queryFn: async () => {
       const sb = createClient()
-      const { data, error } = await sb
-        .from('budget_categories')
-        .select('*')
-        .eq('user_id', userId!)
-        .eq('is_active', true)
-        .order('sort_order')
-      if (error) throw error
-      return data
+      // Return active categories AND any category that has personal_expenses
+      // history. This guarantees that once a category was used, it never
+      // disappears from the UI even if soft-deleted — so import dropdowns
+      // and historical expense lists stay coherent across months.
+      const [catsRes, expRes] = await Promise.all([
+        sb.from('budget_categories').select('*').eq('user_id', userId!).order('sort_order'),
+        sb.from('personal_expenses').select('category_id').eq('user_id', userId!),
+      ])
+      if (catsRes.error) throw catsRes.error
+      if (expRes.error) throw expRes.error
+      const usedIds = new Set((expRes.data ?? []).map(e => e.category_id))
+      // Always keep canonical fallback "שונות" visible, even if user soft-deleted it
+      return (catsRes.data ?? []).filter(c => c.is_active || usedIds.has(c.id) || c.name === 'שונות')
     },
   })
 }
