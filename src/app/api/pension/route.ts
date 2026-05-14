@@ -63,45 +63,64 @@ interface GeminiExtractedReport {
   health_coverages?: Array<{ coverage_name: string; main_insured: number; total: number }>
 }
 
-async function extractWithGemini(text: string): Promise<GeminiExtractedReport | null> {
+type GeminiResult =
+  | { ok: true; data: GeminiExtractedReport }
+  | { ok: false; reason: 'no_key' | 'rate_limit' | 'api_error' | 'parse_error' }
+
+async function extractWithGemini(text: string): Promise<GeminiResult> {
   const apiKey = process.env.GEMINI_API_KEY
-  if (!apiKey) return null
-  try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{
-            parts: [
-              { text: GEMINI_EXTRACTION_PROMPT },
-              { text: '\n\nREPORT TEXT:\n' + text },
-            ],
-          }],
-          generationConfig: {
-            temperature: 0,
-            maxOutputTokens: 8192,
-            responseMimeType: 'application/json',
-          },
-        }),
+  if (!apiKey) return { ok: false, reason: 'no_key' }
+  // Try flash-lite first (high free-tier quota), then flash, then pro
+  const models = ['gemini-2.5-flash-lite', 'gemini-2.5-flash', 'gemini-2.5-pro']
+  let lastReason: 'rate_limit' | 'api_error' | 'parse_error' = 'api_error'
+  for (const model of models) {
+    try {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              parts: [
+                { text: GEMINI_EXTRACTION_PROMPT },
+                { text: '\n\nREPORT TEXT:\n' + text },
+              ],
+            }],
+            generationConfig: {
+              temperature: 0,
+              maxOutputTokens: 8192,
+              responseMimeType: 'application/json',
+            },
+          }),
+        }
+      )
+      if (response.status === 429) {
+        console.warn(`Gemini ${model} rate limited, trying next model`)
+        lastReason = 'rate_limit'
+        continue
       }
-    )
-    if (!response.ok) {
-      console.warn('Gemini extract error:', response.status, await response.text())
-      return null
+      if (!response.ok) {
+        console.warn(`Gemini ${model} error:`, response.status, await response.text())
+        lastReason = 'api_error'
+        continue
+      }
+      const result = await response.json()
+      const raw: string = result?.candidates?.[0]?.content?.parts?.[0]?.text || ''
+      if (!raw) {
+        lastReason = 'parse_error'
+        continue
+      }
+      let jsonStr = raw
+      const jsonMatch = raw.match(/```(?:json)?\s*([\s\S]*?)```/)
+      if (jsonMatch) jsonStr = jsonMatch[1]
+      return { ok: true, data: JSON.parse(jsonStr.trim()) as GeminiExtractedReport }
+    } catch (e) {
+      console.warn(`Gemini ${model} threw:`, e instanceof Error ? e.message : e)
+      lastReason = 'parse_error'
     }
-    const result = await response.json()
-    const raw: string = result?.candidates?.[0]?.content?.parts?.[0]?.text || ''
-    if (!raw) return null
-    let jsonStr = raw
-    const jsonMatch = raw.match(/```(?:json)?\s*([\s\S]*?)```/)
-    if (jsonMatch) jsonStr = jsonMatch[1]
-    return JSON.parse(jsonStr.trim()) as GeminiExtractedReport
-  } catch (e) {
-    console.warn('Gemini extract threw:', e instanceof Error ? e.message : e)
-    return null
   }
+  return { ok: false, reason: lastReason }
 }
 
 function extractNumber(text: string, pattern: RegExp): number {
@@ -328,45 +347,54 @@ export async function POST(req: NextRequest) {
         const textResult = await parser.getText()
         const text = textResult.pages.map((p: { text: string }) => p.text).join('\n')
         if (text.trim().length > 20) {
-          // Prefer Gemini for full extraction (products + correct date). Fall back to regex parser for summary only.
-          const geminiData = await extractWithGemini(text)
-          if (geminiData && (geminiData.products?.length || geminiData.total_savings)) {
-            reportData = {
-              report_date: geminiData.report_date || '',
-              advisor_name: geminiData.advisor_name || 'אלמוג רובין',
-              total_savings: geminiData.total_savings || 0,
-              ytd_return: geminiData.ytd_return || 0,
-              total_monthly_deposits: geminiData.total_monthly_deposits || 0,
-              insurance_premium: geminiData.insurance_premium || 0,
-              estimated_pension: geminiData.estimated_pension || 0,
-              disability_coverage: geminiData.disability_coverage || 0,
-              survivors_pension: geminiData.survivors_pension || 0,
-              death_coverage: geminiData.death_coverage || 0,
-              products: (geminiData.products || []).map((p, i) => ({
-                product_number: p.product_number || i + 1,
-                product_type: p.product_type || 'gemel_tagmulim',
-                product_name: p.product_name || '',
-                company: p.company || '',
-                account_number: p.account_number || '',
-                balance: p.balance || 0,
-                is_active: p.is_active ?? true,
-                mgmt_fee_deposits: p.mgmt_fee_deposits || 0,
-                mgmt_fee_accumulation: p.mgmt_fee_accumulation || 0,
-                monthly_deposit: p.monthly_deposit || 0,
-                monthly_employee: p.monthly_employee || 0,
-                monthly_employer: p.monthly_employer || 0,
-                monthly_severance: p.monthly_severance || 0,
-                salary_basis: p.salary_basis || 0,
-                start_date: p.start_date || null,
-                investment_tracks: [],
-                deposit_history: [],
-                extra_data: {},
-              })),
-              health_coverages: geminiData.health_coverages || [],
-              summary_json: {},
+          // Use Gemini for full structured extraction. If it fails, return error - never silently save partial data.
+          const geminiResult = await extractWithGemini(text)
+          if (!geminiResult.ok) {
+            if (geminiResult.reason === 'rate_limit') {
+              return NextResponse.json(
+                { error: 'שירות ה-AI עמוס כרגע. נסה שוב בעוד דקה.', code: 'ai_rate_limit' },
+                { status: 503 }
+              )
             }
-          } else {
-            reportData = parseSurenseReport(text)
+            return NextResponse.json(
+              { error: 'הקריאה האוטומטית נכשלה. נסה להעלות כתמונה או להזין ידנית.', code: 'ai_failed' },
+              { status: 500 }
+            )
+          }
+          const g = geminiResult.data
+          reportData = {
+            report_date: g.report_date || '',
+            advisor_name: g.advisor_name || 'אלמוג רובין',
+            total_savings: g.total_savings || 0,
+            ytd_return: g.ytd_return || 0,
+            total_monthly_deposits: g.total_monthly_deposits || 0,
+            insurance_premium: g.insurance_premium || 0,
+            estimated_pension: g.estimated_pension || 0,
+            disability_coverage: g.disability_coverage || 0,
+            survivors_pension: g.survivors_pension || 0,
+            death_coverage: g.death_coverage || 0,
+            products: (g.products || []).map((p, i) => ({
+              product_number: p.product_number || i + 1,
+              product_type: p.product_type || 'gemel_tagmulim',
+              product_name: p.product_name || '',
+              company: p.company || '',
+              account_number: p.account_number || '',
+              balance: p.balance || 0,
+              is_active: p.is_active ?? true,
+              mgmt_fee_deposits: p.mgmt_fee_deposits || 0,
+              mgmt_fee_accumulation: p.mgmt_fee_accumulation || 0,
+              monthly_deposit: p.monthly_deposit || 0,
+              monthly_employee: p.monthly_employee || 0,
+              monthly_employer: p.monthly_employer || 0,
+              monthly_severance: p.monthly_severance || 0,
+              salary_basis: p.salary_basis || 0,
+              start_date: p.start_date || null,
+              investment_tracks: [],
+              deposit_history: [],
+              extra_data: {},
+            })),
+            health_coverages: g.health_coverages || [],
+            summary_json: {},
           }
         }
         // If text is too short, PDF is likely image-based — fall through to manual data

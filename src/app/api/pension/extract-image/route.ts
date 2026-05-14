@@ -68,31 +68,47 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{
-            parts: [
-              { inline_data: { mime_type: mimeType, data: base64 } },
-              { text: EXTRACTION_PROMPT },
-            ],
-          }],
-          generationConfig: {
-            temperature: 0,
-            maxOutputTokens: 8192,
-            responseMimeType: 'application/json',
-          },
-        }),
+    // Try flash-lite → flash → pro (flash-lite has best free-tier quota)
+    const models = ['gemini-2.5-flash-lite', 'gemini-2.5-flash', 'gemini-2.5-pro']
+    let response: Response | null = null
+    let lastStatus = 0
+    for (const model of models) {
+      response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              parts: [
+                { inline_data: { mime_type: mimeType, data: base64 } },
+                { text: EXTRACTION_PROMPT },
+              ],
+            }],
+            generationConfig: {
+              temperature: 0,
+              maxOutputTokens: 8192,
+              responseMimeType: 'application/json',
+            },
+          }),
+        }
+      )
+      if (response.ok) break
+      lastStatus = response.status
+      if (response.status !== 429 && response.status !== 503) {
+        // Non-quota error - log and stop trying other models
+        const err = await response.text()
+        console.error(`Gemini ${model} error:`, response.status, err)
+        break
       }
-    )
+      console.warn(`Gemini ${model} returned ${response.status}, trying next model`)
+    }
 
-    if (!response.ok) {
-      const err = await response.text()
-      console.error('Gemini API error:', response.status, err)
-      return NextResponse.json({ error: `שגיאה בשירות AI (${response.status})` }, { status: 500 })
+    if (!response || !response.ok) {
+      const msg = lastStatus === 429 || lastStatus === 503
+        ? 'שירות ה-AI עמוס. נסה שוב בעוד דקה.'
+        : `שגיאה בשירות AI (${lastStatus})`
+      return NextResponse.json({ error: msg }, { status: lastStatus === 429 ? 503 : 500 })
     }
 
     const result = await response.json()
