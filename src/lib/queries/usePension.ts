@@ -43,3 +43,20 @@ export function useUploadPensionReport() {
     },
   })
 }
+
+export function useDeletePensionReport() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ reportId, userId }: { reportId: number; userId: string }) => {
+      const res = await fetch(`/api/pension?reportId=${reportId}&userId=${userId}`, { method: 'DELETE' })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || 'Delete failed')
+      }
+      return res.json()
+    },
+    onSuccess: (_, vars) => {
+      qc.invalidateQueries({ queryKey: ['pension_reports', vars.userId] })
+    },
+  })
+}

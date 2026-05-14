@@ -1,7 +1,7 @@
 'use client'
 
 import { useUser } from '@/lib/queries/useUser'
-import { usePensionReports, useUploadPensionReport } from '@/lib/queries/usePension'
+import { usePensionReports, useUploadPensionReport, useDeletePensionReport } from '@/lib/queries/usePension'
 import { formatCurrency } from '@/lib/utils'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState, useRef } from 'react'
@@ -9,7 +9,7 @@ import { toast } from 'sonner'
 import {
   Upload, ChevronDown, ChevronUp, Shield, Heart, TrendingUp,
   Wallet, Building2, FileText, AlertCircle, Check, X, Clock, PiggyBank,
-  Users, Pencil, FileUp, Camera,
+  Users, Pencil, FileUp, Camera, Trash2,
 } from 'lucide-react'
 import type { PensionReport, PensionProduct, PensionProductType } from '@/lib/types'
 import { TableSkeleton } from '@/components/ui/Skeleton'
@@ -81,6 +81,7 @@ export default function PensionPage() {
   const effectiveUserId = viewMode === 'member' && selectedMemberId ? selectedMemberId : user?.id
   const { data: reports, isLoading: loadingReports } = usePensionReports(effectiveUserId)
   const uploadMutation = useUploadPensionReport()
+  const deleteMutation = useDeletePensionReport()
   const fileRef = useRef<HTMLInputElement>(null)
 
   const [showUpload, setShowUpload] = useState(false)
@@ -287,13 +288,36 @@ export default function PensionPage() {
             </p>
           )}
         </div>
-        <button
-          onClick={() => setShowUpload(true)}
-          className="bg-[var(--accent-blue)] text-[var(--c-0-10)] border-none rounded-lg py-2 px-4 cursor-pointer flex items-center gap-1.5 text-[13px] font-semibold"
-        >
-          <Upload size={14} />
-          העלאת דוח
-        </button>
+        <div className="flex items-center gap-2">
+          {report && user && (
+            <button
+              onClick={async () => {
+                if (!confirm(`למחוק את הדוח מ-${formatDate(report.report_date)}?`)) return
+                try {
+                  await deleteMutation.mutateAsync({ reportId: report.id, userId: user.id })
+                  setSelectedReportIdx(0)
+                  toast.success('הדוח נמחק')
+                } catch (e) {
+                  toast.error(e instanceof Error ? e.message : 'שגיאה במחיקה')
+                }
+              }}
+              disabled={deleteMutation.isPending}
+              className="bg-[var(--c-0-18)] text-[var(--c-red-0-65)] border border-[var(--c-red-0-30)] rounded-lg py-2 px-3 cursor-pointer flex items-center gap-1.5 text-[13px] font-medium disabled:opacity-50"
+              aria-label="מחק דוח נוכחי"
+              title="מחק את הדוח הנוכחי"
+            >
+              <Trash2 size={14} />
+              מחק
+            </button>
+          )}
+          <button
+            onClick={() => setShowUpload(true)}
+            className="bg-[var(--accent-blue)] text-[var(--c-0-10)] border-none rounded-lg py-2 px-4 cursor-pointer flex items-center gap-1.5 text-[13px] font-semibold"
+          >
+            <Upload size={14} />
+            העלאת דוח
+          </button>
+        </div>
       </div>
 
       {/* Report selector if multiple reports */}

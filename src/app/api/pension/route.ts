@@ -505,6 +505,32 @@ export async function POST(req: NextRequest) {
   }
 }
 
+// DELETE: remove a pension report (and its products + health coverages via ON DELETE CASCADE)
+export async function DELETE(req: NextRequest) {
+  const authUser = await getAuthUser()
+  const userId = req.nextUrl.searchParams.get('userId')
+  const reportId = req.nextUrl.searchParams.get('reportId')
+  if (!userId || !reportId) {
+    return NextResponse.json({ error: 'missing userId or reportId' }, { status: 400 })
+  }
+  if (!authUser || authUser.id !== userId) {
+    return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+  }
+
+  const sb = createServiceClient()
+  // Delete children first in case cascade is not configured
+  await sb.from('pension_products').delete().eq('report_id', reportId)
+  await sb.from('pension_health_coverages').delete().eq('report_id', reportId)
+  const { error } = await sb
+    .from('pension_reports')
+    .delete()
+    .eq('id', reportId)
+    .eq('user_id', userId)
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 })
+  return NextResponse.json({ ok: true })
+}
+
 // GET: fetch all pension reports for a user
 export async function GET(req: NextRequest) {
   const authUser = await getAuthUser()
