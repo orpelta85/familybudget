@@ -2,6 +2,108 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { getAuthUser } from '@/lib/supabase/auth'
 
+const GEMINI_EXTRACTION_PROMPT = `Extract ALL financial data from this Israeli pension report text (Surense format).
+
+Return a JSON object with these exact fields:
+{
+  "report_date": "YYYY-MM-DD",
+  "advisor_name": "string",
+  "total_savings": number,
+  "ytd_return": number (percentage, e.g. 2.1),
+  "total_monthly_deposits": number,
+  "insurance_premium": number,
+  "estimated_pension": number,
+  "disability_coverage": number,
+  "survivors_pension": number,
+  "death_coverage": number,
+  "products": [
+    {
+      "product_number": number,
+      "product_type": "pension" | "hishtalmut" | "gemel_tagmulim" | "gemel_invest" | "health_insurance",
+      "product_name": "string in Hebrew",
+      "company": "string in Hebrew",
+      "account_number": "string",
+      "balance": number,
+      "is_active": boolean,
+      "mgmt_fee_deposits": number (percentage),
+      "mgmt_fee_accumulation": number (percentage),
+      "monthly_deposit": number,
+      "monthly_employee": number,
+      "monthly_employer": number,
+      "monthly_severance": number,
+      "salary_basis": number,
+      "start_date": "YYYY-MM-DD" or null
+    }
+  ],
+  "health_coverages": [
+    { "coverage_name": "string in Hebrew", "main_insured": number, "total": number }
+  ]
+}
+
+Rules:
+- Extract numbers exactly as shown (no rounding)
+- Use 0 for missing/unknown values
+- report_date is the date the REPORT was generated (usually near the top, labeled "נכון לתאריך"/"תאריך הדוח"), NOT a deposit history date
+- product_type must be one of: pension, hishtalmut, gemel_tagmulim, gemel_invest, health_insurance
+- Include ALL products listed in the report, even inactive ones
+- Return ONLY valid JSON, no markdown, no explanation`
+
+interface GeminiExtractedReport {
+  report_date?: string
+  advisor_name?: string
+  total_savings?: number
+  ytd_return?: number
+  total_monthly_deposits?: number
+  insurance_premium?: number
+  estimated_pension?: number
+  disability_coverage?: number
+  survivors_pension?: number
+  death_coverage?: number
+  products?: Array<Partial<ParsedProduct>>
+  health_coverages?: Array<{ coverage_name: string; main_insured: number; total: number }>
+}
+
+async function extractWithGemini(text: string): Promise<GeminiExtractedReport | null> {
+  const apiKey = process.env.GEMINI_API_KEY
+  if (!apiKey) return null
+  try {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              { text: GEMINI_EXTRACTION_PROMPT },
+              { text: '\n\nREPORT TEXT:\n' + text },
+            ],
+          }],
+          generationConfig: {
+            temperature: 0,
+            maxOutputTokens: 8192,
+            responseMimeType: 'application/json',
+          },
+        }),
+      }
+    )
+    if (!response.ok) {
+      console.warn('Gemini extract error:', response.status, await response.text())
+      return null
+    }
+    const result = await response.json()
+    const raw: string = result?.candidates?.[0]?.content?.parts?.[0]?.text || ''
+    if (!raw) return null
+    let jsonStr = raw
+    const jsonMatch = raw.match(/```(?:json)?\s*([\s\S]*?)```/)
+    if (jsonMatch) jsonStr = jsonMatch[1]
+    return JSON.parse(jsonStr.trim()) as GeminiExtractedReport
+  } catch (e) {
+    console.warn('Gemini extract threw:', e instanceof Error ? e.message : e)
+    return null
+  }
+}
+
 function extractNumber(text: string, pattern: RegExp): number {
   const m = text.match(pattern)
   if (!m) return 0
@@ -226,7 +328,46 @@ export async function POST(req: NextRequest) {
         const textResult = await parser.getText()
         const text = textResult.pages.map((p: { text: string }) => p.text).join('\n')
         if (text.trim().length > 20) {
-          reportData = parseSurenseReport(text)
+          // Prefer Gemini for full extraction (products + correct date). Fall back to regex parser for summary only.
+          const geminiData = await extractWithGemini(text)
+          if (geminiData && (geminiData.products?.length || geminiData.total_savings)) {
+            reportData = {
+              report_date: geminiData.report_date || '',
+              advisor_name: geminiData.advisor_name || 'אלמוג רובין',
+              total_savings: geminiData.total_savings || 0,
+              ytd_return: geminiData.ytd_return || 0,
+              total_monthly_deposits: geminiData.total_monthly_deposits || 0,
+              insurance_premium: geminiData.insurance_premium || 0,
+              estimated_pension: geminiData.estimated_pension || 0,
+              disability_coverage: geminiData.disability_coverage || 0,
+              survivors_pension: geminiData.survivors_pension || 0,
+              death_coverage: geminiData.death_coverage || 0,
+              products: (geminiData.products || []).map((p, i) => ({
+                product_number: p.product_number || i + 1,
+                product_type: p.product_type || 'gemel_tagmulim',
+                product_name: p.product_name || '',
+                company: p.company || '',
+                account_number: p.account_number || '',
+                balance: p.balance || 0,
+                is_active: p.is_active ?? true,
+                mgmt_fee_deposits: p.mgmt_fee_deposits || 0,
+                mgmt_fee_accumulation: p.mgmt_fee_accumulation || 0,
+                monthly_deposit: p.monthly_deposit || 0,
+                monthly_employee: p.monthly_employee || 0,
+                monthly_employer: p.monthly_employer || 0,
+                monthly_severance: p.monthly_severance || 0,
+                salary_basis: p.salary_basis || 0,
+                start_date: p.start_date || null,
+                investment_tracks: [],
+                deposit_history: [],
+                extra_data: {},
+              })),
+              health_coverages: geminiData.health_coverages || [],
+              summary_json: {},
+            }
+          } else {
+            reportData = parseSurenseReport(text)
+          }
         }
         // If text is too short, PDF is likely image-based — fall through to manual data
       } catch (pdfErr) {
