@@ -213,12 +213,14 @@ export async function POST(req: NextRequest) {
       let parser: { getText: () => Promise<{ pages: { text: string }[] }>; destroy: () => Promise<void> } | null = null
       let PasswordException: unknown = null
       try {
+        // IMPORTANT: must import the worker BEFORE pdf-parse to provide DOMMatrix in serverless
+        const worker = await import('pdf-parse/worker')
         const mod = await import('pdf-parse')
         PasswordException = mod.PasswordException
         const buffer = Buffer.from(await file.arrayBuffer())
         parser = new mod.PDFParse({
           data: new Uint8Array(buffer),
-          useWasm: true,
+          CanvasFactory: worker.CanvasFactory,
           ...(pdfPassword ? { password: pdfPassword } : {}),
         })
         const textResult = await parser.getText()
@@ -236,7 +238,7 @@ export async function POST(req: NextRequest) {
           return NextResponse.json({ error: msg, code }, { status: 400 })
         }
         console.warn('PDF parsing failed (non-password):', pdfErr instanceof Error ? pdfErr.message : pdfErr)
-        // Other PDF parsing failures (image-based, DOMMatrix in serverless, etc.) — fall through
+        // Other PDF parsing failures (image-based, etc.) — fall through to manual data
       } finally {
         if (parser) await parser.destroy().catch(() => {})
       }
