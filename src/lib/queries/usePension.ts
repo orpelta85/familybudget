@@ -17,20 +17,24 @@ export function usePensionReports(userId: string | undefined) {
 export function useUploadPensionReport() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ file, userId, manualData }: {
+    mutationFn: async ({ file, userId, manualData, pdfPassword }: {
       file?: File
       userId: string
       manualData?: Record<string, unknown>
+      pdfPassword?: string
     }) => {
       const formData = new FormData()
       formData.append('userId', userId)
       if (file) formData.append('file', file)
       if (manualData) formData.append('manualData', JSON.stringify(manualData))
+      if (pdfPassword) formData.append('pdfPassword', pdfPassword)
 
       const res = await fetch('/api/pension', { method: 'POST', body: formData })
       if (!res.ok) {
         const err = await res.json()
-        throw new Error(err.error || 'Upload failed')
+        const error = new Error(err.error || 'Upload failed') as Error & { code?: string }
+        if (err.code) error.code = err.code
+        throw error
       }
       return res.json()
     },

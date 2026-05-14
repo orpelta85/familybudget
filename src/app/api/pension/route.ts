@@ -195,6 +195,7 @@ export async function POST(req: NextRequest) {
     const file = formData.get('file') as File | null
     const userId = formData.get('userId') as string | null
     const manualData = formData.get('manualData') as string | null
+    const pdfPassword = (formData.get('pdfPassword') as string | null) || undefined
 
     if (!userId) {
       return NextResponse.json({ error: 'missing userId' }, { status: 400 })
@@ -209,19 +210,30 @@ export async function POST(req: NextRequest) {
 
     // Try PDF parsing if file provided
     if (file && file.size > 0) {
+      const { PDFParse, PasswordException } = await import('pdf-parse')
+      const buffer = Buffer.from(await file.arrayBuffer())
+      const parser = new PDFParse({
+        data: new Uint8Array(buffer),
+        ...(pdfPassword ? { password: pdfPassword } : {}),
+      })
       try {
-        const { PDFParse } = await import('pdf-parse')
-        const buffer = Buffer.from(await file.arrayBuffer())
-        const parser = new PDFParse({ data: new Uint8Array(buffer) })
         const textResult = await parser.getText()
         const text = textResult.pages.map((p: { text: string }) => p.text).join('\n')
         if (text.trim().length > 20) {
           reportData = parseSurenseReport(text)
         }
         // If text is too short, PDF is likely image-based — fall through to manual data
-      } catch {
-        // PDF parsing failed (password protected, corrupted, DOMMatrix not available in serverless, etc.)
-        // Fall through to manual data
+      } catch (pdfErr) {
+        if (pdfErr instanceof PasswordException) {
+          const code = pdfPassword ? 'wrong_password' : 'password_required'
+          const msg = pdfPassword
+            ? 'הסיסמה שגויה - נסה שוב'
+            : 'הקובץ מוגן בסיסמה - נא להזין סיסמה'
+          return NextResponse.json({ error: msg, code }, { status: 400 })
+        }
+        // Other PDF parsing failures (corrupted, image-based, etc.) — fall through to manual data
+      } finally {
+        await parser.destroy().catch(() => {})
       }
     }
 

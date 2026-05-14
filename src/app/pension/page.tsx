@@ -101,6 +101,8 @@ export default function PensionPage() {
   const [uploadFile, setUploadFile] = useState<File | null>(null)
   const [uploadMode, setUploadMode] = useState<'manual' | 'pdf' | 'image'>('image')
   const [imageExtracting, setImageExtracting] = useState(false)
+  const [pdfPassword, setPdfPassword] = useState('')
+  const [showPdfPassword, setShowPdfPassword] = useState(false)
 
   useEffect(() => {
     if (!loading && !user) router.push('/login')
@@ -182,14 +184,26 @@ export default function PensionPage() {
 
     if (uploadMode === 'pdf' && uploadFile) {
       try {
-        await uploadMutation.mutateAsync({ file: uploadFile, userId: user.id })
+        await uploadMutation.mutateAsync({
+          file: uploadFile,
+          userId: user.id,
+          pdfPassword: pdfPassword || undefined,
+        })
         toast.success('הדוח הועלה בהצלחה')
         setShowUpload(false)
         setUploadFile(null)
+        setPdfPassword('')
+        setShowPdfPassword(false)
       } catch (err) {
-        console.error('PDF upload failed:', err)
-        const msg = err instanceof Error ? err.message : 'שגיאה בהעלאת הדוח'
-        toast.error(msg)
+        const code = (err as Error & { code?: string }).code
+        if (code === 'password_required' || code === 'wrong_password') {
+          setShowPdfPassword(true)
+          toast.error(code === 'wrong_password' ? 'הסיסמה שגויה - נסה שוב' : 'הקובץ מוגן בסיסמה - הזן סיסמה')
+        } else {
+          console.error('PDF upload failed:', err)
+          const msg = err instanceof Error ? err.message : 'שגיאה בהעלאת הדוח'
+          toast.error(msg)
+        }
       }
       return
     }
@@ -245,6 +259,8 @@ export default function PensionPage() {
     setFormSurvivors('')
     setFormProducts([emptyProduct(1)])
     setUploadFile(null)
+    setPdfPassword('')
+    setShowPdfPassword(false)
   }
 
   const updateProduct = (idx: number, field: keyof ManualProduct, value: string | number | boolean) => {
@@ -637,8 +653,33 @@ export default function PensionPage() {
                   className="hidden"
                   onChange={e => setUploadFile(e.target.files?.[0] || null)}
                 />
+                {(showPdfPassword || pdfPassword) && (
+                  <div className="mb-3">
+                    <label htmlFor="pdf-password" className="text-[11px] text-[var(--text-secondary)] block mb-1 font-medium">
+                      סיסמת PDF (אם הקובץ מוגן)
+                    </label>
+                    <input
+                      id="pdf-password"
+                      type="password"
+                      autoComplete="off"
+                      className="bg-[var(--bg-hover)] border border-[var(--border-light)] rounded-lg py-2 px-3 text-inherit text-[13px] outline-none w-full"
+                      value={pdfPassword}
+                      onChange={e => setPdfPassword(e.target.value)}
+                      placeholder="הזן סיסמה"
+                    />
+                  </div>
+                )}
+                {!showPdfPassword && !pdfPassword && (
+                  <button
+                    type="button"
+                    onClick={() => setShowPdfPassword(true)}
+                    className="text-[11px] text-[var(--accent-blue)] underline bg-transparent border-none cursor-pointer p-0 mb-3"
+                  >
+                    הקובץ מוגן בסיסמה? לחץ להזנה
+                  </button>
+                )}
                 <div className="text-xs text-[var(--text-secondary)] mb-4">
-                  * ניתוח אוטומטי של דוחות Surense. אם הקובץ מוגן בסיסמה, השתמש בהזנה ידנית.
+                  * ניתוח אוטומטי של דוחות Surense. אם הקובץ מבוסס תמונות, עבור להעלאת תמונה.
                 </div>
               </div>
             ) : (

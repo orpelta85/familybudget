@@ -1,49 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthUser } from '@/lib/supabase/auth'
 
-export async function POST(req: NextRequest) {
-  const authUser = await getAuthUser()
-  if (!authUser) {
-    return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
-  }
-
-  const formData = await req.formData()
-  const file = formData.get('file') as File | null
-  if (!file || file.size === 0) {
-    return NextResponse.json({ error: 'no file' }, { status: 400 })
-  }
-
-  // Convert image to base64
-  const buffer = Buffer.from(await file.arrayBuffer())
-  const base64 = buffer.toString('base64')
-  const mimeType = file.type || 'image/png'
-
-  const apiKey = process.env.ANTHROPIC_API_KEY
-  if (!apiKey) {
-    return NextResponse.json({ error: 'ANTHROPIC_API_KEY not configured' }, { status: 500 })
-  }
-
-  try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 4096,
-        messages: [{
-          role: 'user',
-          content: [
-            {
-              type: 'image',
-              source: { type: 'base64', media_type: mimeType, data: base64 },
-            },
-            {
-              type: 'text',
-              text: `Extract ALL financial data from this Israeli pension report image (Surense format).
+const EXTRACTION_PROMPT = `Extract ALL financial data from this Israeli pension report image (Surense format).
 
 Return a JSON object with these exact fields:
 {
@@ -87,27 +45,74 @@ Rules:
 - product_type must be one of: pension, hishtalmut, gemel_tagmulim, gemel_invest, health_insurance
 - Return ONLY valid JSON, no markdown, no explanation
 - If the image doesn't contain pension data, return {"error": "not a pension report"}`
-            }
-          ]
-        }]
-      }),
-    })
+
+export async function POST(req: NextRequest) {
+  const authUser = await getAuthUser()
+  if (!authUser) {
+    return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+  }
+
+  const formData = await req.formData()
+  const file = formData.get('file') as File | null
+  if (!file || file.size === 0) {
+    return NextResponse.json({ error: 'no file' }, { status: 400 })
+  }
+
+  const buffer = Buffer.from(await file.arrayBuffer())
+  const base64 = buffer.toString('base64')
+  const mimeType = file.type || 'image/png'
+
+  const apiKey = process.env.GEMINI_API_KEY
+  if (!apiKey) {
+    return NextResponse.json({ error: 'GEMINI_API_KEY not configured' }, { status: 500 })
+  }
+
+  try {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{
+            parts: [
+              { inline_data: { mime_type: mimeType, data: base64 } },
+              { text: EXTRACTION_PROMPT },
+            ],
+          }],
+          generationConfig: {
+            temperature: 0,
+            maxOutputTokens: 8192,
+            responseMimeType: 'application/json',
+          },
+        }),
+      }
+    )
 
     if (!response.ok) {
       const err = await response.text()
-      return NextResponse.json({ error: `Claude API error: ${err}` }, { status: 500 })
+      console.error('Gemini API error:', response.status, err)
+      return NextResponse.json({ error: `שגיאה בשירות AI (${response.status})` }, { status: 500 })
     }
 
     const result = await response.json()
-    const text = result.content?.[0]?.text || ''
+    const text: string = result?.candidates?.[0]?.content?.parts?.[0]?.text || ''
+    if (!text) {
+      return NextResponse.json({ error: 'AI לא החזיר תוצאה' }, { status: 500 })
+    }
 
-    // Parse JSON from response (might have markdown wrapper)
     let jsonStr = text
     const jsonMatch = text.match(/```(?:json)?\s*([\s\S]*?)```/)
     if (jsonMatch) jsonStr = jsonMatch[1]
     jsonStr = jsonStr.trim()
 
-    const parsed = JSON.parse(jsonStr)
+    let parsed: Record<string, unknown>
+    try {
+      parsed = JSON.parse(jsonStr)
+    } catch {
+      return NextResponse.json({ error: 'תשובת AI אינה JSON תקין' }, { status: 500 })
+    }
+
     if (parsed.error) {
       return NextResponse.json({ error: parsed.error }, { status: 400 })
     }
