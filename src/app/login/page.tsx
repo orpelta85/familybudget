@@ -148,6 +148,13 @@ function LoginForm() {
             {resetSent ? '✓ מייל נשלח' : 'שכחתי סיסמה'}
           </button>
         )}
+
+        <div className="mt-5 pt-4 border-t border-[var(--border-default)] text-center text-[11px] text-[var(--text-secondary)]">
+          {isSignup && <div className="mb-1">בהרשמה אתה מאשר את</div>}
+          <a href="/terms" className="text-[var(--primary)] underline">תנאי שימוש</a>
+          {' · '}
+          <a href="/privacy" className="text-[var(--primary)] underline">מדיניות פרטיות</a>
+        </div>
       </div>
     </div>
   )

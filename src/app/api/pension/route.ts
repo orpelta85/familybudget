@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceClient } from '@/lib/supabase/server'
 import { getAuthUser } from '@/lib/supabase/auth'
+import { checkRateLimit } from '@/lib/rate-limit'
 
 const GEMINI_EXTRACTION_PROMPT = `Extract ALL financial data from this Israeli pension report text (Surense format).
 
@@ -311,6 +312,8 @@ function parseSurenseReport(text: string): ParsedReport {
 
 export async function POST(req: NextRequest) {
   try {
+    const rateLimited = checkRateLimit(req, { maxRequests: 10, windowMs: 60_000, prefix: 'pension-post' })
+    if (rateLimited) return rateLimited
     const authUser = await getAuthUser()
     const formData = await req.formData()
     const file = formData.get('file') as File | null

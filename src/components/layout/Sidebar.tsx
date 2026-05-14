@@ -230,10 +230,10 @@ export function Sidebar() {
         })}
         <div className="h-px bg-[var(--bg-hover)] my-2" />
         <Link
-          href="/family"
+          href="/settings"
           className={cn(
             'flex items-center gap-2.5 py-2 px-3 rounded-lg text-[13px] no-underline transition-all duration-150 border-r-2 font-medium',
-            pathname === '/family'
+            pathname === '/settings' || pathname === '/family'
               ? 'text-[var(--c-0-92)] bg-[var(--c-0-22)] border-r-[var(--accent-green)] border-r-[3px]'
               : 'text-[var(--text-secondary)] bg-transparent border-r-transparent'
           )}

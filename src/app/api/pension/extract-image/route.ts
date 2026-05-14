@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getAuthUser } from '@/lib/supabase/auth'
+import { checkRateLimit } from '@/lib/rate-limit'
 
 const EXTRACTION_PROMPT = `Extract ALL financial data from this Israeli pension report image (Surense format).
 
@@ -47,6 +48,8 @@ Rules:
 - If the image doesn't contain pension data, return {"error": "not a pension report"}`
 
 export async function POST(req: NextRequest) {
+  const rateLimited = checkRateLimit(req, { maxRequests: 10, windowMs: 60_000, prefix: 'pension-image' })
+  if (rateLimited) return rateLimited
   const authUser = await getAuthUser()
   if (!authUser) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
