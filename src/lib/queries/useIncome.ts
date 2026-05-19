@@ -21,6 +21,28 @@ export function useIncome(periodId: number | undefined, userId: string | undefin
   })
 }
 
+/**
+ * Income rows for a set of periods (range mode).
+ * The `income` table has no real date column, so callers compute the
+ * overlapping period ids via `periodIdsInRange` and pass them here.
+ */
+export function useIncomeByPeriods(periodIds: number[], userId: string | undefined) {
+  return useQuery<Income[]>({
+    queryKey: ['income', 'range', [...periodIds].sort((a, b) => a - b), userId],
+    enabled: !!userId && periodIds.length > 0,
+    queryFn: async () => {
+      const sb = createClient()
+      const { data, error } = await sb
+        .from('income')
+        .select('*')
+        .eq('user_id', userId!)
+        .in('period_id', periodIds)
+      if (error) throw error
+      return data
+    },
+  })
+}
+
 export function useAllIncome(userId: string | undefined) {
   return useQuery<Income[]>({
     queryKey: ['all_income', userId],

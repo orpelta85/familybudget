@@ -28,6 +28,55 @@ export function useJointPoolExpenses(periodId: number | undefined, familyId: str
   })
 }
 
+/**
+ * Joint pool income for a set of periods (range mode).
+ * `joint_pool_income` has no real date column — callers compute the
+ * overlapping period ids via `periodIdsInRange` and pass them here.
+ */
+export function useJointPoolIncomeByPeriods(periodIds: number[], familyId: string | undefined) {
+  return useQuery<JointPoolIncome[]>({
+    queryKey: ['joint_pool_income', 'range', [...periodIds].sort((a, b) => a - b), familyId],
+    enabled: !!familyId && periodIds.length > 0,
+    queryFn: async () => {
+      const sb = createClient()
+      const { data, error } = await sb
+        .from('joint_pool_income')
+        .select('*')
+        .eq('family_id', familyId!)
+        .in('period_id', periodIds)
+      if (error) throw error
+      return data
+    },
+  })
+}
+
+/**
+ * Joint pool expenses within a free date range. `joint_pool_expenses`
+ * has a real `expense_date` column, so this filters by date directly.
+ */
+export function useJointPoolExpensesByRange(
+  dateFrom: string,
+  dateTo: string,
+  familyId: string | undefined,
+) {
+  return useQuery<JointPoolExpense[]>({
+    queryKey: ['joint_pool_expenses', 'range', dateFrom, dateTo, familyId],
+    enabled: !!familyId && !!dateFrom && !!dateTo,
+    queryFn: async () => {
+      const sb = createClient()
+      const { data, error } = await sb
+        .from('joint_pool_expenses')
+        .select('*')
+        .eq('family_id', familyId!)
+        .gte('expense_date', dateFrom)
+        .lte('expense_date', dateTo)
+        .order('expense_date', { ascending: false })
+      if (error) throw error
+      return data
+    },
+  })
+}
+
 export function useUpsertJointIncome() {
   const qc = useQueryClient()
   return useMutation({
@@ -63,7 +112,8 @@ export function useDeleteJointExpense() {
       if (error) throw error
       return periodId
     },
-    onSuccess: (periodId) => qc.invalidateQueries({ queryKey: ['joint_pool_expenses', periodId] }),
+    // Invalidate every joint_pool_expenses query (month + range views).
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['joint_pool_expenses'] }),
   })
 }
 

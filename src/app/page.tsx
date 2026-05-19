@@ -1,7 +1,7 @@
 'use client'
 
 import { useUser } from '@/lib/queries/useUser'
-import { usePeriods, useCurrentPeriod } from '@/lib/queries/usePeriods'
+import { usePeriods, useCurrentPeriod, periodIdsInRange } from '@/lib/queries/usePeriods'
 import { useIncome, useAllIncome } from '@/lib/queries/useIncome'
 import { usePersonalExpenses, useBudgetCategories, useAllPersonalExpenses } from '@/lib/queries/useExpenses'
 import { useSharedExpenses, useAllSharedExpenses } from '@/lib/queries/useShared'
@@ -22,6 +22,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState, useRef } from 'react'
 import { useFamilyView } from '@/contexts/FamilyViewContext'
 import { PeriodSelector } from '@/components/layout/PeriodSelector'
+import { PeriodModeToggle } from '@/components/layout/PeriodModeToggle'
 import { Wallet, Receipt, TrendingUp, PiggyBank, Target, AlertTriangle, CalendarDays, Users, X, Download, MoreHorizontal, Home, Car, Plane, GraduationCap, ShieldAlert, Heart, Baby, EyeOff } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
@@ -71,7 +72,10 @@ export default function Dashboard() {
   const { data: hasSetup, isLoading: setupLoading } = useHasSetup(user?.id)
   const { data: periods } = usePeriods()
   const currentPeriod = useCurrentPeriod()
-  const { selectedPeriodId, setSelectedPeriodId } = useSharedPeriod()
+  const { selectedPeriodId, setSelectedPeriodId, viewMode: periodMode, setViewMode: setPeriodMode, dateFrom, dateTo, setDateRange } = useSharedPeriod()
+  const isRange = periodMode === 'range'
+  // Date range passed to the expense queries — only active in range mode.
+  const expenseDateRange = isRange && dateFrom && dateTo ? { from: dateFrom, to: dateTo } : undefined
   const { familyId, isSolo, loading: familyLoading } = useFamilyContext()
   const splitFrac = useSplitFraction(user?.id)
   const { data: profile } = useProfile(user?.id)
@@ -100,6 +104,13 @@ export default function Dashboard() {
     if (!userLoading && !setupLoading && user && hasSetup === false) router.push('/setup')
   }, [user, userLoading, hasSetup, setupLoading, router])
 
+  // Default the date range to the selected period the first time range mode is used.
+  useEffect(() => {
+    if (!isRange || (dateFrom && dateTo)) return
+    const p = periods?.find(pp => pp.id === selectedPeriodId)
+    if (p) setDateRange(p.start_date, p.end_date)
+  }, [isRange, dateFrom, dateTo, periods, selectedPeriodId, setDateRange])
+
   const selectedYear = useMemo(() => {
     if (!periods || !selectedPeriodId) return undefined
     return periods.find(p => p.id === selectedPeriodId)?.year_number
@@ -107,8 +118,8 @@ export default function Dashboard() {
 
   const { data: income } = useIncome(selectedPeriodId, user?.id)
   const { data: allIncome } = useAllIncome(user?.id)
-  const { data: expenses } = usePersonalExpenses(selectedPeriodId, user?.id)
-  const { data: shared } = useSharedExpenses(selectedPeriodId, isSolo ? undefined : familyId)
+  const { data: expenses } = usePersonalExpenses(selectedPeriodId, user?.id, expenseDateRange)
+  const { data: shared } = useSharedExpenses(selectedPeriodId, isSolo ? undefined : familyId, expenseDateRange)
   const { data: allShared } = useAllSharedExpenses(isSolo ? undefined : familyId)
   const { data: savingsGoals } = useSavingsGoals(user?.id, familyId)
   const goalIds = useMemo(() => (savingsGoals ?? []).map(g => g.id), [savingsGoals])
@@ -166,7 +177,15 @@ export default function Dashboard() {
   if (!user) return null
 
   // ── Core numbers ──────────────────────────────────────────────────────────
-  const totalIncome = (income?.salary ?? 0) + (income?.bonus ?? 0) + (income?.other ?? 0)
+  // Range mode: income table has only period_id, so sum income across every
+  // period that overlaps the selected date range.
+  const rangePeriodIds = isRange && dateFrom && dateTo ? periodIdsInRange(periods, dateFrom, dateTo) : []
+  const rangeIncomeTotal = (allIncome ?? [])
+    .filter(i => rangePeriodIds.includes(i.period_id))
+    .reduce((s, i) => s + Number(i.salary) + Number(i.bonus) + Number(i.other), 0)
+  const totalIncome = isRange
+    ? rangeIncomeTotal
+    : (income?.salary ?? 0) + (income?.bonus ?? 0) + (income?.other ?? 0)
   const totalPersonal = expenses?.reduce((s, e) => s + e.amount, 0) ?? 0
   const totalShared = shared?.reduce((s, e) => s + (e.my_share ?? e.total_amount * splitFrac), 0) ?? 0
   const activeFunds = (funds ?? []).filter(f => f.is_active && (!isSolo || !f.is_shared))
@@ -176,11 +195,12 @@ export default function Dashboard() {
     const share = fund?.is_shared ? splitFrac : 1
     return s + Math.abs(t.amount) * share
   }, 0)
-  const sinkingNet = Math.max(0, sinkingMonthly - fundWithdrawals)
+  // Sinking is a per-month concept — excluded from range-mode totals.
+  const sinkingNet = isRange ? 0 : Math.max(0, sinkingMonthly - fundWithdrawals)
   const totalExpenses = totalPersonal + totalShared + sinkingNet
   const netFlow = totalIncome - totalExpenses
   const savingsPct = totalIncome > 0 ? Math.round((netFlow / totalIncome) * 100) : 0
-  const dataLoading = !selectedPeriodId
+  const dataLoading = isRange ? (!dateFrom || !dateTo) : !selectedPeriodId
 
   // ── Budget utilization ────────────────────────────────────────────────────
   const spendByCat = (expenses ?? []).reduce<Record<number, number>>((acc, e) => {
@@ -337,7 +357,11 @@ export default function Dashboard() {
           </div>
           <p className="text-sm mt-1 text-text-secondary">
             {new Date().toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
-            {selectedPeriod ? ` · ${periodLabel(selectedPeriod.start_date)}` : ''}
+            {isRange
+              ? (dateFrom && dateTo
+                  ? ` · ${dateFrom.split('-').reverse().join('/')} - ${dateTo.split('-').reverse().join('/')}`
+                  : '')
+              : (selectedPeriod ? ` · ${periodLabel(selectedPeriod.start_date)}` : '')}
           </p>
         </div>
         <div className="relative" ref={menuRef}>
@@ -362,7 +386,17 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {periods && <PeriodSelector periods={periods} selectedId={selectedPeriodId} onChange={setSelectedPeriodId} />}
+      <PeriodModeToggle
+        viewMode={periodMode}
+        onModeChange={setPeriodMode}
+        dateFrom={dateFrom}
+        dateTo={dateTo}
+        onRangeChange={setDateRange}
+      />
+
+      {periodMode === 'month' && periods && (
+        <PeriodSelector periods={periods} selectedId={selectedPeriodId} onChange={setSelectedPeriodId} />
+      )}
 
       {/* ── AI Insights Card (weekly Oren insights) ─────────────────────── */}
       <div className="mb-4">
@@ -429,7 +463,8 @@ export default function Dashboard() {
       {viewMode === 'personal' && <>
 
       {/* ── Health Score (Financial Status) — top of dashboard ────────── */}
-      {!dataLoading && totalIncome > 0 && (
+      {/* Health score is a monthly snapshot — hidden in range mode. */}
+      {!isRange && !dataLoading && totalIncome > 0 && (
         <div
           className="flex items-center gap-3 rounded-xl px-4 mb-4"
           style={{ height: 48, background: 'var(--bg-hover)' }}
@@ -475,7 +510,8 @@ export default function Dashboard() {
       )}
 
       {/* ── Alert bar ──────────────────────────────────────────────────────── */}
-      {showAlert && (
+      {/* Overspend alerts compare against monthly targets — hidden in range mode. */}
+      {!isRange && showAlert && (
         <div className="bg-alert-bg border border-alert-border rounded-[10px] px-4 py-[11px] flex items-start gap-2.5">
           <AlertTriangle size={15} className="text-accent-orange shrink-0 mt-px" />
           <div className="text-[13px] text-alert-text leading-relaxed">
@@ -489,8 +525,8 @@ export default function Dashboard() {
       <div className="grid-kpi">
         {[
           { label: 'הכנסה נטו', value: dataLoading ? '—' : formatCurrency(totalIncome), color: 'var(--accent-green)', Icon: Wallet, tip: 'הכנסה אחרי מס ונכויים - הסכום שבאמת נכנס לחשבון' },
-          { label: 'הוצאות החודש', value: dataLoading ? '—' : formatCurrency(totalPersonal + totalShared), color: 'var(--accent-orange)', Icon: Receipt, tip: 'הוצאות החודש מציגות הוצאות אישיות בלבד (ללא קרנות צבירה). "כולל קרנות" מראה את הסך הכולל כולל הסכום שהועבר לקרנות השונות שלך.' },
-          ...(sinkingMonthly > 0 ? [{
+          { label: isRange ? 'הוצאות בטווח' : 'הוצאות החודש', value: dataLoading ? '—' : formatCurrency(totalPersonal + totalShared), color: 'var(--accent-orange)', Icon: Receipt, tip: 'הוצאות אישיות + משותפות (ללא קרנות צבירה).' },
+          ...(!isRange && sinkingMonthly > 0 ? [{
             label: 'כולל קרנות', value: dataLoading ? '—' : formatCurrency(totalExpenses),
             color: 'var(--accent-teal)', Icon: PiggyBank, tip: 'הוצאות + הקצאה חודשית לקרנות צבירה',
           }] : []),
@@ -521,10 +557,33 @@ export default function Dashboard() {
         <div className="card">
           <h2 className="card-header mb-4">
             <CalendarDays size={14} className="text-accent-green" />
-            מבט על החודש
+            {isRange ? 'מבט על הטווח' : 'מבט על החודש'}
           </h2>
           {dataLoading
-            ? <div className="text-text-secondary text-[13px]">בחר תקופה</div>
+            ? <div className="text-text-secondary text-[13px]">{isRange ? 'בחר טווח תאריכים' : 'בחר תקופה'}</div>
+            : isRange
+            ? (
+              <div className="text-[13px]">
+                {[
+                  { label: 'הכנסה', value: totalIncome, color: 'var(--accent-green)', sign: '+' },
+                  { label: 'הוצאות אישיות', value: -totalPersonal, color: 'var(--accent-orange)', sign: '-' },
+                  { label: 'הוצאות משותפות (החלק שלי)', value: -totalShared, color: 'var(--accent-shared)', sign: '-' },
+                ].map(row => (
+                  <div key={row.label} className="flex justify-between py-[5px] row-divider">
+                    <span className="text-text-body">{row.label}</span>
+                    <span className="font-medium" style={{ color: row.color }}>
+                      {row.sign}{formatCurrency(Math.abs(row.value))}
+                    </span>
+                  </div>
+                ))}
+                <div className="flex justify-between pt-2.5 mt-1">
+                  <span className="font-semibold">תזרים נקי</span>
+                  <span className={`text-base font-bold ${netFlow >= 0 ? 'text-accent-green' : 'text-accent-red'}`}>
+                    {formatCurrency(netFlow)}
+                  </span>
+                </div>
+              </div>
+            )
             : (
               <div className="text-[13px]">
                 {[
@@ -612,6 +671,8 @@ export default function Dashboard() {
       )}
 
       {/* ── Budget + Year-over-year ────────────────────────────────────────── */}
+      {/* Both compare against monthly targets / a single prior month — hidden in range mode. */}
+      {!isRange && (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Right (in RTL): Budget utilization */}
         <div className="card">
@@ -701,6 +762,7 @@ export default function Dashboard() {
           }
         </div>
       </div>
+      )}
 
       {/* ── Sinking funds + Goals ──────────────────────────────────────────── */}
       <div className="grid-2">

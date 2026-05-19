@@ -1,8 +1,8 @@
 'use client'
 
 import { useUser } from '@/lib/queries/useUser'
-import { usePeriods, useCurrentPeriod } from '@/lib/queries/usePeriods'
-import { useJointPoolIncome, useJointPoolExpenses, useUpsertJointIncome, useAddJointExpense, useDeleteJointExpense, useJointCarryOver } from '@/lib/queries/useJoint'
+import { usePeriods, useCurrentPeriod, periodIdsInRange } from '@/lib/queries/usePeriods'
+import { useJointPoolIncome, useJointPoolExpenses, useUpsertJointIncome, useAddJointExpense, useDeleteJointExpense, useJointCarryOver, useJointPoolIncomeByPeriods, useJointPoolExpensesByRange } from '@/lib/queries/useJoint'
 import { formatCurrency } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { useQueryClient } from '@tanstack/react-query'
@@ -11,6 +11,7 @@ import { useFamilyContext } from '@/lib/context/FamilyContext'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { PeriodSelector } from '@/components/layout/PeriodSelector'
+import { PeriodModeToggle } from '@/components/layout/PeriodModeToggle'
 import { toast } from 'sonner'
 import { PiggyBank, Trash2, Inbox, X } from 'lucide-react'
 import type { PoolCategory } from '@/lib/types'
@@ -32,7 +33,8 @@ export default function JointPage() {
   const router = useRouter()
   const { data: periods } = usePeriods()
   const currentPeriod = useCurrentPeriod()
-  const { selectedPeriodId, setSelectedPeriodId } = useSharedPeriod()
+  const { selectedPeriodId, setSelectedPeriodId, viewMode: periodMode, setViewMode: setPeriodMode, dateFrom, dateTo, setDateRange } = useSharedPeriod()
+  const isRange = periodMode === 'range'
   const { familyId, isSolo, loading: familyLoading } = useFamilyContext()
 
   useEffect(() => {
@@ -48,11 +50,25 @@ export default function JointPage() {
     if (!familyLoading && isSolo) router.push('/')
   }, [familyLoading, isSolo, router])
 
+  // Default the date range to the selected period the first time range mode is used.
+  useEffect(() => {
+    if (!isRange || (dateFrom && dateTo)) return
+    const p = periods?.find(pp => pp.id === selectedPeriodId)
+    if (p) setDateRange(p.start_date, p.end_date)
+  }, [isRange, dateFrom, dateTo, periods, selectedPeriodId, setDateRange])
+
   // Don't fire queries while loading or in solo mode
   if (familyLoading || isSolo) return <TableSkeleton rows={6} />
 
   const { data: poolIncome } = useJointPoolIncome(selectedPeriodId, familyId)
   const { data: poolExpenses } = useJointPoolExpenses(selectedPeriodId, familyId)
+  // Range mode: joint_pool_income has only period_id → aggregate overlapping
+  // periods; joint_pool_expenses has expense_date → filter by date directly.
+  const rangePeriodIds = isRange && dateFrom && dateTo ? periodIdsInRange(periods, dateFrom, dateTo) : []
+  const { data: rangePoolIncome } = useJointPoolIncomeByPeriods(rangePeriodIds, familyId)
+  const { data: rangePoolExpenses } = useJointPoolExpensesByRange(
+    isRange ? dateFrom : '', isRange ? dateTo : '', familyId,
+  )
   const upsertIncome = useUpsertJointIncome()
   const addExpense = useAddJointExpense()
   const deleteExpense = useDeleteJointExpense()
@@ -92,10 +108,24 @@ export default function JointPage() {
     } catch (e) { console.error('Reset joint pool:', e); toast.error('שגיאה באיפוס') }
   }
 
-  const totalIncome = (Number(myContrib) || 0) + (Number(partnerContrib) || 0)
-  const totalExpenses = poolExpenses?.reduce((s, e) => s + Number(e.amount), 0) ?? 0
-  const balance = carryOver + totalIncome - totalExpenses
+  // Range mode: aggregate income across overlapping periods, expenses by date.
+  const rangeIncomeTotal = (rangePoolIncome ?? []).reduce(
+    (s, r) => s + Number(r.my_contribution) + Number(r.partner_contribution), 0,
+  )
+  const monthIncome = (Number(myContrib) || 0) + (Number(partnerContrib) || 0)
+  const monthExpenses = poolExpenses?.reduce((s, e) => s + Number(e.amount), 0) ?? 0
+  const rangeExpensesTotal = (rangePoolExpenses ?? []).reduce((s, e) => s + Number(e.amount), 0)
+
+  const totalIncome = isRange ? rangeIncomeTotal : monthIncome
+  const totalExpenses = isRange ? rangeExpensesTotal : monthExpenses
+  // Carry-over only makes sense for a single period — exclude it in range mode.
+  const balance = isRange ? totalIncome - totalExpenses : carryOver + totalIncome - totalExpenses
   const selectedPeriod = periods?.find(p => p.id === selectedPeriodId)
+  const rangeLabel = dateFrom && dateTo
+    ? `${dateFrom.split('-').reverse().join('/')} - ${dateTo.split('-').reverse().join('/')}`
+    : 'בחר טווח תאריכים'
+  // List of expenses shown — range list when in range mode.
+  const shownExpenses = isRange ? rangePoolExpenses : poolExpenses
 
   async function saveIncome() {
     if (!selectedPeriodId) return
@@ -143,15 +173,27 @@ export default function JointPage() {
           <Trash2 size={13} /> אפס קופה
         </button>
       </div>
-      <p className="text-[var(--text-secondary)] text-[13px] mb-5">{selectedPeriod?.label ?? '...'}</p>
+      <p className="text-[var(--text-secondary)] text-[13px] mb-5">
+        {isRange ? rangeLabel : (selectedPeriod?.label ?? '...')}
+      </p>
 
-      {periods && <PeriodSelector periods={periods} selectedId={selectedPeriodId} onChange={setSelectedPeriodId} />}
+      <PeriodModeToggle
+        viewMode={periodMode}
+        onModeChange={setPeriodMode}
+        dateFrom={dateFrom}
+        dateTo={dateTo}
+        onRangeChange={setDateRange}
+      />
+
+      {periodMode === 'month' && periods && (
+        <PeriodSelector periods={periods} selectedId={selectedPeriodId} onChange={setSelectedPeriodId} />
+      )}
 
       {/* Balance hero */}
       <div className={`rounded-xl p-5 mb-5 border ${balance >= 0 ? 'bg-[var(--c-purple-0-15)] border-[var(--c-purple-0-25)]' : 'bg-[var(--c-red-0-15)] border-[var(--c-red-0-25)]'}`}>
         <div className="flex justify-between items-center">
           <div className="flex gap-6">
-            {carryOver !== 0 && (
+            {!isRange && carryOver !== 0 && (
               <div className="text-center">
                 <div className={`text-lg font-bold ${carryOver >= 0 ? 'text-[var(--accent-blue)]' : 'text-[var(--accent-orange)]'}`}>{formatCurrency(carryOver)}</div>
                 <div className="text-[11px] text-[var(--text-secondary)]">העברה</div>
@@ -173,6 +215,7 @@ export default function JointPage() {
         </div>
       </div>
 
+      {!isRange && (
       <div className="grid-2 gap-4 mb-4">
         {/* Income */}
         <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5">
@@ -232,11 +275,12 @@ export default function JointPage() {
           </form>
         </div>
       </div>
+      )}
 
       {/* Expense list */}
       <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5">
-        <div className="font-semibold mb-3.5 text-sm">הוצאות המחזור</div>
-        {poolExpenses?.length ? poolExpenses.map(e => (
+        <div className="font-semibold mb-3.5 text-sm">{isRange ? 'הוצאות בטווח' : 'הוצאות המחזור'}</div>
+        {shownExpenses?.length ? shownExpenses.map(e => (
           <div key={e.id} className="flex items-center justify-between py-[9px] border-b border-[var(--c-0-20)] text-[13px] group">
             <div className="flex-1 min-w-0">
               <div>

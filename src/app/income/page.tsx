@@ -1,8 +1,8 @@
 'use client'
 
 import { useUser } from '@/lib/queries/useUser'
-import { usePeriods, useCurrentPeriod } from '@/lib/queries/usePeriods'
-import { useIncome, useUpsertIncome, useAllIncome, useFamilyIncome } from '@/lib/queries/useIncome'
+import { usePeriods, useCurrentPeriod, periodIdsInRange } from '@/lib/queries/usePeriods'
+import { useIncome, useUpsertIncome, useAllIncome, useFamilyIncome, useIncomeByPeriods } from '@/lib/queries/useIncome'
 import { formatCurrency, periodLabel } from '@/lib/utils'
 import { useSharedPeriod } from '@/lib/context/PeriodContext'
 import { useFamilyContext } from '@/lib/context/FamilyContext'
@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState, useMemo } from 'react'
 import { useFamilyView } from '@/contexts/FamilyViewContext'
 import { PeriodSelector } from '@/components/layout/PeriodSelector'
+import { PeriodModeToggle } from '@/components/layout/PeriodModeToggle'
 import { Wallet, TrendingUp, Trash2, Users } from 'lucide-react'
 import { toast } from 'sonner'
 import { PageInfo } from '@/components/ui/PageInfo'
@@ -28,7 +29,8 @@ export default function IncomePage() {
   const router = useRouter()
   const { data: periods } = usePeriods()
   const currentPeriod = useCurrentPeriod()
-  const { selectedPeriodId, setSelectedPeriodId } = useSharedPeriod()
+  const { selectedPeriodId, setSelectedPeriodId, viewMode: periodMode, setViewMode: setPeriodMode, dateFrom, dateTo, setDateRange } = useSharedPeriod()
+  const isRange = periodMode === 'range'
   const { familyId, members } = useFamilyContext()
   const { viewMode } = useFamilyView()
 
@@ -43,8 +45,21 @@ export default function IncomePage() {
     if (!loading && !user) router.push('/login')
   }, [user, loading, router])
 
+  // Default the date range to the selected period the first time range mode is used.
+  useEffect(() => {
+    if (!isRange || (dateFrom && dateTo)) return
+    const p = periods?.find(pp => pp.id === selectedPeriodId)
+    if (p) setDateRange(p.start_date, p.end_date)
+  }, [isRange, dateFrom, dateTo, periods, selectedPeriodId, setDateRange])
+
   const { data: income } = useIncome(selectedPeriodId, user?.id)
   const { data: allIncome } = useAllIncome(user?.id)
+  // Range mode: income has only period_id, so aggregate across overlapping periods.
+  const rangePeriodIds = useMemo(
+    () => (isRange && dateFrom && dateTo ? periodIdsInRange(periods, dateFrom, dateTo) : []),
+    [isRange, dateFrom, dateTo, periods],
+  )
+  const { data: rangeIncome } = useIncomeByPeriods(rangePeriodIds, user?.id)
   const upsert = useUpsertIncome()
   const confirm = useConfirmDialog()
 
@@ -104,6 +119,18 @@ export default function IncomePage() {
   }
 
   const selectedPeriod = periods?.find(p => p.id === selectedPeriodId)
+  const rangeLabel = dateFrom && dateTo
+    ? `${dateFrom.split('-').reverse().join('/')} - ${dateTo.split('-').reverse().join('/')}`
+    : 'בחר טווח תאריכים'
+
+  // Range mode: aggregated income totals across all overlapping periods.
+  const rangeTotals = (() => {
+    const rows = rangeIncome ?? []
+    const salarySum = rows.reduce((s, r) => s + Number(r.salary), 0)
+    const bonusSum = rows.reduce((s, r) => s + Number(r.bonus), 0)
+    const otherSum = rows.reduce((s, r) => s + Number(r.other), 0)
+    return { salary: salarySum, bonus: bonusSum, other: otherSum, total: salarySum + bonusSum + otherSum }
+  })()
 
   // Trend: last 6 periods with income data
   const trendData = (() => {
@@ -145,10 +172,20 @@ export default function IncomePage() {
         </div>
       </div>
       <p className="text-[var(--c-0-60)] text-sm mb-5">
-        {selectedPeriod ? periodLabel(selectedPeriod.start_date) : '...'}
+        {isRange ? rangeLabel : (selectedPeriod ? periodLabel(selectedPeriod.start_date) : '...')}
       </p>
 
-      {periods && <PeriodSelector periods={periods} selectedId={selectedPeriodId} onChange={setSelectedPeriodId} />}
+      <PeriodModeToggle
+        viewMode={periodMode}
+        onModeChange={setPeriodMode}
+        dateFrom={dateFrom}
+        dateTo={dateTo}
+        onRangeChange={setDateRange}
+      />
+
+      {periodMode === 'month' && periods && (
+        <PeriodSelector periods={periods} selectedId={selectedPeriodId} onChange={setSelectedPeriodId} />
+      )}
 
       {/* ── Family View ──────────────────────────────────────────────────── */}
       {viewMode !== 'personal' && (
@@ -212,7 +249,34 @@ export default function IncomePage() {
       {viewMode === 'personal' && (
       <div className="grid-2 items-start">
 
-        {/* Input form */}
+        {/* Range mode: read-only aggregated income summary (no single-period editing) */}
+        {isRange ? (
+        <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5">
+          <div className="mb-[18px] font-semibold text-sm">סיכום הכנסה לטווח</div>
+          {[
+            { label: 'משכורת נטו', value: rangeTotals.salary },
+            { label: 'בונוס', value: rangeTotals.bonus },
+            { label: 'הכנסה אחרת', value: rangeTotals.other },
+          ].map(row => (
+            <div key={row.label} className="flex justify-between py-2.5 border-b border-[var(--c-0-20)] text-[13px]">
+              <span className="text-[var(--text-body)]">{row.label}</span>
+              <span className="font-medium">{formatCurrency(row.value)}</span>
+            </div>
+          ))}
+          <div className="flex justify-between items-center py-3.5">
+            <span className="font-semibold">סה&quot;כ הכנסה בטווח</span>
+            <span className="text-[22px] font-bold text-[var(--accent-blue)]">
+              {formatCurrency(rangeTotals.total)}
+            </span>
+          </div>
+          <p className="text-[11px] text-[var(--text-secondary)]">
+            {rangePeriodIds.length > 0
+              ? `מצרף ${rangePeriodIds.length} מחזורים בטווח ${rangeLabel}. לעריכת הכנסה - עבור למצב "לפי חודש".`
+              : 'אין מחזורים בטווח הנבחר'}
+          </p>
+        </div>
+        ) : (
+        /* Input form */
         <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5">
           <div className="mb-[18px] font-semibold text-sm">הזנת הכנסה למחזור</div>
 
@@ -276,6 +340,7 @@ export default function IncomePage() {
             {upsert.isPending ? 'שומר...' : 'שמור הכנסה'}
           </button>
         </div>
+        )}
 
         {/* Trend chart */}
         <div className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-xl p-5">
