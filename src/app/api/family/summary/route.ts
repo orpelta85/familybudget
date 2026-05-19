@@ -9,7 +9,16 @@ export async function GET(req: NextRequest) {
   }
 
   const periodId = req.nextUrl.searchParams.get('period_id')
-  if (!periodId) {
+  const dateFrom = req.nextUrl.searchParams.get('date_from')
+  const dateTo = req.nextUrl.searchParams.get('date_to')
+  const periodIdsParam = req.nextUrl.searchParams.get('period_ids')
+  const rangeMode = !!dateFrom && !!dateTo
+  // Range mode: caller passes the overlapping period ids for period-only tables (income).
+  const rangePeriodIds = (periodIdsParam ?? '')
+    .split(',')
+    .map(s => Number(s))
+    .filter(n => Number.isFinite(n) && n > 0)
+  if (!periodId && !rangeMode) {
     return NextResponse.json({ error: 'missing period_id' }, { status: 400 })
   }
 
@@ -48,35 +57,59 @@ export async function GET(req: NextRequest) {
 
   const profileMap = new Map((profiles ?? []).map(p => [p.id, p.name]))
 
-  // Get income for all members in this period
-  const { data: incomeRows } = await sb
+  // Get income for all members — income has only period_id, so in range
+  // mode sum across every period overlapping the range.
+  let incomeQuery = sb
     .from('income')
     .select('user_id, salary, bonus, other')
-    .eq('period_id', Number(periodId))
     .in('user_id', memberIds)
+  if (rangeMode) {
+    incomeQuery = incomeQuery.in('period_id', rangePeriodIds.length > 0 ? rangePeriodIds : [-1])
+  } else {
+    incomeQuery = incomeQuery.eq('period_id', Number(periodId))
+  }
+  const { data: incomeRows } = await incomeQuery
 
-  const incomeMap = new Map(
-    (incomeRows ?? []).map(i => [i.user_id, Number(i.salary) + Number(i.bonus) + Number(i.other)])
-  )
+  const incomeMap = new Map<string, number>()
+  for (const i of incomeRows ?? []) {
+    incomeMap.set(
+      i.user_id,
+      (incomeMap.get(i.user_id) ?? 0) + Number(i.salary) + Number(i.bonus) + Number(i.other),
+    )
+  }
 
-  // Get personal expenses for all members in this period
-  const { data: expenseRows } = await sb
+  // Get personal expenses for all members — by date range when supplied, else by period.
+  let expenseQuery = sb
     .from('personal_expenses')
     .select('user_id, amount')
-    .eq('period_id', Number(periodId))
     .in('user_id', memberIds)
+  if (rangeMode) {
+    expenseQuery = expenseQuery
+      .gte('expense_date', dateFrom!)
+      .lte('expense_date', dateTo!)
+  } else {
+    expenseQuery = expenseQuery.eq('period_id', Number(periodId))
+  }
+  const { data: expenseRows } = await expenseQuery
 
   const expenseMap = new Map<string, number>()
   for (const e of expenseRows ?? []) {
     expenseMap.set(e.user_id, (expenseMap.get(e.user_id) ?? 0) + Number(e.amount))
   }
 
-  // Get shared expenses for this family in this period
-  const { data: sharedRows } = await sb
+  // Get shared expenses for this family — by date range when supplied, else by period.
+  let sharedQuery = sb
     .from('shared_expenses')
     .select('total_amount')
     .eq('family_id', membership.family_id)
-    .eq('period_id', Number(periodId))
+  if (rangeMode) {
+    sharedQuery = sharedQuery
+      .gte('expense_date', dateFrom!)
+      .lte('expense_date', dateTo!)
+  } else {
+    sharedQuery = sharedQuery.eq('period_id', Number(periodId))
+  }
+  const { data: sharedRows } = await sharedQuery
 
   const totalSharedExpenses = (sharedRows ?? []).reduce((s, e) => s + Number(e.total_amount), 0)
 

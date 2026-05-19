@@ -85,7 +85,18 @@ export default function Dashboard() {
   useEffect(() => {
     if (!familyLoading && isSolo && viewMode !== 'personal') setViewMode('personal')
   }, [familyLoading, isSolo, viewMode, setViewMode])
-  const { data: familySummary } = useFamilySummary(selectedPeriodId, viewMode !== 'personal')
+  // Range mode: ids of every period overlapping the date range — used for the
+  // period-only `income` table in the family summary query.
+  const familyRangePeriodIds = useMemo(
+    () => (isRange && dateFrom && dateTo ? periodIdsInRange(periods, dateFrom, dateTo) : []),
+    [isRange, dateFrom, dateTo, periods],
+  )
+  const { data: familySummary } = useFamilySummary(
+    selectedPeriodId,
+    viewMode !== 'personal',
+    expenseDateRange,
+    familyRangePeriodIds,
+  )
   const { data: dashboardAlerts } = useAlerts(user?.id)
   const markAlertRead = useMarkAlertRead()
 
@@ -456,6 +467,7 @@ export default function Dashboard() {
           categories={categories}
           spendByCat={spendByCat}
           dataLoading={dataLoading}
+          isRange={isRange}
         />
       )}
 
@@ -930,6 +942,7 @@ function FamilyDashboard({
   categories,
   spendByCat,
   dataLoading,
+  isRange,
 }: {
   summary: import('@/lib/queries/useFamily').FamilySummary | undefined
   totalSharedFromPersonal: number
@@ -942,6 +955,7 @@ function FamilyDashboard({
   categories: import('@/lib/types').BudgetCategory[] | undefined
   spendByCat: Record<number, number>
   dataLoading: boolean
+  isRange: boolean
 }) {
   if (!summary) {
     return <DashboardSkeleton />
@@ -949,7 +963,8 @@ function FamilyDashboard({
 
   const familySinkingMonthly = (funds ?? []).filter(f => f.is_active).reduce((s, f) => s + f.monthly_allocation, 0)
   const familyFundWithdrawals = (allSinkingTx ?? []).filter(t => t.period_id === selectedPeriodId && t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0)
-  const familySinkingNet = Math.max(0, familySinkingMonthly - familyFundWithdrawals)
+  // Sinking is a per-month concept — excluded from range-mode totals.
+  const familySinkingNet = isRange ? 0 : Math.max(0, familySinkingMonthly - familyFundWithdrawals)
   const totalExpenses = summary.total_personal_expenses + summary.total_shared_expenses + familySinkingNet
   const familyNet = summary.total_income - totalExpenses
   const familySavingsPct = summary.total_income > 0 ? Math.round((familyNet / summary.total_income) * 100) : 0
@@ -976,8 +991,8 @@ function FamilyDashboard({
       <div className="grid-kpi">
         {[
           { label: 'הכנסה משפחתית', value: formatCurrency(summary.total_income), color: 'var(--accent-green)', Icon: Wallet },
-          { label: 'הוצאות החודש', value: formatCurrency(summary.total_personal_expenses + summary.total_shared_expenses), color: 'var(--accent-orange)', Icon: Receipt },
-          ...(familySinkingMonthly > 0 ? [{
+          { label: isRange ? 'הוצאות בטווח' : 'הוצאות החודש', value: formatCurrency(summary.total_personal_expenses + summary.total_shared_expenses), color: 'var(--accent-orange)', Icon: Receipt },
+          ...(!isRange && familySinkingMonthly > 0 ? [{
             label: 'כולל קרנות', value: formatCurrency(totalExpenses),
             color: 'var(--accent-teal)', Icon: PiggyBank,
           }] : []),
@@ -1024,7 +1039,7 @@ function FamilyDashboard({
           <ExpenseDonut data={[
             { name: 'אישיות', value: summary.total_personal_expenses, color: 'var(--accent-orange)' },
             { name: 'משותפות', value: summary.total_shared_expenses, color: 'var(--accent-shared)' },
-            ...(familySinkingMonthly > 0 ? [{ name: 'קרנות צבירה', value: familySinkingMonthly, color: 'var(--accent-teal)' }] : []),
+            ...(!isRange && familySinkingMonthly > 0 ? [{ name: 'קרנות צבירה', value: familySinkingMonthly, color: 'var(--accent-teal)' }] : []),
           ]} />
         </div>
       </div>

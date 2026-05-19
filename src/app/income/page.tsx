@@ -35,7 +35,12 @@ export default function IncomePage() {
   const { viewMode } = useFamilyView()
 
   const familyMemberIds = useMemo(() => members.map(m => m.user_id), [members])
-  const { data: familyIncome } = useFamilyIncome(selectedPeriodId, familyMemberIds, viewMode !== 'personal')
+  // Range mode: income has only period_id, so aggregate across overlapping periods.
+  const rangePeriodIds = useMemo(
+    () => (isRange && dateFrom && dateTo ? periodIdsInRange(periods, dateFrom, dateTo) : []),
+    [isRange, dateFrom, dateTo, periods],
+  )
+  const { data: familyIncome } = useFamilyIncome(selectedPeriodId, familyMemberIds, viewMode !== 'personal', rangePeriodIds)
 
   useEffect(() => {
     if (currentPeriod && !selectedPeriodId) setSelectedPeriodId(currentPeriod.id)
@@ -54,11 +59,6 @@ export default function IncomePage() {
 
   const { data: income } = useIncome(selectedPeriodId, user?.id)
   const { data: allIncome } = useAllIncome(user?.id)
-  // Range mode: income has only period_id, so aggregate across overlapping periods.
-  const rangePeriodIds = useMemo(
-    () => (isRange && dateFrom && dateTo ? periodIdsInRange(periods, dateFrom, dateTo) : []),
-    [isRange, dateFrom, dateTo, periods],
-  )
   const { data: rangeIncome } = useIncomeByPeriods(rangePeriodIds, user?.id)
   const upsert = useUpsertIncome()
   const confirm = useConfirmDialog()

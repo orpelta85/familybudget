@@ -54,12 +54,35 @@ export interface FamilySummary {
   members: FamilyMemberSummary[]
 }
 
-export function useFamilySummary(periodId: number | undefined, enabled: boolean) {
+/**
+ * Family-wide income / expense summary.
+ * - Month mode: pass `periodId`, filtering happens by `period_id`.
+ * - Range mode: pass `dateRange` ({ from, to }) for date-column tables and
+ *   `rangePeriodIds` (overlapping period ids) for the period-only `income`
+ *   table. When a range is supplied it takes precedence over `periodId`.
+ */
+export function useFamilySummary(
+  periodId: number | undefined,
+  enabled: boolean,
+  dateRange?: { from: string; to: string },
+  rangePeriodIds?: number[],
+) {
+  const rangeActive = !!dateRange?.from && !!dateRange?.to
   return useQuery<FamilySummary>({
-    queryKey: ['family_summary', periodId],
-    enabled: !!periodId && enabled,
+    queryKey: rangeActive
+      ? ['family_summary', 'range', dateRange!.from, dateRange!.to]
+      : ['family_summary', periodId],
+    enabled: (rangeActive || !!periodId) && enabled,
     queryFn: async () => {
-      const res = await fetch(withImpersonation(`/api/family/summary?period_id=${periodId}`))
+      const params = new URLSearchParams()
+      if (rangeActive) {
+        params.set('date_from', dateRange!.from)
+        params.set('date_to', dateRange!.to)
+        params.set('period_ids', (rangePeriodIds ?? []).join(','))
+      } else {
+        params.set('period_id', String(periodId))
+      }
+      const res = await fetch(withImpersonation(`/api/family/summary?${params.toString()}`))
       if (!res.ok) throw new Error('Failed to fetch family summary')
       return res.json()
     },

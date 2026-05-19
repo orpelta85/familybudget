@@ -69,12 +69,33 @@ export interface FamilyMemberIncome {
   total: number
 }
 
-export function useFamilyIncome(periodId: number | undefined, memberIds: string[], enabled: boolean) {
+/**
+ * Family members' income.
+ * - Month mode: pass `periodId`, filtering happens by `period_id`.
+ * - Range mode: pass `rangePeriodIds` (the period ids overlapping the date
+ *   range — `income` has no real date column). When supplied it takes
+ *   precedence over `periodId`.
+ */
+export function useFamilyIncome(
+  periodId: number | undefined,
+  memberIds: string[],
+  enabled: boolean,
+  rangePeriodIds?: number[],
+) {
+  const rangeActive = !!rangePeriodIds && rangePeriodIds.length > 0
   return useQuery<FamilyMemberIncome[]>({
-    queryKey: ['family_income', periodId, memberIds],
-    enabled: !!periodId && memberIds.length > 0 && enabled,
+    queryKey: rangeActive
+      ? ['family_income', 'range', [...rangePeriodIds!].sort((a, b) => a - b), memberIds]
+      : ['family_income', periodId, memberIds],
+    enabled: (rangeActive || !!periodId) && memberIds.length > 0 && enabled,
     queryFn: async () => {
-      const res = await fetch(withImpersonation(`/api/family/income?period_id=${periodId}&member_ids=${memberIds.join(',')}`))
+      const params = new URLSearchParams({ member_ids: memberIds.join(',') })
+      if (rangeActive) {
+        params.set('period_ids', rangePeriodIds!.join(','))
+      } else {
+        params.set('period_id', String(periodId))
+      }
+      const res = await fetch(withImpersonation(`/api/family/income?${params.toString()}`))
       if (!res.ok) throw new Error('Failed to fetch family income')
       return res.json()
     },

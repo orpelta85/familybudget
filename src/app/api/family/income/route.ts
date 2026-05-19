@@ -10,7 +10,14 @@ export async function GET(req: NextRequest) {
 
   const periodId = req.nextUrl.searchParams.get('period_id')
   const memberIdsParam = req.nextUrl.searchParams.get('member_ids')
-  if (!periodId || !memberIdsParam) {
+  const periodIdsParam = req.nextUrl.searchParams.get('period_ids')
+  // Range mode: caller passes the ids of every period overlapping the range.
+  const rangePeriodIds = (periodIdsParam ?? '')
+    .split(',')
+    .map(s => Number(s))
+    .filter(n => Number.isFinite(n) && n > 0)
+  const rangeMode = rangePeriodIds.length > 0
+  if ((!periodId && !rangeMode) || !memberIdsParam) {
     return NextResponse.json({ error: 'missing params' }, { status: 400 })
   }
 
@@ -58,16 +65,25 @@ export async function GET(req: NextRequest) {
 
   const privacyMap = new Map((privacyRows ?? []).map(m => [m.user_id, m.privacy_mode as string]))
 
-  // Get income for all members in this period
-  const { data: incomeRows } = await sb
+  // Get income for all members — by period, or across overlapping periods in range mode.
+  let incomeQuery = sb
     .from('income')
     .select('*')
-    .eq('period_id', Number(periodId))
     .in('user_id', memberIds)
+  if (rangeMode) {
+    incomeQuery = incomeQuery.in('period_id', rangePeriodIds)
+  } else {
+    incomeQuery = incomeQuery.eq('period_id', Number(periodId))
+  }
+  const { data: incomeRows } = await incomeQuery
 
   const result = memberIds.map(uid => {
-    const inc = (incomeRows ?? []).find(i => i.user_id === uid)
-    const total = Number(inc?.salary ?? 0) + Number(inc?.bonus ?? 0) + Number(inc?.other ?? 0)
+    // Range mode may return several rows per member — sum them all.
+    const userIncome = (incomeRows ?? []).filter(i => i.user_id === uid)
+    const salary = userIncome.reduce((s, i) => s + Number(i.salary ?? 0), 0)
+    const bonus = userIncome.reduce((s, i) => s + Number(i.bonus ?? 0), 0)
+    const other = userIncome.reduce((s, i) => s + Number(i.other ?? 0), 0)
+    const total = salary + bonus + other
     const isCurrentUser = uid === effective.userId
     const privacyMode = isCurrentUser ? 'full_access' : (privacyMap.get(uid) ?? 'summary_only')
 
@@ -75,9 +91,9 @@ export async function GET(req: NextRequest) {
       return {
         user_id: uid,
         display_name: profileMap.get(uid) ?? 'חבר/ת משפחה',
-        salary: Number(inc?.salary ?? 0),
-        bonus: Number(inc?.bonus ?? 0),
-        other: Number(inc?.other ?? 0),
+        salary,
+        bonus,
+        other,
         total,
         privacy: 'full' as const,
       }
