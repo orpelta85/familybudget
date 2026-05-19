@@ -59,9 +59,6 @@ export default function JointPage() {
     if (p) setDateRange(p.start_date, p.end_date)
   }, [isRange, dateFrom, dateTo, periods, selectedPeriodId, setDateRange])
 
-  // Don't fire queries while loading or in solo mode
-  if (familyLoading || isSolo) return <TableSkeleton rows={6} />
-
   const { data: poolIncome } = useJointPoolIncome(selectedPeriodId, familyId)
   const { data: poolExpenses } = useJointPoolExpenses(selectedPeriodId, familyId)
   // Range mode: joint_pool_income has only period_id → aggregate overlapping
@@ -94,7 +91,11 @@ export default function JointPage() {
     }
   }, [poolIncome, selectedPeriodId])
 
+  // Early returns must come AFTER every hook above (Rules of Hooks).
+  // The query hooks are disabled via `enabled` when familyId is missing,
+  // so they fire nothing while loading / in solo mode.
   if (loading || !user) return <TableSkeleton rows={5} />
+  if (familyLoading || isSolo) return <TableSkeleton rows={6} />
 
   async function handleResetPool() {
     if (!selectedPeriodId || !familyId) return
