@@ -64,6 +64,15 @@ export function sharedCatLabel(category: string): string {
   return SHARED_CAT_LABEL_MAP[category] ?? category
 }
 
+// Format an ISO date (YYYY-MM-DD) to Israeli DD/MM/YYYY without timezone drift.
+function formatExpenseDate(iso: string | null | undefined): string | null {
+  if (!iso) return null
+  const parts = iso.split('T')[0].split('-')
+  if (parts.length !== 3) return null
+  const [y, m, d] = parts
+  return `${d}/${m}/${y}`
+}
+
 // Default fixed/variable by shared category
 const SHARED_FIXED_DEFAULTS: Record<string, boolean> = {
   rent: true, property_tax: true, electricity: true, water_gas: true,
@@ -222,7 +231,13 @@ export function SharedExpenseList({
                                 </span>
                               )}
                             </div>
-                            <div className="text-[10px] text-muted-foreground">סה&quot;כ {formatCurrency(e.total_amount)} · חלקי {formatCurrency(myAmt)}</div>
+                            <div className="text-[10px] text-muted-foreground">
+                              סה&quot;כ {formatCurrency(e.total_amount)} · חלקי {formatCurrency(myAmt)}
+                              {(() => {
+                                const d = formatExpenseDate(e.expense_date)
+                                return d ? <span className="text-[var(--c-0-40)]"> · {d}</span> : null
+                              })()}
+                            </div>
                           </div>
                           <div className="flex items-center gap-1.5">
                             <span className="text-[12px] font-semibold text-[var(--accent-shared)]">{formatCurrency(myAmt)}</span>

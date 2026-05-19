@@ -5,6 +5,15 @@ import { formatCurrency } from '@/lib/utils'
 import { User, Lock, Unlock, X, Pencil, Check, Inbox, ChevronDown, Pin, PinOff } from 'lucide-react'
 import type { BudgetCategory, PersonalExpense } from '@/lib/types'
 
+// Format an ISO date (YYYY-MM-DD) to Israeli DD/MM/YYYY without timezone drift.
+function formatExpenseDate(iso: string | null | undefined): string | null {
+  if (!iso) return null
+  const parts = iso.split('T')[0].split('-')
+  if (parts.length !== 3) return null
+  const [y, m, d] = parts
+  return `${d}/${m}/${y}`
+}
+
 interface PersonalExpenseListProps {
   expenses: PersonalExpense[]
   categories: BudgetCategory[] | undefined
@@ -112,8 +121,12 @@ export function PersonalExpenseList({
 
     return (
       <div key={e.id} className="flex justify-between items-center py-2 pr-4 border-b border-[var(--c-0-15)] last:border-b-0">
-        <div>
+        <div className="min-w-0">
           <div className="text-[12px] font-medium text-[var(--c-0-75)]">{e.description || catName}</div>
+          {(() => {
+            const d = formatExpenseDate(e.expense_date)
+            return d ? <div className="text-[10px] text-[var(--c-0-40)]">{d}</div> : null
+          })()}
         </div>
         <div className="flex items-center gap-1.5">
           <span className="text-[12px] font-semibold text-[var(--c-0-65)]">{formatCurrency(e.amount)}</span>

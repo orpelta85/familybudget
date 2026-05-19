@@ -10,7 +10,10 @@ export async function GET(req: NextRequest) {
 
   const periodId = req.nextUrl.searchParams.get('period_id')
   const memberIdsParam = req.nextUrl.searchParams.get('member_ids')
-  if (!periodId || !memberIdsParam) {
+  const dateFrom = req.nextUrl.searchParams.get('date_from')
+  const dateTo = req.nextUrl.searchParams.get('date_to')
+  const rangeMode = !!dateFrom && !!dateTo
+  if ((!periodId && !rangeMode) || !memberIdsParam) {
     return NextResponse.json({ error: 'missing params' }, { status: 400 })
   }
 
@@ -58,13 +61,19 @@ export async function GET(req: NextRequest) {
 
   const privacyMap = new Map((privacyRows ?? []).map(m => [m.user_id, m.privacy_mode as string]))
 
-  // Get expenses for all members in this period
-  const { data: expenseRows } = await sb
+  // Get expenses for all members — by date range when supplied, else by period
+  let expenseQuery = sb
     .from('personal_expenses')
     .select('*, budget_categories(*)')
-    .eq('period_id', Number(periodId))
     .in('user_id', memberIds)
-    .order('created_at', { ascending: false })
+  if (rangeMode) {
+    expenseQuery = expenseQuery
+      .gte('expense_date', dateFrom!)
+      .lte('expense_date', dateTo!)
+  } else {
+    expenseQuery = expenseQuery.eq('period_id', Number(periodId))
+  }
+  const { data: expenseRows } = await expenseQuery.order('created_at', { ascending: false })
 
   // Group by user — respect privacy settings
   const result = memberIds.map(uid => {

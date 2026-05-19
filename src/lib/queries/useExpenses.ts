@@ -107,12 +107,33 @@ export interface FamilyMemberExpenses {
   privacy?: 'full' | 'summary' | 'hidden'
 }
 
-export function useFamilyPersonalExpenses(periodId: number | undefined, memberIds: string[], enabled: boolean) {
+/**
+ * Family members' personal expenses.
+ * - Month mode: pass `periodId`, filtering happens by `period_id`.
+ * - Range mode: pass `dateRange` ({ from, to }), filtering happens by `expense_date`.
+ *   When a range is supplied it takes precedence over `periodId`.
+ */
+export function useFamilyPersonalExpenses(
+  periodId: number | undefined,
+  memberIds: string[],
+  enabled: boolean,
+  dateRange?: { from: string; to: string },
+) {
+  const rangeActive = !!dateRange?.from && !!dateRange?.to
   return useQuery<FamilyMemberExpenses[]>({
-    queryKey: ['family_personal_expenses', periodId, memberIds],
-    enabled: !!periodId && memberIds.length > 0 && enabled,
+    queryKey: rangeActive
+      ? ['family_personal_expenses', 'range', dateRange!.from, dateRange!.to, memberIds]
+      : ['family_personal_expenses', periodId, memberIds],
+    enabled: (rangeActive || !!periodId) && memberIds.length > 0 && enabled,
     queryFn: async () => {
-      const res = await fetch(withImpersonation(`/api/family/expenses?period_id=${periodId}&member_ids=${memberIds.join(',')}`))
+      const params = new URLSearchParams({ member_ids: memberIds.join(',') })
+      if (rangeActive) {
+        params.set('date_from', dateRange!.from)
+        params.set('date_to', dateRange!.to)
+      } else {
+        params.set('period_id', String(periodId))
+      }
+      const res = await fetch(withImpersonation(`/api/family/expenses?${params.toString()}`))
       if (!res.ok) throw new Error('Failed to fetch family expenses')
       return res.json()
     },

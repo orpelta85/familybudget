@@ -84,7 +84,10 @@ export function useUpdateSinkingFund() {
       const { error } = await sb.from('sinking_funds').update(update).eq('id', id)
       if (error) throw error
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['sinking_funds'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['sinking_funds'] })
+      qc.invalidateQueries({ queryKey: ['family_sinking_funds'] })
+    },
   })
 }
 
@@ -100,7 +103,10 @@ export function useAddSinkingFund() {
       if (error) throw error
       return data
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['sinking_funds'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['sinking_funds'] })
+      qc.invalidateQueries({ queryKey: ['family_sinking_funds'] })
+    },
   })
 }
 
@@ -115,7 +121,9 @@ export function useDeleteSinkingFund() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['sinking_funds'] })
+      qc.invalidateQueries({ queryKey: ['family_sinking_funds'] })
       qc.invalidateQueries({ queryKey: ['all_sinking_transactions'] })
+      qc.invalidateQueries({ queryKey: ['family_sinking_transactions'] })
     },
   })
 }

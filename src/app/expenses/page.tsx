@@ -55,7 +55,7 @@ export default function ExpensesPage() {
   const splitFrac = useSplitFraction(user?.id)
   const { viewMode } = useFamilyView()
   const familyMemberIds = useMemo(() => members.map(m => m.user_id), [members])
-  const { data: familyExpenses } = useFamilyPersonalExpenses(selectedPeriodId, familyMemberIds, viewMode !== 'personal')
+  const { data: familyExpenses } = useFamilyPersonalExpenses(selectedPeriodId, familyMemberIds, viewMode !== 'personal', expenseDateRange)
   const { data: memberProfiles } = useFamilyMemberProfiles(familyMemberIds, !isSolo)
 
   useEffect(() => {
@@ -214,10 +214,14 @@ export default function ExpensesPage() {
     expenseDate: string
     paidBy: string
   }) {
-    if (!user || !selectedPeriodId) return
+    if (!user) return
     if (!data.amount || Number(data.amount) <= 0) { toast.error('הזן סכום'); return }
     const amt = Number(data.amount)
     const expDate = data.expenseDate || new Date().toISOString().split('T')[0]
+    // Resolve the period from the chosen date so the expense lands in the
+    // correct month — works in both month and date-range view modes.
+    const targetPeriodId = periods?.find(p => p.start_date <= expDate && expDate <= p.end_date)?.id ?? selectedPeriodId
+    if (!targetPeriodId) { toast.error('לא נמצא מחזור מתאים לתאריך'); return }
     try {
       if (data.expType === 'personal') {
         const catId = data.useCustomCat ? null : (data.categoryId ? Number(data.categoryId) : null)
@@ -225,7 +229,7 @@ export default function ExpensesPage() {
         const resolvedCatId = catId ?? categories?.[0]?.id ?? 1
         const desc = data.detailMode ? data.description.trim() : (data.useCustomCat ? data.customCat.trim() : (categories?.find(c => c.id === resolvedCatId)?.name ?? ''))
         await addExpense.mutateAsync({
-          period_id: selectedPeriodId, user_id: user.id,
+          period_id: targetPeriodId, user_id: user.id,
           category_id: resolvedCatId,
           amount: amt,
           description: desc,
@@ -241,7 +245,7 @@ export default function ExpensesPage() {
         const notes = data.detailMode && data.description.trim()
           ? `${label} - ${data.description.trim()}`
           : label
-        await upsertShared.mutateAsync({ period_id: selectedPeriodId, category: resolvedCategory as SharedCategory, total_amount: amt, notes, family_id: familyId, expense_date: expDate, paid_by: data.paidBy || user.id })
+        await upsertShared.mutateAsync({ period_id: targetPeriodId, category: resolvedCategory as SharedCategory, total_amount: amt, notes, family_id: familyId, expense_date: expDate, paid_by: data.paidBy || user.id })
       }
       toast.success('הוצאה נוספה')
     } catch (e) { console.error('Add expense:', e); toast.error('שגיאה בהוספה') }
@@ -1094,20 +1098,20 @@ export default function ExpensesPage() {
         </div>
       )}
 
-      {/* ── Family View ── month mode only; range mode always uses the personal list view ── */}
-      {viewMode !== 'personal' && !isRange && (
+      {/* ── Family View ── works in both month and range mode (toggle-driven) ── */}
+      {viewMode !== 'personal' && (
         <FamilyExpensesView
           familyExpenses={familyExpenses}
           sharedExp={sharedExp}
           splitFrac={splitFrac}
-          sinkingMonthly={sinkingMonthly}
+          sinkingMonthly={isRange ? 0 : sinkingMonthly}
           formatCurrency={formatCurrency}
         />
       )}
 
       {/* ── Personal View ──────────────────────────────────────────────────
-          Shown for the personal family-view, and always in range mode. ── */}
-      {(viewMode === 'personal' || isRange) && <>{/* Personal / Range View */}
+          Shown for the personal family-view (month or range). ── */}
+      {viewMode === 'personal' && <>{/* Personal / Range View */}
 
       <ExcelImportModal
         importRows={importRows}
@@ -1137,23 +1141,21 @@ export default function ExpensesPage() {
         setImportPaidBy={setImportPaidBy}
       />
 
-      <div className={isRange ? 'items-start' : 'grid-2 items-start'}>
+      <div className="grid-2 items-start">
 
-        {/* ── Add form ── hidden in range mode (an expense needs a single period) ── */}
-        {!isRange && (
-          <ExpenseForm
-            categories={categories}
-            funds={funds}
-            allSinkingTx={allSinkingTx}
-            selectedPeriodId={selectedPeriodId}
-            splitFrac={splitFrac}
-            isPending={isPending}
-            isSolo={isSolo}
-            paidByOptions={paidByOptions}
-            currentUserId={user.id}
-            onAdd={handleAdd}
-          />
-        )}
+        {/* ── Add form ── always shown; the chosen date resolves the period ── */}
+        <ExpenseForm
+          categories={categories}
+          funds={funds}
+          allSinkingTx={allSinkingTx}
+          selectedPeriodId={selectedPeriodId}
+          splitFrac={splitFrac}
+          isPending={isPending}
+          isSolo={isSolo}
+          paidByOptions={paidByOptions}
+          currentUserId={user.id}
+          onAdd={handleAdd}
+        />
 
         {/* ── Lists ──────────────────────────────────────────────────────────── */}
         <div>
