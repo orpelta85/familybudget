@@ -10,6 +10,9 @@ node_modules/
 /*.jpeg
 /*.jpg
 
+# TypeScript incremental build cache
+*.tsbuildinfo
+
 # temp/generated files
 .tmp-*
 _gen_tmp/
