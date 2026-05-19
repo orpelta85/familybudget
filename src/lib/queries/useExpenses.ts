@@ -4,18 +4,37 @@ import { withImpersonation } from '@/lib/impersonate-client'
 import { cleanMerchantPattern } from '@/lib/categorization-engine'
 import type { PersonalExpense, BudgetCategory } from '@/lib/types'
 
-export function usePersonalExpenses(periodId: number | undefined, userId: string | undefined) {
+/**
+ * Personal expenses for the expenses page.
+ * - Month mode: pass `periodId`, filtering happens by `period_id` (default behavior).
+ * - Range mode: pass `dateRange` ({ from, to }), filtering happens by `expense_date`.
+ *   When a range is supplied it takes precedence over `periodId`.
+ */
+export function usePersonalExpenses(
+  periodId: number | undefined,
+  userId: string | undefined,
+  dateRange?: { from: string; to: string },
+) {
+  const rangeActive = !!dateRange?.from && !!dateRange?.to
   return useQuery<PersonalExpense[]>({
-    queryKey: ['personal_expenses', periodId, userId],
-    enabled: !!periodId && !!userId,
+    queryKey: rangeActive
+      ? ['personal_expenses', 'range', dateRange!.from, dateRange!.to, userId]
+      : ['personal_expenses', periodId, userId],
+    enabled: !!userId && (rangeActive || !!periodId),
     queryFn: async () => {
       const sb = createClient()
-      const { data, error } = await sb
+      let query = sb
         .from('personal_expenses')
         .select('*, budget_categories(*)')
-        .eq('period_id', periodId!)
         .eq('user_id', userId!)
-        .order('created_at', { ascending: false })
+      if (rangeActive) {
+        query = query
+          .gte('expense_date', dateRange!.from)
+          .lte('expense_date', dateRange!.to)
+      } else {
+        query = query.eq('period_id', periodId!)
+      }
+      const { data, error } = await query.order('created_at', { ascending: false })
       if (error) throw error
       return data
     },

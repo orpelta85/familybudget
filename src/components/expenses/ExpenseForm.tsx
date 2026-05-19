@@ -27,6 +27,11 @@ const SHARED_CATEGORIES: { value: string; label: string }[] = [
 
 export { SHARED_CATEGORIES }
 
+export interface PaidByOption {
+  user_id: string
+  name: string
+}
+
 interface ExpenseFormProps {
   categories: BudgetCategory[] | undefined
   funds: SinkingFund[] | undefined
@@ -35,6 +40,8 @@ interface ExpenseFormProps {
   splitFrac: number
   isPending: boolean
   isSolo?: boolean
+  paidByOptions?: PaidByOption[]
+  currentUserId?: string
   onAdd: (data: {
     expType: ExpType
     categoryId: string
@@ -45,10 +52,14 @@ interface ExpenseFormProps {
     amount: string
     detailMode: boolean
     description: string
+    expenseDate: string
+    paidBy: string
   }) => void
 }
 
-export function ExpenseForm({ categories, funds, allSinkingTx, selectedPeriodId, splitFrac, isPending, isSolo, onAdd }: ExpenseFormProps) {
+const today = () => new Date().toISOString().split('T')[0]
+
+export function ExpenseForm({ categories, funds, allSinkingTx, selectedPeriodId, splitFrac, isPending, isSolo, paidByOptions, currentUserId, onAdd }: ExpenseFormProps) {
   const [expType, setExpType] = useState<ExpType>('personal')
   const [categoryId, setCategoryId] = useState('')
   const [customCat, setCustomCat] = useState('')
@@ -58,14 +69,20 @@ export function ExpenseForm({ categories, funds, allSinkingTx, selectedPeriodId,
   const [amount, setAmount] = useState('')
   const [detailMode, setDetailMode] = useState(true)
   const [description, setDescription] = useState('')
+  const [expenseDate, setExpenseDate] = useState(today)
+  const [paidByOverride, setPaidByOverride] = useState('')
 
   const splitPctLabel = Math.round(splitFrac * 100)
   const totalSinking = (funds ?? []).reduce((s, f) => s + f.monthly_allocation, 0)
 
+  // Effective payer: user's explicit choice, otherwise default to the current user
+  const paidBy = paidByOverride || currentUserId || ''
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
-    onAdd({ expType, categoryId, customCat, useCustomCat, sharedLabel, sharedCategory, amount, detailMode, description })
-    setAmount(''); setSharedLabel(''); setCustomCat(''); setCategoryId(''); setSharedCategory(''); setDescription('')
+    onAdd({ expType, categoryId, customCat, useCustomCat, sharedLabel, sharedCategory, amount, detailMode, description, expenseDate, paidBy })
+    setAmount(''); setSharedLabel(''); setCustomCat(''); setCategoryId(''); setSharedCategory(''); setDescription(''); setExpenseDate(today())
+    setPaidByOverride('')
   }
 
   return (
@@ -158,6 +175,27 @@ export function ExpenseForm({ categories, funds, allSinkingTx, selectedPeriodId,
             </div>
           )}
         </div>
+
+        {/* Expense date */}
+        <div>
+          <label htmlFor="expense-date" className="text-[11px] text-muted-foreground block mb-1 font-medium">תאריך ההוצאה</label>
+          <input id="expense-date" type="date" value={expenseDate} onChange={e => setExpenseDate(e.target.value)}
+            required
+            className="w-full bg-secondary border border-[var(--border-light)] rounded-lg px-3 py-2 text-inherit text-[13px] outline-none" />
+        </div>
+
+        {/* Paid by — shared expenses only */}
+        {expType === 'shared' && (paidByOptions?.length ?? 0) > 0 && (
+          <div>
+            <label htmlFor="expense-paidby" className="text-[11px] text-muted-foreground block mb-1 font-medium">שולם ע&quot;י</label>
+            <select id="expense-paidby" value={paidBy} onChange={e => setPaidByOverride(e.target.value)}
+              className="w-full bg-secondary border border-[var(--border-light)] rounded-lg px-3 py-2 text-inherit text-[13px] outline-none">
+              {paidByOptions!.map(o => (
+                <option key={o.user_id} value={o.user_id}>{o.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
 
         <button type="submit" disabled={isPending} className={`btn-hover border-none rounded-lg py-2.5 font-semibold text-[13px] cursor-pointer text-primary-foreground ${
           expType === 'personal' ? 'bg-primary' : 'bg-[var(--c-purple-0-55)]'

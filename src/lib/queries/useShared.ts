@@ -32,18 +32,37 @@ export function useDeleteAllPeriodSharedExpenses() {
   })
 }
 
-export function useSharedExpenses(periodId: number | undefined, familyId: string | undefined) {
+/**
+ * Shared expenses for the expenses page.
+ * - Month mode: pass `periodId`, filtering happens by `period_id` (default behavior).
+ * - Range mode: pass `dateRange` ({ from, to }), filtering happens by `expense_date`.
+ *   When a range is supplied it takes precedence over `periodId`.
+ */
+export function useSharedExpenses(
+  periodId: number | undefined,
+  familyId: string | undefined,
+  dateRange?: { from: string; to: string },
+) {
+  const rangeActive = !!dateRange?.from && !!dateRange?.to
   return useQuery<SharedExpense[]>({
-    queryKey: ['shared_expenses', periodId, familyId],
-    enabled: !!periodId && !!familyId,
+    queryKey: rangeActive
+      ? ['shared_expenses', 'range', dateRange!.from, dateRange!.to, familyId]
+      : ['shared_expenses', periodId, familyId],
+    enabled: !!familyId && (rangeActive || !!periodId),
     queryFn: async () => {
       const sb = createClient()
-      const { data, error } = await sb
+      let query = sb
         .from('shared_expenses')
         .select('*')
-        .eq('period_id', periodId!)
         .eq('family_id', familyId!)
-        .order('created_at')
+      if (rangeActive) {
+        query = query
+          .gte('expense_date', dateRange!.from)
+          .lte('expense_date', dateRange!.to)
+      } else {
+        query = query.eq('period_id', periodId!)
+      }
+      const { data, error } = await query.order('created_at')
       if (error) throw error
       return data
     },
@@ -95,9 +114,11 @@ export function usePaginatedSharedExpenses(
 export function useUpdateSharedExpense() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ id, period_id, category, total_amount, notes, family_id }: { id: number; period_id: number; category: string; total_amount: number; notes?: string; family_id?: string }) => {
+    mutationFn: async ({ id, period_id, category, total_amount, notes, family_id, paid_by }: { id: number; period_id: number; category: string; total_amount: number; notes?: string; family_id?: string; paid_by?: string | null }) => {
       const sb = createClient()
-      let query = sb.from('shared_expenses').update({ category, total_amount, notes }).eq('id', id)
+      const patch: { category: string; total_amount: number; notes?: string; paid_by?: string | null } = { category, total_amount, notes }
+      if (paid_by !== undefined) patch.paid_by = paid_by
+      let query = sb.from('shared_expenses').update(patch).eq('id', id)
       if (family_id) query = query.eq('family_id', family_id)
       const { error } = await query
       if (error) throw error

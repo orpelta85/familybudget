@@ -87,11 +87,13 @@ interface SharedExpenseListProps {
   onToggleLock: (exp: { id: number; category: string; total_amount: number; notes?: string | null }) => void
   onToggleFixed?: (exp: SharedExpense) => void
   onConvertToPersonal?: (exp: SharedExpense) => void
+  paidByNameMap?: Map<string, string>
 }
 
 export function SharedExpenseList({
   expenses, splitFrac, totalSharedMy,
   isLocked, onEdit, onDelete, onToggleLock, onToggleFixed, onConvertToPersonal,
+  paidByNameMap,
 }: SharedExpenseListProps) {
   const [editingShared, setEditingShared] = useState<{ id: number; category: string; totalAmount: string; notes: string } | null>(null)
   const [openCategories, setOpenCategories] = useState<Set<string>>(new Set())
@@ -203,10 +205,23 @@ export function SharedExpenseList({
                         )
                       }
 
+                      const paidByName = e.paid_by ? paidByNameMap?.get(e.paid_by) : undefined
+
                       return (
                         <div key={e.id} className="flex justify-between items-center py-2 pr-4 border-b border-[var(--c-0-15)] last:border-b-0">
-                          <div>
-                            <div className="text-[12px] font-medium text-[var(--c-0-75)]">{label}</div>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="text-[12px] font-medium text-[var(--c-0-75)]">{label}</span>
+                              {e.paid_by ? (
+                                <span className="inline-flex items-center text-[9px] px-1.5 py-0.5 rounded font-medium bg-[var(--c-purple-0-18)] text-[var(--c-purple-0-75)]">
+                                  שולם: {paidByName ?? 'חבר/ת משפחה'}
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center text-[9px] px-1.5 py-0.5 rounded font-medium bg-[var(--c-0-14)] text-[var(--c-0-40)]">
+                                  שולם: לא ידוע
+                                </span>
+                              )}
+                            </div>
                             <div className="text-[10px] text-muted-foreground">סה&quot;כ {formatCurrency(e.total_amount)} · חלקי {formatCurrency(myAmt)}</div>
                           </div>
                           <div className="flex items-center gap-1.5">

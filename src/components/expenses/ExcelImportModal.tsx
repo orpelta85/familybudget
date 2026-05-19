@@ -35,26 +35,21 @@ interface ExcelImportModalProps {
   onAcceptAllSuggestions?: () => void
   parsingFiles?: boolean
   parseProgress?: { current: number; total: number } | null
+  paidByOptions?: Array<{ user_id: string; name: string }>
+  importPaidBy?: string
+  setImportPaidBy?: (v: string) => void
 }
 
+// normalizeDate now returns clean ISO (YYYY-MM-DD). Display as Israeli DD/MM
+// without re-parsing through Date (avoids timezone + MM/DD locale bugs).
 function formatDate(d: string | undefined): string {
   if (!d) return '-'
-  // Excel serial date (e.g. 46174.00 or 46174)
-  const num = parseFloat(d)
-  if (!isNaN(num) && num > 30000 && num < 60000 && /^\d{4,5}(\.\d+)?$/.test(d.trim())) {
-    const epoch = new Date(1899, 11, 30)
-    const dt = new Date(epoch.getTime() + num * 86400000)
-    return `${dt.getDate()}/${dt.getMonth() + 1}`
-  }
-  // ISO date string or Date object toString
-  const iso = Date.parse(d)
-  if (!isNaN(iso)) {
-    const dt = new Date(iso)
-    return `${dt.getDate()}/${dt.getMonth() + 1}`
-  }
-  // DD/MM/YYYY, DD.MM.YYYY, DD-MM-YYYY
+  // ISO date string (YYYY-MM-DD) — primary path
+  const iso = d.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/)
+  if (iso) return `${Number(iso[3])}/${Number(iso[2])}`
+  // DD/MM/YYYY, DD.MM.YYYY, DD-MM-YYYY fallback
   const m = d.match(/(\d{1,2})[/.\-](\d{1,2})[/.\-](\d{2,4})/)
-  if (m) return `${m[1]}/${m[2]}`
+  if (m) return `${Number(m[1])}/${Number(m[2])}`
   return d.substring(0, 8)
 }
 
@@ -65,6 +60,7 @@ export function ExcelImportModal({
   isDragging, setIsDragging, fileRef,
   onDrop, onImportSave, showTextInput, onAcceptAllSuggestions,
   parsingFiles = false, parseProgress,
+  paidByOptions, importPaidBy, setImportPaidBy,
 }: ExcelImportModalProps) {
   const [bulkCategory, setBulkCategory] = useState('')
   const [selectedRows, setSelectedRows] = useState<Set<number>>(new Set())
@@ -185,6 +181,22 @@ export function ExcelImportModal({
               </div>
             )
           })()}
+
+          {/* Paid-by selector — applies to all shared rows in this batch */}
+          {(paidByOptions?.length ?? 0) > 0 && setImportPaidBy && (
+            <div className="flex flex-wrap items-center gap-2 mb-3 bg-[var(--c-purple-0-18)] rounded-lg px-3 py-2">
+              <label htmlFor="import-paidby" className="text-[12px] text-[var(--c-purple-0-75)] font-semibold">שולם ע&quot;י (להוצאות משותפות)</label>
+              <select
+                id="import-paidby"
+                value={importPaidBy ?? ''}
+                onChange={e => setImportPaidBy(e.target.value)}
+                className="bg-[var(--c-0-20)] border border-[var(--border-light)] rounded-md px-2 py-1 text-[11px] text-inherit cursor-pointer">
+                {paidByOptions!.map(o => (
+                  <option key={o.user_id} value={o.user_id}>{o.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* Bulk actions bar */}
           {selectedRows.size > 0 && (

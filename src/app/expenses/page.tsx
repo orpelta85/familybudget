@@ -3,6 +3,8 @@
 import { useUser } from '@/lib/queries/useUser'
 import { usePeriods, useCurrentPeriod } from '@/lib/queries/usePeriods'
 import { usePersonalExpenses, useBudgetCategories, useAddExpense, useDeleteExpense, useUpdateExpense, useToggleExpenseFixed, useUpdateCategoryType, useAddBudgetCategory, useCategoryRules, useSaveCategoryRule, useUpdateRuleConfidence, useGlobalMappings, findMatchingRule, useFamilyPersonalExpenses } from '@/lib/queries/useExpenses'
+import { useFamilyMemberProfiles } from '@/lib/queries/useFamily'
+import { withImpersonation } from '@/lib/impersonate-client'
 import { categorizeTransaction } from '@/lib/categorization-engine'
 import type { MatchResult } from '@/lib/categorization-engine'
 import { useSharedExpenses, useUpsertSharedExpense, useDeleteSharedExpense, useUpdateSharedExpense, useToggleSharedFixed } from '@/lib/queries/useShared'
@@ -20,6 +22,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState, useRef, useMemo } from 'react'
 import { useFamilyView } from '@/contexts/FamilyViewContext'
 import { PeriodSelector } from '@/components/layout/PeriodSelector'
+import { PeriodModeToggle } from '@/components/layout/PeriodModeToggle'
 import { toast } from 'sonner'
 import { Receipt, Upload, Download, FileSpreadsheet, Trash2, X, Pin } from 'lucide-react'
 import type { RawExpenseRow } from '@/lib/excel-import'
@@ -30,10 +33,11 @@ import { PAGE_TIPS } from '@/lib/page-tips'
 import { TableSkeleton } from '@/components/ui/Skeleton'
 
 // Extracted components
-import { ExpenseForm, type ExpType } from '@/components/expenses/ExpenseForm'
+import { ExpenseForm, type ExpType, type PaidByOption } from '@/components/expenses/ExpenseForm'
 import { ExpenseStats } from '@/components/expenses/ExpenseStats'
 import { PersonalExpenseList } from '@/components/expenses/PersonalExpenseList'
 import { SharedExpenseList, sharedCatLabel, isSharedExpenseFixed } from '@/components/expenses/SharedExpenseList'
+import { SettlementCard } from '@/components/expenses/SettlementCard'
 import { ExcelImportModal, type ImportRow } from '@/components/expenses/ExcelImportModal'
 import { FamilyExpensesView } from '@/components/expenses/FamilyExpensesView'
 
@@ -42,13 +46,17 @@ export default function ExpensesPage() {
   const router = useRouter()
   const { data: periods } = usePeriods()
   const currentPeriod = useCurrentPeriod()
-  const { selectedPeriodId, setSelectedPeriodId } = useSharedPeriod()
+  const { selectedPeriodId, setSelectedPeriodId, viewMode: periodMode, setViewMode: setPeriodMode, dateFrom, dateTo, setDateRange } = useSharedPeriod()
+  const isRange = periodMode === 'range'
+  // Date range passed to the expense queries — only active in range mode
+  const expenseDateRange = isRange && dateFrom && dateTo ? { from: dateFrom, to: dateTo } : undefined
   const fileRef = useRef<HTMLInputElement>(null)
   const { familyId, members, isSolo } = useFamilyContext()
   const splitFrac = useSplitFraction(user?.id)
   const { viewMode } = useFamilyView()
   const familyMemberIds = useMemo(() => members.map(m => m.user_id), [members])
   const { data: familyExpenses } = useFamilyPersonalExpenses(selectedPeriodId, familyMemberIds, viewMode !== 'personal')
+  const { data: memberProfiles } = useFamilyMemberProfiles(familyMemberIds, !isSolo)
 
   useEffect(() => {
     if (currentPeriod && !selectedPeriodId) setSelectedPeriodId(currentPeriod.id)
@@ -57,13 +65,21 @@ export default function ExpensesPage() {
     if (!loading && !user) router.push('/login')
   }, [user, loading, router])
 
+  // Default the date range to the currently selected period's start/end
+  // the first time range mode is used (or whenever the range is still empty).
+  useEffect(() => {
+    if (!isRange || (dateFrom && dateTo)) return
+    const p = periods?.find(pp => pp.id === selectedPeriodId)
+    if (p) setDateRange(p.start_date, p.end_date)
+  }, [isRange, dateFrom, dateTo, periods, selectedPeriodId, setDateRange])
+
   const selectedYear = useMemo(() => {
     if (!periods || !selectedPeriodId) return undefined
     return periods.find(p => p.id === selectedPeriodId)?.year_number
   }, [periods, selectedPeriodId])
 
-  const { data: personalExp } = usePersonalExpenses(selectedPeriodId, user?.id)
-  const { data: sharedExp }   = useSharedExpenses(selectedPeriodId, isSolo ? undefined : familyId)
+  const { data: personalExp } = usePersonalExpenses(selectedPeriodId, user?.id, expenseDateRange)
+  const { data: sharedExp }   = useSharedExpenses(selectedPeriodId, isSolo ? undefined : familyId, expenseDateRange)
   const { data: categories }  = useBudgetCategories(user?.id)
   const { data: funds }       = useSinkingFunds(user?.id)
   const { data: allSinkingTx } = useAllSinkingTransactions(user?.id)
@@ -105,9 +121,15 @@ export default function ExpensesPage() {
   const [parsedFormats, setParsedFormats] = useState<string[]>([])
   const [importDateFrom, setImportDateFrom] = useState('')
   const [importDateTo, setImportDateTo] = useState('')
+  const [importPaidBy, setImportPaidBy] = useState('')
 
   // Reset expenses dialog state
   const [showResetDialog, setShowResetDialog] = useState(false)
+  const [resetTarget, setResetTarget] = useState<'personal' | 'shared' | 'both'>('both')
+  const [resetPersonalScope, setResetPersonalScope] = useState<'me' | 'partner' | 'both'>('me')
+  const [resetDateFrom, setResetDateFrom] = useState('')
+  const [resetDateTo, setResetDateTo] = useState('')
+  const [resetting, setResetting] = useState(false)
 
   // Inline text input modal (replaces native prompt)
   const [textInputModal, setTextInputModal] = useState<{ title: string; resolve: (value: string | null) => void } | null>(null)
@@ -125,6 +147,33 @@ export default function ExpensesPage() {
     if (!personalExp?.length) return []
     return [...personalExp].sort((a, b) => b.amount - a.amount)
   }, [personalExp])
+
+  // Family members for the "paid by" selector — current user first, then partner.
+  // Falls back to "אני" / "בן/בת הזוג" when a profile name is not available.
+  const paidByOptions = useMemo<PaidByOption[]>(() => {
+    if (isSolo || !user) return []
+    const opts: PaidByOption[] = []
+    const meName = memberProfiles?.find(p => p.user_id === user.id)?.name?.trim()
+    opts.push({ user_id: user.id, name: meName || 'אני' })
+    for (const id of familyMemberIds) {
+      if (id === user.id) continue
+      const name = memberProfiles?.find(p => p.user_id === id)?.name?.trim()
+      opts.push({ user_id: id, name: name || 'בן/בת הזוג' })
+    }
+    return opts
+  }, [isSolo, user, memberProfiles, familyMemberIds])
+
+  // Map of user_id -> display name for "paid by" badges
+  const paidByNameMap = useMemo(() => {
+    const map = new Map<string, string>()
+    for (const o of paidByOptions) map.set(o.user_id, o.name)
+    return map
+  }, [paidByOptions])
+
+  // Default the Excel-import "paid by" selector to the current user
+  useEffect(() => {
+    if (!importPaidBy && user) setImportPaidBy(user.id)
+  }, [importPaidBy, user])
 
   // Sort shared expenses by my share descending
   const sortedSharedExp = useMemo(() => {
@@ -162,10 +211,13 @@ export default function ExpensesPage() {
     amount: string
     detailMode: boolean
     description: string
+    expenseDate: string
+    paidBy: string
   }) {
     if (!user || !selectedPeriodId) return
     if (!data.amount || Number(data.amount) <= 0) { toast.error('הזן סכום'); return }
     const amt = Number(data.amount)
+    const expDate = data.expenseDate || new Date().toISOString().split('T')[0]
     try {
       if (data.expType === 'personal') {
         const catId = data.useCustomCat ? null : (data.categoryId ? Number(data.categoryId) : null)
@@ -177,7 +229,7 @@ export default function ExpensesPage() {
           category_id: resolvedCatId,
           amount: amt,
           description: desc,
-          expense_date: new Date().toISOString().split('T')[0],
+          expense_date: expDate,
         })
       } else {
         if (!familyId) { toast.error('לא משויך למשפחה'); return }
@@ -189,7 +241,7 @@ export default function ExpensesPage() {
         const notes = data.detailMode && data.description.trim()
           ? `${label} - ${data.description.trim()}`
           : label
-        await upsertShared.mutateAsync({ period_id: selectedPeriodId, category: resolvedCategory as SharedCategory, total_amount: amt, notes, family_id: familyId })
+        await upsertShared.mutateAsync({ period_id: selectedPeriodId, category: resolvedCategory as SharedCategory, total_amount: amt, notes, family_id: familyId, expense_date: expDate, paid_by: data.paidBy || user.id })
       }
       toast.success('הוצאה נוספה')
     } catch (e) { console.error('Add expense:', e); toast.error('שגיאה בהוספה') }
@@ -533,6 +585,19 @@ export default function ExpensesPage() {
       const today = new Date().toISOString().split('T')[0]
       const sb = createClient()
 
+      // Resolve the correct period for a given expense date (ISO YYYY-MM-DD).
+      // A row belongs to the period where start_date <= date <= end_date.
+      // Falls back to the selected period if the date matches no period.
+      const unmatchedDates: string[] = []
+      const resolvePeriodId = (isoDate: string | undefined): number => {
+        if (isoDate && periods) {
+          const match = periods.find(p => p.start_date <= isoDate && isoDate <= p.end_date)
+          if (match) return match.id
+          if (isoDate) unmatchedDates.push(isoDate)
+        }
+        return selectedPeriodId
+      }
+
       // Auto-create new categories from Excel (use Supabase directly for reliability)
       const newCatNames = [...new Set(valid.filter(r => r.categoryId.startsWith('__new__')).map(r => r.categoryId.replace('__new__', '')))]
       const createdCatMap: Record<string, number> = {}
@@ -588,7 +653,8 @@ export default function ExpensesPage() {
 
       // Resolve categories for all rows
       const personalRows: { period_id: number; user_id: string; category_id: number; amount: number; description: string; expense_date: string }[] = []
-      const sharedRows: { period_id: number; category: string; total_amount: number; notes: string; family_id: string }[] = []
+      const sharedRows: { period_id: number; category: string; total_amount: number; notes: string; family_id: string; expense_date: string; paid_by: string }[] = []
+      const importPaidByResolved = importPaidBy || user.id
       const fundTxRows: { fund_id: number; period_id: number; amount: number; description: string; transaction_date: string }[] = []
 
       for (const r of valid) {
@@ -605,6 +671,11 @@ export default function ExpensesPage() {
           const miscCat = categories?.find(c => c.name === 'שונות')
           resolvedCatId = miscCat?.id ?? categories?.[0]?.id ?? 1
         }
+
+        // Real expense date from the Excel row (normalizeDate → ISO), with the
+        // matching period. Falls back to today / selected period when missing.
+        const rowDate = r.date || today
+        const rowPeriodId = resolvePeriodId(r.date)
 
         if (r.is_shared && familyId) {
           // Map Hebrew category name to shared category enum value
@@ -635,14 +706,15 @@ export default function ExpensesPage() {
             sharedNotes = `[${catName}] ${r.description}`
           }
           sharedRows.push({
-            period_id: selectedPeriodId, category: sharedCat,
+            period_id: rowPeriodId, category: sharedCat,
             total_amount: r.amount, notes: sharedNotes, family_id: familyId,
+            expense_date: rowDate, paid_by: importPaidByResolved,
           })
         } else {
           personalRows.push({
-            period_id: selectedPeriodId, user_id: user.id,
+            period_id: rowPeriodId, user_id: user.id,
             category_id: resolvedCatId, amount: r.amount,
-            description: r.description, expense_date: today,
+            description: r.description, expense_date: rowDate,
           })
         }
         const rawFundName = r.fund_name?.startsWith('__new_fund__') ? r.fund_name.replace('__new_fund__', '') : r.fund_name
@@ -651,8 +723,8 @@ export default function ExpensesPage() {
           const fundId = fund?.id ?? createdFundMap[rawFundName]
           if (fundId) {
             fundTxRows.push({
-              fund_id: fundId, period_id: selectedPeriodId,
-              amount: -r.amount, description: r.description, transaction_date: today,
+              fund_id: fundId, period_id: rowPeriodId,
+              amount: -r.amount, description: r.description, transaction_date: rowDate,
             })
           }
         }
@@ -671,6 +743,10 @@ export default function ExpensesPage() {
             source: 'user',
           })
         }
+      }
+
+      if (unmatchedDates.length) {
+        console.warn(`Import: ${unmatchedDates.length} rows had dates outside all periods — assigned to selected period as fallback:`, [...new Set(unmatchedDates)])
       }
 
       // Batch insert (much faster than one-by-one)
@@ -822,37 +898,52 @@ export default function ExpensesPage() {
 
   function handleResetExpenses() {
     if (!user || !selectedPeriodId) return
-    const hasPersonal = (personalExp ?? []).length > 0
-    const hasShared = (sharedExp ?? []).length > 0
-    if (!hasPersonal && !hasShared) { toast.info('אין הוצאות למחיקה'); return }
-
-    if (hasPersonal && hasShared) {
-      setShowResetDialog(true)
-    } else if (hasShared && !hasPersonal) {
-      doResetExpenses('shared')
-    } else {
-      doResetExpenses('personal')
-    }
+    // Default the date range to the selected period's bounds
+    setResetDateFrom(selectedPeriod?.start_date ?? '')
+    setResetDateTo(selectedPeriod?.end_date ?? '')
+    setResetTarget(isSolo ? 'personal' : 'both')
+    setResetPersonalScope('me')
+    setShowResetDialog(true)
   }
 
-  async function doResetExpenses(resetTarget: 'personal' | 'shared' | 'both') {
-    if (!user || !selectedPeriodId) return
-    setShowResetDialog(false)
-    const labels = { personal: 'אישיות', shared: 'משותפות', both: 'אישיות + משותפות' }
-    if (!(await confirm({ message: `למחוק את כל ההוצאות ה${labels[resetTarget]} של המחזור הנוכחי?` }))) return
+  async function doResetExpenses() {
+    if (!user || !selectedPeriodId || resetting) return
+    if (!resetDateFrom || !resetDateTo) { toast.error('בחר טווח תאריכים'); return }
+    if (resetDateFrom > resetDateTo) { toast.error('טווח תאריכים לא תקין'); return }
 
+    const targetLabel = resetTarget === 'personal' ? 'אישיות' : resetTarget === 'shared' ? 'משותפות' : 'אישיות + משותפות'
+    if (!(await confirm({ message: `למחוק את ההוצאות ה${targetLabel} בטווח ${resetDateFrom} עד ${resetDateTo}?` }))) return
+
+    setResetting(true)
     try {
-      const sb = createClient()
-      if (resetTarget === 'personal' || resetTarget === 'both') {
-        await sb.from('personal_expenses').delete().eq('period_id', selectedPeriodId).eq('user_id', user.id)
-        queryClient.invalidateQueries({ queryKey: ['personal_expenses', selectedPeriodId, user.id] })
+      const res = await fetch(withImpersonation('/api/family/reset-expenses'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          period_id: selectedPeriodId,
+          reset_target: resetTarget,
+          personal_scope: resetPersonalScope,
+          date_from: resetDateFrom,
+          date_to: resetDateTo,
+          family_id: familyId ?? null,
+          target_user_ids: familyMemberIds,
+        }),
+      })
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}))
+        throw new Error(err.error || 'שגיאה באיפוס')
       }
-      if ((resetTarget === 'shared' || resetTarget === 'both') && familyId) {
-        await sb.from('shared_expenses').delete().eq('period_id', selectedPeriodId).eq('family_id', familyId)
-        queryClient.invalidateQueries({ queryKey: ['shared_expenses', selectedPeriodId, familyId] })
-      }
-      toast.success(`ההוצאות ה${labels[resetTarget]} אופסו`)
-    } catch (e) { console.error('Reset expenses:', e); toast.error('שגיאה באיפוס') }
+      const result: { deleted_total: number } = await res.json()
+      queryClient.invalidateQueries({ queryKey: ['personal_expenses'] })
+      queryClient.invalidateQueries({ queryKey: ['shared_expenses'] })
+      setShowResetDialog(false)
+      toast.success(`נמחקו ${result.deleted_total} הוצאות`)
+    } catch (e) {
+      console.error('Reset expenses:', e)
+      toast.error(e instanceof Error ? e.message : 'שגיאה באיפוס')
+    } finally {
+      setResetting(false)
+    }
   }
 
   const isPending = addExpense.isPending || upsertShared.isPending
@@ -867,7 +958,13 @@ export default function ExpensesPage() {
             <h1 className="text-xl font-bold tracking-tight">הוצאות</h1>
             <PageInfo {...PAGE_TIPS.expenses} />
           </div>
-          <p className="text-muted-foreground text-[13px] break-words">{selectedPeriod?.label ?? '...'}</p>
+          <p className="text-muted-foreground text-[13px] break-words">
+            {isRange
+              ? (dateFrom && dateTo
+                  ? `${dateFrom.split('-').reverse().join('/')} - ${dateTo.split('-').reverse().join('/')}`
+                  : 'בחר טווח תאריכים')
+              : (selectedPeriod?.label ?? '...')}
+          </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <button onClick={handleResetExpenses} className="flex items-center gap-1.5 bg-transparent border border-border rounded-lg px-2.5 sm:px-3.5 py-[7px] text-muted-foreground text-xs font-medium cursor-pointer" title="אפס הוצאות">
@@ -886,7 +983,17 @@ export default function ExpensesPage() {
         </div>
       </div>
 
-      {periods && <PeriodSelector periods={periods} selectedId={selectedPeriodId} onChange={setSelectedPeriodId} />}
+      <PeriodModeToggle
+        viewMode={periodMode}
+        onModeChange={setPeriodMode}
+        dateFrom={dateFrom}
+        dateTo={dateTo}
+        onRangeChange={setDateRange}
+      />
+
+      {periodMode === 'month' && periods && (
+        <PeriodSelector periods={periods} selectedId={selectedPeriodId} onChange={setSelectedPeriodId} />
+      )}
 
       {/* ── Period Selection Step (after file upload, before preview) ──── */}
       {showPeriodStep && periods && (
@@ -987,8 +1094,8 @@ export default function ExpensesPage() {
         </div>
       )}
 
-      {/* ── Family View ──────────────────────────────────────────────────── */}
-      {viewMode !== 'personal' && (
+      {/* ── Family View ── month mode only; range mode always uses the personal list view ── */}
+      {viewMode !== 'personal' && !isRange && (
         <FamilyExpensesView
           familyExpenses={familyExpenses}
           sharedExp={sharedExp}
@@ -998,8 +1105,9 @@ export default function ExpensesPage() {
         />
       )}
 
-      {/* ── Personal View ────────────────────────────────────────────────── */}
-      {viewMode === 'personal' && <>{/* Personal View */}
+      {/* ── Personal View ──────────────────────────────────────────────────
+          Shown for the personal family-view, and always in range mode. ── */}
+      {(viewMode === 'personal' || isRange) && <>{/* Personal / Range View */}
 
       <ExcelImportModal
         importRows={importRows}
@@ -1024,21 +1132,28 @@ export default function ExpensesPage() {
           // Accept all suggestions with confidence >= 0.3 — no change needed, they already have categoryId set
           toast.success('כל ההצעות אושרו')
         }}
+        paidByOptions={paidByOptions}
+        importPaidBy={importPaidBy}
+        setImportPaidBy={setImportPaidBy}
       />
 
-      <div className="grid-2 items-start">
+      <div className={isRange ? 'items-start' : 'grid-2 items-start'}>
 
-        {/* ── Add form ───────────────────────────────────────────────────────── */}
-        <ExpenseForm
-          categories={categories}
-          funds={funds}
-          allSinkingTx={allSinkingTx}
-          selectedPeriodId={selectedPeriodId}
-          splitFrac={splitFrac}
-          isPending={isPending}
-          isSolo={isSolo}
-          onAdd={handleAdd}
-        />
+        {/* ── Add form ── hidden in range mode (an expense needs a single period) ── */}
+        {!isRange && (
+          <ExpenseForm
+            categories={categories}
+            funds={funds}
+            allSinkingTx={allSinkingTx}
+            selectedPeriodId={selectedPeriodId}
+            splitFrac={splitFrac}
+            isPending={isPending}
+            isSolo={isSolo}
+            paidByOptions={paidByOptions}
+            currentUserId={user.id}
+            onAdd={handleAdd}
+          />
+        )}
 
         {/* ── Lists ──────────────────────────────────────────────────────────── */}
         <div>
@@ -1046,8 +1161,8 @@ export default function ExpensesPage() {
             totalPersonal={totalPersonal}
             totalSharedMy={totalSharedMy}
             totalAll={totalAll}
-            sinkingMonthly={sinkingMonthly}
-            totalWithSinking={totalWithSinking}
+            sinkingMonthly={isRange ? undefined : sinkingMonthly}
+            totalWithSinking={isRange ? undefined : totalWithSinking}
             isSolo={isSolo}
           />
 
@@ -1122,17 +1237,25 @@ export default function ExpensesPage() {
             />
 
             {!isSolo && (
-              <SharedExpenseList
-                expenses={sortedSharedExp}
-                splitFrac={splitFrac}
-                totalSharedMy={totalSharedMy}
-                isLocked={recurringShared.isLocked}
-                onEdit={handleEditShared}
-                onDelete={handleDeleteShared}
-                onToggleLock={toggleLockShared}
-                onToggleFixed={handleToggleSharedFixed}
-                onConvertToPersonal={handleConvertToPersonal}
-              />
+              <div>
+                <SettlementCard
+                  expenses={sortedSharedExp}
+                  currentUserId={user.id}
+                  paidByNameMap={paidByNameMap}
+                />
+                <SharedExpenseList
+                  expenses={sortedSharedExp}
+                  splitFrac={splitFrac}
+                  totalSharedMy={totalSharedMy}
+                  isLocked={recurringShared.isLocked}
+                  onEdit={handleEditShared}
+                  onDelete={handleDeleteShared}
+                  onToggleLock={toggleLockShared}
+                  onToggleFixed={handleToggleSharedFixed}
+                  onConvertToPersonal={handleConvertToPersonal}
+                  paidByNameMap={paidByNameMap}
+                />
+              </div>
             )}
           </div>{/* close grid-2 */}
 
@@ -1142,27 +1265,116 @@ export default function ExpensesPage() {
       </>}
 
       {/* ── Reset Expenses Dialog ─────────────────────────────────────────── */}
-      {showResetDialog && (
-        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-          <div className="bg-background border border-border rounded-xl p-6 w-[340px]">
-            <h3 className="text-base font-semibold mb-4">מה ברצונך למחוק?</h3>
-            <div className="flex flex-col gap-2">
-              <button onClick={() => doResetExpenses('personal')} className="bg-secondary border border-border rounded-lg py-2.5 text-[13px] font-medium cursor-pointer text-inherit hover:bg-[var(--bg-hover)]">
-                רק הוצאות אישיות
+      {showResetDialog && (() => {
+        const partnerName =
+          memberProfiles?.find(p => p.user_id !== user.id)?.name?.trim() || 'בן/בת הזוג'
+        const partnerWarning = resetPersonalScope === 'partner' || resetPersonalScope === 'both'
+        const showPersonalScope = resetTarget === 'personal' || resetTarget === 'both'
+        return (
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+          <div className="bg-background border border-border rounded-xl p-6 w-full max-w-[400px] max-h-[90vh] overflow-y-auto">
+            <h3 className="text-base font-semibold mb-4">איפוס הוצאות</h3>
+
+            {/* What to reset */}
+            <div className="mb-4">
+              <label className="block text-[12px] text-[var(--text-secondary)] mb-1.5">מה לאפס</label>
+              <div className="flex gap-1.5">
+                {([
+                  { v: 'personal', l: 'אישיות' },
+                  { v: 'shared', l: 'משותפות' },
+                  { v: 'both', l: 'הכל' },
+                ] as const).map(opt => (
+                  <button
+                    key={opt.v}
+                    onClick={() => setResetTarget(opt.v)}
+                    disabled={isSolo && opt.v !== 'personal'}
+                    className={`flex-1 rounded-lg py-2 text-[13px] font-medium cursor-pointer transition-colors disabled:opacity-30 disabled:cursor-not-allowed ${
+                      resetTarget === opt.v
+                        ? 'bg-primary text-primary-foreground border border-primary'
+                        : 'bg-secondary border border-border text-inherit hover:bg-[var(--bg-hover)]'
+                    }`}
+                  >
+                    {opt.l}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Whose personal expenses */}
+            {showPersonalScope && !isSolo && (
+              <div className="mb-4">
+                <label className="block text-[12px] text-[var(--text-secondary)] mb-1.5">של מי לאפס הוצאות אישיות</label>
+                <div className="flex gap-1.5">
+                  {([
+                    { v: 'me', l: 'שלי' },
+                    { v: 'partner', l: `של ${partnerName}` },
+                    { v: 'both', l: 'שנינו' },
+                  ] as const).map(opt => (
+                    <button
+                      key={opt.v}
+                      onClick={() => setResetPersonalScope(opt.v)}
+                      className={`flex-1 rounded-lg py-2 text-[13px] font-medium cursor-pointer transition-colors ${
+                        resetPersonalScope === opt.v
+                          ? 'bg-primary text-primary-foreground border border-primary'
+                          : 'bg-secondary border border-border text-inherit hover:bg-[var(--bg-hover)]'
+                      }`}
+                    >
+                      {opt.l}
+                    </button>
+                  ))}
+                </div>
+                {partnerWarning && (
+                  <p className="mt-2 text-[12px] font-medium text-[var(--c-red-0-75)] bg-[var(--c-red-0-20)] border border-[var(--c-red-0-32)] rounded-lg px-3 py-2">
+                    פעולה זו תמחק לצמיתות את ההוצאות האישיות של {resetPersonalScope === 'both' ? `${partnerName} ושלך` : partnerName}.
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* Date range */}
+            <div className="flex gap-3 mb-5">
+              <div className="flex-1">
+                <label className="block text-[11px] text-[var(--text-secondary)] mb-1">מתאריך</label>
+                <input
+                  type="date"
+                  value={resetDateFrom}
+                  onChange={e => setResetDateFrom(e.target.value)}
+                  aria-label="מתאריך"
+                  className="w-full bg-[var(--c-0-18)] border border-[var(--border-light)] rounded-lg px-3 py-2 text-[13px] text-inherit outline-none focus:border-[var(--accent-blue)] transition-colors"
+                />
+              </div>
+              <div className="flex-1">
+                <label className="block text-[11px] text-[var(--text-secondary)] mb-1">עד תאריך</label>
+                <input
+                  type="date"
+                  value={resetDateTo}
+                  onChange={e => setResetDateTo(e.target.value)}
+                  aria-label="עד תאריך"
+                  className="w-full bg-[var(--c-0-18)] border border-[var(--border-light)] rounded-lg px-3 py-2 text-[13px] text-inherit outline-none focus:border-[var(--accent-blue)] transition-colors"
+                />
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={doResetExpenses}
+                disabled={resetting}
+                className="flex-1 bg-[var(--c-red-0-20)] border border-[var(--c-red-0-32)] rounded-lg py-2.5 text-[13px] font-semibold cursor-pointer text-[var(--c-red-0-75)] hover:bg-[var(--c-red-0-24)] disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                {resetting ? 'מוחק...' : 'אפס'}
               </button>
-              <button onClick={() => doResetExpenses('shared')} className="bg-secondary border border-border rounded-lg py-2.5 text-[13px] font-medium cursor-pointer text-inherit hover:bg-[var(--bg-hover)]">
-                רק הוצאות משותפות
-              </button>
-              <button onClick={() => doResetExpenses('both')} className="bg-[var(--c-red-0-20)] border border-[var(--c-red-0-32)] rounded-lg py-2.5 text-[13px] font-semibold cursor-pointer text-[var(--c-red-0-75)] hover:bg-[var(--c-red-0-24)]">
-                הכל — אישיות + משותפות
-              </button>
-              <button onClick={() => setShowResetDialog(false)} className="bg-transparent border border-border rounded-lg py-2.5 text-[13px] font-medium cursor-pointer text-muted-foreground">
+              <button
+                onClick={() => setShowResetDialog(false)}
+                disabled={resetting}
+                className="bg-transparent border border-border rounded-lg px-4 py-2.5 text-[13px] font-medium cursor-pointer text-muted-foreground disabled:opacity-40"
+              >
                 ביטול
               </button>
             </div>
           </div>
         </div>
-      )}
+        )
+      })()}
 
       {/* ── Text Input Modal (replaces native prompt) ────────────────────── */}
       {textInputModal && (

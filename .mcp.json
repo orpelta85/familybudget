@@ -17,7 +17,7 @@
         "--console-level",
         "info",
         "--output-dir",
-        "C:\\Users\\User\\.playwright-output-familybudget",
+        "C:\\Users\\orpel\\.playwright-output-familybudget",
         "--image-responses",
         "allow"
       ],

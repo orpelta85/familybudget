@@ -115,21 +115,48 @@ export interface ParseResult {
   fileName?: string  // source file name for multi-file imports
 }
 
-// Convert Excel serial dates (e.g. 46174) and Date objects to DD/MM/YYYY string
+// Convert Excel serial dates, Date objects and D/M/YY strings to a clean
+// timezone-independent ISO date string (YYYY-MM-DD). No re-parsing, no locale.
 function normalizeDate(val: unknown): string {
   if (val == null || val === '') return ''
-  // Date object (from cellDates: true)
+  const pad = (n: number) => String(n).padStart(2, '0')
+
+  // Date object (from cellDates: true) — use UTC parts to avoid off-by-one
   if (val instanceof Date) {
-    return `${val.getDate()}/${val.getMonth() + 1}/${val.getFullYear()}`
+    if (isNaN(val.getTime())) return ''
+    return `${val.getUTCFullYear()}-${pad(val.getUTCMonth() + 1)}-${pad(val.getUTCDate())}`
   }
-  const s = String(val)
-  // Excel serial number (30000-60000 range, no slashes/dashes)
+
+  const s = String(val).trim()
+
+  // Excel serial number (30000-60000 range) — compute date parts in UTC
   const num = parseFloat(s)
-  if (!isNaN(num) && num > 30000 && num < 60000 && /^\d{4,5}(\.\d+)?$/.test(s.trim())) {
-    const epoch = new Date(1899, 11, 30)
-    const dt = new Date(epoch.getTime() + num * 86400000)
-    return `${dt.getDate()}/${dt.getMonth() + 1}/${dt.getFullYear()}`
+  if (!isNaN(num) && num > 30000 && num < 60000 && /^\d{4,5}(\.\d+)?$/.test(s)) {
+    // Excel epoch is 1899-12-30. Build the date in UTC and read UTC parts.
+    const epochUTC = Date.UTC(1899, 11, 30)
+    const dt = new Date(epochUTC + Math.floor(num) * 86400000)
+    return `${dt.getUTCFullYear()}-${pad(dt.getUTCMonth() + 1)}-${pad(dt.getUTCDate())}`
   }
+
+  // Already ISO (YYYY-MM-DD or YYYY-MM-DDThh:mm) — strip any time portion
+  const isoMatch = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/)
+  if (isoMatch) {
+    return `${isoMatch[1]}-${pad(Number(isoMatch[2]))}-${pad(Number(isoMatch[3]))}`
+  }
+
+  // Israeli string format: D/M/YY or D/M/YYYY (also . or - separators).
+  // Parse manually as day/month/year — never American MM/DD.
+  const m = s.match(/^(\d{1,2})[/.\-](\d{1,2})[/.\-](\d{2,4})/)
+  if (m) {
+    const day = Number(m[1])
+    const month = Number(m[2])
+    let year = Number(m[3])
+    if (year < 100) year += 2000
+    if (day >= 1 && day <= 31 && month >= 1 && month <= 12) {
+      return `${year}-${pad(month)}-${pad(day)}`
+    }
+  }
+
   return s
 }
 
