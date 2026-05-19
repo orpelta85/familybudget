@@ -45,10 +45,12 @@ export default function JointPage() {
     if (!loading && !user) router.push('/login')
   }, [user, loading, router])
 
-  // Solo mode: redirect to dashboard (wait for family data to load)
+  // Solo mode: redirect to dashboard. Wait for the user AND the family query
+  // to resolve — useFamily is disabled while user is undefined, which makes
+  // familyLoading briefly false with empty members (false "solo").
   useEffect(() => {
-    if (!familyLoading && isSolo) router.push('/')
-  }, [familyLoading, isSolo, router])
+    if (user && !familyLoading && isSolo) router.push('/')
+  }, [user, familyLoading, isSolo, router])
 
   // Default the date range to the selected period the first time range mode is used.
   useEffect(() => {
