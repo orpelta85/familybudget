@@ -15,6 +15,18 @@
 4. TypeScript check runs automatically (hook)
 5. RTL check on .docx runs automatically (hook)
 
-@rules/approach.md
-@rules/code-style.md
-@rules/frontend.md
+## Working with agents on this project
+Subagents receive CLAUDE.md, rules and memory - but NOT the conversation. Anything
+task-specific (which file, which error, what was already decided) must be in the prompt.
+
+Subagents collect information and verify. Implementation stays in the main session.
+Invoke an agent by name; auto-routing is unreliable.
+
+## RTL
+RTL is layout, not text alignment. Sidebar LEFT, content RIGHT. Grids flow right to left,
+first item top-right. Screenshot at 1920x1080 and confirm direction before reporting done.
+Full checklist in the global `rtl-fix` skill.
+
+@.claude/rules/approach.md
+@.claude/rules/code-style.md
+@.claude/rules/frontend.md
